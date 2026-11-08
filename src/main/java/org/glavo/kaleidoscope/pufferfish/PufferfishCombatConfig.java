@@ -77,7 +77,7 @@ public final class PufferfishCombatConfig {
         NETHERITE_THROW_SPEED = builder.comment("Netherite pufferfish launch speed.")
                 .worldRestart().defineInRange("netheriteSpeed", 1.0, 0.1, 3.0);
         HEAVY_THROW_SPEED = builder.comment("Heavy pufferfish launch speed.")
-                .worldRestart().defineInRange("heavySpeed", 1.0, 0.1, 3.0);
+                .worldRestart().defineInRange("heavySpeed", 0.8, 0.1, 3.0);
         DENSITY_THROW_SPEED_PENALTY = builder.comment("Launch speed is base speed / (1 + this value * Density level), before spread and inherited player motion.",
                 "Applies to normal, dyed, netherite, and heavy pufferfish. Zero disables the penalty; 0.2 halves speed at Density V.")
                 .worldRestart().defineInRange("densitySpeedPenaltyPerLevel", 0.2, 0.0, 16.0);

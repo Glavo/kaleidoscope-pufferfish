@@ -130,7 +130,7 @@ public class PufferfishProjectileGameTests {
                     EnchantmentHelper.updateEnchantments(stack, entries -> entries.set(density, level));
                     var original = stack.copyWithCount(1);
                     var projectile = launch(helper, stack, hand);
-                    double expectedSpeed = (variant.is(Items.PUFFERFISH) ? 1.5 : 1.0) / (1 + 0.2 * rank);
+                    double expectedSpeed = (PufferfishItems.isHeavy(variant) ? 0.8 : variant.is(Items.PUFFERFISH) ? 1.5 : 1.0) / (1 + 0.2 * rank);
                     helper.assertTrue(Math.abs(projectile.getDeltaMovement().length() - expectedSpeed) < expectedSpeed * 0.04,
                             "Density did not scale the launched fish's speed");
                     helper.assertTrue(stack.getCount() == 2 && ItemStack.matches(projectile.getItem(), original),
