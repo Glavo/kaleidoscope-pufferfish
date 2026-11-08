@@ -6,7 +6,9 @@ package org.glavo.kaleidoscope.pufferfish.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.PufferfishBigModel;
+import net.minecraft.client.model.PufferfishSmallModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
@@ -28,11 +30,15 @@ import org.glavo.kaleidoscope.pufferfish.PufferfishConduitBlockEntity;
 
 public final class PufferfishConduitRenderer implements BlockEntityRenderer<PufferfishConduitBlockEntity> {
     private static final ResourceLocation TEXTURE = ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png");
-    private final PufferfishBigModel<Entity> fish;
+    /// The inflated model rendered while the conduit is active.
+    private final PufferfishBigModel<Entity> activeFish;
+    /// The uninflated model rendered while the conduit is inactive, including item rendering.
+    private final PufferfishSmallModel<Entity> inactiveFish;
     private final ModelPart wind;
 
     public PufferfishConduitRenderer(BlockEntityRendererProvider.Context context) {
-        fish = new PufferfishBigModel<>(context.bakeLayer(ModelLayers.PUFFERFISH_BIG));
+        activeFish = new PufferfishBigModel<>(context.bakeLayer(ModelLayers.PUFFERFISH_BIG));
+        inactiveFish = new PufferfishSmallModel<>(context.bakeLayer(ModelLayers.PUFFERFISH_SMALL));
         wind = context.bakeLayer(ModelLayers.CONDUIT_WIND);
     }
 
@@ -43,9 +49,9 @@ public final class PufferfishConduitRenderer implements BlockEntityRenderer<Puff
         pose.pushPose();
         pose.translate(0.5, active ? 0.5 + Mth.sin(age * 0.1F) * 0.1F : 0.5, 0.5);
         if (active) pose.mulPose(Axis.YP.rotation(entity.getActiveRotation(partialTick)));
-        float size = active ? 1 : 0.75F;
-        pose.scale(size, -size, -size);
-        pose.translate(0, -18.0F / 16, 0);
+        pose.scale(1, -1, -1);
+        pose.translate(0, -(active ? 18.0F : 22.0F) / 16, 0);
+        EntityModel<Entity> fish = active ? activeFish : inactiveFish;
         fish.setupAnim(null, 0, 0, age, 0, 0);
         fish.renderToBuffer(pose, buffers.getBuffer(RenderType.entityCutoutNoCull(TEXTURE)), light, overlay);
         pose.popPose();
