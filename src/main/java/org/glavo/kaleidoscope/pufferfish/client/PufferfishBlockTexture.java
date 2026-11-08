@@ -9,19 +9,18 @@ import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.resources.metadata.animation.FrameSize;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceMetadata;
-import net.minecraft.world.item.DyeColor;
 
 public final class PufferfishBlockTexture {
     private PufferfishBlockTexture() {}
 
     public static SpriteContents create(ResourceLocation id, FrameSize size, NativeImage source,
-            ResourceMetadata metadata, @Nullable DyeColor color) {
+            ResourceMetadata metadata, @Nullable Integer color) {
         try (source) {
             if (color != null) {
                 PufferfishTextures.recolor(source, color);
             }
             var image = new NativeImage(source.getWidth(), source.getHeight(), false);
-            int background = color == null ? 0xC6A252 : color.getTextureDiffuseColor();
+            int background = color == null ? 0xC6A252 : color;
             for (int y = 0; y < image.getHeight(); y++) {
                 for (int x = 0; x < image.getWidth(); x++) {
                     int pixel = source.getPixelRGBA(x, y);

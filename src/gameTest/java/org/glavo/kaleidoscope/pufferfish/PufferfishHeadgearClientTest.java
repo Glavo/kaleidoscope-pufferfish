@@ -99,9 +99,14 @@ public final class PufferfishHeadgearClientTest {
             List<DyeColor> colors = new ArrayList<>();
             colors.add(null);
             colors.addAll(List.of(DyeColor.values()));
+            List<ItemStack> headgear = new ArrayList<>();
             for (var color : colors) {
-                var stack = new ItemStack(Items.PUFFERFISH);
-                player.setItemSlot(EquipmentSlot.HEAD, color == null ? stack : PufferfishColors.dye(stack, color));
+                var fish = new ItemStack(Items.PUFFERFISH);
+                headgear.add(color == null ? fish : PufferfishColors.dye(fish, color));
+            }
+            headgear.add(new ItemStack(PufferfishItems.NETHERITE.get()));
+            for (var stack : headgear) {
+                player.setItemSlot(EquipmentSlot.HEAD, stack);
                 model.head.visible = true;
                 model.hat.visible = true;
                 var capture = new CapturedVertices();
@@ -111,10 +116,12 @@ public final class PufferfishHeadgearClientTest {
                     throw new IllegalStateException("Player head was not hidden");
                 }
                 layer.render(pose, capture, 15728880, player, 0, 0, 0, 0, 0, 0);
-                var texture = color == null ? ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png") : PufferfishTextures.entity(color);
+                var color = PufferfishColors.get(stack);
+                var texture = PufferfishItems.isNetherite(stack) ? PufferfishTextures.netheriteEntity()
+                        : color == null ? ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png") : PufferfishTextures.entity(color);
                 if (capture.type != RenderType.entityCutoutNoCull(texture) || capture.vertices < 100
                         || capture.minY < -0.65F || capture.maxY > 0.15F) {
-                    throw new IllegalStateException("Pufferfish head model, texture, or alignment was incorrect: " + color);
+                    throw new IllegalStateException("Pufferfish head model, texture, or alignment was incorrect: " + stack);
                 }
                 NeoForge.EVENT_BUS.post(new RenderPlayerEvent.Post(player, renderer, 0, pose, capture, 15728880));
                 if (!model.head.visible || !model.hat.visible) {

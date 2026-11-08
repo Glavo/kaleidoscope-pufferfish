@@ -71,6 +71,13 @@ public final class PufferfishClientSmokeTest {
         for (DyeColor color : DyeColor.values()) {
             verifyBlock(minecraft, color);
         }
+        verifyBlock(minecraft, PufferfishBlocks.NETHERITE.get(), "netherite_pufferfish_block");
+        var netheriteModel = minecraft.getItemRenderer().getModel(new ItemStack(PufferfishItems.NETHERITE.get()), null, null, 0);
+        if (netheriteModel == minecraft.getModelManager().getMissingModel()
+                || netheriteModel.getQuads(null, null, RandomSource.create()).isEmpty()
+                || !netheriteModel.getParticleIcon().contents().name().equals(KaleidoscopePufferfish.id("item/netherite_pufferfish"))) {
+            throw new IllegalStateException("Missing netherite pufferfish item model or texture");
+        }
         verifyModelDelegation(minecraft);
         PufferfishHeadgearClientTest.verify(minecraft);
         if (!projectileRendererChecked) {
@@ -81,39 +88,42 @@ public final class PufferfishClientSmokeTest {
             projectileRendererChecked = false;
             minecraft.reloadResourcePacks();
         } else {
-            LogUtils.getLogger().info("Pufferfish client smoke test passed: 32 item models, 17 blocks, 16 entity textures, headgear rendering, projectile renderer, model override delegation, and resource reload");
+            LogUtils.getLogger().info("Pufferfish client smoke test passed: 33 item models, 18 blocks, dyed and netherite headgear rendering, projectile renderer, model override delegation, and resource reload");
             minecraft.stop();
         }
     }
 
     private static void verifyBlock(Minecraft minecraft, DyeColor color) {
-        var block = PufferfishBlocks.get(color);
+        verifyBlock(minecraft, PufferfishBlocks.get(color), PufferfishBlocks.name(color));
+    }
+
+    private static void verifyBlock(Minecraft minecraft, net.minecraft.world.level.block.Block block, String name) {
         var state = block.defaultBlockState();
         var stack = new ItemStack(block);
         var blockModel = minecraft.getBlockRenderer().getBlockModel(state);
         var itemModel = minecraft.getItemRenderer().getModel(stack, null, null, 0);
-        var texture = KaleidoscopePufferfish.id("block/" + PufferfishBlocks.name(color));
+        var texture = KaleidoscopePufferfish.id("block/" + name);
         for (var model : new BakedModel[] {blockModel, itemModel}) {
             if (model == minecraft.getModelManager().getMissingModel()
                     || !model.getParticleIcon().contents().name().equals(texture)) {
-                throw new IllegalStateException("Missing pufferfish block model or texture: " + color);
+                throw new IllegalStateException("Missing pufferfish block model or texture: " + name);
             }
             for (var direction : Direction.values()) {
                 if (model.getQuads(state, direction, RandomSource.create()).isEmpty()) {
-                    throw new IllegalStateException("Missing pufferfish block face: " + color + ", " + direction);
+                    throw new IllegalStateException("Missing pufferfish block face: " + name + ", " + direction);
                 }
             }
             var image = model.getParticleIcon().contents().getOriginalImage();
             for (int y = 0; y < image.getHeight(); y++) {
                 for (int x = 0; x < image.getWidth(); x++) {
                     if (image.getPixelRGBA(x, y) >>> 24 != 255) {
-                        throw new IllegalStateException("Pufferfish block texture is not opaque: " + color);
+                        throw new IllegalStateException("Pufferfish block texture is not opaque: " + name);
                     }
                 }
             }
         }
         if (stack.getHoverName().getString().startsWith("block.")) {
-            throw new IllegalStateException("Missing pufferfish block translation: " + color);
+            throw new IllegalStateException("Missing pufferfish block translation: " + name);
         }
     }
 

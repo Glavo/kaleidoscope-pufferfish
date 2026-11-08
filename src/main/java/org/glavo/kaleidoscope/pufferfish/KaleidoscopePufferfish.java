@@ -47,12 +47,16 @@ public class KaleidoscopePufferfish {
             RECIPES.register("dye_pufferfish", () -> new SimpleCraftingRecipeSerializer<>(PufferfishDyeRecipe::new));
     public static final DeferredHolder<IngredientType<?>, IngredientType<PufferfishIngredient>> PUFFERFISH_INGREDIENT =
             INGREDIENTS.register("pufferfish", () -> new IngredientType<>(PufferfishIngredient.CODEC));
+    public static final DeferredHolder<RecipeSerializer<?>, NetheritePufferfishUpgradeRecipe.Serializer> NETHERITE_UPGRADE =
+            RECIPES.register("netherite_pufferfish_upgrade", NetheritePufferfishUpgradeRecipe.Serializer::new);
 
     static {
         TABS.register("pufferfish", () -> CreativeModeTab.builder()
                 .title(Component.translatable("itemGroup.kaleidoscope_pufferfish"))
                 .icon(() -> PufferfishColors.dye(new ItemStack(Items.PUFFERFISH_BUCKET), DyeColor.PURPLE))
                 .displayItems((parameters, output) -> {
+                    output.accept(PufferfishItems.NETHERITE);
+                    output.accept(PufferfishBlocks.NETHERITE);
                     output.accept(PufferfishBlocks.get(null));
                     for (DyeColor color : DyeColor.values()) {
                         output.accept(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
@@ -63,6 +67,7 @@ public class KaleidoscopePufferfish {
     }
 
     public KaleidoscopePufferfish(IEventBus bus) {
+        PufferfishItems.register(bus);
         PufferfishBlocks.register(bus);
         COMPONENTS.register(bus);
         ATTACHMENTS.register(bus);

@@ -4,7 +4,7 @@
   "group": "${modId}:pufferfish_blocks",
   "pattern": ["FFF", "FFF", "FFF"],
   "key": {
-    "F": {"type": "${modId}:pufferfish"${colorProperty}}
+    "F": ${ingredient}
   },
   "result": {"id": "${blockId}", "count": 1}
 }

@@ -142,7 +142,7 @@ val generateModMetadata by tasks.registering(ProcessResources::class) {
 val generateItemModels = tasks.register<Sync>("generateItemModels") {
     val modelNames = dyeColors.flatMap { color ->
         listOf("${color}_pufferfish", "${color}_pufferfish_bucket")
-    }
+    } + "netherite_pufferfish"
     inputs.property("modId", modId)
     inputs.property("modelNames", modelNames)
     filteringCharset = "UTF-8"
@@ -161,10 +161,12 @@ val generateBlockResources = tasks.register<Sync>("generateBlockResources") {
     inputs.property("colors", dyeColors)
     filteringCharset = "UTF-8"
     into(layout.buildDirectory.dir("generated/resources/pufferfishBlocks"))
-    for (color in listOf("") + dyeColors) {
+    for (color in listOf("") + dyeColors + "netherite") {
+        val netherite = color == "netherite"
         val blockName = if (color.isEmpty()) "pufferfish_block" else "${color}_pufferfish_block"
         val blockId = "$modId:$blockName"
-        val components = if (color.isEmpty()) "{}" else JsonOutput.toJson(mapOf(
+        val fishId = if (netherite) "$modId:netherite_pufferfish" else "minecraft:pufferfish"
+        val components = if (color.isEmpty() || netherite) "{}" else JsonOutput.toJson(mapOf(
             "$modId:color" to color,
             "minecraft:item_name" to JsonOutput.toJson(mapOf(
                 "translate" to "item.$modId.dyed_pufferfish",
@@ -175,7 +177,12 @@ val generateBlockResources = tasks.register<Sync>("generateBlockResources") {
             "modId" to modId,
             "blockName" to blockName,
             "blockId" to blockId,
-            "colorProperty" to if (color.isEmpty()) "" else ", \"color\": \"$color\"",
+            "fishId" to fishId,
+            "ingredient" to JsonOutput.toJson(when {
+                netherite -> mapOf("item" to fishId)
+                color.isEmpty() -> mapOf("type" to "$modId:pufferfish")
+                else -> mapOf("type" to "$modId:pufferfish", "color" to color)
+            }),
             "components" to components
         )
         inputs.property(blockName, properties)
@@ -193,7 +200,7 @@ val generateBlockResources = tasks.register<Sync>("generateBlockResources") {
                 rename { target.substringAfterLast('/') }
             }
         }
-        for ((recipe, ingredient) in mapOf(blockName to "minecraft:pufferfish", "${blockName}_unpacking" to blockId)) {
+        for ((recipe, ingredient) in mapOf(blockName to fishId, "${blockName}_unpacking" to blockId)) {
             from("src/main/blockTemplates/advancement.json") {
                 expand("recipe" to "$modId:$recipe", "ingredient" to ingredient)
                 into("data/$modId/advancement/recipes/misc")

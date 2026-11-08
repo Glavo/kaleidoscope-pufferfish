@@ -22,6 +22,7 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.glavo.kaleidoscope.pufferfish.KaleidoscopePufferfish;
+import org.glavo.kaleidoscope.pufferfish.PufferfishItems;
 
 public class ThrownPufferfish extends ThrowableItemProjectile {
     public static final ResourceKey<DamageType> DAMAGE_TYPE = ResourceKey.create(
@@ -56,8 +57,9 @@ public class ThrownPufferfish extends ThrowableItemProjectile {
                             : Component.translatable(key + ".player", victim.getDisplayName(), attacker.getDisplayName());
                 }
             };
-            if (target.hurt(damage, 2.0F) && target instanceof LivingEntity living) {
-                living.addEffect(new MobEffectInstance(MobEffects.POISON, 120, 0), getEffectSource());
+            boolean netherite = PufferfishItems.isNetherite(getItem());
+            if (target.hurt(damage, netherite ? 10.0F : 2.0F) && target instanceof LivingEntity living) {
+                living.addEffect(new MobEffectInstance(MobEffects.POISON, 120, netherite ? 1 : 0), getEffectSource());
             }
         }
     }

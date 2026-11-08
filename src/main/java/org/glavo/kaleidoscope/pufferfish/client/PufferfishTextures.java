@@ -17,8 +17,10 @@ import net.minecraft.world.item.DyeColor;
 import org.glavo.kaleidoscope.pufferfish.KaleidoscopePufferfish;
 
 public final class PufferfishTextures implements ResourceManagerReloadListener {
+    public static final int NETHERITE_COLOR = 0x594F52;
     private static final ResourceLocation ORIGINAL = ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png");
     private static final Map<DyeColor, ResourceLocation> ENTITY_TEXTURES = new EnumMap<>(DyeColor.class);
+    private static ResourceLocation netheriteTexture;
 
     public static ResourceLocation item(DyeColor color, boolean bucket) {
         return KaleidoscopePufferfish.id("item/" + color.getName() + (bucket ? "_pufferfish_bucket" : "_pufferfish"));
@@ -29,11 +31,22 @@ public final class PufferfishTextures implements ResourceManagerReloadListener {
     }
 
     private static ResourceLocation loadEntityTexture(DyeColor color) {
+        return loadEntityTexture(color.getName(), color.getTextureDiffuseColor());
+    }
+
+    public static ResourceLocation netheriteEntity() {
+        if (netheriteTexture == null) {
+            netheriteTexture = loadEntityTexture("netherite", NETHERITE_COLOR);
+        }
+        return netheriteTexture;
+    }
+
+    private static ResourceLocation loadEntityTexture(String variant, int color) {
         Minecraft minecraft = Minecraft.getInstance();
         try (var stream = minecraft.getResourceManager().open(ORIGINAL)) {
             NativeImage image = NativeImage.read(stream);
             recolor(image, color);
-            ResourceLocation location = KaleidoscopePufferfish.id("textures/entity/" + color.getName() + "_pufferfish.png");
+            ResourceLocation location = KaleidoscopePufferfish.id("textures/entity/" + variant + "_pufferfish.png");
             minecraft.getTextureManager().register(location, new DynamicTexture(image));
             return location;
         } catch (IOException exception) {
@@ -43,7 +56,10 @@ public final class PufferfishTextures implements ResourceManagerReloadListener {
     }
 
     public static void recolor(NativeImage image, DyeColor color) {
-        int target = color.getTextureDiffuseColor();
+        recolor(image, color.getTextureDiffuseColor());
+    }
+
+    public static void recolor(NativeImage image, int target) {
         for (int y = 0; y < image.getHeight(); y++) {
             for (int x = 0; x < image.getWidth(); x++) {
                 int pixel = image.getPixelRGBA(x, y);
@@ -67,5 +83,9 @@ public final class PufferfishTextures implements ResourceManagerReloadListener {
         var textures = Minecraft.getInstance().getTextureManager();
         ENTITY_TEXTURES.values().stream().filter(id -> !id.equals(ORIGINAL)).forEach(textures::release);
         ENTITY_TEXTURES.clear();
+        if (netheriteTexture != null && !netheriteTexture.equals(ORIGINAL)) {
+            textures.release(netheriteTexture);
+        }
+        netheriteTexture = null;
     }
 }

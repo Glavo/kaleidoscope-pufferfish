@@ -14,7 +14,6 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.Pufferfish;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.EnchantedItemInUse;
 import net.minecraft.world.item.enchantment.EnchantmentTarget;
 import net.minecraft.world.item.enchantment.Enchantments;
@@ -29,7 +28,7 @@ public final class PufferfishHeadgear {
 
     public static boolean isWearing(LivingEntity entity) {
         return entity instanceof Player player && !player.isSpectator()
-                && entity.getItemBySlot(EquipmentSlot.HEAD).is(Items.PUFFERFISH);
+                && PufferfishItems.isPufferfish(entity.getItemBySlot(EquipmentSlot.HEAD));
     }
 
     public static void breathe(LivingBreatheEvent event) {
@@ -40,9 +39,10 @@ public final class PufferfishHeadgear {
     }
 
     public static void tooltip(ItemTooltipEvent event) {
-        if (event.getItemStack().is(Items.PUFFERFISH)) {
+        if (PufferfishItems.isPufferfish(event.getItemStack())) {
             event.getToolTip().add(Component.translatable("tooltip.kaleidoscope_pufferfish.headgear").withStyle(ChatFormatting.GRAY));
-            event.getToolTip().add(Component.translatable("tooltip.kaleidoscope_pufferfish.headgear_defense").withStyle(ChatFormatting.GRAY));
+            String key = PufferfishItems.isNetherite(event.getItemStack()) ? "netherite_headgear_defense" : "headgear_defense";
+            event.getToolTip().add(Component.translatable("tooltip.kaleidoscope_pufferfish." + key).withStyle(ChatFormatting.GRAY));
         }
     }
 
@@ -60,9 +60,10 @@ public final class PufferfishHeadgear {
                 || attacker == wearer || event.getNewDamage() + event.getReduction(DamageContainer.Reduction.ABSORPTION) <= 0) {
             return;
         }
-        attacker.addEffect(new MobEffectInstance(MobEffects.POISON, 60, 0), wearer);
+        boolean netherite = PufferfishItems.isNetherite(wearer.getItemBySlot(EquipmentSlot.HEAD));
+        attacker.addEffect(new MobEffectInstance(MobEffects.POISON, netherite ? 120 : 60, netherite ? 1 : 0), wearer);
         var thorns = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.THORNS);
-        thorns.value().doPostAttack(level, 1,
+        thorns.value().doPostAttack(level, netherite ? 3 : 1,
                 new EnchantedItemInUse(wearer.getItemBySlot(EquipmentSlot.HEAD), EquipmentSlot.HEAD, wearer),
                 EnchantmentTarget.VICTIM, wearer, source);
     }

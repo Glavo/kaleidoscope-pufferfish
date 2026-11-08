@@ -7,7 +7,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import org.glavo.kaleidoscope.pufferfish.entity.ThrownPufferfish;
 
@@ -17,8 +16,8 @@ public final class PufferfishThrowing {
     public static void use(PlayerInteractEvent.RightClickItem event) {
         var player = event.getEntity();
         var stack = event.getItemStack();
-        if (!stack.is(Items.PUFFERFISH) || player.isShiftKeyDown() || player.isSpectator()
-                || player.getCooldowns().isOnCooldown(Items.PUFFERFISH)) {
+        if (!PufferfishItems.isPufferfish(stack) || player.isShiftKeyDown() || player.isSpectator()
+                || player.getCooldowns().isOnCooldown(stack.getItem())) {
             return;
         }
         var level = event.getLevel();
@@ -34,7 +33,7 @@ public final class PufferfishThrowing {
             }
             level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.SNOWBALL_THROW,
                     SoundSource.PLAYERS, 0.5F, 0.4F / (level.getRandom().nextFloat() * 0.4F + 0.8F));
-            player.awardStat(Stats.ITEM_USED.get(Items.PUFFERFISH));
+            player.awardStat(Stats.ITEM_USED.get(stack.getItem()));
         }
         stack.consume(1, player);
     }

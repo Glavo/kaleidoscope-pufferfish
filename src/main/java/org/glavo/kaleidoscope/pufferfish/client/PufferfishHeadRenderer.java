@@ -20,6 +20,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.neoforge.client.event.RenderPlayerEvent;
 import org.glavo.kaleidoscope.pufferfish.PufferfishColors;
 import org.glavo.kaleidoscope.pufferfish.PufferfishHeadgear;
+import org.glavo.kaleidoscope.pufferfish.PufferfishItems;
 
 public final class PufferfishHeadRenderer {
     private static final ResourceLocation ORIGINAL = ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png");
@@ -47,8 +48,10 @@ public final class PufferfishHeadRenderer {
 
     public void render(ModelPart head, PoseStack pose, MultiBufferSource buffers, int light,
             LivingEntity wearer, float ageInTicks) {
-        var color = PufferfishColors.get(wearer.getItemBySlot(EquipmentSlot.HEAD));
-        var texture = color == null ? ORIGINAL : PufferfishTextures.entity(color);
+        var stack = wearer.getItemBySlot(EquipmentSlot.HEAD);
+        var color = PufferfishColors.get(stack);
+        var texture = PufferfishItems.isNetherite(stack) ? PufferfishTextures.netheriteEntity()
+                : color == null ? ORIGINAL : PufferfishTextures.entity(color);
         pose.pushPose();
         head.translateAndRotate(pose);
         pose.translate(0.0F, -22.0F / 16.0F, 0.0F);

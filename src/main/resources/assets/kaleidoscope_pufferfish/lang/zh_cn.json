@@ -1,5 +1,8 @@
 {
   "itemGroup.kaleidoscope_pufferfish": "森罗河豚",
+  "item.kaleidoscope_pufferfish.netherite_pufferfish": "下界合金河豚",
+  "block.kaleidoscope_pufferfish.netherite_pufferfish_block": "下界合金河豚块",
+  "tooltip.kaleidoscope_pufferfish.netherite_headgear_defense": "受到攻击时：荆棘 III 反伤，并使攻击者中毒 II 6 秒",
   "tooltip.kaleidoscope_pufferfish.headgear": "装备于头部：水下呼吸、免疫河豚刺伤",
   "tooltip.kaleidoscope_pufferfish.headgear_defense": "受到攻击时：荆棘 I 反伤，并使攻击者中毒 3 秒",
   "entity.kaleidoscope_pufferfish.thrown_pufferfish": "投掷的河豚",
