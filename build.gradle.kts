@@ -133,10 +133,33 @@ val generateModMetadata by tasks.registering(ProcessResources::class) {
     into(layout.buildDirectory.dir("generated/sources/modMetadata"))
 }
 
+val generateItemModels = tasks.register<Sync>("generateItemModels") {
+    val colors = listOf(
+        "white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray",
+        "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"
+    )
+    val modelNames = colors.flatMap { color ->
+        listOf("${color}_pufferfish", "${color}_pufferfish_bucket")
+    }
+    inputs.property("modId", modId)
+    inputs.property("modelNames", modelNames)
+    filteringCharset = "UTF-8"
+    into(layout.buildDirectory.dir("generated/resources/itemModels"))
+    for (modelName in modelNames) {
+        from("src/main/modelTemplates/item.json") {
+            expand("texture" to "$modId:item/$modelName")
+            into("assets/$modId/models/item")
+            rename { "$modelName.json" }
+        }
+    }
+}
+
 sourceSets.main {
     resources.srcDir(generateModMetadata)
+    resources.srcDir(generateItemModels)
 }
 neoForge.ideSyncTask(generateModMetadata)
+neoForge.ideSyncTask(generateItemModels)
 
 publishing {
     publications {

@@ -33,6 +33,10 @@ tooltip fallback until recolored.
 
 ## Development
 
+The 32 colored item models are generated from `src/main/modelTemplates/item.json`
+by the `generateItemModels` Gradle task. Builds, development runs, and IDE sync
+generate them automatically under `build/generated/resources/itemModels`.
+
 Optional integrations are Kaleidoscope Cookery 1.5.1 / 1.6.0 and Farmer's Delight
 1.3.4, resolved through Modrinth Maven. Both mods are available at compile time
 and loaded in development runs by default; neither is bundled in the output JAR.
