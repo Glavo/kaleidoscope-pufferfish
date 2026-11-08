@@ -13,11 +13,13 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.ModelEvent;
 import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import net.neoforged.neoforge.client.event.RegisterSpriteSourceTypesEvent;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishItemModel;
+import org.glavo.kaleidoscope.pufferfish.client.PufferfishHeadRenderer;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishSpriteSource;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishTextures;
 
@@ -29,6 +31,8 @@ public class KaleidoscopePufferfishClient {
         bus.addListener(EventPriority.LOWEST, this::wrapModels);
         bus.addListener(this::registerReloadListeners);
         bus.addListener(this::registerRenderers);
+        NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishHeadRenderer::beforePlayer);
+        NeoForge.EVENT_BUS.addListener(PufferfishHeadRenderer::afterPlayer);
     }
 
     private void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {

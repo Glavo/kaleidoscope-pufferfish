@@ -5,10 +5,12 @@
   "mixins": [
     "LegacyPufferfishDataMixin",
     "AbstractFishMixin",
-    "EntityTypeMixin"
+    "EntityTypeMixin",
+    "PufferfishEquipmentMixin"
   ],
   "client": [
-    "PufferfishRendererMixin"
+    "PufferfishRendererMixin",
+    "PufferfishHeadLayerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

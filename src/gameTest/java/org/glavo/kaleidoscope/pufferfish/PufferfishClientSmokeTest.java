@@ -72,6 +72,7 @@ public final class PufferfishClientSmokeTest {
             verifyBlock(minecraft, color);
         }
         verifyModelDelegation(minecraft);
+        PufferfishHeadgearClientTest.verify(minecraft);
         if (!projectileRendererChecked) {
             throw new IllegalStateException("Projectile renderer registration was not checked");
         }
@@ -80,7 +81,7 @@ public final class PufferfishClientSmokeTest {
             projectileRendererChecked = false;
             minecraft.reloadResourcePacks();
         } else {
-            LogUtils.getLogger().info("Pufferfish client smoke test passed: 32 item models, 17 blocks, 16 entity textures, projectile renderer, model override delegation, and resource reload");
+            LogUtils.getLogger().info("Pufferfish client smoke test passed: 32 item models, 17 blocks, 16 entity textures, headgear rendering, projectile renderer, model override delegation, and resource reload");
             minecraft.stop();
         }
     }

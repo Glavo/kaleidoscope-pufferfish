@@ -74,6 +74,10 @@ public class KaleidoscopePufferfish {
         NeoForge.EVENT_BUS.addListener(PufferfishColors::colorDrops);
         NeoForge.EVENT_BUS.addListener(PufferfishColors::legacyTooltip);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishThrowing::use);
+        NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::breathe);
+        NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::protect);
+        NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::retaliate);
+        NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::tooltip);
     }
 
     public static ResourceLocation id(String path) {

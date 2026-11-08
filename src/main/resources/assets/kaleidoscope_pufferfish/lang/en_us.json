@@ -1,5 +1,7 @@
 {
   "itemGroup.kaleidoscope_pufferfish": "Kaleidoscope Pufferfish",
+  "tooltip.kaleidoscope_pufferfish.headgear": "Head slot: underwater breathing and immunity to pufferfish stings",
+  "tooltip.kaleidoscope_pufferfish.headgear_defense": "When attacked: Thorns I and Poison I for 3 seconds",
   "entity.kaleidoscope_pufferfish.thrown_pufferfish": "Thrown Pufferfish",
   "death.attack.kaleidoscope_pufferfish.thrown_pufferfish": "%1$s was struck down by a pufferfish",
   "death.attack.kaleidoscope_pufferfish.thrown_pufferfish.player": "%1$s was struck down by %2$s with a pufferfish",
