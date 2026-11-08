@@ -3,9 +3,7 @@
 
 package org.glavo.kaleidoscope.pufferfish;
 
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -21,7 +19,6 @@ import net.neoforged.neoforge.common.damagesource.DamageContainer;
 import net.neoforged.neoforge.event.entity.living.LivingBreatheEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
-import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 
 public final class PufferfishHeadgear {
     private PufferfishHeadgear() {}
@@ -35,14 +32,6 @@ public final class PufferfishHeadgear {
         if (isWearing(event.getEntity())) {
             event.setCanBreathe(true);
             event.setRefillAirAmount(event.getEntity().getMaxAirSupply());
-        }
-    }
-
-    public static void tooltip(ItemTooltipEvent event) {
-        if (PufferfishItems.isPufferfish(event.getItemStack())) {
-            event.getToolTip().add(Component.translatable("tooltip.kaleidoscope_pufferfish.headgear").withStyle(ChatFormatting.GRAY));
-            String key = PufferfishItems.isNetherite(event.getItemStack()) ? "netherite_headgear_defense" : "headgear_defense";
-            event.getToolTip().add(Component.translatable("tooltip.kaleidoscope_pufferfish." + key).withStyle(ChatFormatting.GRAY));
         }
     }
 
