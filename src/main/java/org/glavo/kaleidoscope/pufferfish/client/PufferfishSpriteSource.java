@@ -42,7 +42,7 @@ public final class PufferfishSpriteSource implements SpriteSource {
             addSkin(manager, output, color);
         }
         addItem(manager, output, "netherite_pufferfish", PufferfishTextures.NETHERITE_COLOR);
-        addItem(manager, output, "golden_pufferfish", PufferfishTextures.GOLDEN_COLOR);
+        addItem(manager, output, "golden_pufferfish", 0);
         addItem(manager, output, "heavy_pufferfish", 0);
         addBlock(manager, output, "netherite_pufferfish_block", PufferfishTextures.NETHERITE_COLOR);
     }
@@ -84,6 +84,7 @@ public final class PufferfishSpriteSource implements SpriteSource {
             manager.getResource(TEXTURE_ID_CONVERTER.idToFile(ResourceLocation.withDefaultNamespace("item/pufferfish")))
                     .ifPresent(resource -> output.add(id, loader -> loader.loadSprite(id, resource, (name, size, image, metadata) -> {
                         if (itemName.equals("heavy_pufferfish")) HeavyPufferfishVisuals.recolor(image, false);
+                        else if (itemName.equals("golden_pufferfish")) GoldenPufferfishTexture.recolor(image);
                         else PufferfishTextures.recolor(image, color);
                         if (itemName.equals("netherite_pufferfish")) PufferfishTextures.whiteEyes(image, false, PufferfishTextures.NETHERITE_EYE_COLOR);
                         return new SpriteContents(name, size, image, metadata);

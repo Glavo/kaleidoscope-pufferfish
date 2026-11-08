@@ -93,6 +93,18 @@ public final class PufferfishClientSmokeTest {
                 || goldenStack.getHoverName().getString().startsWith("item.")) {
             throw new IllegalStateException("Missing golden pufferfish item model, texture, or translation");
         }
+        var goldenSprite = goldenModel.getParticleIcon().contents().getOriginalImage();
+        try (var preview = new com.mojang.blaze3d.platform.NativeImage(256, 256, true)) {
+            for (int y = 0; y < 256; y++) {
+                for (int x = 0; x < 256; x++) {
+                    preview.setPixelRGBA(x, y, goldenSprite.getPixelRGBA(
+                            x * goldenSprite.getWidth() / 256, y * goldenSprite.getHeight() / 256));
+                }
+            }
+            preview.writeToFile(java.nio.file.Path.of("golden-pufferfish-preview.png"));
+        } catch (java.io.IOException exception) {
+            throw new IllegalStateException("Could not save golden pufferfish sprite preview", exception);
+        }
         verifyCuttingModels(minecraft);
         verifyDishModels(minecraft);
         verifyHeavyModel(minecraft);

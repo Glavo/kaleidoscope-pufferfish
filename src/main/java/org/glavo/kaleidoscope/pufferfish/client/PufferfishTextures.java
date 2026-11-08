@@ -17,8 +17,6 @@ import net.minecraft.world.item.DyeColor;
 import org.glavo.kaleidoscope.pufferfish.KaleidoscopePufferfish;
 
 public final class PufferfishTextures implements ResourceManagerReloadListener {
-    /// The RGB tint applied to the body pixels of the golden pufferfish item.
-    public static final int GOLDEN_COLOR = 0xFFE040;
     public static final int NETHERITE_COLOR = 0x594F52;
     public static final int NETHERITE_EYE_COLOR = 0xE5DED1;
     public static final int HEAVY_EYE_COLOR = 0xE5F0FA;
