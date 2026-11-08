@@ -31,8 +31,10 @@ public final class PufferfishSpriteSource implements SpriteSource {
             });
         }
         addBlock(manager, output, null);
+        addCarpet(manager, output, null);
         for (DyeColor color : DyeColor.values()) {
             addBlock(manager, output, color);
+            addCarpet(manager, output, color);
         }
         addItem(manager, output, "netherite_pufferfish", PufferfishTextures.NETHERITE_COLOR);
         addItem(manager, output, "golden_pufferfish", PufferfishTextures.GOLDEN_COLOR);
@@ -69,6 +71,20 @@ public final class PufferfishSpriteSource implements SpriteSource {
         manager.getResource(TEXTURE_ID_CONVERTER.idToFile(source)).ifPresent(resource ->
                 output.add(id, loader -> loader.loadSprite(id, resource, (name, size, image, metadata) ->
                         PufferfishBlockTexture.create(name, size, image, metadata, color))));
+    }
+
+    /// Adds a carpet sprite from a resource-pack replacement or the entity's unfolded skin.
+    private static void addCarpet(ResourceManager manager, Output output, DyeColor color) {
+        var id = KaleidoscopePufferfish.id("block/" + PufferfishBlocks.carpetName(color));
+        var replacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(id));
+        if (replacement.isPresent()) {
+            output.add(id, replacement.get());
+            return;
+        }
+        var source = ResourceLocation.withDefaultNamespace("entity/fish/pufferfish");
+        manager.getResource(TEXTURE_ID_CONVERTER.idToFile(source)).ifPresent(resource ->
+                output.add(id, loader -> loader.loadSprite(id, resource, (name, size, image, metadata) ->
+                        PufferfishCarpetTexture.create(name, size, image, metadata, color == null ? null : color.getTextureDiffuseColor()))));
     }
 
     @Override

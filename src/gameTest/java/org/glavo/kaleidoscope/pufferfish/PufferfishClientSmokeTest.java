@@ -77,6 +77,7 @@ public final class PufferfishClientSmokeTest {
             verifyBlock(minecraft, color);
             verifyCarpet(minecraft, color);
         }
+        PufferfishCarpetClientPreview.save(minecraft);
         verifyBlock(minecraft, PufferfishBlocks.NETHERITE.get(), "netherite_pufferfish_block");
         var netheriteModel = minecraft.getItemRenderer().getModel(new ItemStack(PufferfishItems.NETHERITE.get()), null, null, 0);
         if (netheriteModel == minecraft.getModelManager().getMissingModel()
@@ -147,12 +148,12 @@ public final class PufferfishClientSmokeTest {
         }
     }
 
-    /// Checks that each carpet's block and item models use the matching fish texture and a thin top face.
+    /// Checks that each carpet's block and item models use the matching skin texture and a thin top face.
     private static void verifyCarpet(Minecraft minecraft, DyeColor color) {
         var block = PufferfishBlocks.carpet(color);
         var state = block.defaultBlockState();
         var stack = new ItemStack(block);
-        var texture = KaleidoscopePufferfish.id("block/" + PufferfishBlocks.name(color));
+        var texture = KaleidoscopePufferfish.id("block/" + PufferfishBlocks.carpetName(color));
         var blockModel = minecraft.getBlockRenderer().getBlockModel(state);
         var itemModel = minecraft.getItemRenderer().getModel(stack, null, null, 0);
         for (var model : new BakedModel[] {blockModel, itemModel}) {
@@ -168,6 +169,17 @@ public final class PufferfishClientSmokeTest {
                     float y = Float.intBitsToFloat(vertices[vertex * stride + 1]);
                     if (Math.abs(y - 1.0F / 16) > 0.0001F) throw new IllegalStateException("Incorrect carpet model height: " + color);
                 }
+            }
+        }
+        var image = blockModel.getParticleIcon().contents().getOriginalImage();
+        for (int y = 0; y < image.getHeight(); y++) {
+            if (image.getPixelRGBA(0, y) != image.getPixelRGBA(image.getWidth() - 1, y)) {
+                throw new IllegalStateException("Carpet skin does not tile horizontally: " + color);
+            }
+        }
+        for (int x = 0; x < image.getWidth(); x++) {
+            if (image.getPixelRGBA(x, 0) != image.getPixelRGBA(x, image.getHeight() - 1)) {
+                throw new IllegalStateException("Carpet skin does not tile vertically: " + color);
             }
         }
         if (stack.getHoverName().getString().startsWith("block.")) {

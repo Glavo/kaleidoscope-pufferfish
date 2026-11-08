@@ -236,7 +236,6 @@ val generateCarpetResources = tasks.register<Sync>("generateCarpetResources") {
             "modId" to modId,
             "blockName" to carpetName,
             "blockId" to "$modId:$carpetName",
-            "textureName" to "${prefix}pufferfish_block",
             "ingredient" to JsonOutput.toJson(if (color.isEmpty()) mapOf("type" to "$modId:pufferfish")
                 else mapOf("type" to "$modId:pufferfish", "color" to color))
         )
