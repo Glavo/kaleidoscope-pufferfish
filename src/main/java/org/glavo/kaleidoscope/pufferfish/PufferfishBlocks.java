@@ -11,7 +11,6 @@ import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.CarpetBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -33,10 +32,10 @@ public final class PufferfishBlocks {
             BlockBehaviour.Properties.ofFullCopy(Blocks.NETHERITE_BLOCK));
     private static final DeferredBlock<Block> PLAIN = registerBlock(null);
     private static final Map<DyeColor, DeferredBlock<Block>> COLORED = new EnumMap<>(DyeColor.class);
-    /// The carpet made from undyed pufferfish.
-    private static final DeferredBlock<CarpetBlock> PLAIN_CARPET = registerCarpet(null);
-    /// Carpets indexed by the dye color of their ingredient fish.
-    private static final Map<DyeColor, DeferredBlock<CarpetBlock>> COLORED_CARPETS = new EnumMap<>(DyeColor.class);
+    /// The placeable skin obtained from undyed pufferfish.
+    private static final DeferredBlock<PufferfishSkinBlock> PLAIN_CARPET = registerCarpet(null);
+    /// Placeable skins indexed by the dye color of their ingredient fish.
+    private static final Map<DyeColor, DeferredBlock<PufferfishSkinBlock>> COLORED_CARPETS = new EnumMap<>(DyeColor.class);
 
     static {
         ITEMS.registerSimpleBlockItem(CONDUIT);
@@ -65,19 +64,19 @@ public final class PufferfishBlocks {
         return block;
     }
 
-    /// Returns the registry path for the given carpet color, or the undyed carpet if null.
+    /// Returns the legacy registry path for the given skin color, or the undyed skin if null.
     public static String carpetName(@Nullable DyeColor color) {
         return color == null ? "pufferfish_carpet" : color.getName() + "_pufferfish_carpet";
     }
 
-    /// Returns the registered carpet for the given color, or the undyed carpet if null.
-    public static CarpetBlock carpet(@Nullable DyeColor color) {
+    /// Returns the registered skin for the given color, or the undyed skin if null.
+    public static PufferfishSkinBlock carpet(@Nullable DyeColor color) {
         return (color == null ? PLAIN_CARPET : COLORED_CARPETS.get(color)).get();
     }
 
-    /// Registers a carpet and its item with vanilla carpet shape and support requirements.
-    private static DeferredBlock<CarpetBlock> registerCarpet(@Nullable DyeColor color) {
-        var block = BLOCKS.registerBlock(carpetName(color), CarpetBlock::new,
+    /// Registers a skin and its item, retaining the legacy carpet registry path.
+    private static DeferredBlock<PufferfishSkinBlock> registerCarpet(@Nullable DyeColor color) {
+        var block = BLOCKS.registerBlock(carpetName(color), PufferfishSkinBlock::new,
                 BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CARPET)
                         .mapColor(color == null ? MapColor.COLOR_YELLOW : color.getMapColor())
                         .sound(SoundType.WET_GRASS));

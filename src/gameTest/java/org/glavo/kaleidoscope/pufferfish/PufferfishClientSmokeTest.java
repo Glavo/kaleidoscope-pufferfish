@@ -197,6 +197,7 @@ public final class PufferfishClientSmokeTest {
                 }
             }
         }
+        verifySkinOrientations(minecraft, block);
         var image = blockModel.getParticleIcon().contents().getOriginalImage();
         for (int y = 0; y < image.getHeight(); y++) {
             if (image.getPixelRGBA(0, y) != image.getPixelRGBA(image.getWidth() - 1, y)) {
@@ -210,6 +211,40 @@ public final class PufferfishClientSmokeTest {
         }
         if (stack.getHoverName().getString().startsWith("block.")) {
             throw new IllegalStateException("Missing carpet translation: " + color);
+        }
+    }
+
+    /// Checks every attached model's outward face, thickness, texture, and horizontal rotation.
+    private static void verifySkinOrientations(Minecraft minecraft, PufferfishSkinBlock block) {
+        var reference = minecraft.getBlockRenderer().getBlockModel(block.defaultBlockState())
+                .getQuads(block.defaultBlockState(), null, RandomSource.create()).getFirst().getVertices();
+        for (var state : block.getStateDefinition().getPossibleStates()) {
+            var model = minecraft.getBlockRenderer().getBlockModel(state);
+            var normal = switch (state.getValue(PufferfishSkinBlock.FACE)) {
+                case FLOOR -> Direction.UP;
+                case CEILING -> Direction.DOWN;
+                case WALL -> state.getValue(PufferfishSkinBlock.FACING);
+            };
+            var quads = model.getQuads(state, null, RandomSource.create());
+            if (model == minecraft.getModelManager().getMissingModel() || quads.isEmpty()) {
+                throw new IllegalStateException("Missing attached skin model: " + state);
+            }
+            float coordinate = normal.getAxisDirection() == Direction.AxisDirection.POSITIVE ? 1.0F / 16 : 15.0F / 16;
+            int axis = switch (normal.getAxis()) { case X -> 0; case Y -> 1; case Z -> 2; };
+            for (var quad : quads) {
+                if (quad.getDirection() != normal) throw new IllegalStateException("Incorrect skin face normal: " + state);
+                var vertices = quad.getVertices();
+                int stride = vertices.length / 4;
+                for (int vertex = 0; vertex < 4; vertex++) {
+                    if (Math.abs(Float.intBitsToFloat(vertices[vertex * stride + axis]) - coordinate) > 0.0001F) {
+                        throw new IllegalStateException("Skin model does not match its attachment shape: " + state);
+                    }
+                }
+            }
+            if (normal == Direction.UP && state.getValue(PufferfishSkinBlock.FACING) != Direction.NORTH
+                    && java.util.Arrays.equals(reference, quads.getFirst().getVertices())) {
+                throw new IllegalStateException("Skin texture orientation is locked: " + state);
+            }
         }
     }
 

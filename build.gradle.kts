@@ -242,7 +242,7 @@ val generateCarpetResources = tasks.register<Sync>("generateCarpetResources") {
         )
         inputs.property(carpetName, properties)
         for ((template, target) in mapOf(
-            "blockTemplates/blockstate" to "assets/$modId/blockstates/$carpetName.json",
+            "carpetTemplates/blockstate" to "assets/$modId/blockstates/$carpetName.json",
             "blockTemplates/item_model" to "assets/$modId/models/item/$carpetName.json",
             "blockTemplates/loot" to "data/$modId/loot_table/blocks/$carpetName.json",
             "carpetTemplates/block_model" to "assets/$modId/models/block/$carpetName.json",
