@@ -221,6 +221,49 @@ public final class PufferfishExtraEnchantmentGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void thornsAddsRetaliationToWornAndHeldFish(GameTestHelper helper) {
+        var attacker = helper.spawn(EntityType.ZOMBIE, new BlockPos(2, 2, 3));
+        attacker.setNoAi(true);
+        attacker.getAttribute(Attributes.ARMOR).setBaseValue(0);
+        try {
+            for (var item : List.of(Items.PUFFERFISH, PufferfishItems.NETHERITE.get(), PufferfishItems.HEAVY.get())) {
+                for (var slot : List.of(EquipmentSlot.HEAD, EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND)) {
+                    int baseline = 0;
+                    for (int rank : new int[] {0, 3}) {
+                        var wearer = helper.makeMockPlayer(GameType.SURVIVAL);
+                        var stack = new ItemStack(item);
+                        if (rank > 0) enchant(helper, stack, Enchantments.THORNS, rank);
+                        wearer.setItemSlot(slot, stack);
+                        helper.getLevel().getRandom().setSeed(81357);
+                        int reflected = 0;
+                        for (int hit = 0; hit < 128; hit++) {
+                            wearer.setHealth(wearer.getMaxHealth());
+                            wearer.invulnerableTime = 0;
+                            attacker.setHealth(attacker.getMaxHealth());
+                            attacker.invulnerableTime = 0;
+                            attacker.removeAllEffects();
+                            helper.assertTrue(attacker.doHurtTarget(wearer), "Attack did not hit fish wearer");
+                            if (attacker.getHealth() < attacker.getMaxHealth()) reflected++;
+                        }
+                        if (rank == 0) {
+                            baseline = reflected;
+                            helper.assertTrue(slot == EquipmentSlot.HEAD ? baseline > 0 : baseline == 0,
+                                    "Unenchanted fish changed its innate retaliation");
+                        } else {
+                            helper.assertTrue(reflected > baseline && reflected < 128,
+                                    "Thorns did not add chance-based retaliation: " + item + ", slot=" + slot);
+                            helper.assertTrue(stack.getCount() == 1 && !stack.isDamaged(), "Thorns damaged or consumed the fish");
+                        }
+                    }
+                }
+            }
+        } finally {
+            attacker.discard();
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void newDamageBooksRespectExclusivity(GameTestHelper helper) {
         var keys = List.of(Enchantments.DENSITY, Enchantments.BREACH, Enchantments.SMITE, Enchantments.BANE_OF_ARTHROPODS);
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
