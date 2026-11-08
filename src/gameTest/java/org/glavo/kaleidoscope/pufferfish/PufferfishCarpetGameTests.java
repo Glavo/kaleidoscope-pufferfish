@@ -49,22 +49,17 @@ public final class PufferfishCarpetGameTests {
         return color == null ? stack : PufferfishColors.dye(stack, color);
     }
 
-    /// Verifies three same-colored fish in any crafting-table row produce exactly one matching carpet.
+    /// Verifies that the former three-fish crafting recipes no longer match any color or row.
     @GameTest(template = "empty")
-    public static void threeFishCraftOneMatchingCarpet(GameTestHelper helper) {
+    public static void threeFishNoLongerCraftSkin(GameTestHelper helper) {
         var manager = helper.getLevel().getRecipeManager();
         for (var color : colors()) {
             for (int row = 0; row < 3; row++) {
                 var items = new ArrayList<>(Collections.nCopies(9, ItemStack.EMPTY));
                 for (int column = 0; column < 3; column++) items.set(row * 3 + column, fish(color));
                 var input = CraftingInput.of(3, 3, items);
-                var holder = manager.getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel()).orElseThrow();
-                var output = holder.value().assemble(input, helper.getLevel().registryAccess());
-                helper.assertTrue(holder.id().equals(KaleidoscopePufferfish.id(PufferfishBlocks.carpetName(color)))
-                        && output.is(PufferfishBlocks.carpet(color).asItem()) && output.getCount() == 1, "Incorrect carpet crafting output");
-                helper.assertTrue(holder.value().getRemainingItems(input).stream().allMatch(ItemStack::isEmpty)
-                        && input.items().stream().allMatch(stack -> stack.getCount() == 1), "Carpet crafting duplicated or mutated ingredients");
-                helper.assertTrue(!holder.value().canCraftInDimensions(2, 2), "Carpet recipe fitted a two-column crafting grid");
+                helper.assertTrue(manager.getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel()).isEmpty(),
+                        "Removed skin crafting recipe still matches");
             }
         }
         helper.succeed();

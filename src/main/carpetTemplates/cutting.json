@@ -1,0 +1,10 @@
+{
+  "neoforge:conditions": [{"type": "neoforge:mod_loaded", "modid": "farmersdelight"}],
+  "type": "farmersdelight:cutting",
+  "ingredients": [${ingredient}],
+  "tool": [{"type": "farmersdelight:item_ability", "action": "knife_dig"}, {"tag": "c:tools/knife"}, {"tag": "kaleidoscope_cookery:kitchen_knife"}],
+  "result": [
+    {"item": {"id": "${modId}:pufferfish_meat", "count": 1}},
+    {"item": {"id": "${blockId}", "count": 1}}
+  ]
+}

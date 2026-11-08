@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "LegacyPufferfishDataMixin",
+    "ChoppingBoardMixin",
     "AbstractFishMixin",
     "EntityTypeMixin",
     "PufferfishEquipmentMixin"

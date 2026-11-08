@@ -30,6 +30,7 @@ public final class PufferfishSpriteSource implements SpriteSource {
                 }
             });
         }
+        addMeat(manager, output);
         addBlock(manager, output, null);
         addCarpet(manager, output, null);
         for (DyeColor color : DyeColor.values()) {
@@ -39,6 +40,17 @@ public final class PufferfishSpriteSource implements SpriteSource {
         addItem(manager, output, "netherite_pufferfish", PufferfishTextures.NETHERITE_COLOR);
         addItem(manager, output, "golden_pufferfish", PufferfishTextures.GOLDEN_COLOR);
         addBlock(manager, output, "netherite_pufferfish_block", PufferfishTextures.NETHERITE_COLOR);
+    }
+
+    /// Adds a resource-pack meat sprite or the built-in fillet sprite.
+    private static void addMeat(ResourceManager manager, Output output) {
+        var id = KaleidoscopePufferfish.id("item/pufferfish_meat");
+        var replacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(id));
+        if (replacement.isPresent()) {
+            output.add(id, replacement.get());
+        } else {
+            output.add(id, loader -> PufferfishMeatTexture.create(id));
+        }
     }
 
     /// Adds an item sprite from a resource-pack replacement or a recolored vanilla pufferfish.

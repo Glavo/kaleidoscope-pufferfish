@@ -93,6 +93,7 @@ public final class PufferfishClientSmokeTest {
                 || goldenStack.getHoverName().getString().startsWith("item.")) {
             throw new IllegalStateException("Missing golden pufferfish item model, texture, or translation");
         }
+        verifyCuttingModels(minecraft);
         verifyModelDelegation(minecraft);
         PufferfishHeadgearClientTest.verify(minecraft);
         PufferfishGloveClientTest.verify(minecraft);
@@ -109,8 +110,33 @@ public final class PufferfishClientSmokeTest {
             projectileRendererChecked = false;
             minecraft.reloadResourcePacks();
         } else {
-            LogUtils.getLogger().info("Pufferfish client smoke test passed: 34 item models, 18 blocks, 17 carpets, headgear, gloves, flails and conduit rendering, projectile renderers, model override delegation, and resource reload");
+            LogUtils.getLogger().info("Pufferfish client smoke test passed: 35 item models, 18 blocks, 17 skins, cutting models, headgear, gloves, flails and conduit rendering, projectile renderers, model override delegation, and resource reload");
             minecraft.stop();
+        }
+    }
+
+    /// Verifies the meat sprite and every Cookery cutting-stage model before and after resource reload.
+    private static void verifyCuttingModels(Minecraft minecraft) {
+        var stack = new ItemStack(PufferfishItems.MEAT.get());
+        var model = minecraft.getItemRenderer().getModel(stack, null, null, 0);
+        if (model == minecraft.getModelManager().getMissingModel()
+                || model.getQuads(null, null, RandomSource.create()).isEmpty()
+                || !model.getParticleIcon().contents().name().equals(KaleidoscopePufferfish.id("item/pufferfish_meat"))
+                || stack.getHoverName().getString().startsWith("item.")) {
+            throw new IllegalStateException("Missing pufferfish meat model, sprite, or translation");
+        }
+        if (net.neoforged.fml.ModList.get().isLoaded("kaleidoscope_cookery")) {
+            for (int color = -1; color < 16; color++) {
+                var name = PufferfishBlocks.carpetName(color < 0 ? null : DyeColor.byId(color));
+                for (int stage = 0; stage <= 3; stage++) {
+                    var id = KaleidoscopePufferfish.id("chopping_board/" + name + "/" + stage);
+                    var cuttingModel = minecraft.getModelManager().getModel(ModelResourceLocation.standalone(id));
+                    if (cuttingModel == minecraft.getModelManager().getMissingModel()
+                            || cuttingModel.getQuads(null, null, RandomSource.create()).isEmpty()) {
+                        throw new IllegalStateException("Missing chopping board model: " + id);
+                    }
+                }
+            }
         }
     }
 

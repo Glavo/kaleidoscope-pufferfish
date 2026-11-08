@@ -38,8 +38,8 @@ public final class CreateGameTestRegistration {
             var name = PufferfishBlocks.carpetName(color < 0 ? null : net.minecraft.world.item.DyeColor.byId(color));
             helper.assertTrue(helper.getLevel().getRecipeManager().byKey(KaleidoscopePufferfish.id("pressing/" + name)).isPresent() == create,
                     "Carpet pressing recipe condition failed");
-            helper.assertTrue(helper.getLevel().getRecipeManager().byKey(KaleidoscopePufferfish.id(name)).isPresent(),
-                    "Carpet crafting recipe depends on Create");
+            helper.assertTrue(helper.getLevel().getRecipeManager().byKey(KaleidoscopePufferfish.id(name)).isEmpty(),
+                    "Removed skin crafting recipe is still loaded");
         }
         helper.succeed();
     }

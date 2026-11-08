@@ -156,7 +156,7 @@ val generateModMetadata by tasks.registering(ProcessResources::class) {
 val generateItemModels = tasks.register<Sync>("generateItemModels") {
     val modelNames = dyeColors.flatMap { color ->
         listOf("${color}_pufferfish", "${color}_pufferfish_bucket")
-    } + listOf("netherite_pufferfish", "golden_pufferfish")
+    } + listOf("netherite_pufferfish", "golden_pufferfish", "pufferfish_meat")
     inputs.property("modId", modId)
     inputs.property("modelNames", modelNames)
     filteringCharset = "UTF-8"
@@ -235,6 +235,7 @@ val generateCarpetResources = tasks.register<Sync>("generateCarpetResources") {
         val properties = mapOf(
             "modId" to modId,
             "blockName" to carpetName,
+            "fishTexture" to (if (color.isEmpty()) "minecraft:item/pufferfish" else "$modId:item/${color}_pufferfish"),
             "blockId" to "$modId:$carpetName",
             "ingredient" to JsonOutput.toJson(if (color.isEmpty()) mapOf("type" to "$modId:pufferfish")
                 else mapOf("type" to "$modId:pufferfish", "color" to color))
@@ -245,7 +246,8 @@ val generateCarpetResources = tasks.register<Sync>("generateCarpetResources") {
             "blockTemplates/item_model" to "assets/$modId/models/item/$carpetName.json",
             "blockTemplates/loot" to "data/$modId/loot_table/blocks/$carpetName.json",
             "carpetTemplates/block_model" to "assets/$modId/models/block/$carpetName.json",
-            "carpetTemplates/crafting" to "data/$modId/recipe/$carpetName.json",
+            "carpetTemplates/cutting" to "data/$modId/recipe/cutting/$carpetName.json",
+            "carpetTemplates/chopping" to "data/$modId/recipe/chopping/$carpetName.json",
             "carpetTemplates/pressing" to "data/$modId/recipe/pressing/$carpetName.json"
         )) {
             from("src/main/$template.json") {
@@ -254,10 +256,12 @@ val generateCarpetResources = tasks.register<Sync>("generateCarpetResources") {
                 rename { target.substringAfterLast('/') }
             }
         }
-        from("src/main/blockTemplates/advancement.json") {
-            expand("recipe" to "$modId:$carpetName", "ingredient" to "minecraft:pufferfish")
-            into("data/$modId/advancement/recipes/decorations")
-            rename { "$carpetName.json" }
+        for (stage in 0..3) {
+            from("src/main/carpetTemplates/chopping_stage_$stage.json") {
+                expand(properties)
+                into("assets/$modId/models/chopping_board/$carpetName")
+                rename { "$stage.json" }
+            }
         }
     }
 }

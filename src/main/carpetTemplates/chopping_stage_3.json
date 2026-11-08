@@ -1,0 +1,55 @@
+{
+  "textures": {
+    "fish": "${fishTexture}",
+    "skin": "${modId}:block/${blockName}",
+    "meat": "${modId}:item/pufferfish_meat"
+  },
+  "elements": [
+    {
+      "from": [
+        2,
+        0.1,
+        3
+      ],
+      "to": [
+        8,
+        0.1,
+        13
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#skin"
+        }
+      }
+    },
+    {
+      "from": [
+        9,
+        0.1,
+        3
+      ],
+      "to": [
+        15,
+        0.1,
+        13
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#meat"
+        }
+      }
+    }
+  ]
+}
