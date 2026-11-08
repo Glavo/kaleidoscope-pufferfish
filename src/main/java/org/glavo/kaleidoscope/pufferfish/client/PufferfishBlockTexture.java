@@ -20,13 +20,11 @@ public final class PufferfishBlockTexture {
             if (color != null) {
                 PufferfishTextures.recolor(source, color);
             }
-            var image = new NativeImage(source.getWidth() * 3, source.getHeight() * 3, false);
+            var image = new NativeImage(source.getWidth(), source.getHeight(), false);
             int background = color == null ? 0xC6A252 : color.getTextureDiffuseColor();
             for (int y = 0; y < image.getHeight(); y++) {
                 for (int x = 0; x < image.getWidth(); x++) {
-                    int sourceX = x / (size.width() * 3) * size.width() + x % size.width();
-                    int sourceY = y / (size.height() * 3) * size.height() + y % size.height();
-                    int pixel = source.getPixelRGBA(sourceX, sourceY);
+                    int pixel = source.getPixelRGBA(x, y);
                     int alpha = pixel >>> 24;
                     int shade = x % size.width() == 0 || y % size.height() == 0 ? 110 : 160;
                     int red = blend(pixel & 255, (background >>> 16 & 255) * shade / 255, alpha);
@@ -35,7 +33,7 @@ public final class PufferfishBlockTexture {
                     image.setPixelRGBA(x, y, 0xFF000000 | blue << 16 | green << 8 | red);
                 }
             }
-            return new SpriteContents(id, new FrameSize(size.width() * 3, size.height() * 3), image, metadata);
+            return new SpriteContents(id, size, image, metadata);
         }
     }
 

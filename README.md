@@ -36,7 +36,7 @@ are recolored while neutral pixels and water retain their colors. Resource packs
 that replace the yellow body with another hue may need custom models or textures.
 Explicit item model overrides from resource packs or other mods take precedence
 over the generated colored models.
-Block faces arrange nine fish from the same source texture on an opaque colored
+Each block face displays one large fish from the same source texture on an opaque colored
 background. Resource packs can replace individual block textures at
 `assets/kaleidoscope_pufferfish/textures/block/<color>_pufferfish_block.png`
 (or `pufferfish_block.png` for the undyed variant).
