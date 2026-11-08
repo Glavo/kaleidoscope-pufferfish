@@ -28,12 +28,14 @@ public final class PufferfishEnchantments {
     public static void applyBook(AnvilUpdateEvent event) {
         var fish = event.getLeft();
         var book = event.getRight();
-        if (!event.getOutput().isEmpty() || !PufferfishItems.isPufferfish(fish) || !book.is(Items.ENCHANTED_BOOK)) {
+        if (!event.getOutput().isEmpty() || !PufferfishItems.isWeapon(fish) || !book.is(Items.ENCHANTED_BOOK)) {
             return;
         }
         var stored = book.getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY);
         // Sort registry IDs so conflicting mixed books have a stable result.
         List<Holder<Enchantment>> supported = stored.keySet().stream().filter(PufferfishEnchantments::supports)
+                .filter(enchantment -> !PufferfishItems.isFlail(fish)
+                        || !enchantment.is(Enchantments.AQUA_AFFINITY) && !enchantment.is(Enchantments.LOYALTY))
                 .sorted(Comparator.comparing(holder -> holder.getRegisteredName())).toList();
         if (supported.isEmpty()) {
             return;

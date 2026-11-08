@@ -29,5 +29,8 @@
   "gui.kaleidoscope_pufferfish.engine.empty": "Insert a pufferfish",
   "gui.kaleidoscope_pufferfish.engine.dry": "Needs a bucket of water",
   "gui.kaleidoscope_pufferfish.engine.stopped": "Stopped by redstone",
-  "gui.kaleidoscope_pufferfish.engine.running": "Running"
+  "gui.kaleidoscope_pufferfish.engine.running": "Running",
+  "item.kaleidoscope_pufferfish.pufferfish_flail": "Pufferfish Flail",
+  "item.kaleidoscope_pufferfish.netherite_pufferfish_flail": "Netherite Pufferfish Flail",
+  "entity.kaleidoscope_pufferfish.pufferfish_flail_head": "Pufferfish Flail Head"
 }

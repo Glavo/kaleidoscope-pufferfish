@@ -29,5 +29,8 @@
   "gui.kaleidoscope_pufferfish.engine.empty": "请放入一只河豚",
   "gui.kaleidoscope_pufferfish.engine.dry": "需要一桶水",
   "gui.kaleidoscope_pufferfish.engine.stopped": "红石信号已停机",
-  "gui.kaleidoscope_pufferfish.engine.running": "运行中"
+  "gui.kaleidoscope_pufferfish.engine.running": "运行中",
+  "item.kaleidoscope_pufferfish.pufferfish_flail": "河豚流星锤",
+  "item.kaleidoscope_pufferfish.netherite_pufferfish_flail": "下界合金河豚流星锤",
+  "entity.kaleidoscope_pufferfish.pufferfish_flail_head": "河豚流星锤锤头"
 }

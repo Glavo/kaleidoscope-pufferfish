@@ -32,11 +32,13 @@ public final class PufferfishCombat {
 
     public static float damage(ItemStack stack) {
         int density = enchantmentLevel(stack, Enchantments.DENSITY);
-        return (PufferfishItems.isNetherite(stack) ? 10 : 2) + (density > 0 ? 0.5F + 0.5F * density : 0);
+        float base = PufferfishItems.isFlail(stack) ? (PufferfishItems.hasNetheriteCombat(stack) ? 12 : 6)
+                : (PufferfishItems.isNetherite(stack) ? 10 : 2);
+        return base + (density > 0 ? 0.5F + 0.5F * density : 0);
     }
 
     public static void attributes(ItemAttributeModifierEvent event) {
-        if (!PufferfishItems.isPufferfish(event.getItemStack())) return;
+        if (!PufferfishItems.isWeapon(event.getItemStack())) return;
         event.addModifier(Attributes.ATTACK_DAMAGE, new AttributeModifier(Item.BASE_ATTACK_DAMAGE_ID,
                 damage(event.getItemStack()) - 1, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
         event.addModifier(Attributes.ATTACK_SPEED, new AttributeModifier(Item.BASE_ATTACK_SPEED_ID,
@@ -48,13 +50,13 @@ public final class PufferfishCombat {
                 || !(event.getSource().getDirectEntity() instanceof Player player)
                 || event.getNewDamage() + event.getReduction(DamageContainer.Reduction.ABSORPTION) <= 0) return;
         var stack = player.getMainHandItem();
-        if (PufferfishItems.isPufferfish(stack)) {
+        if (PufferfishItems.isWeapon(stack)) {
             hitEffects(stack, event.getEntity(), player, event.getEntity().position().subtract(player.position()));
         }
     }
 
     public static void hitEffects(ItemStack stack, LivingEntity target, Entity source, Vec3 direction) {
-        target.addEffect(new MobEffectInstance(MobEffects.POISON, 120, PufferfishItems.isNetherite(stack) ? 1 : 0), source);
+        target.addEffect(new MobEffectInstance(MobEffects.POISON, 120, PufferfishItems.hasNetheriteCombat(stack) ? 1 : 0), source);
         int punch = enchantmentLevel(stack, Enchantments.PUNCH);
         if (punch > 0) {
             double resistance = Math.max(0, 1 - target.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE));

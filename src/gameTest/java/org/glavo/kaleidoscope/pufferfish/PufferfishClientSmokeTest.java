@@ -25,6 +25,7 @@ import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.model.BakedModelWrapper;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishItemModel;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishTextures;
+import org.glavo.kaleidoscope.pufferfish.client.PufferfishFlailHeadRenderer;
 
 @EventBusSubscriber(modid = KaleidoscopePufferfish.MODID, value = Dist.CLIENT)
 public final class PufferfishClientSmokeTest {
@@ -36,6 +37,9 @@ public final class PufferfishClientSmokeTest {
         if (Boolean.getBoolean("kaleidoscope_pufferfish.clientSmokeTest")) {
             if (!(event.getRenderer(KaleidoscopePufferfish.THROWN_PUFFERFISH.get()) instanceof ThrownItemRenderer<?>)) {
                 throw new IllegalStateException("Missing pufferfish projectile renderer");
+            }
+            if (!(event.getRenderer(KaleidoscopePufferfish.FLAIL_HEAD.get()) instanceof PufferfishFlailHeadRenderer)) {
+                throw new IllegalStateException("Missing flail head renderer");
             }
             projectileRendererChecked = true;
         }
@@ -82,6 +86,7 @@ public final class PufferfishClientSmokeTest {
         PufferfishHeadgearClientTest.verify(minecraft);
         PufferfishGloveClientTest.verify(minecraft);
         PufferfishConduitClientTest.verify(minecraft);
+        PufferfishFlailClientTest.verify(minecraft);
         if (net.neoforged.fml.ModList.get().isLoaded("create")) {
             org.glavo.kaleidoscope.pufferfish.compat.create.PufferfishEngineClientTest.verify(minecraft);
         }
@@ -93,7 +98,7 @@ public final class PufferfishClientSmokeTest {
             projectileRendererChecked = false;
             minecraft.reloadResourcePacks();
         } else {
-            LogUtils.getLogger().info("Pufferfish client smoke test passed: 33 item models, 18 blocks, headgear, gloves and conduit rendering, projectile renderer, model override delegation, and resource reload");
+            LogUtils.getLogger().info("Pufferfish client smoke test passed: 33 item models, 18 blocks, headgear, gloves, flails and conduit rendering, projectile renderers, model override delegation, and resource reload");
             minecraft.stop();
         }
     }

@@ -27,9 +27,20 @@ import org.glavo.kaleidoscope.pufferfish.client.PufferfishGloveRenderer;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishSpriteSource;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishTextures;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishConduitRenderer;
+import org.glavo.kaleidoscope.pufferfish.client.PufferfishFlailHeadRenderer;
+import org.glavo.kaleidoscope.pufferfish.client.PufferfishFlailItemRenderer;
 
 @Mod(value = KaleidoscopePufferfish.MODID, dist = Dist.CLIENT)
 public class KaleidoscopePufferfishClient {
+    /// The item renderer shared by both flail variants and refreshed with client resources.
+    private PufferfishFlailItemRenderer flailRenderer;
+
+    /// Creates the flail renderer on demand after the client dispatchers are initialized.
+    private PufferfishFlailItemRenderer flailRenderer() {
+        if (flailRenderer == null) flailRenderer = new PufferfishFlailItemRenderer();
+        return flailRenderer;
+    }
+
     public KaleidoscopePufferfishClient(IEventBus bus) {
         if (ModList.get().isLoaded("create")) {
             CreateClientIntegration.register(bus);
@@ -47,11 +58,13 @@ public class KaleidoscopePufferfishClient {
 
     private void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(KaleidoscopePufferfish.THROWN_PUFFERFISH.get(), ThrownItemRenderer::new);
+        event.registerEntityRenderer(KaleidoscopePufferfish.FLAIL_HEAD.get(), PufferfishFlailHeadRenderer::new);
         event.registerBlockEntityRenderer(PufferfishBlocks.CONDUIT_ENTITY.get(), PufferfishConduitRenderer::new);
     }
 
     private void registerItemExtensions(RegisterClientExtensionsEvent event) {
         event.registerItem(PufferfishConduitRenderer.itemExtensions(), PufferfishBlocks.CONDUIT.get().asItem());
+        event.registerItem(flailRenderer(), PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get());
     }
 
     private void registerSprites(RegisterSpriteSourceTypesEvent event) {
@@ -67,6 +80,7 @@ public class KaleidoscopePufferfishClient {
 
     private void registerReloadListeners(RegisterClientReloadListenersEvent event) {
         event.registerReloadListener(new PufferfishTextures());
+        event.registerReloadListener(flailRenderer());
         event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener) manager -> PufferfishGloveRenderer.reset());
     }
 

@@ -28,6 +28,7 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import org.glavo.kaleidoscope.pufferfish.entity.ThrownPufferfish;
+import org.glavo.kaleidoscope.pufferfish.entity.PufferfishFlailHead;
 
 @Mod(KaleidoscopePufferfish.MODID)
 public class KaleidoscopePufferfish {
@@ -46,6 +47,14 @@ public class KaleidoscopePufferfish {
     public static final DeferredHolder<EntityType<?>, EntityType<ThrownPufferfish>> THROWN_PUFFERFISH = ENTITIES.register("thrown_pufferfish",
             () -> EntityType.Builder.<ThrownPufferfish>of(ThrownPufferfish::new, MobCategory.MISC)
                     .sized(0.25F, 0.25F).clientTrackingRange(4).updateInterval(10).build(id("thrown_pufferfish").toString()));
+    /// The transient tethered head; the weapon remains in the player's inventory.
+    public static final DeferredHolder<EntityType<?>, EntityType<PufferfishFlailHead>> FLAIL_HEAD = ENTITIES.register("pufferfish_flail_head",
+            () -> EntityType.Builder.<PufferfishFlailHead>of(PufferfishFlailHead::new, MobCategory.MISC)
+                    .sized(0.4F, 0.4F).clientTrackingRange(8).updateInterval(1).noSave()
+                    .build(id("pufferfish_flail_head").toString()));
+    /// The shaped flail recipe serializer, which retains the ingredient fish's component changes.
+    public static final DeferredHolder<RecipeSerializer<?>, PufferfishFlailRecipe.Serializer> FLAIL_RECIPE =
+            RECIPES.register("pufferfish_flail", PufferfishFlailRecipe.Serializer::new);
     public static final DeferredHolder<RecipeSerializer<?>, SimpleCraftingRecipeSerializer<PufferfishDyeRecipe>> DYE_RECIPE =
             RECIPES.register("dye_pufferfish", () -> new SimpleCraftingRecipeSerializer<>(PufferfishDyeRecipe::new));
     public static final DeferredHolder<IngredientType<?>, IngredientType<PufferfishIngredient>> PUFFERFISH_INGREDIENT =
@@ -63,6 +72,8 @@ public class KaleidoscopePufferfish {
                         output.accept(CreateIntegration.ENGINE_ITEM.get());
                     }
                     output.accept(PufferfishItems.NETHERITE);
+                    output.accept(PufferfishItems.FLAIL);
+                    output.accept(PufferfishItems.NETHERITE_FLAIL);
                     output.accept(PufferfishBlocks.NETHERITE);
                     output.accept(PufferfishBlocks.get(null));
                     for (DyeColor color : DyeColor.values()) {
