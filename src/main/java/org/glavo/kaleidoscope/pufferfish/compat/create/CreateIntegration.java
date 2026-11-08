@@ -37,6 +37,8 @@ public final class CreateIntegration {
     public static final ModConfigSpec.IntValue SPEED;
     public static final ModConfigSpec.IntValue NORMAL_CAPACITY;
     public static final ModConfigSpec.IntValue NETHERITE_CAPACITY;
+    /// Total engine stress capacity in SU when powered by a heavy pufferfish.
+    public static final ModConfigSpec.IntValue HEAVY_CAPACITY;
 
     static {
         var builder = new ModConfigSpec.Builder();
@@ -46,6 +48,8 @@ public final class CreateIntegration {
                 .defineInRange("normalCapacity", 256, 1, 1048576);
         NETHERITE_CAPACITY = builder.comment("Total stress capacity in SU with a netherite pufferfish.")
                 .defineInRange("netheriteCapacity", 1024, 1, 1048576);
+        HEAVY_CAPACITY = builder.comment("Total stress capacity in SU with a heavy pufferfish.")
+                .defineInRange("heavyCapacity", 4096, 1, 1048576);
         builder.pop();
         CONFIG = builder.build();
     }

@@ -104,7 +104,7 @@ public final class PufferfishEngineGameTests {
                 use(engine, player, new ItemStack(Items.WATER_BUCKET));
                 helper.assertTrue(player.getMainHandItem().is(Items.BUCKET), "Water bucket was not returned");
             }
-            int capacity = PufferfishItems.hasNetheriteCombat(variant) ? 1024 : 256;
+            int capacity = PufferfishItems.isHeavy(variant) ? 4096 : PufferfishItems.isNetherite(variant) ? 1024 : 256;
             helper.assertTrue(engine.getGeneratedSpeed() == 16 && engine.calculateAddedStressCapacity() * 16 == capacity,
                     "Wrong engine speed or total capacity");
             var extra = new ItemStack(Items.PUFFERFISH, 2);
@@ -178,7 +178,15 @@ public final class PufferfishEngineGameTests {
                             turnAround(engine, player);
                             helper.runAfterDelay(10, () -> {
                                 helper.assertTrue(drill.getSpeed() == 16 && PufferfishItems.isNetherite(engine.getFish()), "Rotating the engine lost its fish or connections");
-                                helper.succeed();
+                                take(engine, player);
+                                use(engine, player, new ItemStack(PufferfishItems.HEAVY.get()));
+                                helper.runAfterDelay(15, () -> {
+                                    helper.assertTrue(shaft.getSpeed() == 16 && drill.getSpeed() == 16
+                                            && PufferfishItems.isHeavy(engine.getFish())
+                                            && engine.getOrCreateNetwork().calculateCapacity() == 4096,
+                                            "Heavy fish failed to provide 4096 SU at 16 RPM");
+                                    helper.succeed();
+                                });
                             });
                         });
                     });
