@@ -190,7 +190,8 @@ public final class PufferfishFlailGameTests {
         helper.assertTrue(returnTicks >= 10, "Distant head returned too quickly to show the retraction");
         helper.assertTrue(head.position().distanceTo(player.getEyePosition().add(0, -0.3, 0)) <= 0.21
                 && head.tickCount < PufferfishFlailItem.COOLDOWN, "Head expired before reaching the owner or outlasted the cooldown");
-        helper.assertTrue(helper.getLevel().getEntitiesOfClass(ItemEntity.class, player.getBoundingBox().inflate(8)).isEmpty(), "Return duplicated the weapon");
+        helper.assertTrue(helper.getLevel().getEntitiesOfClass(ItemEntity.class, player.getBoundingBox().inflate(8),
+                entity -> PufferfishItems.isFlail(entity.getItem())).isEmpty(), "Return duplicated the weapon");
         head = new PufferfishFlailHead(helper.getLevel(), player, InteractionHand.MAIN_HAND);
         helper.getLevel().addFreshEntity(head);
         player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
