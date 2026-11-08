@@ -35,7 +35,7 @@ public abstract class ChoppingBoardMixin {
             CallbackInfoReturnable<Boolean> callback) {
         if (!level.isClientSide && currentCutStack.is(Items.PUFFERFISH) && result.is(PufferfishItems.MEAT.get())) {
             var pos = ((BlockEntity) (Object) this).getBlockPos();
-            var skin = new ItemStack(PufferfishBlocks.carpet(PufferfishColors.get(currentCutStack)));
+            var skin = new ItemStack(PufferfishBlocks.skin(PufferfishColors.get(currentCutStack)));
             var entity = new ItemEntity(level, pos.getX() + 0.5, pos.getY() + 0.25, pos.getZ() + 0.5, skin, 0, 0, 0);
             entity.setDefaultPickUpDelay();
             level.addFreshEntity(entity);

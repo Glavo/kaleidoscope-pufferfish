@@ -69,7 +69,7 @@ public final class PufferfishSkinBlock extends FaceAttachedHorizontalDirectional
         return SHAPES.get(getConnectedDirection(state));
     }
 
-    /// Preserves carpet support on any non-air block below; other surfaces must be sturdy.
+    /// Requires non-air support below floor skins and sturdy support on other surfaces.
     @Override
     protected boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
         return state.getValue(FACE) == AttachFace.FLOOR

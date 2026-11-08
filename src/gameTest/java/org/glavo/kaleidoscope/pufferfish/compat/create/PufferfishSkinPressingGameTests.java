@@ -23,15 +23,15 @@ import org.glavo.kaleidoscope.pufferfish.PufferfishBlocks;
 import org.glavo.kaleidoscope.pufferfish.PufferfishColors;
 import org.glavo.kaleidoscope.pufferfish.PufferfishItems;
 
-/// Verifies the mechanical press processes fish into carpets without losing their colors.
+/// Verifies the mechanical press processes fish into skins without losing their colors.
 @PrefixGameTestTemplate(false)
-public final class PufferfishCarpetPressingGameTests {
+public final class PufferfishSkinPressingGameTests {
     /// Prevents construction of the test holder.
-    private PufferfishCarpetPressingGameTests() {}
+    private PufferfishSkinPressingGameTests() {}
 
     /// Verifies recipe lookup, simulation, and actual world-item processing for all seventeen variants.
     @GameTest(template = "empty", templateNamespace = KaleidoscopePufferfish.MODID)
-    public static void pressingOneFishProducesOneMatchingCarpet(GameTestHelper helper) {
+    public static void pressingOneFishProducesOneMatchingSkin(GameTestHelper helper) {
         var pos = new BlockPos(1, 3, 1);
         helper.setBlock(pos, BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("create", "mechanical_press")));
         var press = (MechanicalPressBlockEntity) helper.getBlockEntity(pos);
@@ -43,16 +43,16 @@ public final class PufferfishCarpetPressingGameTests {
             var fish = new ItemStack(Items.PUFFERFISH);
             if (color != null) PufferfishColors.dye(fish, color);
             var recipe = press.getRecipe(fish).orElseThrow();
-            helper.assertTrue(recipe.id().equals(KaleidoscopePufferfish.id("pressing/" + PufferfishBlocks.carpetName(color))),
-                    "Press selected the wrong carpet color");
+            helper.assertTrue(recipe.id().equals(KaleidoscopePufferfish.id("pressing/" + PufferfishBlocks.skinName(color))),
+                    "Press selected the wrong skin color");
             var entity = new ItemEntity(helper.getLevel(), itemPos.x, itemPos.y, itemPos.z, fish.copy());
             helper.getLevel().addFreshEntity(entity);
             helper.assertTrue(press.tryProcessInWorld(entity, true) && ItemStack.matches(fish, entity.getItem()),
                     "Press simulation consumed or changed its fish");
             helper.assertTrue(press.tryProcessInWorld(entity, false), "Press failed to process its fish");
             var items = helper.getLevel().getEntitiesOfClass(ItemEntity.class, entity.getBoundingBox().inflate(1));
-            helper.assertTrue(items.size() == 1 && items.getFirst().getItem().is(PufferfishBlocks.carpet(color).asItem())
-                    && items.getFirst().getItem().getCount() == 1, "Press produced the wrong carpet or quantity");
+            helper.assertTrue(items.size() == 1 && items.getFirst().getItem().is(PufferfishBlocks.skin(color).asItem())
+                    && items.getFirst().getItem().getCount() == 1, "Press produced the wrong skin or quantity");
             items.forEach(ItemEntity::discard);
         }
         for (var item : List.of(Items.COD, Items.PUFFERFISH_BUCKET, PufferfishItems.NETHERITE.get(), PufferfishItems.GOLDEN.get())) {

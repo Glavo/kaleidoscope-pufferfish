@@ -51,10 +51,10 @@ public final class PufferfishSurfacePoisonGameTests {
         var states = new ArrayList<BlockState>();
         states.add(PufferfishBlocks.get(null).defaultBlockState());
         states.add(PufferfishBlocks.NETHERITE.get().defaultBlockState());
-        states.add(PufferfishBlocks.carpet(null).defaultBlockState());
+        states.add(PufferfishBlocks.skin(null).defaultBlockState());
         for (var color : DyeColor.values()) {
             states.add(PufferfishBlocks.get(color).defaultBlockState());
-            states.add(PufferfishBlocks.carpet(color).defaultBlockState());
+            states.add(PufferfishBlocks.skin(color).defaultBlockState());
         }
         for (var state : states) {
             var entity = stand(helper, state);
@@ -82,7 +82,7 @@ public final class PufferfishSurfacePoisonGameTests {
         for (var face : new AttachFace[] {AttachFace.WALL, AttachFace.CEILING}) {
             level.setBlockAndUpdate(pos.above(), Blocks.STONE.defaultBlockState());
             level.setBlockAndUpdate(pos.south(), Blocks.STONE.defaultBlockState());
-            level.setBlockAndUpdate(pos, PufferfishBlocks.carpet(null).defaultBlockState().setValue(PufferfishSkinBlock.FACE, face));
+            level.setBlockAndUpdate(pos, PufferfishBlocks.skin(null).defaultBlockState().setValue(PufferfishSkinBlock.FACE, face));
             NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
             helper.assertTrue(!entity.hasEffect(MobEffects.POISON), "A wall or ceiling skin applied standing poison");
         }
@@ -119,7 +119,7 @@ public final class PufferfishSurfacePoisonGameTests {
     /// Runs real server ticks to verify stationary poisoning deals damage and expires after leaving.
     @GameTest(template = "empty", timeoutTicks = 250)
     public static void stationaryPoisonDamagesAndExpiresAfterLeaving(GameTestHelper helper) {
-        var entity = stand(helper, PufferfishBlocks.carpet(DyeColor.BLUE).defaultBlockState());
+        var entity = stand(helper, PufferfishBlocks.skin(DyeColor.BLUE).defaultBlockState());
         float health = entity.getHealth();
         helper.runAfterDelay(100, () -> {
             helper.assertTrue(entity.hasEffect(MobEffects.POISON) && entity.getHealth() < health,

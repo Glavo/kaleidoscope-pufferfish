@@ -33,16 +33,16 @@ public final class PufferfishBlocks {
     private static final DeferredBlock<Block> PLAIN = registerBlock(null);
     private static final Map<DyeColor, DeferredBlock<Block>> COLORED = new EnumMap<>(DyeColor.class);
     /// The placeable skin obtained from undyed pufferfish.
-    private static final DeferredBlock<PufferfishSkinBlock> PLAIN_CARPET = registerCarpet(null);
+    private static final DeferredBlock<PufferfishSkinBlock> PLAIN_SKIN = registerSkin(null);
     /// Placeable skins indexed by the dye color of their ingredient fish.
-    private static final Map<DyeColor, DeferredBlock<PufferfishSkinBlock>> COLORED_CARPETS = new EnumMap<>(DyeColor.class);
+    private static final Map<DyeColor, DeferredBlock<PufferfishSkinBlock>> COLORED_SKINS = new EnumMap<>(DyeColor.class);
 
     static {
         ITEMS.registerSimpleBlockItem(CONDUIT);
         ITEMS.registerSimpleBlockItem(NETHERITE, new Item.Properties().fireResistant());
         for (DyeColor color : DyeColor.values()) {
             COLORED.put(color, registerBlock(color));
-            COLORED_CARPETS.put(color, registerCarpet(color));
+            COLORED_SKINS.put(color, registerSkin(color));
         }
     }
 
@@ -64,19 +64,19 @@ public final class PufferfishBlocks {
         return block;
     }
 
-    /// Returns the legacy registry path for the given skin color, or the undyed skin if null.
-    public static String carpetName(@Nullable DyeColor color) {
-        return color == null ? "pufferfish_carpet" : color.getName() + "_pufferfish_carpet";
+    /// Returns the registry path for the given skin color, or the undyed skin if null.
+    public static String skinName(@Nullable DyeColor color) {
+        return color == null ? "pufferfish_skin" : color.getName() + "_pufferfish_skin";
     }
 
     /// Returns the registered skin for the given color, or the undyed skin if null.
-    public static PufferfishSkinBlock carpet(@Nullable DyeColor color) {
-        return (color == null ? PLAIN_CARPET : COLORED_CARPETS.get(color)).get();
+    public static PufferfishSkinBlock skin(@Nullable DyeColor color) {
+        return (color == null ? PLAIN_SKIN : COLORED_SKINS.get(color)).get();
     }
 
-    /// Registers a skin and its item, retaining the legacy carpet registry path.
-    private static DeferredBlock<PufferfishSkinBlock> registerCarpet(@Nullable DyeColor color) {
-        var block = BLOCKS.registerBlock(carpetName(color), PufferfishSkinBlock::new,
+    /// Registers a skin block and its item under the same identifier.
+    private static DeferredBlock<PufferfishSkinBlock> registerSkin(@Nullable DyeColor color) {
+        var block = BLOCKS.registerBlock(skinName(color), PufferfishSkinBlock::new,
                 BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CARPET)
                         .mapColor(color == null ? MapColor.COLOR_YELLOW : color.getMapColor())
                         .sound(SoundType.WET_GRASS));

@@ -17,6 +17,8 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.glavo.kaleidoscope.pufferfish.PufferfishCuttingGameTests;
+import org.glavo.kaleidoscope.pufferfish.KaleidoscopePufferfish;
+import org.glavo.kaleidoscope.pufferfish.PufferfishBlocks;
 import org.glavo.kaleidoscope.pufferfish.PufferfishItems;
 
 /// Exercises Cookery's real board, including saved progress and input cancellation.
@@ -44,6 +46,8 @@ public final class CookeryCuttingGameTests {
             level.removeBlockEntity(pos);
             board = new ChoppingBoardBlockEntity(pos, level.getBlockState(pos));
             board.loadWithComponents(saved, level.registryAccess());
+            helper.assertTrue(KaleidoscopePufferfish.id(PufferfishBlocks.skinName(color)).equals(board.getModelId()),
+                    "Saved cutting progress lost its skin model ID");
             level.setBlockEntity(board);
             for (int cut = 1; cut < 3; cut++) helper.assertTrue(board.onCutItem(level, player, knife), "Knife cut failed");
             helper.assertTrue(level.getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(2)).isEmpty(), "Products dropped before collection");

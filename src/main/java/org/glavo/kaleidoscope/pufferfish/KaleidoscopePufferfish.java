@@ -78,12 +78,12 @@ public class KaleidoscopePufferfish {
                     output.accept(PufferfishItems.NETHERITE_FLAIL);
                     output.accept(PufferfishBlocks.NETHERITE);
                     output.accept(PufferfishBlocks.get(null));
-                    output.accept(PufferfishBlocks.carpet(null));
+                    output.accept(PufferfishBlocks.skin(null));
                     for (DyeColor color : DyeColor.values()) {
                         output.accept(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
                         output.accept(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH_BUCKET), color));
                         output.accept(PufferfishBlocks.get(color));
-                        output.accept(PufferfishBlocks.carpet(color));
+                        output.accept(PufferfishBlocks.skin(color));
                     }
                 }).build());
     }

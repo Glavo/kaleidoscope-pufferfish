@@ -224,31 +224,31 @@ val generateBlockResources = tasks.register<Sync>("generateBlockResources") {
     }
 }
 
-val generateCarpetResources = tasks.register<Sync>("generateCarpetResources") {
+val generateSkinResources = tasks.register<Sync>("generateSkinResources") {
     inputs.property("modId", modId)
     inputs.property("colors", dyeColors)
     filteringCharset = "UTF-8"
-    into(layout.buildDirectory.dir("generated/resources/pufferfishCarpets"))
+    into(layout.buildDirectory.dir("generated/resources/pufferfishSkins"))
     for (color in listOf("") + dyeColors) {
         val prefix = if (color.isEmpty()) "" else "${color}_"
-        val carpetName = "${prefix}pufferfish_carpet"
+        val skinName = "${prefix}pufferfish_skin"
         val properties = mapOf(
             "modId" to modId,
-            "blockName" to carpetName,
+            "blockName" to skinName,
             "fishTexture" to (if (color.isEmpty()) "minecraft:item/pufferfish" else "$modId:item/${color}_pufferfish"),
-            "blockId" to "$modId:$carpetName",
+            "blockId" to "$modId:$skinName",
             "ingredient" to JsonOutput.toJson(if (color.isEmpty()) mapOf("type" to "$modId:pufferfish")
                 else mapOf("type" to "$modId:pufferfish", "color" to color))
         )
-        inputs.property(carpetName, properties)
+        inputs.property(skinName, properties)
         for ((template, target) in mapOf(
-            "carpetTemplates/blockstate" to "assets/$modId/blockstates/$carpetName.json",
-            "blockTemplates/item_model" to "assets/$modId/models/item/$carpetName.json",
-            "blockTemplates/loot" to "data/$modId/loot_table/blocks/$carpetName.json",
-            "carpetTemplates/block_model" to "assets/$modId/models/block/$carpetName.json",
-            "carpetTemplates/cutting" to "data/$modId/recipe/cutting/$carpetName.json",
-            "carpetTemplates/chopping" to "data/$modId/recipe/chopping/$carpetName.json",
-            "carpetTemplates/pressing" to "data/$modId/recipe/pressing/$carpetName.json"
+            "skinTemplates/blockstate" to "assets/$modId/blockstates/$skinName.json",
+            "blockTemplates/item_model" to "assets/$modId/models/item/$skinName.json",
+            "blockTemplates/loot" to "data/$modId/loot_table/blocks/$skinName.json",
+            "skinTemplates/block_model" to "assets/$modId/models/block/$skinName.json",
+            "skinTemplates/cutting" to "data/$modId/recipe/cutting/$skinName.json",
+            "skinTemplates/chopping" to "data/$modId/recipe/chopping/$skinName.json",
+            "skinTemplates/pressing" to "data/$modId/recipe/pressing/$skinName.json"
         )) {
             from("src/main/$template.json") {
                 expand(properties)
@@ -257,9 +257,9 @@ val generateCarpetResources = tasks.register<Sync>("generateCarpetResources") {
             }
         }
         for (stage in 0..3) {
-            from("src/main/carpetTemplates/chopping_stage_$stage.json") {
+            from("src/main/skinTemplates/chopping_stage_$stage.json") {
                 expand(properties)
-                into("assets/$modId/models/chopping_board/$carpetName")
+                into("assets/$modId/models/chopping_board/$skinName")
                 rename { "$stage.json" }
             }
         }
@@ -270,12 +270,12 @@ sourceSets.main {
     resources.srcDir(generateModMetadata)
     resources.srcDir(generateItemModels)
     resources.srcDir(generateBlockResources)
-    resources.srcDir(generateCarpetResources)
+    resources.srcDir(generateSkinResources)
 }
 neoForge.ideSyncTask(generateModMetadata)
 neoForge.ideSyncTask(generateItemModels)
 neoForge.ideSyncTask(generateBlockResources)
-neoForge.ideSyncTask(generateCarpetResources)
+neoForge.ideSyncTask(generateSkinResources)
 
 publishing {
     publications {

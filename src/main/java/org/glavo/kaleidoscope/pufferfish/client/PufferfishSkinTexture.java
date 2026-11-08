@@ -10,12 +10,12 @@ import net.minecraft.client.resources.metadata.animation.FrameSize;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceMetadata;
 
-/// Unfolds the inflated pufferfish model's back and lower flank into a tileable carpet skin.
-public final class PufferfishCarpetTexture {
+/// Unfolds the inflated pufferfish model's back and lower flank into a tileable skin.
+public final class PufferfishSkinTexture {
     /// Prevents construction of this texture utility.
-    private PufferfishCarpetTexture() {}
+    private PufferfishSkinTexture() {}
 
-    /// Creates a carpet sprite with a dorsal center and pale belly edges, excluding eyes and fins.
+    /// Creates a skin sprite with a dorsal center and pale belly edges, excluding eyes and fins.
     /// Each frame has identical opposing edge pixels: the lengthwise pattern is mirrored,
     /// and both belly edges sample the same flank in opposite directions.
     /// Source frames use the vanilla entity texture's 32-by-32 UV layout; larger frames retain
@@ -27,7 +27,7 @@ public final class PufferfishCarpetTexture {
     /// @param source the entity texture, whose ownership is transferred to this method
     /// @param metadata the source animation metadata
     /// @param color the RGB body tint, or null to retain the original skin color
-    /// @return the generated carpet sprite
+    /// @return the generated skin sprite
     public static SpriteContents create(ResourceLocation id, FrameSize size, NativeImage source,
             ResourceMetadata metadata, @Nullable Integer color) {
         try (source) {

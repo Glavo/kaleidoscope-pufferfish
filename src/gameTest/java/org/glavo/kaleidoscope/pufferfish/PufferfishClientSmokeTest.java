@@ -72,12 +72,12 @@ public final class PufferfishClientSmokeTest {
             }
         }
         verifyBlock(minecraft, null);
-        verifyCarpet(minecraft, null);
+        verifySkin(minecraft, null);
         for (DyeColor color : DyeColor.values()) {
             verifyBlock(minecraft, color);
-            verifyCarpet(minecraft, color);
+            verifySkin(minecraft, color);
         }
-        PufferfishCarpetClientPreview.save(minecraft);
+        PufferfishSkinClientPreview.save(minecraft);
         verifyBlock(minecraft, PufferfishBlocks.NETHERITE.get(), "netherite_pufferfish_block");
         var netheriteModel = minecraft.getItemRenderer().getModel(new ItemStack(PufferfishItems.NETHERITE.get()), null, null, 0);
         if (netheriteModel == minecraft.getModelManager().getMissingModel()
@@ -127,7 +127,7 @@ public final class PufferfishClientSmokeTest {
         }
         if (net.neoforged.fml.ModList.get().isLoaded("kaleidoscope_cookery")) {
             for (int color = -1; color < 16; color++) {
-                var name = PufferfishBlocks.carpetName(color < 0 ? null : DyeColor.byId(color));
+                var name = PufferfishBlocks.skinName(color < 0 ? null : DyeColor.byId(color));
                 for (int stage = 0; stage <= 3; stage++) {
                     var id = KaleidoscopePufferfish.id("chopping_board/" + name + "/" + stage);
                     var cuttingModel = minecraft.getModelManager().getModel(ModelResourceLocation.standalone(id));
@@ -174,26 +174,26 @@ public final class PufferfishClientSmokeTest {
         }
     }
 
-    /// Checks that each carpet's block and item models use the matching skin texture and a thin top face.
-    private static void verifyCarpet(Minecraft minecraft, DyeColor color) {
-        var block = PufferfishBlocks.carpet(color);
+    /// Checks that each skin's block and item models use the matching skin texture and a thin top face.
+    private static void verifySkin(Minecraft minecraft, DyeColor color) {
+        var block = PufferfishBlocks.skin(color);
         var state = block.defaultBlockState();
         var stack = new ItemStack(block);
-        var texture = KaleidoscopePufferfish.id("block/" + PufferfishBlocks.carpetName(color));
+        var texture = KaleidoscopePufferfish.id("block/" + PufferfishBlocks.skinName(color));
         var blockModel = minecraft.getBlockRenderer().getBlockModel(state);
         var itemModel = minecraft.getItemRenderer().getModel(stack, null, null, 0);
         for (var model : new BakedModel[] {blockModel, itemModel}) {
             if (model == minecraft.getModelManager().getMissingModel() || !model.getParticleIcon().contents().name().equals(texture)) {
-                throw new IllegalStateException("Missing carpet model or color texture: " + color);
+                throw new IllegalStateException("Missing skin model or color texture: " + color);
             }
             var top = model.getQuads(state, null, RandomSource.create());
-            if (top.isEmpty()) throw new IllegalStateException("Missing carpet top face: " + color);
+            if (top.isEmpty()) throw new IllegalStateException("Missing skin top face: " + color);
             for (var quad : top) {
                 var vertices = quad.getVertices();
                 int stride = vertices.length / 4;
                 for (int vertex = 0; vertex < 4; vertex++) {
                     float y = Float.intBitsToFloat(vertices[vertex * stride + 1]);
-                    if (Math.abs(y - 1.0F / 16) > 0.0001F) throw new IllegalStateException("Incorrect carpet model height: " + color);
+                    if (Math.abs(y - 1.0F / 16) > 0.0001F) throw new IllegalStateException("Incorrect skin model height: " + color);
                 }
             }
         }
@@ -201,16 +201,16 @@ public final class PufferfishClientSmokeTest {
         var image = blockModel.getParticleIcon().contents().getOriginalImage();
         for (int y = 0; y < image.getHeight(); y++) {
             if (image.getPixelRGBA(0, y) != image.getPixelRGBA(image.getWidth() - 1, y)) {
-                throw new IllegalStateException("Carpet skin does not tile horizontally: " + color);
+                throw new IllegalStateException("Skin does not tile horizontally: " + color);
             }
         }
         for (int x = 0; x < image.getWidth(); x++) {
             if (image.getPixelRGBA(x, 0) != image.getPixelRGBA(x, image.getHeight() - 1)) {
-                throw new IllegalStateException("Carpet skin does not tile vertically: " + color);
+                throw new IllegalStateException("Skin does not tile vertically: " + color);
             }
         }
         if (stack.getHoverName().getString().startsWith("block.")) {
-            throw new IllegalStateException("Missing carpet translation: " + color);
+            throw new IllegalStateException("Missing skin translation: " + color);
         }
     }
 

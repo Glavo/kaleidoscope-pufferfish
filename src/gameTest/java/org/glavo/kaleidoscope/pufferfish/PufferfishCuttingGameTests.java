@@ -40,7 +40,7 @@ public final class PufferfishCuttingGameTests {
     public static void cuttingRecipesFollowOptionalMods(GameTestHelper helper) {
         var manager = helper.getLevel().getRecipeManager();
         for (int index = -1; index < 16; index++) {
-            var name = PufferfishBlocks.carpetName(index < 0 ? null : DyeColor.byId(index));
+            var name = PufferfishBlocks.skinName(index < 0 ? null : DyeColor.byId(index));
             helper.assertTrue(manager.byKey(KaleidoscopePufferfish.id("chopping/" + name)).isPresent()
                     == ModList.get().isLoaded("kaleidoscope_cookery"), "Cookery recipe condition failed");
             helper.assertTrue(manager.byKey(KaleidoscopePufferfish.id("cutting/" + name)).isPresent()
@@ -65,7 +65,7 @@ public final class PufferfishCuttingGameTests {
         helper.assertTrue(drops.size() == 2
                 && drops.stream().allMatch(entity -> entity.getItem().getCount() == 1)
                 && drops.stream().anyMatch(entity -> entity.getItem().is(PufferfishItems.MEAT.get()))
-                && drops.stream().anyMatch(entity -> entity.getItem().is(PufferfishBlocks.carpet(color).asItem())),
+                && drops.stream().anyMatch(entity -> entity.getItem().is(PufferfishBlocks.skin(color).asItem())),
                 "Cutting must drop exactly one meat and one matching skin");
         drops.forEach(ItemEntity::discard);
     }

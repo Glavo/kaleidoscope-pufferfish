@@ -17,12 +17,12 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.item.DyeColor;
 import org.joml.Matrix4f;
 
-/// Saves an in-engine preview of tiled original, red, and blue carpet skins.
-public final class PufferfishCarpetClientPreview {
+/// Saves an in-engine preview of tiled original, red, and blue skins.
+public final class PufferfishSkinClientPreview {
     /// Prevents construction of this preview utility.
-    private PufferfishCarpetClientPreview() {}
+    private PufferfishSkinClientPreview() {}
 
-    /// Renders three 3-by-3 carpet patches into a PNG in the client's working directory.
+    /// Renders three 3-by-3 skin patches into a PNG in the client's working directory.
     public static void save(Minecraft minecraft) {
         var target = new TextureTarget(900, 360, true, Minecraft.ON_OSX);
         target.setClearColor(0.08F, 0.14F, 0.2F, 1);
@@ -49,7 +49,7 @@ public final class PufferfishCarpetClientPreview {
                     for (int x = 0; x < 3; x++) {
                         pose.pushPose();
                         pose.translate(x, 0, z);
-                        minecraft.getBlockRenderer().renderSingleBlock(PufferfishBlocks.carpet(colors[i]).defaultBlockState(),
+                        minecraft.getBlockRenderer().renderSingleBlock(PufferfishBlocks.skin(colors[i]).defaultBlockState(),
                                 pose, buffers, 15728880, OverlayTexture.NO_OVERLAY);
                         pose.popPose();
                     }
@@ -57,10 +57,10 @@ public final class PufferfishCarpetClientPreview {
                 buffers.endBatch();
             }
             try (var image = Screenshot.takeScreenshot(target)) {
-                image.writeToFile(Path.of("pufferfish-carpet-preview.png"));
+                image.writeToFile(Path.of("pufferfish-skin-preview.png"));
             }
         } catch (IOException exception) {
-            throw new IllegalStateException("Could not save carpet preview", exception);
+            throw new IllegalStateException("Could not save skin preview", exception);
         } finally {
             view.popMatrix();
             RenderSystem.applyModelViewMatrix();

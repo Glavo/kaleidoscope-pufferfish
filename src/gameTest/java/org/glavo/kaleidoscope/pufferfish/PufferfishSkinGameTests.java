@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.InteractionHand;
@@ -31,12 +32,12 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/// Verifies color-specific carpet recipes, placement, shape, and drops.
+/// Verifies color-specific skin recipes, placement, shape, and drops.
 @GameTestHolder(KaleidoscopePufferfish.MODID)
 @PrefixGameTestTemplate(false)
-public final class PufferfishCarpetGameTests {
+public final class PufferfishSkinGameTests {
     /// Prevents construction of the test holder.
-    private PufferfishCarpetGameTests() {}
+    private PufferfishSkinGameTests() {}
 
     /// Returns the undyed variant followed by all dye colors.
     private static List<DyeColor> colors() {
@@ -50,6 +51,18 @@ public final class PufferfishCarpetGameTests {
     private static ItemStack fish(DyeColor color) {
         var stack = new ItemStack(Items.PUFFERFISH);
         return color == null ? stack : PufferfishColors.dye(stack, color);
+    }
+
+    /// Verifies that skin blocks and their items share the expected skin registry identifiers.
+    @GameTest(template = "empty")
+    public static void skinBlocksAndItemsUseSkinIds(GameTestHelper helper) {
+        for (var color : colors()) {
+            var block = PufferfishBlocks.skin(color);
+            var id = KaleidoscopePufferfish.id(color == null ? "pufferfish_skin" : color.getName() + "_pufferfish_skin");
+            helper.assertTrue(BuiltInRegistries.BLOCK.getKey(block).equals(id)
+                    && BuiltInRegistries.ITEM.getKey(block.asItem()).equals(id), "Incorrect skin registry ID");
+        }
+        helper.succeed();
     }
 
     /// Verifies that the former three-fish crafting recipes no longer match any color or row.
@@ -70,24 +83,24 @@ public final class PufferfishCarpetGameTests {
 
     /// Rejects mixed colors, wrong fish types, vertical arrangements, and incorrect quantities.
     @GameTest(template = "empty")
-    public static void carpetRecipesRejectMixedColorsAndWrongInputs(GameTestHelper helper) {
+    public static void skinRecipesRejectMixedColorsAndWrongInputs(GameTestHelper helper) {
         var manager = helper.getLevel().getRecipeManager();
         for (var color : colors()) {
             for (var other : colors()) {
                 if (other == color) continue;
                 var input = CraftingInput.of(3, 1, List.of(fish(color), fish(other), fish(color)));
-                helper.assertTrue(manager.getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel()).isEmpty(), "Mixed carpet colors were accepted");
+                helper.assertTrue(manager.getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel()).isEmpty(), "Mixed skin colors were accepted");
             }
         }
         for (var item : List.of(Items.COD, Items.PUFFERFISH_BUCKET, PufferfishItems.NETHERITE.get(), PufferfishItems.GOLDEN.get())) {
             var input = CraftingInput.of(3, 1, Collections.nCopies(3, new ItemStack(item)));
-            helper.assertTrue(manager.getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel()).isEmpty(), "Carpet recipe accepted an invalid fish type");
+            helper.assertTrue(manager.getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel()).isEmpty(), "Skin recipe accepted an invalid fish type");
         }
         for (var input : List.of(
                 CraftingInput.of(1, 3, Collections.nCopies(3, fish(null))),
                 CraftingInput.of(2, 1, Collections.nCopies(2, fish(null))),
                 CraftingInput.of(1, 1, List.of(new ItemStack(Items.PUFFERFISH, 3))))) {
-            helper.assertTrue(manager.getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel()).isEmpty(), "Carpet recipe accepted an invalid arrangement");
+            helper.assertTrue(manager.getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel()).isEmpty(), "Skin recipe accepted an invalid arrangement");
         }
         helper.succeed();
     }
@@ -99,7 +112,7 @@ public final class PufferfishCarpetGameTests {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         var base = helper.absolutePos(new BlockPos(2, 2, 2));
         for (var color : colors()) {
-            var block = PufferfishBlocks.carpet(color);
+            var block = PufferfishBlocks.skin(color);
             for (var normal : Direction.values()) {
                 var pos = base.relative(normal);
                 for (var facing : Direction.Plane.HORIZONTAL) {
@@ -144,18 +157,18 @@ public final class PufferfishCarpetGameTests {
         helper.succeed();
     }
 
-    /// Verifies legacy floor support and prevents attachment to non-sturdy walls and ceilings.
+    /// Verifies floor support and prevents attachment to non-sturdy walls and ceilings.
     @GameTest(template = "empty")
     public static void skinsRequireSupportOnTheirAttachedSurface(GameTestHelper helper) {
         var level = helper.getLevel();
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         var base = helper.absolutePos(new BlockPos(2, 2, 2));
-        var block = PufferfishBlocks.carpet(null);
+        var block = PufferfishBlocks.skin(null);
         helper.assertTrue(block.defaultBlockState().getValue(PufferfishSkinBlock.FACE) == AttachFace.FLOOR
                 && block.defaultBlockState().getValue(PufferfishSkinBlock.FACING) == Direction.NORTH,
-                "Legacy skins must default to their original floor orientation");
+                "Skins must default to a north-facing floor orientation");
         level.setBlockAndUpdate(base, Blocks.OAK_SLAB.defaultBlockState());
-        helper.assertTrue(block.defaultBlockState().canSurvive(level, base.above()), "Legacy floor support was lost");
+        helper.assertTrue(block.defaultBlockState().canSurvive(level, base.above()), "Floor skin rejected a non-air support block");
         for (var normal : Direction.values()) {
             if (normal == Direction.UP) continue;
             level.setBlockAndUpdate(base, normal == Direction.DOWN

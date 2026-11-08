@@ -13,7 +13,7 @@ import net.neoforged.neoforge.event.RegisterGameTestsEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.glavo.kaleidoscope.pufferfish.compat.create.PufferfishEngineGameTests;
-import org.glavo.kaleidoscope.pufferfish.compat.create.PufferfishCarpetPressingGameTests;
+import org.glavo.kaleidoscope.pufferfish.compat.create.PufferfishSkinPressingGameTests;
 
 @EventBusSubscriber(modid = KaleidoscopePufferfish.MODID)
 @GameTestHolder(KaleidoscopePufferfish.MODID)
@@ -23,7 +23,7 @@ public final class CreateGameTestRegistration {
     public static void register(RegisterGameTestsEvent event) {
         if (ModList.get().isLoaded("create")) {
             event.register(PufferfishEngineGameTests.class);
-            event.register(PufferfishCarpetPressingGameTests.class);
+            event.register(PufferfishSkinPressingGameTests.class);
         }
     }
 
@@ -35,9 +35,9 @@ public final class CreateGameTestRegistration {
         helper.assertTrue(BuiltInRegistries.ITEM.containsKey(id) == create, "Engine item optional registration failed");
         helper.assertTrue(helper.getLevel().getRecipeManager().byKey(id).isPresent() == create, "Engine recipe condition failed");
         for (int color = -1; color < 16; color++) {
-            var name = PufferfishBlocks.carpetName(color < 0 ? null : net.minecraft.world.item.DyeColor.byId(color));
+            var name = PufferfishBlocks.skinName(color < 0 ? null : net.minecraft.world.item.DyeColor.byId(color));
             helper.assertTrue(helper.getLevel().getRecipeManager().byKey(KaleidoscopePufferfish.id("pressing/" + name)).isPresent() == create,
-                    "Carpet pressing recipe condition failed");
+                    "Skin pressing recipe condition failed");
             helper.assertTrue(helper.getLevel().getRecipeManager().byKey(KaleidoscopePufferfish.id(name)).isEmpty(),
                     "Removed skin crafting recipe is still loaded");
         }
