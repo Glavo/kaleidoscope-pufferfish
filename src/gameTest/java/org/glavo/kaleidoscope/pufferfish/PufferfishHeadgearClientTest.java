@@ -61,7 +61,7 @@ public final class PufferfishHeadgearClientTest {
         return registry.freeze();
     }
 
-    private static ClientLevel level(Minecraft minecraft) {
+    public static ClientLevel level(Minecraft minecraft) {
         if (level == null) {
             var lookup = VanillaRegistries.createLookup();
             var dynamic = Stream.of(

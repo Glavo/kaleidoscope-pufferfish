@@ -13,6 +13,8 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.ModList;
+import org.glavo.kaleidoscope.pufferfish.compat.create.client.CreateClientIntegration;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.ModelEvent;
@@ -26,6 +28,9 @@ import org.glavo.kaleidoscope.pufferfish.client.PufferfishTextures;
 @Mod(value = KaleidoscopePufferfish.MODID, dist = Dist.CLIENT)
 public class KaleidoscopePufferfishClient {
     public KaleidoscopePufferfishClient(IEventBus bus) {
+        if (ModList.get().isLoaded("create")) {
+            CreateClientIntegration.register(bus);
+        }
         bus.addListener(this::registerSprites);
         bus.addListener(this::registerModels);
         bus.addListener(EventPriority.LOWEST, this::wrapModels);

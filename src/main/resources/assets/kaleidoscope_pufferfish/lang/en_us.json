@@ -23,5 +23,10 @@
   "block.kaleidoscope_pufferfish.brown_pufferfish_block": "Brown Pufferfish Block",
   "block.kaleidoscope_pufferfish.green_pufferfish_block": "Green Pufferfish Block",
   "block.kaleidoscope_pufferfish.red_pufferfish_block": "Red Pufferfish Block",
-  "block.kaleidoscope_pufferfish.black_pufferfish_block": "Black Pufferfish Block"
+  "block.kaleidoscope_pufferfish.black_pufferfish_block": "Black Pufferfish Block",
+  "block.kaleidoscope_pufferfish.pufferfish_engine": "Pufferfish Engine",
+  "gui.kaleidoscope_pufferfish.engine.empty": "Insert a pufferfish",
+  "gui.kaleidoscope_pufferfish.engine.dry": "Needs a bucket of water",
+  "gui.kaleidoscope_pufferfish.engine.stopped": "Stopped by redstone",
+  "gui.kaleidoscope_pufferfish.engine.running": "Running"
 }

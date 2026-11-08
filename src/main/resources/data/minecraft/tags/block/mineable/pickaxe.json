@@ -1,4 +1,10 @@
 {
   "replace": false,
-  "values": ["kaleidoscope_pufferfish:netherite_pufferfish_block"]
+  "values": [
+    "kaleidoscope_pufferfish:netherite_pufferfish_block",
+    {
+      "id": "kaleidoscope_pufferfish:pufferfish_engine",
+      "required": false
+    }
+  ]
 }

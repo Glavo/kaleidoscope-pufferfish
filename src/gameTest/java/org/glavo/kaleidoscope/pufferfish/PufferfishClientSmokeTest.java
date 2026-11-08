@@ -80,6 +80,9 @@ public final class PufferfishClientSmokeTest {
         }
         verifyModelDelegation(minecraft);
         PufferfishHeadgearClientTest.verify(minecraft);
+        if (net.neoforged.fml.ModList.get().isLoaded("create")) {
+            org.glavo.kaleidoscope.pufferfish.compat.create.PufferfishEngineClientTest.verify(minecraft);
+        }
         if (!projectileRendererChecked) {
             throw new IllegalStateException("Projectile renderer registration was not checked");
         }

@@ -18,6 +18,9 @@ import net.minecraft.world.item.crafting.SimpleCraftingRecipeSerializer;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModList;
+import org.glavo.kaleidoscope.pufferfish.compat.create.CreateIntegration;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.crafting.IngredientType;
@@ -55,6 +58,9 @@ public class KaleidoscopePufferfish {
                 .title(Component.translatable("itemGroup.kaleidoscope_pufferfish"))
                 .icon(() -> PufferfishColors.dye(new ItemStack(Items.PUFFERFISH_BUCKET), DyeColor.PURPLE))
                 .displayItems((parameters, output) -> {
+                    if (ModList.get().isLoaded("create")) {
+                        output.accept(CreateIntegration.ENGINE_ITEM.get());
+                    }
                     output.accept(PufferfishItems.NETHERITE);
                     output.accept(PufferfishBlocks.NETHERITE);
                     output.accept(PufferfishBlocks.get(null));
@@ -66,7 +72,10 @@ public class KaleidoscopePufferfish {
                 }).build());
     }
 
-    public KaleidoscopePufferfish(IEventBus bus) {
+    public KaleidoscopePufferfish(IEventBus bus, ModContainer container) {
+        if (ModList.get().isLoaded("create")) {
+            CreateIntegration.register(bus, container);
+        }
         PufferfishItems.register(bus);
         PufferfishBlocks.register(bus);
         COMPONENTS.register(bus);

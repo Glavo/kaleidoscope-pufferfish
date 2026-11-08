@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "kaleidoscope_pufferfish:block/pufferfish_engine",
+      "y": 0
+    },
+    "facing=east": {
+      "model": "kaleidoscope_pufferfish:block/pufferfish_engine",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "kaleidoscope_pufferfish:block/pufferfish_engine",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "kaleidoscope_pufferfish:block/pufferfish_engine",
+      "y": 270
+    }
+  }
+}

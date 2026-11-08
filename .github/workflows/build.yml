@@ -8,6 +8,7 @@ jobs:
     strategy:
       matrix:
         cookery: ['1.5.1-neoforge+mc1.21.1', '1.6.0-neoforge+mc1.21.1']
+        create: ['true', 'false']
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -30,7 +31,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build with Gradle
-        run: ./gradlew build -Pkaleidoscope_cookery_version=${{ matrix.cookery }}
+        run: ./gradlew build -Pkaleidoscope_cookery_version=${{ matrix.cookery }} -Pinclude_create=${{ matrix.create }}
 
       - name: Run game tests
-        run: ./gradlew runGameTestServer -Pkaleidoscope_cookery_version=${{ matrix.cookery }}
+        run: ./gradlew runGameTestServer -Pkaleidoscope_cookery_version=${{ matrix.cookery }} -Pinclude_create=${{ matrix.create }}

@@ -1,0 +1,45 @@
+{
+  "textures": {
+    "particle": "minecraft:block/copper_block",
+    "copper": "minecraft:block/copper_block",
+    "frame": "minecraft:block/polished_andesite",
+    "iron": "minecraft:block/iron_block",
+    "glass": "minecraft:block/glass",
+    "dark": "minecraft:block/deepslate_tiles",
+    "water": "minecraft:block/water_still"
+  },
+  "elements": [
+    {
+      "from": [
+        5,
+        4,
+        2.5
+      ],
+      "to": [
+        11,
+        9,
+        3
+      ],
+      "faces": {
+        "down": {
+          "texture": "#dark"
+        },
+        "up": {
+          "texture": "#dark"
+        },
+        "north": {
+          "texture": "#dark"
+        },
+        "south": {
+          "texture": "#dark"
+        },
+        "west": {
+          "texture": "#dark"
+        },
+        "east": {
+          "texture": "#dark"
+        }
+      }
+    }
+  ]
+}

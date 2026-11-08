@@ -23,5 +23,10 @@
   "block.kaleidoscope_pufferfish.brown_pufferfish_block": "棕色河豚块",
   "block.kaleidoscope_pufferfish.green_pufferfish_block": "绿色河豚块",
   "block.kaleidoscope_pufferfish.red_pufferfish_block": "红色河豚块",
-  "block.kaleidoscope_pufferfish.black_pufferfish_block": "黑色河豚块"
+  "block.kaleidoscope_pufferfish.black_pufferfish_block": "黑色河豚块",
+  "block.kaleidoscope_pufferfish.pufferfish_engine": "河豚引擎",
+  "gui.kaleidoscope_pufferfish.engine.empty": "请放入一只河豚",
+  "gui.kaleidoscope_pufferfish.engine.dry": "需要一桶水",
+  "gui.kaleidoscope_pufferfish.engine.stopped": "红石信号已停机",
+  "gui.kaleidoscope_pufferfish.engine.running": "运行中"
 }

@@ -43,6 +43,11 @@ val gameTest = sourceSets.create("gameTest") {
 
 repositories {
     mavenCentral()
+    maven {
+        name = "Create"
+        url = uri("https://maven.createmod.net")
+        content { includeGroup("net.createmod.ponder") }
+    }
     exclusiveContent {
         forRepository {
             maven {
@@ -111,9 +116,18 @@ configurations.runtimeClasspath {
 dependencies {
     val cookery = "maven.modrinth:kaleidoscope-cookery:${providers.gradleProperty("kaleidoscope_cookery_version").get()}"
     val farmersDelight = "maven.modrinth:farmers-delight:${providers.gradleProperty("farmers_delight_version").get()}"
+    val create = "maven.modrinth:create:${providers.gradleProperty("create_version").get()}"
 
     compileOnly(cookery)
     compileOnly(farmersDelight)
+    compileOnly(create)
+    // Create bundles Ponder at runtime; its base interfaces are also needed by javac.
+    compileOnly("net.createmod.ponder:ponder-neoforge:${providers.gradleProperty("ponder_version").get()}") {
+        isTransitive = false
+    }
+    if (providers.gradleProperty("include_create").get().toBoolean()) {
+        localRuntime(create)
+    }
     if (providers.gradleProperty("include_cookery").get().toBoolean()) {
         localRuntime(cookery)
     }
@@ -129,7 +143,7 @@ dependencies {
 val metadataProperties = listOf(
     "minecraft_version", "minecraft_version_range", "neo_version", "loader_version_range",
     "mod_id", "mod_name", "mod_license", "mod_version",
-    "kaleidoscope_cookery_version_range", "farmers_delight_version_range"
+    "kaleidoscope_cookery_version_range", "farmers_delight_version_range", "create_version_range"
 ).associateWith { providers.gradleProperty(it).get() }
 
 val generateModMetadata by tasks.registering(ProcessResources::class) {
