@@ -20,7 +20,7 @@ public final class PufferfishEnchantments {
     private PufferfishEnchantments() {}
 
     public static boolean supports(Holder<Enchantment> enchantment) {
-        return enchantment.is(Enchantments.RESPIRATION) || enchantment.is(Enchantments.LOYALTY)
+        return enchantment.is(Enchantments.AQUA_AFFINITY) || enchantment.is(Enchantments.LOYALTY)
                 || enchantment.is(Enchantments.DENSITY) || enchantment.is(Enchantments.BREACH)
                 || enchantment.is(Enchantments.PUNCH);
     }

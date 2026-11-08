@@ -13,6 +13,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -28,6 +29,7 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.Blocks;
 import org.glavo.kaleidoscope.pufferfish.entity.ThrownPufferfish;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.living.LivingBreatheEvent;
@@ -38,7 +40,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class PufferfishEnchantmentGameTests {
     private static final List<ResourceKey<Enchantment>> SUPPORTED = List.of(
-            Enchantments.RESPIRATION, Enchantments.LOYALTY, Enchantments.DENSITY, Enchantments.BREACH, Enchantments.PUNCH);
+            Enchantments.AQUA_AFFINITY, Enchantments.LOYALTY, Enchantments.DENSITY, Enchantments.BREACH, Enchantments.PUNCH);
 
     private static ItemStack enchant(GameTestHelper helper, ItemStack stack, ResourceKey<Enchantment> key, int level) {
         var holder = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(key);
@@ -92,6 +94,10 @@ public final class PufferfishEnchantmentGameTests {
         var player = owner(helper);
         for (var original : variants()) {
             original.set(DataComponents.CUSTOM_NAME, Component.literal("Enchanted keepsake"));
+            var rejected = new AnvilMenu(1, player.getInventory());
+            rejected.getSlot(0).set(original.copy());
+            rejected.getSlot(1).set(enchant(helper, new ItemStack(Items.ENCHANTED_BOOK), Enchantments.RESPIRATION, 3));
+            helper.assertTrue(!rejected.getSlot(2).hasItem(), "Respiration is still accepted on pufferfish");
             for (var key : SUPPORTED) {
                 int max = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(key).value().getMaxLevel();
                 for (int rank = 1; rank <= max; rank++) {
@@ -130,14 +136,16 @@ public final class PufferfishEnchantmentGameTests {
             helper.assertTrue(!menu.getSlot(2).hasItem(), "Density and Breach were combined");
             enchant(helper, book, Enchantments.PUNCH, 2);
             enchant(helper, book, Enchantments.LOYALTY, 3);
-            enchant(helper, book, Enchantments.RESPIRATION, 3);
+            enchant(helper, book, Enchantments.AQUA_AFFINITY, 1);
             enchant(helper, book, Enchantments.SHARPNESS, 5);
+            enchant(helper, book, Enchantments.RESPIRATION, 3);
             menu.createResult();
             var result = menu.getSlot(2).getItem();
             helper.assertTrue(!result.isEmpty() && level(helper, result, first) == 1 && level(helper, result, second) == 0,
                     "Mixed book replaced an existing incompatible enchantment");
             helper.assertTrue(level(helper, result, Enchantments.PUNCH) == 2 && level(helper, result, Enchantments.LOYALTY) == 3
-                    && level(helper, result, Enchantments.RESPIRATION) == 3 && level(helper, result, Enchantments.SHARPNESS) == 0,
+                    && level(helper, result, Enchantments.AQUA_AFFINITY) == 1 && level(helper, result, Enchantments.SHARPNESS) == 0
+                    && level(helper, result, Enchantments.RESPIRATION) == 0,
                     "Mixed book lost supported enchantments or enabled Sharpness");
         }
         helper.succeed();
@@ -215,23 +223,36 @@ public final class PufferfishEnchantmentGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void respirationAppliesOnlyToHeadAndPreservesUnlimitedBreathing(GameTestHelper helper) {
-        var player = owner(helper);
+    public static void aquaAffinityRestoresUnderwaterMiningSpeedOnlyWhileWorn(GameTestHelper helper) {
+        for (int y = 1; y <= 3; y++) helper.setBlock(new BlockPos(2, y, 0), Blocks.WATER);
         for (var stack : variants()) {
-            for (int rank = 1; rank <= 3; rank++) {
-                enchant(helper, stack, Enchantments.RESPIRATION, rank);
-                player.setItemSlot(EquipmentSlot.HEAD, stack.copy());
-                player.tick();
-                helper.assertTrue(player.getAttributeValue(Attributes.OXYGEN_BONUS) == rank, "Respiration did not apply its oxygen attribute");
-                var breathe = new LivingBreatheEvent(player, false, 1, 0);
-                NeoForge.EVENT_BUS.post(breathe);
-                helper.assertTrue(breathe.canBreathe(), "Enchanted headgear lost unlimited breathing");
-                player.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
-                player.setItemSlot(EquipmentSlot.MAINHAND, stack.copy());
-                player.tick();
-                helper.assertTrue(player.getAttributeValue(Attributes.OXYGEN_BONUS) == 0, "Respiration remained after removing headgear");
-                player.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
-            }
+            var player = owner(helper);
+            player.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.IRON_PICKAXE));
+            player.tick();
+            player.tick();
+            player.setOnGround(true);
+            helper.assertTrue(player.isEyeInFluid(FluidTags.WATER), "Mining test player was not submerged");
+            float baseline = player.getDigSpeed(Blocks.STONE.defaultBlockState(), player.blockPosition());
+            enchant(helper, stack, Enchantments.AQUA_AFFINITY, 1);
+            player.setItemSlot(EquipmentSlot.HEAD, stack.copy());
+            player.tick();
+            player.setOnGround(true);
+            helper.assertTrue(Math.abs(player.getAttributeValue(Attributes.SUBMERGED_MINING_SPEED) - 1) < 0.0001,
+                    "Aqua Affinity did not remove the submerged mining penalty");
+            helper.assertTrue(Math.abs(player.getDigSpeed(Blocks.STONE.defaultBlockState(), player.blockPosition()) - baseline * 5) < 0.0001,
+                    "Wearing enchanted fish did not restore underwater mining speed");
+            var breathe = new LivingBreatheEvent(player, false, 1, 0);
+            NeoForge.EVENT_BUS.post(breathe);
+            helper.assertTrue(breathe.canBreathe(), "Aqua Affinity headgear lost unlimited breathing");
+            player.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
+            player.tick();
+            player.setOnGround(true);
+            helper.assertTrue(Math.abs(player.getDigSpeed(Blocks.STONE.defaultBlockState(), player.blockPosition()) - baseline) < 0.0001,
+                    "Mining bonus remained after removing headgear");
+            player.setItemSlot(EquipmentSlot.MAINHAND, stack.copy());
+            player.tick();
+            helper.assertTrue(Math.abs(player.getAttributeValue(Attributes.SUBMERGED_MINING_SPEED) - 0.2) < 0.0001,
+                    "Holding enchanted fish applied the head-only mining bonus");
         }
         helper.succeed();
     }
@@ -245,7 +266,7 @@ public final class PufferfishEnchantmentGameTests {
                 stack.set(DataComponents.CUSTOM_NAME, Component.literal("Combined keepsake"));
                 enchant(helper, stack, damageEnchantment, 4);
                 enchant(helper, stack, Enchantments.LOYALTY, 3);
-                enchant(helper, stack, Enchantments.RESPIRATION, 3);
+                enchant(helper, stack, Enchantments.AQUA_AFFINITY, 1);
                 enchant(helper, stack, Enchantments.PUNCH, 2);
                 var target = target(helper);
                 var fish = hit(helper, player, target, stack);
