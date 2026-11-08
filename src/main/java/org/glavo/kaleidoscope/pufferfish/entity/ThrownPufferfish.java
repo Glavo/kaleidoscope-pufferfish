@@ -20,6 +20,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
@@ -27,6 +28,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
@@ -150,6 +152,11 @@ public class ThrownPufferfish extends ThrowableItemProjectile {
     }
 
     @Override
+    public ItemStack getWeaponItem() {
+        return getItem();
+    }
+
+    @Override
     protected void onHitEntity(EntityHitResult result) {
         super.onHitEntity(result);
         if (!level().isClientSide()) {
@@ -166,8 +173,20 @@ public class ThrownPufferfish extends ThrowableItemProjectile {
                 }
             };
             boolean netherite = PufferfishItems.isNetherite(getItem());
-            if (target.hurt(damage, netherite ? 10.0F : 2.0F) && target instanceof LivingEntity living) {
+            var enchantments = registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+            int density = EnchantmentHelper.getItemEnchantmentLevel(enchantments.getOrThrow(Enchantments.DENSITY), getItem());
+            float amount = (netherite ? 10.0F : 2.0F) + (density > 0 ? 0.5F + 0.5F * density : 0);
+            if (target.hurt(damage, amount) && target instanceof LivingEntity living) {
                 living.addEffect(new MobEffectInstance(MobEffects.POISON, 120, netherite ? 1 : 0), getEffectSource());
+                // Punch's vanilla effect requires an arrow; apply its knockback to this projectile explicitly.
+                int punch = EnchantmentHelper.getItemEnchantmentLevel(enchantments.getOrThrow(Enchantments.PUNCH), getItem());
+                if (punch > 0) {
+                    double resistance = Math.max(0, 1 - living.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE));
+                    Vec3 push = getDeltaMovement().multiply(1, 0, 1).normalize().scale(punch * 0.6 * resistance);
+                    if (push.lengthSqr() > 0) {
+                        living.push(push.x, 0.1, push.z);
+                    }
+                }
             }
         }
     }
