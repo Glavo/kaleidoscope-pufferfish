@@ -50,7 +50,7 @@ public final class PufferfishCombat {
         event.addModifier(Attributes.ATTACK_DAMAGE, new AttributeModifier(Item.BASE_ATTACK_DAMAGE_ID,
                 meleeDamage - 1, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
         event.addModifier(Attributes.ATTACK_SPEED, new AttributeModifier(Item.BASE_ATTACK_SPEED_ID,
-                -3, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
+                PufferfishItems.isHeavy(stack) ? -3.4 : -3, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
     }
 
     /// Returns whether the supplied fish can perform a configured smash with the attacker's current fall state.

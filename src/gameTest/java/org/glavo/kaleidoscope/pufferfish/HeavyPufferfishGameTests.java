@@ -108,7 +108,10 @@ public final class HeavyPufferfishGameTests {
         player.attack(target);
         if (PufferfishItems.isHeavy(stack)) {
             helper.assertTrue(Math.abs(player.getAttributeValue(Attributes.ATTACK_DAMAGE) - 6 * PufferfishCombatConfig.HEAVY_DAMAGE_MULTIPLIER.get()) < 0.0001
-                    && player.getAttributeValue(Attributes.ATTACK_SPEED) == 1, "Heavy fish did not use configurable fish attack attributes");
+                    && Math.abs(player.getAttributeValue(Attributes.ATTACK_SPEED) - 0.6) < 0.0001,
+                    "Heavy fish did not use configured damage and heavy attack speed");
+            helper.assertTrue(Math.abs(player.getCurrentItemAttackStrengthDelay() - 20 / 0.6) < 0.001,
+                    "Heavy fish did not have the expected attack recharge time");
             var poison = target.getEffect(MobEffects.POISON);
             helper.assertTrue(poison != null && poison.getAmplifier() == 1 && poison.getDuration() == 120,
                     "Heavy fish lost pufferfish poison effects");
