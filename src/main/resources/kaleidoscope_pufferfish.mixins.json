@@ -1,0 +1,17 @@
+{
+  "required": true,
+  "package": "org.glavo.kaleidoscope.pufferfish.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "PufferfishMixin",
+    "AbstractFishMixin",
+    "ItemMixin"
+  ],
+  "client": [
+    "PufferfishRendererMixin",
+    "ItemRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

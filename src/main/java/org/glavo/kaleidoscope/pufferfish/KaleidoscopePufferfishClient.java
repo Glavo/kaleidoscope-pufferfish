@@ -3,32 +3,37 @@
 
 package org.glavo.kaleidoscope.pufferfish;
 
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.world.item.DyeColor;
 import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
-import net.neoforged.neoforge.client.gui.ConfigurationScreen;
-import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
+import net.neoforged.neoforge.client.event.ModelEvent;
+import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
+import net.neoforged.neoforge.client.event.RegisterSpriteSourceTypesEvent;
+import org.glavo.kaleidoscope.pufferfish.client.PufferfishSpriteSource;
+import org.glavo.kaleidoscope.pufferfish.client.PufferfishTextures;
 
-// This class will not load on dedicated servers. Accessing client side code from here is safe.
 @Mod(value = KaleidoscopePufferfish.MODID, dist = Dist.CLIENT)
-// You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
-@EventBusSubscriber(modid = KaleidoscopePufferfish.MODID, value = Dist.CLIENT)
 public class KaleidoscopePufferfishClient {
-    public KaleidoscopePufferfishClient(ModContainer container) {
-        // Allows NeoForge to create a config screen for this mod's configs.
-        // The config screen is accessed by going to the Mods screen > clicking on your mod > clicking on config.
-        // Do not forget to add translations for your config options to the en_us.json file.
-        container.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
+    public KaleidoscopePufferfishClient(IEventBus bus) {
+        bus.addListener(this::registerSprites);
+        bus.addListener(this::registerModels);
+        bus.addListener(this::registerReloadListeners);
     }
 
-    @SubscribeEvent
-    static void onClientSetup(FMLClientSetupEvent event) {
-        // Some client setup code
-        KaleidoscopePufferfish.LOGGER.info("HELLO FROM CLIENT SETUP");
-        KaleidoscopePufferfish.LOGGER.info("MINECRAFT NAME >> {}", Minecraft.getInstance().getUser().getName());
+    private void registerSprites(RegisterSpriteSourceTypesEvent event) {
+        event.register(KaleidoscopePufferfish.id("dyed_pufferfish"), PufferfishSpriteSource.TYPE);
+    }
+
+    private void registerModels(ModelEvent.RegisterAdditional event) {
+        for (DyeColor color : DyeColor.values()) {
+            event.register(ModelResourceLocation.standalone(PufferfishTextures.item(color, false)));
+            event.register(ModelResourceLocation.standalone(PufferfishTextures.item(color, true)));
+        }
+    }
+
+    private void registerReloadListeners(RegisterClientReloadListenersEvent event) {
+        event.registerReloadListener(new PufferfishTextures());
     }
 }

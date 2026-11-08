@@ -30,6 +30,11 @@ sourceSets.main {
     }
 }
 
+val gameTest = sourceSets.create("gameTest") {
+    compileClasspath += sourceSets.main.get().output + sourceSets.main.get().compileClasspath
+    runtimeClasspath += sourceSets.main.get().output + sourceSets.main.get().runtimeClasspath
+}
+
 repositories {
     mavenCentral()
     exclusiveContent {
@@ -57,6 +62,7 @@ neoForge {
         create("client") {
             client()
             systemProperty("neoforge.enabledGameTestNamespaces", modId)
+            systemProperty("kaleidoscope_pufferfish.clientSmokeTest", providers.gradleProperty("client_smoke_test").getOrElse("false"))
         }
         create("server") {
             server()
@@ -65,6 +71,7 @@ neoForge {
         }
         create("gameTestServer") {
             type.set("gameTestServer")
+            sourceSet.set(gameTest)
             systemProperty("neoforge.enabledGameTestNamespaces", modId)
         }
         create("data") {
@@ -84,6 +91,7 @@ neoForge {
     mods {
         create(modId) {
             sourceSet(sourceSets.main.get())
+            sourceSet(gameTest)
         }
     }
 }

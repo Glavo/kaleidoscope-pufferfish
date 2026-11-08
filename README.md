@@ -1,10 +1,32 @@
+# Kaleidoscope Pufferfish
 
-# Development dependencies
+Dye live pufferfish, pufferfish items, and pufferfish buckets in all 16 Minecraft
+colors. Targets Minecraft 1.21.1 and NeoForge with Java 21.
 
-Targets Minecraft 1.21.1 and NeoForge with Java 21. Optional integrations are
-Kaleidoscope Cookery 1.5.1 / 1.6.0 and Farmer's Delight 1.3.4, resolved through
-Modrinth Maven. Both mods are available at compile time and loaded in development
-runs by default; neither is bundled in the output JAR.
+## Usage
+
+- Use a dye on a live pufferfish. Survival mode consumes one dye when the color
+  changes; creative mode consumes none. Dyed fish do not naturally despawn.
+- Craft one pufferfish or pufferfish bucket with one dye in any crafting grid.
+  Recoloring preserves custom names and bucket entity data.
+- Catch and release dyed fish with water buckets. Colors survive world saves,
+  bucket storage, and death drops.
+- Find all colored items and buckets in the Kaleidoscope Pufferfish creative tab.
+
+Undyed fish retain their vanilla appearance and behavior. Dyed items retain the
+vanilla item IDs and food properties, including pufferfish poisoning. Existing
+recipes that accept vanilla pufferfish also accept dyed pufferfish. This does not
+add new dishes or change which fish other mods consider edible.
+
+Textures are derived from the active resource pack at load time: warm body pixels
+are recolored while neutral pixels and water retain their colors. Resource packs
+that replace the yellow body with another hue may need custom models or textures.
+
+## Development
+
+Optional integrations are Kaleidoscope Cookery 1.5.1 / 1.6.0 and Farmer's Delight
+1.3.4, resolved through Modrinth Maven. Both mods are available at compile time
+and loaded in development runs by default; neither is bundled in the output JAR.
 
 The default build uses Cookery 1.5.1. To build or run against 1.6.0:
 
@@ -13,37 +35,25 @@ The default build uses Cookery 1.5.1. To build or run against 1.6.0:
 .\gradlew.bat runClient "-Pkaleidoscope_cookery_version=1.6.0-neoforge+mc1.21.1"
 ```
 
-Use `-Pinclude_cookery=false` or `-Pinclude_farmers_delight=false` with
-`runClient` / `runServer` to test an integration separately. Set both to `false`
-to run without either mod. CI builds against both supported Cookery versions.
+Use `-Pinclude_cookery=false` or `-Pinclude_farmers_delight=false` to test an
+integration separately. Set both to `false` to run without either mod.
 
-Installation information
-=======
+```powershell
+.\gradlew.bat runGameTestServer
+.\gradlew.bat runClient -Pclient_smoke_test=true
+```
 
-This template repository can be directly cloned to get you started with a new
-mod. Simply create a new repository cloned from this one, by following the
-instructions provided by [GitHub](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
+Game tests cover all colors, entity synchronization and persistence, bucket
+release, recipe data preservation, dye consumption, death drops, and Cookery
+recipe ingredients. The client smoke test checks all colored models and textures,
+reloads resource packs, and exits automatically. Test sources are excluded from
+the published JAR. CI runs game tests against both supported Cookery versions.
 
-Once you have your clone, simply open the repository in the IDE of your choice. The usual recommendation for an IDE is either IntelliJ IDEA or Eclipse.
-
-If at any point you are missing libraries in your IDE, or you've run into problems you can
-run `gradlew --refresh-dependencies` to refresh the local cache. `gradlew clean` to reset everything 
-{this does not affect your code} and then start the process again.
-
-Mapping Names:
-============
-By default, the MDK is configured to use the official mapping names from Mojang for methods and fields 
-in the Minecraft codebase. These names are covered by a specific license. All modders should be aware of this
-license. For the latest license text, refer to the mapping file itself, or the reference copy here:
-https://github.com/NeoForged/NeoForm/blob/main/Mojang.md
-
-Additional Resources: 
-==========
-Community Documentation: https://docs.neoforged.net/  
-NeoForged Discord: https://discord.neoforged.net/
-
-# License
+## License
 
 This project is licensed under the [Mozilla Public License 2.0](LICENSE), except
 where otherwise noted. The original NeoForge MDK template files retain their
 [MIT license notice](TEMPLATE_LICENSE.txt).
+
+Minecraft mapping names are covered by Mojang's
+[mapping license](https://github.com/NeoForged/NeoForm/blob/main/Mojang.md).

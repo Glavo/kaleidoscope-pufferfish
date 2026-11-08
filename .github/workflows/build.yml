@@ -31,3 +31,6 @@ jobs:
 
       - name: Build with Gradle
         run: ./gradlew build -Pkaleidoscope_cookery_version=${{ matrix.cookery }}
+
+      - name: Run game tests
+        run: ./gradlew runGameTestServer -Pkaleidoscope_cookery_version=${{ matrix.cookery }}

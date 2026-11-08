@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "kaleidoscope_pufferfish:item/black_pufferfish_bucket"
+  }
+}
