@@ -94,6 +94,7 @@ public final class PufferfishClientSmokeTest {
             throw new IllegalStateException("Missing golden pufferfish item model, texture, or translation");
         }
         verifyCuttingModels(minecraft);
+        verifyDishModels(minecraft);
         verifyHeavyModel(minecraft);
         verifyWhiteEyes(minecraft);
         PufferfishEyesClientPreview.save(minecraft);
@@ -113,8 +114,35 @@ public final class PufferfishClientSmokeTest {
             projectileRendererChecked = false;
             minecraft.reloadResourcePacks();
         } else {
-            LogUtils.getLogger().info("Pufferfish client smoke test passed: 36 item models, 18 blocks, 17 skins, cutting models, headgear, gloves, flails and conduit rendering, projectile renderers, model override delegation, and resource reload");
+            LogUtils.getLogger().info("Pufferfish client smoke test passed: 38 item models, 18 blocks, 17 skins, cutting models, headgear, gloves, flails and conduit rendering, projectile renderers, model override delegation, and resource reload");
             minecraft.stop();
+        }
+    }
+
+    /// Verifies both cooked dish models and saves their stitched sprites side by side for visual inspection.
+    private static void verifyDishModels(Minecraft minecraft) {
+        try (var preview = new com.mojang.blaze3d.platform.NativeImage(512, 256, true)) {
+            var items = java.util.List.of(PufferfishItems.BRAISED.get(), PufferfishItems.BRAISED_RICE_BOWL.get());
+            for (int index = 0; index < items.size(); index++) {
+                var stack = new ItemStack(items.get(index));
+                var model = minecraft.getItemRenderer().getModel(stack, null, null, 0);
+                var name = index == 0 ? "braised_pufferfish" : "braised_pufferfish_rice_bowl";
+                if (model == minecraft.getModelManager().getMissingModel()
+                        || model.getQuads(null, null, RandomSource.create()).isEmpty()
+                        || !model.getParticleIcon().contents().name().equals(KaleidoscopePufferfish.id("item/" + name))
+                        || stack.getHoverName().getString().startsWith("item.")) {
+                    throw new IllegalStateException("Missing cooked dish model, sprite, or translation: " + name);
+                }
+                var sprite = model.getParticleIcon().contents().getOriginalImage();
+                for (int y = 0; y < 256; y++) {
+                    for (int x = 0; x < 256; x++) {
+                        preview.setPixelRGBA(index * 256 + x, y, sprite.getPixelRGBA(x * sprite.getWidth() / 256, y * sprite.getHeight() / 256));
+                    }
+                }
+            }
+            preview.writeToFile(java.nio.file.Path.of("pufferfish-dishes-preview.png"));
+        } catch (java.io.IOException exception) {
+            throw new IllegalStateException("Could not save cooked dish preview", exception);
         }
     }
 

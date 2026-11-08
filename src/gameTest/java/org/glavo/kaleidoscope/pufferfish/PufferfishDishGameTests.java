@@ -1,0 +1,45 @@
+// Copyright (c) 2026 Glavo
+// SPDX-License-Identifier: MPL-2.0
+
+package org.glavo.kaleidoscope.pufferfish;
+
+import java.util.List;
+import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.GameType;
+import net.neoforged.fml.ModList;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+
+/// Verifies cooked meals, their bowl returns, and optional recipe loading.
+@GameTestHolder(KaleidoscopePufferfish.MODID)
+@PrefixGameTestTemplate(false)
+public final class PufferfishDishGameTests {
+    /// Prevents construction of the test holder.
+    private PufferfishDishGameTests() {}
+
+    /// Verifies food recovery and bowl returns for single and stacked meals without applying raw-fish poison.
+    @GameTest(template = "empty")
+    public static void cookedDishesRestoreFoodAndReturnBowls(GameTestHelper helper) {
+        for (var item : List.of(PufferfishItems.BRAISED.get(), PufferfishItems.BRAISED_RICE_BOWL.get())) {
+            for (int count : new int[] {1, 2}) {
+                var player = helper.makeMockPlayer(GameType.SURVIVAL);
+                player.getFoodData().setFoodLevel(0);
+                var stack = new ItemStack(item, count);
+                var result = stack.finishUsingItem(helper.getLevel(), player);
+                helper.assertTrue(player.getFoodData().getFoodLevel() == (item == PufferfishItems.BRAISED.get() ? 9 : 14)
+                        && player.getActiveEffects().isEmpty() && !PufferfishItems.isWeapon(stack), "Cooked meal nutrition or effects are incorrect");
+                helper.assertTrue(count == 1 ? result.is(Items.BOWL) && result.getCount() == 1
+                        : result.is(item) && result.getCount() == 1 && player.getInventory().countItem(Items.BOWL) == 1,
+                        "Eating a meal lost or duplicated its bowl");
+            }
+        }
+        for (var name : List.of("braised_pufferfish", "braised_pufferfish_rice_bowl")) {
+            helper.assertTrue(helper.getLevel().getRecipeManager().byKey(KaleidoscopePufferfish.id("compat/cookery/" + name)).isPresent()
+                    == ModList.get().isLoaded("kaleidoscope_cookery"), "Cookery dish recipe ignored its mod condition");
+        }
+        helper.succeed();
+    }
+}

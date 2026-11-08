@@ -1,0 +1,30 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "kaleidoscope_cookery"
+    }
+  ],
+  "type": "kaleidoscope_cookery:pot",
+  "carrier": {
+    "item": "minecraft:bowl"
+  },
+  "ingredients": [
+    {
+      "tag": "c:foods/raw_pufferfish"
+    },
+    {
+      "tag": "c:foods/raw_pufferfish"
+    },
+    {
+      "tag": "c:foods/raw_pufferfish"
+    },
+    {
+      "tag": "c:foods/raw_pufferfish"
+    }
+  ],
+  "result": {
+    "id": "kaleidoscope_pufferfish:braised_pufferfish",
+    "count": 1
+  }
+}

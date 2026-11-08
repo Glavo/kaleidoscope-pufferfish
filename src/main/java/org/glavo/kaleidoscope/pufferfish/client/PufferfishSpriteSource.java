@@ -31,6 +31,8 @@ public final class PufferfishSpriteSource implements SpriteSource {
             });
         }
         addSashimi(manager, output);
+        addDish(manager, output, false);
+        addDish(manager, output, true);
         addBlock(manager, output, null);
         addSkin(manager, output, null);
         for (DyeColor color : DyeColor.values()) {
@@ -41,6 +43,14 @@ public final class PufferfishSpriteSource implements SpriteSource {
         addItem(manager, output, "golden_pufferfish", PufferfishTextures.GOLDEN_COLOR);
         addItem(manager, output, "heavy_pufferfish", 0);
         addBlock(manager, output, "netherite_pufferfish_block", PufferfishTextures.NETHERITE_COLOR);
+    }
+
+    /// Adds a resource-pack cooked dish sprite or the built-in bowl sprite.
+    private static void addDish(ResourceManager manager, Output output, boolean rice) {
+        var id = KaleidoscopePufferfish.id("item/" + (rice ? "braised_pufferfish_rice_bowl" : "braised_pufferfish"));
+        var replacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(id));
+        if (replacement.isPresent()) output.add(id, replacement.get());
+        else output.add(id, loader -> PufferfishDishTexture.create(id, rice));
     }
 
     /// Adds a resource-pack sashimi sprite or the built-in sliced-fish sprite.

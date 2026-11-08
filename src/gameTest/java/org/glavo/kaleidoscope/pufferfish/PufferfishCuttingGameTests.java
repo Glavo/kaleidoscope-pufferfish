@@ -23,6 +23,7 @@ import net.neoforged.neoforge.event.RegisterGameTestsEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.glavo.kaleidoscope.pufferfish.compat.cooking.CookeryCuttingGameTests;
+import org.glavo.kaleidoscope.pufferfish.compat.cooking.CookeryDishGameTests;
 import org.glavo.kaleidoscope.pufferfish.compat.cooking.FarmersDelightCuttingGameTests;
 
 /// Verifies optional cutting recipes and provides assertions shared by both board integrations.
@@ -37,6 +38,7 @@ public final class PufferfishCuttingGameTests {
     @SubscribeEvent
     public static void register(RegisterGameTestsEvent event) {
         if (ModList.get().isLoaded("kaleidoscope_cookery")) event.register(CookeryCuttingGameTests.class);
+        if (ModList.get().isLoaded("kaleidoscope_cookery")) event.register(CookeryDishGameTests.class);
         if (ModList.get().isLoaded("farmersdelight")) event.register(FarmersDelightCuttingGameTests.class);
     }
 

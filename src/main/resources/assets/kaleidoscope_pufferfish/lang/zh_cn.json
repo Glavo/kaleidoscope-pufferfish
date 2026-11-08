@@ -52,5 +52,7 @@
   "block.kaleidoscope_pufferfish.brown_pufferfish_skin": "棕色河豚皮",
   "block.kaleidoscope_pufferfish.green_pufferfish_skin": "绿色河豚皮",
   "block.kaleidoscope_pufferfish.red_pufferfish_skin": "红色河豚皮",
-  "block.kaleidoscope_pufferfish.black_pufferfish_skin": "黑色河豚皮"
+  "block.kaleidoscope_pufferfish.black_pufferfish_skin": "黑色河豚皮",
+  "item.kaleidoscope_pufferfish.braised_pufferfish": "红烧河豚",
+  "item.kaleidoscope_pufferfish.braised_pufferfish_rice_bowl": "红烧河豚盖饭"
 }

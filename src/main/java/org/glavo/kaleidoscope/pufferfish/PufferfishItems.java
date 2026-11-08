@@ -35,6 +35,14 @@ public final class PufferfishItems {
     public static final DeferredItem<Item> SASHIMI = ITEMS.register("pufferfish_sashimi", () -> new Item(
             new Item.Properties().food(new FoodProperties.Builder().nutrition(2).saturationModifier(0.1F)
                     .effect(() -> new MobEffectInstance(MobEffects.POISON, 1200, 1), 1).build())));
+    /// A cooked fish dish restoring nine nutrition points and returning a bowl when eaten.
+    public static final DeferredItem<Item> BRAISED = ITEMS.register("braised_pufferfish", () -> new Item(
+            new Item.Properties().food(new FoodProperties.Builder().nutrition(9).saturationModifier(0.6F)
+                    .usingConvertsTo(Items.BOWL).build())));
+    /// A cooked fish rice bowl restoring fourteen nutrition points and returning a bowl when eaten.
+    public static final DeferredItem<Item> BRAISED_RICE_BOWL = ITEMS.register("braised_pufferfish_rice_bowl", () -> new Item(
+            new Item.Properties().food(new FoodProperties.Builder().nutrition(14).saturationModifier(0.65F)
+                    .usingConvertsTo(Items.BOWL).build())));
     /// The reusable flail crafted from an ordinary or dyed pufferfish and two chains.
     public static final DeferredItem<PufferfishFlailItem> FLAIL = ITEMS.register("pufferfish_flail",
             () -> new PufferfishFlailItem(new Item.Properties().stacksTo(1)));
