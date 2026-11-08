@@ -5,7 +5,7 @@ package org.glavo.kaleidoscope.pufferfish;
 
 import net.neoforged.neoforge.common.ModConfigSpec;
 
-/// Defines server-authoritative melee damage and falling-smash settings for handheld pufferfish.
+/// Defines server-authoritative melee damage, falling-smash settings, and throwing speeds for handheld pufferfish.
 public final class PufferfishCombatConfig {
     /// The combat configuration, synchronized from the server to connected clients.
     public static final ModConfigSpec SPEC;
@@ -27,6 +27,10 @@ public final class PufferfishCombatConfig {
     public static final ModConfigSpec.DoubleValue NETHERITE_DENSITY_DAMAGE;
     /// Maximum falling damage bonus, including Density, before critical hits and armor; zero means uncapped.
     public static final ModConfigSpec.DoubleValue MAX_SMASH_BONUS;
+    /// Initial normal and dyed fish projectile speed in blocks per tick, before spread and inherited player motion.
+    public static final ModConfigSpec.DoubleValue NORMAL_THROW_SPEED;
+    /// Initial netherite fish projectile speed in blocks per tick, before spread and inherited player motion.
+    public static final ModConfigSpec.DoubleValue NETHERITE_THROW_SPEED;
 
     static {
         var builder = new ModConfigSpec.Builder();
@@ -53,6 +57,12 @@ public final class PufferfishCombatConfig {
                 .worldRestart().defineInRange("netheriteDensityDamagePerLevel", 0.3, 0.0, 1024.0);
         MAX_SMASH_BONUS = builder.comment("Maximum combined falling bonus after the fish multiplier and Density, before critical hits and armor. Zero disables the cap.")
                 .worldRestart().defineInRange("maxBonusDamage", 0.0, 0.0, 1048576.0);
+        builder.pop().comment("Projectile launch speeds in blocks per tick, before spread and inherited player motion.",
+                "Lower speed gives a shorter range at the same launch angle. Reload the world/server after editing.").push("throwing");
+        NORMAL_THROW_SPEED = builder.comment("Normal and dyed pufferfish launch speed.")
+                .worldRestart().defineInRange("normalSpeed", 1.5, 0.1, 3.0);
+        NETHERITE_THROW_SPEED = builder.comment("Netherite pufferfish launch speed.")
+                .worldRestart().defineInRange("netheriteSpeed", 1.0, 0.1, 3.0);
         builder.pop();
         SPEC = builder.build();
     }

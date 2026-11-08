@@ -37,6 +37,78 @@ import org.glavo.kaleidoscope.pufferfish.entity.ThrownPufferfish;
 @GameTestHolder(KaleidoscopePufferfish.MODID)
 @PrefixGameTestTemplate(false)
 public class PufferfishProjectileGameTests {
+    /// Throws a fish through the interaction event from a stationary player in unobstructed air.
+    private static ThrownPufferfish launch(GameTestHelper helper, ItemStack stack, InteractionHand hand) {
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        var pos = helper.absolutePos(new BlockPos(2, 40, 2));
+        player.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+        player.setOnGround(true);
+        player.setXRot(0);
+        player.setYRot(0);
+        player.setItemInHand(hand, stack);
+        var event = new PlayerInteractEvent.RightClickItem(player, hand);
+        NeoForge.EVENT_BUS.post(event);
+        var projectiles = helper.getLevel().getEntitiesOfClass(ThrownPufferfish.class, new AABB(pos).inflate(3));
+        helper.assertTrue(event.getCancellationResult().consumesAction() && projectiles.size() == 1,
+                "Throw did not spawn exactly one projectile");
+        return projectiles.getFirst();
+    }
+
+    /// Verifies netherite fish cover less horizontal distance under the same launch conditions.
+    @GameTest(template = "empty")
+    public static void netheriteThrowsHaveShorterFlightRange(GameTestHelper helper) {
+        for (var hand : InteractionHand.values()) {
+            double normalDistance = 0;
+            for (boolean netherite : new boolean[] {false, true}) {
+                var projectile = launch(helper, new ItemStack(netherite ? PufferfishItems.NETHERITE.get() : Items.PUFFERFISH), hand);
+                double expectedSpeed = netherite ? 1.0 : 1.5;
+                helper.assertTrue(Math.abs(projectile.getDeltaMovement().length() - expectedSpeed) < 0.06,
+                        "Incorrect default launch speed");
+                var start = projectile.position();
+                for (int tick = 0; tick < 20; tick++) projectile.tick();
+                helper.assertTrue(!projectile.isRemoved() && projectile.getY() < start.y, "Projectile did not follow its falling flight path");
+                double distance = projectile.position().subtract(start).horizontalDistance();
+                if (!netherite) normalDistance = distance;
+                else helper.assertTrue(distance > 0 && distance < normalDistance * 0.8,
+                        "Netherite fish did not fly a shorter distance");
+                projectile.discard();
+            }
+        }
+        helper.succeed();
+    }
+
+    /// Verifies independent speed settings are honored by both hands and all dyed fish use normal speed.
+    @GameTest(template = "empty")
+    public static void throwingSpeedsCanBeConfiguredIndependently(GameTestHelper helper) {
+        double normal = PufferfishCombatConfig.NORMAL_THROW_SPEED.get();
+        double netherite = PufferfishCombatConfig.NETHERITE_THROW_SPEED.get();
+        try {
+            PufferfishCombatConfig.NORMAL_THROW_SPEED.set(1.2);
+            PufferfishCombatConfig.NORMAL_THROW_SPEED.clearCache();
+            PufferfishCombatConfig.NETHERITE_THROW_SPEED.set(0.6);
+            PufferfishCombatConfig.NETHERITE_THROW_SPEED.clearCache();
+            var stacks = new ArrayList<ItemStack>();
+            stacks.add(new ItemStack(Items.PUFFERFISH));
+            stacks.add(new ItemStack(PufferfishItems.NETHERITE.get()));
+            for (var color : DyeColor.values()) stacks.add(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
+            for (var hand : InteractionHand.values()) {
+                for (var stack : stacks) {
+                    var projectile = launch(helper, stack.copy(), hand);
+                    double expected = PufferfishItems.isNetherite(stack) ? 0.6 : 1.2;
+                    helper.assertTrue(Math.abs(projectile.getDeltaMovement().length() - expected) < 0.06,
+                            "Configured launch speed was not used for the fish type");
+                    projectile.discard();
+                }
+            }
+        } finally {
+            PufferfishCombatConfig.NORMAL_THROW_SPEED.set(normal);
+            PufferfishCombatConfig.NORMAL_THROW_SPEED.clearCache();
+            PufferfishCombatConfig.NETHERITE_THROW_SPEED.set(netherite);
+            PufferfishCombatConfig.NETHERITE_THROW_SPEED.clearCache();
+        }
+        helper.succeed();
+    }
+
     @GameTest(template = "empty")
     public static void throwingConsumesOneFishAndPreservesColor(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);

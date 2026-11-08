@@ -10,9 +10,12 @@ import net.minecraft.world.InteractionResult;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import org.glavo.kaleidoscope.pufferfish.entity.ThrownPufferfish;
 
+/// Handles pufferfish throwing with item-specific launch speeds and normal item consumption.
 public final class PufferfishThrowing {
+    /// Prevents construction of this interaction handler.
     private PufferfishThrowing() {}
 
+    /// Handles eligible right-clicks, spawning a fish on the server and consuming one item on success.
     public static void use(PlayerInteractEvent.RightClickItem event) {
         var player = event.getEntity();
         var stack = event.getItemStack();
@@ -26,7 +29,9 @@ public final class PufferfishThrowing {
         if (!level.isClientSide()) {
             var projectile = new ThrownPufferfish(level, player);
             projectile.setItem(stack);
-            projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 1.5F, 1.0F);
+            float speed = PufferfishCombatConfig.value(PufferfishItems.isNetherite(stack)
+                    ? PufferfishCombatConfig.NETHERITE_THROW_SPEED : PufferfishCombatConfig.NORMAL_THROW_SPEED).floatValue();
+            projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, speed, 1.0F);
             if (!level.addFreshEntity(projectile)) {
                 event.setCancellationResult(InteractionResult.FAIL);
                 return;
