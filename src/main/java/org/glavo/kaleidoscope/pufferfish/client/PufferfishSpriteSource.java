@@ -30,7 +30,8 @@ public final class PufferfishSpriteSource implements SpriteSource {
                 }
             });
         }
-        addSashimi(manager, output);
+        addSashimi(manager, output, false);
+        addSashimi(manager, output, true);
         addDish(manager, output, false);
         addDish(manager, output, true);
         addZosui(manager, output);
@@ -63,13 +64,13 @@ public final class PufferfishSpriteSource implements SpriteSource {
     }
 
     /// Adds a resource-pack sashimi sprite or the built-in sliced-fish sprite.
-    private static void addSashimi(ResourceManager manager, Output output) {
-        var id = KaleidoscopePufferfish.id("item/pufferfish_sashimi");
+    private static void addSashimi(ResourceManager manager, Output output, boolean golden) {
+        var id = KaleidoscopePufferfish.id("item/" + (golden ? "golden_pufferfish_sashimi" : "pufferfish_sashimi"));
         var replacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(id));
         if (replacement.isPresent()) {
             output.add(id, replacement.get());
         } else {
-            output.add(id, loader -> PufferfishSashimiTexture.create(id));
+            output.add(id, loader -> PufferfishSashimiTexture.create(id, golden));
         }
     }
 

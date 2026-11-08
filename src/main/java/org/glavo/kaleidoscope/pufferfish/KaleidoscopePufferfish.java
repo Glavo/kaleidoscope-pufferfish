@@ -79,6 +79,7 @@ public class KaleidoscopePufferfish {
                     output.accept(PufferfishItems.HEAVY);
                     output.accept(PufferfishItems.GOLDEN);
                     output.accept(PufferfishItems.SASHIMI);
+                    output.accept(PufferfishItems.GOLDEN_SASHIMI);
                     output.accept(PufferfishItems.BRAISED);
                     output.accept(PufferfishItems.BRAISED_RICE_BOWL);
                     output.accept(PufferfishItems.ZOSUI);

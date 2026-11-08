@@ -114,7 +114,7 @@ public final class PufferfishClientSmokeTest {
             projectileRendererChecked = false;
             minecraft.reloadResourcePacks();
         } else {
-            LogUtils.getLogger().info("Pufferfish client smoke test passed: 39 item models, 18 blocks, 17 skins, cutting models, headgear, gloves, flails and conduit rendering, projectile renderers, model override delegation, and resource reload");
+            LogUtils.getLogger().info("Pufferfish client smoke test passed: 40 item models, 18 blocks, 17 skins, cutting models, headgear, gloves, flails and conduit rendering, projectile renderers, model override delegation, and resource reload");
             minecraft.stop();
         }
     }
@@ -191,28 +191,30 @@ public final class PufferfishClientSmokeTest {
 
     /// Verifies cutting models across resource reloads and saves an enlarged sashimi sprite for visual inspection.
     private static void verifyCuttingModels(Minecraft minecraft) {
-        var stack = new ItemStack(PufferfishItems.SASHIMI.get());
-        var model = minecraft.getItemRenderer().getModel(stack, null, null, 0);
-        if (model == minecraft.getModelManager().getMissingModel()
-                || model.getQuads(null, null, RandomSource.create()).isEmpty()
-                || !model.getParticleIcon().contents().name().equals(KaleidoscopePufferfish.id("item/pufferfish_sashimi"))
-                || stack.getHoverName().getString().startsWith("item.")) {
-            throw new IllegalStateException("Missing pufferfish sashimi model, sprite, or translation");
-        }
-        var sprite = model.getParticleIcon().contents().getOriginalImage();
-        try (var preview = new com.mojang.blaze3d.platform.NativeImage(sprite.getWidth() * 16, sprite.getHeight() * 16, true)) {
-            for (int y = 0; y < preview.getHeight(); y++) {
-                for (int x = 0; x < preview.getWidth(); x++) {
-                    preview.setPixelRGBA(x, y, sprite.getPixelRGBA(x / 16, y / 16));
-                }
+        for (boolean golden : new boolean[] {false, true}) {
+            var stack = new ItemStack(golden ? PufferfishItems.GOLDEN_SASHIMI.get() : PufferfishItems.SASHIMI.get());
+            var model = minecraft.getItemRenderer().getModel(stack, null, null, 0);
+            if (model == minecraft.getModelManager().getMissingModel()
+                    || model.getQuads(null, null, RandomSource.create()).isEmpty()
+                    || !model.getParticleIcon().contents().name().equals(KaleidoscopePufferfish.id(golden ? "item/golden_pufferfish_sashimi" : "item/pufferfish_sashimi"))
+                    || stack.getHoverName().getString().startsWith("item.")) {
+                throw new IllegalStateException("Missing pufferfish sashimi model, sprite, or translation");
             }
-            preview.writeToFile(java.nio.file.Path.of("pufferfish-sashimi-preview.png"));
-        } catch (java.io.IOException exception) {
-            throw new IllegalStateException("Could not save sashimi sprite preview", exception);
+            var sprite = model.getParticleIcon().contents().getOriginalImage();
+            try (var preview = new com.mojang.blaze3d.platform.NativeImage(sprite.getWidth() * 16, sprite.getHeight() * 16, true)) {
+                for (int y = 0; y < preview.getHeight(); y++) {
+                    for (int x = 0; x < preview.getWidth(); x++) {
+                        preview.setPixelRGBA(x, y, sprite.getPixelRGBA(x / 16, y / 16));
+                    }
+                }
+                preview.writeToFile(java.nio.file.Path.of(golden ? "golden-pufferfish-sashimi-preview.png" : "pufferfish-sashimi-preview.png"));
+            } catch (java.io.IOException exception) {
+                throw new IllegalStateException("Could not save sashimi sprite preview", exception);
+            }
         }
         if (net.neoforged.fml.ModList.get().isLoaded("kaleidoscope_cookery")) {
-            for (int color = -1; color < 16; color++) {
-                var name = PufferfishBlocks.skinName(color < 0 ? null : DyeColor.byId(color));
+            for (int color = -1; color < 17; color++) {
+                var name = color == 16 ? "golden_pufferfish" : PufferfishBlocks.skinName(color < 0 ? null : DyeColor.byId(color));
                 for (int stage = 0; stage <= 3; stage++) {
                     var id = KaleidoscopePufferfish.id("chopping_board/" + name + "/" + stage);
                     var cuttingModel = minecraft.getModelManager().getModel(ModelResourceLocation.standalone(id));

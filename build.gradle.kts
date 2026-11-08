@@ -157,7 +157,7 @@ val generateItemModels = tasks.register<Sync>("generateItemModels") {
     val modelNames = dyeColors.flatMap { color ->
         listOf("${color}_pufferfish", "${color}_pufferfish_bucket")
     } + listOf("netherite_pufferfish", "golden_pufferfish", "pufferfish_sashimi", "heavy_pufferfish",
-        "braised_pufferfish", "braised_pufferfish_rice_bowl", "pufferfish_zosui")
+        "braised_pufferfish", "braised_pufferfish_rice_bowl", "pufferfish_zosui", "golden_pufferfish_sashimi")
     inputs.property("modId", modId)
     inputs.property("modelNames", modelNames)
     filteringCharset = "UTF-8"
@@ -237,6 +237,7 @@ val generateSkinResources = tasks.register<Sync>("generateSkinResources") {
             "modId" to modId,
             "blockName" to skinName,
             "fishTexture" to (if (color.isEmpty()) "minecraft:item/pufferfish" else "$modId:item/${color}_pufferfish"),
+            "sashimiTexture" to "$modId:item/pufferfish_sashimi",
             "blockId" to "$modId:$skinName",
             "ingredient" to JsonOutput.toJson(if (color.isEmpty()) mapOf("type" to "$modId:pufferfish")
                 else mapOf("type" to "$modId:pufferfish", "color" to color))
@@ -263,6 +264,15 @@ val generateSkinResources = tasks.register<Sync>("generateSkinResources") {
                 into("assets/$modId/models/chopping_board/$skinName")
                 rename { "$stage.json" }
             }
+        }
+    }
+    for (stage in 0..3) {
+        from("src/main/skinTemplates/chopping_stage_$stage.json") {
+            expand("modId" to modId, "blockName" to "pufferfish_skin",
+                "fishTexture" to "$modId:item/golden_pufferfish",
+                "sashimiTexture" to "$modId:item/golden_pufferfish_sashimi")
+            into("assets/$modId/models/chopping_board/golden_pufferfish")
+            rename { "$stage.json" }
         }
     }
 }

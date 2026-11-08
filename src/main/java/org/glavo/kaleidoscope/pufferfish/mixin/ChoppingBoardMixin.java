@@ -33,9 +33,10 @@ public abstract class ChoppingBoardMixin {
             "Lcom/github/ysbbbbbb/kaleidoscopecookery/blockentity/kitchen/ChoppingBoardBlockEntity;popResource(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/item/ItemStack;)V"))
     private void kaleidoscope$releaseSkin(Level level, LivingEntity user, ItemStack cutter,
             CallbackInfoReturnable<Boolean> callback) {
-        if (!level.isClientSide && currentCutStack.is(Items.PUFFERFISH) && result.is(PufferfishItems.SASHIMI.get())) {
+        boolean golden = currentCutStack.is(PufferfishItems.GOLDEN.get()) && result.is(PufferfishItems.GOLDEN_SASHIMI.get());
+        if (!level.isClientSide && (golden || currentCutStack.is(Items.PUFFERFISH) && result.is(PufferfishItems.SASHIMI.get()))) {
             var pos = ((BlockEntity) (Object) this).getBlockPos();
-            var skin = new ItemStack(PufferfishBlocks.skin(PufferfishColors.get(currentCutStack)));
+            var skin = new ItemStack(PufferfishBlocks.skin(golden ? null : PufferfishColors.get(currentCutStack)));
             var entity = new ItemEntity(level, pos.getX() + 0.5, pos.getY() + 0.25, pos.getZ() + 0.5, skin, 0, 0, 0);
             entity.setDefaultPickUpDelay();
             level.addFreshEntity(entity);

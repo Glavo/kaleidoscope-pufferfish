@@ -90,7 +90,22 @@ public final class CookeryCuttingGameTests {
             PufferfishCuttingGameTests.verifyDrops(helper, pos, color);
             helper.assertTrue(!board.onCutItem(level, player, knife), "Empty board produced repeated output");
         }
-        for (var item : new net.minecraft.world.item.Item[] {PufferfishItems.GOLDEN.get(), PufferfishItems.NETHERITE.get()}) {
+        var golden = new ItemStack(PufferfishItems.GOLDEN.get(), 2);
+        golden.set(KaleidoscopePufferfish.COLOR.get(), DyeColor.RED);
+        helper.assertTrue(board.onPutItem(level, player, golden) && golden.getCount() == 1, "Board did not consume one golden fish");
+        helper.assertTrue(!board.onCutItem(level, player, new ItemStack(Items.STICK)) && board.onCutItem(level, player, knife), "Golden fish knife requirement failed");
+        var saved = board.saveWithFullMetadata(level.registryAccess());
+        level.removeBlockEntity(pos);
+        board = new ChoppingBoardBlockEntity(pos, level.getBlockState(pos));
+        board.loadWithComponents(saved, level.registryAccess());
+        level.setBlockEntity(board);
+        helper.assertTrue(KaleidoscopePufferfish.id("golden_pufferfish").equals(board.getModelId()), "Golden cutting progress lost its model");
+        for (int cut = 1; cut < 3; cut++) helper.assertTrue(board.onCutItem(level, player, knife), "Golden fish cutting failed");
+        helper.assertTrue(level.getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(2)).isEmpty(), "Golden products dropped before collection");
+        helper.assertTrue(board.onCutItem(level, player, knife), "Golden output collection failed");
+        PufferfishCuttingGameTests.verifyDrops(helper, pos, null, PufferfishItems.GOLDEN_SASHIMI.get());
+        helper.assertTrue(!board.onCutItem(level, player, knife), "Golden fish produced repeated output");
+        for (var item : new net.minecraft.world.item.Item[] {PufferfishItems.GOLDEN_SASHIMI.get(), PufferfishItems.NETHERITE.get(), PufferfishItems.HEAVY.get()}) {
             helper.assertTrue(!board.onPutItem(level, player, new ItemStack(item)), "Special fish was accepted for cutting");
         }
         var fish = PufferfishCuttingGameTests.fish(DyeColor.RED);

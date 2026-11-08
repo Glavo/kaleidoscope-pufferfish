@@ -9,9 +9,9 @@ import net.minecraft.client.resources.metadata.animation.FrameSize;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceMetadata;
 
-/// Supplies a built-in sprite of three thin ivory fish slices with pink grain and a green garnish.
+/// Supplies ordinary and golden sliced-fish sprites with a green garnish.
 public final class PufferfishSashimiTexture {
-    /// Pixel rows using transparency, cool outlines, flesh shading, and two garnish greens.
+    /// Pixel rows using transparency, outlines, flesh shading, and two garnish greens.
     private static final String[] PIXELS = {
             "................", "...........oooo.", "..........ohhhho", ".........ohhffso",
             "........ohhffso.", ".......oooosso..", "......ohhhhooo..", ".....ohhffso....",
@@ -22,16 +22,16 @@ public final class PufferfishSashimiTexture {
     /// Prevents construction of the sprite factory.
     private PufferfishSashimiTexture() {}
 
-    /// Creates a 16-by-16 sprite whose image is owned by the returned sprite contents.
-    public static SpriteContents create(ResourceLocation id) {
+    /// Creates a 16-by-16 sprite with ivory or golden slices; the returned contents own the image.
+    public static SpriteContents create(ResourceLocation id, boolean golden) {
         var image = new NativeImage(16, 16, true);
         for (int y = 0; y < 16; y++) {
             for (int x = 0; x < PIXELS[y].length(); x++) {
                 int rgb = switch (PIXELS[y].charAt(x)) {
-                    case 'o' -> 0x72858C;
-                    case 's' -> 0xBAC9CC;
-                    case 'f' -> 0xEBD2CD;
-                    case 'h' -> 0xFFF8EC;
+                    case 'o' -> golden ? 0x98702E : 0x72858C;
+                    case 's' -> golden ? 0xD49E37 : 0xBAC9CC;
+                    case 'f' -> golden ? 0xF4CF64 : 0xEBD2CD;
+                    case 'h' -> golden ? 0xFFF3B0 : 0xFFF8EC;
                     case 'g' -> 0x4F7945;
                     case 'l' -> 0x94B960;
                     default -> -1;

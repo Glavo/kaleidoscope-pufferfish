@@ -102,6 +102,32 @@ public final class GoldenPufferfishGameTests {
         helper.succeed();
     }
 
+    /// Verifies golden sashimi retains food buffs, can be eaten at full hunger, and applies no poison.
+    @GameTest(template = "empty")
+    public static void goldenSashimiRetainsBuffsWithoutPoison(GameTestHelper helper) {
+        for (int hunger : new int[] {10, 20}) {
+            var player = helper.makeMockPlayer(GameType.SURVIVAL);
+            player.getFoodData().setFoodLevel(hunger);
+            player.getFoodData().setSaturation(0);
+            var stack = new ItemStack(PufferfishItems.GOLDEN_SASHIMI.get(), 2);
+            player.setItemInHand(InteractionHand.MAIN_HAND, stack);
+            var event = new PlayerInteractEvent.RightClickItem(player, InteractionHand.MAIN_HAND);
+            NeoForge.EVENT_BUS.post(event);
+            helper.assertTrue(!event.isCanceled() && !PufferfishItems.isWeapon(stack)
+                    && stack.use(helper.getLevel(), player, InteractionHand.MAIN_HAND).getResult().consumesAction(),
+                    "Golden sashimi was throwable or could not be eaten");
+            stack.finishUsingItem(helper.getLevel(), player);
+            helper.assertTrue(stack.getCount() == 1 && player.getFoodData().getFoodLevel() == Math.min(20, hunger + 4)
+                    && Math.abs(player.getFoodData().getSaturationLevel() - 9.6F) < 0.001F
+                    && !player.hasEffect(MobEffects.POISON) && player.getActiveEffects().size() == 3,
+                    "Golden sashimi nutrition, consumption, or poison removal failed");
+            effect(helper, player, MobEffects.REGENERATION, 100, 1);
+            effect(helper, player, MobEffects.ABSORPTION, 2400, 0);
+            effect(helper, player, MobEffects.WATER_BREATHING, 9600, 0);
+        }
+        helper.succeed();
+    }
+
     /// Checks an effect's duration in ticks and zero-based amplifier.
     private static void effect(GameTestHelper helper, Player player, Holder<MobEffect> type, int ticks, int amplifier) {
         var effect = player.getEffect(type);

@@ -52,7 +52,16 @@ public final class FarmersDelightCuttingGameTests {
             helper.assertTrue(board.processStoredItemUsingTool(kitchenKnife, player), "Cookery knife could not cut on Farmer's Delight board");
             PufferfishCuttingGameTests.verifyDrops(helper, pos, null);
         }
-        for (var item : new net.minecraft.world.item.Item[] {PufferfishItems.GOLDEN.get(), PufferfishItems.NETHERITE.get()}) {
+        var golden = new ItemStack(PufferfishItems.GOLDEN.get(), 2);
+        helper.assertTrue(board.addItem(golden).isEmpty(), "Board rejected golden fish");
+        helper.assertTrue(!board.processStoredItemUsingTool(new ItemStack(Items.STICK), player), "Stick cut a golden fish");
+        for (int remaining = 1; remaining >= 0; remaining--) {
+            helper.assertTrue(board.processStoredItemUsingTool(knife, player) && board.getStoredItem().getCount() == remaining,
+                    "Golden cutting did not consume exactly one fish");
+            PufferfishCuttingGameTests.verifyDrops(helper, pos, null, PufferfishItems.GOLDEN_SASHIMI.get());
+        }
+        helper.assertTrue(!board.processStoredItemUsingTool(knife, player), "Golden fish produced repeated output");
+        for (var item : new net.minecraft.world.item.Item[] {PufferfishItems.GOLDEN_SASHIMI.get(), PufferfishItems.NETHERITE.get(), PufferfishItems.HEAVY.get()}) {
             board.addItem(new ItemStack(item));
             helper.assertTrue(!board.processStoredItemUsingTool(knife, player), "Special fish was accepted for cutting");
             board.removeItem();
