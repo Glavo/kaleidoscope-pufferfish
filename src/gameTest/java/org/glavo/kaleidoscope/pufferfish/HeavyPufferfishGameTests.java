@@ -206,7 +206,7 @@ public final class HeavyPufferfishGameTests {
                 "Heavy fish did not equip exactly one item in the head slot");
         helper.assertTrue(player.getAttributeValue(Attributes.ARMOR) == 4 && player.getAttributeValue(Attributes.ARMOR_TOUGHNESS) == 4
                 && player.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE) == 0.5
-                && Math.abs(player.getAttributeValue(Attributes.MOVEMENT_SPEED) - speed * 0.85) < 0.000001,
+                && Math.abs(player.getAttributeValue(Attributes.MOVEMENT_SPEED) - speed * 0.70) < 0.000001,
                 "Heavy headgear attributes are incorrect");
         var breathe = new LivingBreatheEvent(player, false, 1, 0);
         NeoForge.EVENT_BUS.post(breathe);

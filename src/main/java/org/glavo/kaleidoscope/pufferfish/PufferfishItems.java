@@ -63,7 +63,7 @@ public final class PufferfishItems {
                     .add(Attributes.KNOCKBACK_RESISTANCE, new AttributeModifier(KaleidoscopePufferfish.id("heavy_head_knockback_resistance"),
                             0.5, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD)
                     .add(Attributes.MOVEMENT_SPEED, new AttributeModifier(KaleidoscopePufferfish.id("heavy_head_movement_speed"),
-                            -0.15, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL), EquipmentSlotGroup.HEAD)
+                            -0.30, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL), EquipmentSlotGroup.HEAD)
                     .build())));
 
     /// Returns whether the stack contains a heavy pufferfish.
