@@ -4,12 +4,11 @@
 package org.glavo.kaleidoscope.pufferfish;
 
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.MaceItem;
+import net.minecraft.world.item.Item;
 
-/// A wearable pufferfish with native mace attacks and no durability consumption.
-public final class HeavyPufferfishItem extends MaceItem {
+/// A wearable pufferfish using the shared configurable combat hooks without durability consumption.
+public final class HeavyPufferfishItem extends Item {
     /// Creates a heavy pufferfish with the supplied equipment and item properties.
     public HeavyPufferfishItem(Properties properties) {
         super(properties);
@@ -21,9 +20,9 @@ public final class HeavyPufferfishItem extends MaceItem {
         return EquipmentSlot.HEAD;
     }
 
-    /// Resets fall distance after smash-hit enchantments without consuming or damaging the fish.
+    /// Retains the heavy fish's enchantability independently of its combat implementation.
     @Override
-    public void postHurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-        if (canSmashAttack(attacker)) attacker.resetFallDistance();
+    public int getEnchantmentValue() {
+        return 15;
     }
 }

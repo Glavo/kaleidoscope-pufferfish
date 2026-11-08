@@ -34,7 +34,7 @@ import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.glavo.kaleidoscope.pufferfish.entity.ThrownPufferfish;
 
-/// Verifies heavy fish upgrading, native mace combat, equipment penalties, and retained pufferfish behavior.
+/// Verifies heavy fish upgrading, configurable combat, equipment penalties, and retained pufferfish behavior.
 @GameTestHolder(KaleidoscopePufferfish.MODID)
 @PrefixGameTestTemplate(false)
 public final class HeavyPufferfishGameTests {
@@ -107,13 +107,14 @@ public final class HeavyPufferfishGameTests {
         }
         player.attack(target);
         if (PufferfishItems.isHeavy(stack)) {
-            helper.assertTrue(Math.abs(player.getAttributeValue(Attributes.ATTACK_DAMAGE) - 6) < 0.0001
-                    && Math.abs(player.getAttributeValue(Attributes.ATTACK_SPEED) - 0.6) < 0.0001, "Heavy fish did not use mace attack attributes");
+            helper.assertTrue(Math.abs(player.getAttributeValue(Attributes.ATTACK_DAMAGE) - 6 * PufferfishCombatConfig.HEAVY_DAMAGE_MULTIPLIER.get()) < 0.0001
+                    && player.getAttributeValue(Attributes.ATTACK_SPEED) == 1, "Heavy fish did not use configurable fish attack attributes");
             var poison = target.getEffect(MobEffects.POISON);
             helper.assertTrue(poison != null && poison.getAmplifier() == 1 && poison.getDuration() == 120,
                     "Heavy fish lost pufferfish poison effects");
             helper.assertTrue(stack.getCount() == 1 && !stack.isDamaged(), "Heavy fish attack consumed or damaged the item");
-            helper.assertTrue(player.fallDistance == (distance > 1.5F ? 0 : distance), "Heavy fish did not reset successful smash fall distance");
+            helper.assertTrue(player.fallDistance == (distance > 1.5F && PufferfishCombatConfig.SMASH_ENABLED.get() ? 0 : distance),
+                    "Heavy fish did not respect smash landing rules");
         }
         float damage = 1000 - target.getHealth();
         target.discard();
@@ -122,7 +123,7 @@ public final class HeavyPufferfishGameTests {
 
     /// Compares heavy fish with actual vanilla mace hits across all Density levels, fall boundaries, and armor.
     @GameTest(template = "empty")
-    public static void heavyFishDamageMatchesVanillaMace(GameTestHelper helper) {
+    public static void defaultHeavyFishDamageMatchesVanillaMace(GameTestHelper helper) {
         var density = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.DENSITY);
         for (boolean armored : new boolean[] {false, true}) {
             for (float distance : new float[] {0, 1.5F, 2, 3, 8, 15}) {
@@ -136,20 +137,55 @@ public final class HeavyPufferfishGameTests {
                 }
             }
         }
+        helper.succeed();
+    }
+
+    /// Changes a world-restart setting for the duration of a synchronous test.
+    private static <T> void configure(net.neoforged.neoforge.common.ModConfigSpec.ConfigValue<T> setting, T value) {
+        setting.set(value);
+        setting.clearCache();
+    }
+
+    /// Verifies independent heavy coefficients, shared curve, cap, and disabling through actual player attacks.
+    @GameTest(template = "empty")
+    public static void heavyFishUseSharedSmashConfiguration(GameTestHelper helper) {
         boolean enabled = PufferfishCombatConfig.SMASH_ENABLED.get();
         double cap = PufferfishCombatConfig.MAX_SMASH_BONUS.get();
+        double multiplier = PufferfishCombatConfig.HEAVY_DAMAGE_MULTIPLIER.get();
+        double density = PufferfishCombatConfig.HEAVY_DENSITY_DAMAGE.get();
+        double first = PufferfishCombatConfig.FIRST_THREE_BLOCKS_DAMAGE.get();
+        double next = PufferfishCombatConfig.NEXT_FIVE_BLOCKS_DAMAGE.get();
+        double remaining = PufferfishCombatConfig.REMAINING_BLOCKS_DAMAGE.get();
+        var stack = new ItemStack(PufferfishItems.HEAVY.get());
+        var enchantment = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.DENSITY);
+        EnchantmentHelper.updateEnchantments(stack, entries -> entries.set(enchantment, 2));
         try {
-            PufferfishCombatConfig.SMASH_ENABLED.set(false);
-            PufferfishCombatConfig.SMASH_ENABLED.clearCache();
-            PufferfishCombatConfig.MAX_SMASH_BONUS.set(1.0);
-            PufferfishCombatConfig.MAX_SMASH_BONUS.clearCache();
-            helper.assertTrue(hit(helper, new ItemStack(PufferfishItems.HEAVY.get()), 8, false)
-                    == hit(helper, new ItemStack(Items.MACE), 8, false), "Scaled fish settings modified the heavy fish's native mace behavior");
+            configure(PufferfishCombatConfig.HEAVY_DAMAGE_MULTIPLIER, 2.0);
+            configure(PufferfishCombatConfig.HEAVY_DENSITY_DAMAGE, 0.7);
+            configure(PufferfishCombatConfig.FIRST_THREE_BLOCKS_DAMAGE, 1.0);
+            configure(PufferfishCombatConfig.NEXT_FIVE_BLOCKS_DAMAGE, 2.0);
+            configure(PufferfishCombatConfig.REMAINING_BLOCKS_DAMAGE, 3.0);
+            configure(PufferfishCombatConfig.MAX_SMASH_BONUS, 0.0);
+            helper.assertTrue(hit(helper, stack.copy(), 0, false) == 12, "Heavy base multiplier was ignored");
+            helper.assertTrue(Math.abs(hit(helper, stack.copy(), 12, false) - (12 + 50 + 16.8) * 1.5) < 0.001,
+                    "Heavy fish ignored the shared curve or its Density coefficient");
+            helper.assertTrue(hit(helper, new ItemStack(Items.PUFFERFISH), 0, false) == 1.5F
+                    && hit(helper, new ItemStack(PufferfishItems.NETHERITE.get()), 0, false) == 3,
+                    "Heavy settings changed another fish's base damage");
+            configure(PufferfishCombatConfig.MAX_SMASH_BONUS, 7.0);
+            helper.assertTrue(hit(helper, stack.copy(), 12, false) == 28.5F, "Heavy fish ignored the combined falling damage cap");
+            configure(PufferfishCombatConfig.SMASH_ENABLED, false);
+            helper.assertTrue(hit(helper, stack.copy(), 12, false) == 18, "Disabled heavy smash still added falling damage");
+            helper.assertTrue(PufferfishCombat.damage(stack) == 11.5F, "Heavy melee settings changed thrown damage");
+            helper.assertTrue(hit(helper, new ItemStack(Items.MACE), 8, false) == 42, "Fish configuration changed the vanilla mace");
         } finally {
-            PufferfishCombatConfig.SMASH_ENABLED.set(enabled);
-            PufferfishCombatConfig.SMASH_ENABLED.clearCache();
-            PufferfishCombatConfig.MAX_SMASH_BONUS.set(cap);
-            PufferfishCombatConfig.MAX_SMASH_BONUS.clearCache();
+            configure(PufferfishCombatConfig.SMASH_ENABLED, enabled);
+            configure(PufferfishCombatConfig.MAX_SMASH_BONUS, cap);
+            configure(PufferfishCombatConfig.HEAVY_DAMAGE_MULTIPLIER, multiplier);
+            configure(PufferfishCombatConfig.HEAVY_DENSITY_DAMAGE, density);
+            configure(PufferfishCombatConfig.FIRST_THREE_BLOCKS_DAMAGE, first);
+            configure(PufferfishCombatConfig.NEXT_FIVE_BLOCKS_DAMAGE, next);
+            configure(PufferfishCombatConfig.REMAINING_BLOCKS_DAMAGE, remaining);
         }
         helper.succeed();
     }
@@ -183,7 +219,7 @@ public final class HeavyPufferfishGameTests {
         helper.succeed();
     }
 
-    /// Verifies heavy fish accept Wind Burst and retain their item identity and netherite throwing speed.
+    /// Verifies heavy fish accept Wind Burst and retain their identity with an independently configured launch speed.
     @GameTest(template = "empty")
     public static void heavyFishSupportWindBurstAndThrowing(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
@@ -196,16 +232,37 @@ public final class HeavyPufferfishGameTests {
         menu.createResult();
         var output = menu.getSlot(2).getItem();
         helper.assertTrue(output.is(PufferfishItems.HEAVY.get()) && output.getEnchantmentLevel(wind) == 3, "Heavy fish rejected Wind Burst");
+        int[] bursts = {0};
+        java.util.function.Consumer<net.neoforged.neoforge.event.level.ExplosionEvent.Start> captureBurst = event -> {
+            bursts[0]++;
+            event.setCanceled(true);
+        };
+        NeoForge.EVENT_BUS.addListener(captureBurst);
+        try {
+            hit(helper, output.copy(), 3, false);
+            helper.assertTrue(bursts[0] == 1, "Shared smash hooks reset falling before Wind Burst could activate");
+        } finally {
+            NeoForge.EVENT_BUS.unregister(captureBurst);
+        }
         var pos = helper.absolutePos(new BlockPos(2, 10, 2));
         player.setPos(pos.getX(), pos.getY(), pos.getZ());
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(PufferfishItems.HEAVY.get(), 2));
-        NeoForge.EVENT_BUS.post(new PlayerInteractEvent.RightClickItem(player, InteractionHand.MAIN_HAND));
-        var projectiles = helper.getLevel().getEntitiesOfClass(ThrownPufferfish.class, new AABB(pos).inflate(3));
-        helper.assertTrue(projectiles.size() == 1 && projectiles.getFirst().getItem().is(PufferfishItems.HEAVY.get())
-                && player.getMainHandItem().getCount() == 1
-                && Math.abs(projectiles.getFirst().getDeltaMovement().length() - PufferfishCombatConfig.NETHERITE_THROW_SPEED.get()) < 0.06,
-                "Heavy fish throwing lost identity, count, or netherite launch speed");
-        projectiles.forEach(ThrownPufferfish::discard);
+        double speed = PufferfishCombatConfig.HEAVY_THROW_SPEED.get();
+        double netheriteSpeed = PufferfishCombatConfig.NETHERITE_THROW_SPEED.get();
+        try {
+            configure(PufferfishCombatConfig.HEAVY_THROW_SPEED, 0.5);
+            configure(PufferfishCombatConfig.NETHERITE_THROW_SPEED, 2.0);
+            NeoForge.EVENT_BUS.post(new PlayerInteractEvent.RightClickItem(player, InteractionHand.MAIN_HAND));
+            var projectiles = helper.getLevel().getEntitiesOfClass(ThrownPufferfish.class, new AABB(pos).inflate(3));
+            helper.assertTrue(projectiles.size() == 1 && projectiles.getFirst().getItem().is(PufferfishItems.HEAVY.get())
+                    && player.getMainHandItem().getCount() == 1
+                    && Math.abs(projectiles.getFirst().getDeltaMovement().length() - 0.5) < 0.06,
+                    "Heavy fish throwing lost identity, count, or independent launch speed");
+            projectiles.forEach(ThrownPufferfish::discard);
+        } finally {
+            configure(PufferfishCombatConfig.HEAVY_THROW_SPEED, speed);
+            configure(PufferfishCombatConfig.NETHERITE_THROW_SPEED, netheriteSpeed);
+        }
         helper.succeed();
     }
 }

@@ -13,6 +13,8 @@ public final class PufferfishCombatConfig {
     public static final ModConfigSpec.DoubleValue NORMAL_DAMAGE_MULTIPLIER;
     /// Multiplier applied to mace base damage and the unenchanted falling curve for netherite fish.
     public static final ModConfigSpec.DoubleValue NETHERITE_DAMAGE_MULTIPLIER;
+    /// Multiplier applied to mace base damage and the unenchanted falling curve for heavy fish.
+    public static final ModConfigSpec.DoubleValue HEAVY_DAMAGE_MULTIPLIER;
     /// Whether handheld pufferfish perform falling smash attacks.
     public static final ModConfigSpec.BooleanValue SMASH_ENABLED;
     /// Unscaled damage per fallen block within the first three blocks.
@@ -25,12 +27,16 @@ public final class PufferfishCombatConfig {
     public static final ModConfigSpec.DoubleValue NORMAL_DENSITY_DAMAGE;
     /// Density damage per enchantment level per fallen block for netherite fish.
     public static final ModConfigSpec.DoubleValue NETHERITE_DENSITY_DAMAGE;
+    /// Density damage per enchantment level per fallen block for heavy fish.
+    public static final ModConfigSpec.DoubleValue HEAVY_DENSITY_DAMAGE;
     /// Maximum falling damage bonus, including Density, before critical hits and armor; zero means uncapped.
     public static final ModConfigSpec.DoubleValue MAX_SMASH_BONUS;
     /// Initial normal and dyed fish projectile speed in blocks per tick, before spread and inherited player motion.
     public static final ModConfigSpec.DoubleValue NORMAL_THROW_SPEED;
     /// Initial netherite fish projectile speed in blocks per tick, before spread and inherited player motion.
     public static final ModConfigSpec.DoubleValue NETHERITE_THROW_SPEED;
+    /// Initial heavy fish projectile speed in blocks per tick, before spread and inherited player motion.
+    public static final ModConfigSpec.DoubleValue HEAVY_THROW_SPEED;
 
     static {
         var builder = new ModConfigSpec.Builder();
@@ -40,6 +46,8 @@ public final class PufferfishCombatConfig {
                 .worldRestart().defineInRange("normalDamageMultiplier", 0.25, 0.01, 128.0);
         NETHERITE_DAMAGE_MULTIPLIER = builder.comment("Netherite pufferfish multiplier for mace base damage (6) and the unenchanted falling curve.")
                 .worldRestart().defineInRange("netheriteDamageMultiplier", 0.5, 0.01, 128.0);
+        HEAVY_DAMAGE_MULTIPLIER = builder.comment("Heavy pufferfish multiplier for mace base damage (6) and the unenchanted falling curve.")
+                .worldRestart().defineInRange("heavyDamageMultiplier", 1.0, 0.01, 128.0);
         builder.pop().push("smash");
         SMASH_ENABLED = builder.comment("Enable mace-style attacks after falling more than 1.5 blocks, excluding elytra flight.")
                 .worldRestart().define("enabled", true);
@@ -55,6 +63,9 @@ public final class PufferfishCombatConfig {
         NETHERITE_DENSITY_DAMAGE = builder.comment("Netherite fish Density bonus per level per fallen block. Level V adds 1.5 damage per block by default.",
                 "Only applies to smash attacks and is not multiplied by netheriteDamageMultiplier.")
                 .worldRestart().defineInRange("netheriteDensityDamagePerLevel", 0.3, 0.0, 1024.0);
+        HEAVY_DENSITY_DAMAGE = builder.comment("Heavy fish Density bonus per level per fallen block. Level V adds 2.5 damage per block by default.",
+                "Only applies to smash attacks and is not multiplied by heavyDamageMultiplier.")
+                .worldRestart().defineInRange("heavyDensityDamagePerLevel", 0.5, 0.0, 1024.0);
         MAX_SMASH_BONUS = builder.comment("Maximum combined falling bonus after the fish multiplier and Density, before critical hits and armor. Zero disables the cap.")
                 .worldRestart().defineInRange("maxBonusDamage", 0.0, 0.0, 1048576.0);
         builder.pop().comment("Projectile launch speeds in blocks per tick, before spread and inherited player motion.",
@@ -63,6 +74,8 @@ public final class PufferfishCombatConfig {
                 .worldRestart().defineInRange("normalSpeed", 1.5, 0.1, 3.0);
         NETHERITE_THROW_SPEED = builder.comment("Netherite pufferfish launch speed.")
                 .worldRestart().defineInRange("netheriteSpeed", 1.0, 0.1, 3.0);
+        HEAVY_THROW_SPEED = builder.comment("Heavy pufferfish launch speed.")
+                .worldRestart().defineInRange("heavySpeed", 1.0, 0.1, 3.0);
         builder.pop();
         SPEC = builder.build();
     }
