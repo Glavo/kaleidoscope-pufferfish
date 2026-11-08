@@ -8,6 +8,7 @@ import java.util.Map;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.block.model.ItemOverrides;
+import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.util.RandomSource;
@@ -19,6 +20,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.model.BakedModelWrapper;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishItemModel;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishTextures;
@@ -26,6 +28,17 @@ import org.glavo.kaleidoscope.pufferfish.client.PufferfishTextures;
 @EventBusSubscriber(modid = KaleidoscopePufferfish.MODID, value = Dist.CLIENT)
 public final class PufferfishClientSmokeTest {
     private static int phase;
+    private static boolean projectileRendererChecked;
+
+    @SubscribeEvent
+    public static void checkProjectileRenderer(EntityRenderersEvent.AddLayers event) {
+        if (Boolean.getBoolean("kaleidoscope_pufferfish.clientSmokeTest")) {
+            if (!(event.getRenderer(KaleidoscopePufferfish.THROWN_PUFFERFISH.get()) instanceof ThrownItemRenderer<?>)) {
+                throw new IllegalStateException("Missing pufferfish projectile renderer");
+            }
+            projectileRendererChecked = true;
+        }
+    }
 
     @SubscribeEvent
     public static void tick(ClientTickEvent.Post event) {
@@ -54,11 +67,15 @@ public final class PufferfishClientSmokeTest {
             }
         }
         verifyModelDelegation(minecraft);
+        if (!projectileRendererChecked) {
+            throw new IllegalStateException("Projectile renderer registration was not checked");
+        }
         phase++;
         if (phase == 1) {
+            projectileRendererChecked = false;
             minecraft.reloadResourcePacks();
         } else {
-            LogUtils.getLogger().info("Pufferfish client smoke test passed: 32 models, 16 entity textures, model override delegation, and resource reload");
+            LogUtils.getLogger().info("Pufferfish client smoke test passed: 32 models, 16 entity textures, projectile renderer, model override delegation, and resource reload");
             minecraft.stop();
         }
     }

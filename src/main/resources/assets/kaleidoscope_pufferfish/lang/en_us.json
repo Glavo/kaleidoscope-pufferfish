@@ -1,5 +1,6 @@
 {
   "itemGroup.kaleidoscope_pufferfish": "Kaleidoscope Pufferfish",
+  "entity.kaleidoscope_pufferfish.thrown_pufferfish": "Thrown Pufferfish",
   "item.kaleidoscope_pufferfish.dyed_pufferfish": "%s Pufferfish",
   "item.kaleidoscope_pufferfish.dyed_pufferfish_bucket": "Bucket of %s Pufferfish"
 }

@@ -4,6 +4,7 @@
 package org.glavo.kaleidoscope.pufferfish;
 
 import java.util.EnumMap;
+import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.resources.ResourceLocation;
@@ -12,6 +13,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.ModelEvent;
 import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import net.neoforged.neoforge.client.event.RegisterSpriteSourceTypesEvent;
@@ -26,6 +28,11 @@ public class KaleidoscopePufferfishClient {
         bus.addListener(this::registerModels);
         bus.addListener(EventPriority.LOWEST, this::wrapModels);
         bus.addListener(this::registerReloadListeners);
+        bus.addListener(this::registerRenderers);
+    }
+
+    private void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(KaleidoscopePufferfish.THROWN_PUFFERFISH.get(), ThrownItemRenderer::new);
     }
 
     private void registerSprites(RegisterSpriteSourceTypesEvent event) {

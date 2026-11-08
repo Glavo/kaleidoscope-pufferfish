@@ -12,6 +12,11 @@ colors. Targets Minecraft 1.21.1 and NeoForge with Java 21.
 - Catch and release dyed fish with water buckets. Colors survive world saves,
   bucket storage, and death drops.
 - Find all colored items and buckets in the Kaleidoscope Pufferfish creative tab.
+- Right-click with a pufferfish item to throw it. A successful hit deals 2 base
+  damage and applies Poison I for 6 seconds, subject to normal damage and effect
+  immunity. Survival mode consumes one fish; creative mode consumes none. The
+  projectile retains its color and disappears on impact. Sneak-right-click to eat
+  the fish instead. Pufferfish buckets retain their normal use.
 
 Undyed fish retain their vanilla appearance and behavior. Dyed items retain the
 vanilla item IDs and food properties, including pufferfish poisoning. Existing
@@ -59,9 +64,12 @@ integration separately. Set both to `false` to run without either mod.
 Game tests cover all colors, initial tracking packets, persistence, legacy save
 migration, bucket release, item names, recipe data preservation, dye consumption,
 death drops, and Cookery recipe ingredients. The client smoke test checks all
-colored models and textures, verifies external model override delegation, reloads
+colored models and textures, projectile renderer registration, and external model
+override delegation, reloads
 resource packs, and exits automatically. Test sources are excluded from
 the published JAR. CI runs game tests against both supported Cookery versions.
+Projectile tests cover item consumption, canceled spawns, collision damage,
+poison duration and immunity, block impacts, and saved and synchronized colors.
 
 ## License
 
