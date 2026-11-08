@@ -89,6 +89,8 @@ public class KaleidoscopePufferfish {
     }
 
     public KaleidoscopePufferfish(IEventBus bus, ModContainer container) {
+        container.registerConfig(net.neoforged.fml.config.ModConfig.Type.SERVER, PufferfishCombatConfig.SPEC,
+                MODID + "-combat.toml");
         if (ModList.get().isLoaded("create")) {
             CreateIntegration.register(bus, container);
         }

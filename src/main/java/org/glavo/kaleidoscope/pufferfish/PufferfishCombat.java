@@ -15,6 +15,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.MaceItem;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.phys.Vec3;
@@ -22,14 +23,18 @@ import net.neoforged.neoforge.event.ItemAttributeModifierEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.common.damagesource.DamageContainer;
 
+/// Calculates pufferfish weapon damage and applies shared melee and projectile effects.
 public final class PufferfishCombat {
+    /// Prevents construction of this combat utility.
     private PufferfishCombat() {}
 
+    /// Returns the stored level of the specified enchantment, or zero when absent.
     private static int enchantmentLevel(ItemStack stack, ResourceKey<Enchantment> key) {
         return stack.getEnchantments().entrySet().stream().filter(entry -> entry.getKey().is(key))
                 .mapToInt(entry -> entry.getIntValue()).findFirst().orElse(0);
     }
 
+    /// Returns base weapon damage plus the flat Density bonus, excluding configurable fish melee adjustments.
     public static float damage(ItemStack stack) {
         int density = enchantmentLevel(stack, Enchantments.DENSITY);
         float base = PufferfishItems.isFlail(stack) ? (PufferfishItems.hasNetheriteCombat(stack) ? 12 : 6)
@@ -37,14 +42,38 @@ public final class PufferfishCombat {
         return base + (density > 0 ? 0.5F + 0.5F * density : 0);
     }
 
+    /// Adds main-hand weapon attributes, applying configured base damage only to handheld fish.
     public static void attributes(ItemAttributeModifierEvent event) {
         if (!PufferfishItems.isWeapon(event.getItemStack())) return;
+        var stack = event.getItemStack();
+        float meleeDamage = damage(stack);
+        if (PufferfishItems.isPufferfish(stack)) {
+            meleeDamage += PufferfishCombatConfig.value(PufferfishItems.isNetherite(stack)
+                    ? PufferfishCombatConfig.NETHERITE_MELEE_DAMAGE : PufferfishCombatConfig.NORMAL_MELEE_DAMAGE)
+                    - (PufferfishItems.isNetherite(stack) ? 10 : 2);
+        }
         event.addModifier(Attributes.ATTACK_DAMAGE, new AttributeModifier(Item.BASE_ATTACK_DAMAGE_ID,
-                damage(event.getItemStack()) - 1, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
+                meleeDamage - 1, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
         event.addModifier(Attributes.ATTACK_SPEED, new AttributeModifier(Item.BASE_ATTACK_SPEED_ID,
                 -3, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
     }
 
+    /// Returns whether the supplied fish can perform a configured smash with the attacker's current fall state.
+    public static boolean canSmash(LivingEntity attacker, ItemStack stack) {
+        return PufferfishItems.isPufferfish(stack) && PufferfishCombatConfig.value(PufferfishCombatConfig.SMASH_ENABLED)
+                && MaceItem.canSmashAttack(attacker);
+    }
+
+    /// Returns the capped falling bonus for a nonnegative distance in blocks, excluding enchantments and critical hits.
+    public static float smashBonus(float distance) {
+        double bonus = Math.min(distance, 3) * PufferfishCombatConfig.value(PufferfishCombatConfig.FIRST_THREE_BLOCKS_DAMAGE)
+                + Math.min(Math.max(distance - 3, 0), 5) * PufferfishCombatConfig.value(PufferfishCombatConfig.NEXT_FIVE_BLOCKS_DAMAGE)
+                + Math.max(distance - 8, 0) * PufferfishCombatConfig.value(PufferfishCombatConfig.REMAINING_BLOCKS_DAMAGE);
+        double cap = PufferfishCombatConfig.value(PufferfishCombatConfig.MAX_SMASH_BONUS);
+        return (float) (cap > 0 ? Math.min(bonus, cap) : bonus);
+    }
+
+    /// Applies shared weapon effects after a server-side player attack damages health or absorption.
     public static void meleeHit(LivingDamageEvent.Post event) {
         if (event.getEntity().level().isClientSide() || !event.getSource().is(DamageTypes.PLAYER_ATTACK)
                 || !(event.getSource().getDirectEntity() instanceof Player player)
@@ -55,6 +84,7 @@ public final class PufferfishCombat {
         }
     }
 
+    /// Attempts to apply six seconds of poison and adds Punch knockback, respecting effect immunity and knockback resistance.
     public static void hitEffects(ItemStack stack, LivingEntity target, Entity source, Vec3 direction) {
         target.addEffect(new MobEffectInstance(MobEffects.POISON, 120, PufferfishItems.hasNetheriteCombat(stack) ? 1 : 0), source);
         int punch = enchantmentLevel(stack, Enchantments.PUNCH);
