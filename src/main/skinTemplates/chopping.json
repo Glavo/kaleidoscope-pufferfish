@@ -4,5 +4,5 @@
   "ingredient": ${ingredient},
   "cut_count": 3,
   "model_id": "${blockId}",
-  "result": {"id": "${modId}:pufferfish_meat", "count": 1}
+  "result": {"id": "${modId}:pufferfish_sashimi", "count": 1}
 }

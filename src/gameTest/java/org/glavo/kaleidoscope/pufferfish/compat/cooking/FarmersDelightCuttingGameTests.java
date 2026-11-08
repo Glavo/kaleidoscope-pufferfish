@@ -28,7 +28,7 @@ public final class FarmersDelightCuttingGameTests {
 
     /// Verifies all skin colors, knife requirements, consumption, and empty-board behavior.
     @GameTest(template = "empty", templateNamespace = "kaleidoscope_pufferfish")
-    public static void farmersDelightCutsFishIntoMeatAndSkin(GameTestHelper helper) {
+    public static void farmersDelightCutsFishIntoSashimiAndSkin(GameTestHelper helper) {
         var level = helper.getLevel();
         var pos = helper.absolutePos(new BlockPos(1, 2, 1));
         var player = helper.makeMockPlayer(GameType.SURVIVAL);

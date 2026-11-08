@@ -161,15 +161,26 @@ public final class PufferfishClientSmokeTest {
         if (block.getPixelRGBA(4, 6) != 0xFFD1DEE5) throw new IllegalStateException("Netherite block retained a dark pupil");
     }
 
-    /// Verifies the meat sprite and every Cookery cutting-stage model before and after resource reload.
+    /// Verifies cutting models across resource reloads and saves an enlarged sashimi sprite for visual inspection.
     private static void verifyCuttingModels(Minecraft minecraft) {
-        var stack = new ItemStack(PufferfishItems.MEAT.get());
+        var stack = new ItemStack(PufferfishItems.SASHIMI.get());
         var model = minecraft.getItemRenderer().getModel(stack, null, null, 0);
         if (model == minecraft.getModelManager().getMissingModel()
                 || model.getQuads(null, null, RandomSource.create()).isEmpty()
-                || !model.getParticleIcon().contents().name().equals(KaleidoscopePufferfish.id("item/pufferfish_meat"))
+                || !model.getParticleIcon().contents().name().equals(KaleidoscopePufferfish.id("item/pufferfish_sashimi"))
                 || stack.getHoverName().getString().startsWith("item.")) {
-            throw new IllegalStateException("Missing pufferfish meat model, sprite, or translation");
+            throw new IllegalStateException("Missing pufferfish sashimi model, sprite, or translation");
+        }
+        var sprite = model.getParticleIcon().contents().getOriginalImage();
+        try (var preview = new com.mojang.blaze3d.platform.NativeImage(sprite.getWidth() * 16, sprite.getHeight() * 16, true)) {
+            for (int y = 0; y < preview.getHeight(); y++) {
+                for (int x = 0; x < preview.getWidth(); x++) {
+                    preview.setPixelRGBA(x, y, sprite.getPixelRGBA(x / 16, y / 16));
+                }
+            }
+            preview.writeToFile(java.nio.file.Path.of("pufferfish-sashimi-preview.png"));
+        } catch (java.io.IOException exception) {
+            throw new IllegalStateException("Could not save sashimi sprite preview", exception);
         }
         if (net.neoforged.fml.ModList.get().isLoaded("kaleidoscope_cookery")) {
             for (int color = -1; color < 16; color++) {

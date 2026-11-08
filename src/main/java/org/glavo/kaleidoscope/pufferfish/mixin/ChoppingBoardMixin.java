@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/// Adds the matching skin when Cookery's single-output board releases pufferfish meat.
+/// Adds the matching skin when Cookery's single-output board releases pufferfish sashimi.
 @Pseudo
 @Mixin(targets = "com.github.ysbbbbbb.kaleidoscopecookery.blockentity.kitchen.ChoppingBoardBlockEntity", remap = false)
 public abstract class ChoppingBoardMixin {
@@ -28,12 +28,12 @@ public abstract class ChoppingBoardMixin {
     /// The primary output stored by the board when the input is inserted.
     @Shadow private ItemStack result;
 
-    /// Drops one skin on the server immediately before the completed meat is released.
+    /// Drops one skin on the server immediately before the completed sashimi is released.
     @Inject(method = "onCutItem", at = @At(value = "INVOKE", target =
             "Lcom/github/ysbbbbbb/kaleidoscopecookery/blockentity/kitchen/ChoppingBoardBlockEntity;popResource(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/item/ItemStack;)V"))
     private void kaleidoscope$releaseSkin(Level level, LivingEntity user, ItemStack cutter,
             CallbackInfoReturnable<Boolean> callback) {
-        if (!level.isClientSide && currentCutStack.is(Items.PUFFERFISH) && result.is(PufferfishItems.MEAT.get())) {
+        if (!level.isClientSide && currentCutStack.is(Items.PUFFERFISH) && result.is(PufferfishItems.SASHIMI.get())) {
             var pos = ((BlockEntity) (Object) this).getBlockPos();
             var skin = new ItemStack(PufferfishBlocks.skin(PufferfishColors.get(currentCutStack)));
             var entity = new ItemEntity(level, pos.getX() + 0.5, pos.getY() + 0.25, pos.getZ() + 0.5, skin, 0, 0, 0);

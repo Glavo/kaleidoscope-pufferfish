@@ -78,7 +78,7 @@ public class KaleidoscopePufferfish {
                     output.accept(PufferfishItems.NETHERITE);
                     output.accept(PufferfishItems.HEAVY);
                     output.accept(PufferfishItems.GOLDEN);
-                    output.accept(PufferfishItems.MEAT);
+                    output.accept(PufferfishItems.SASHIMI);
                     output.accept(PufferfishItems.FLAIL);
                     output.accept(PufferfishItems.NETHERITE_FLAIL);
                     output.accept(PufferfishBlocks.NETHERITE);

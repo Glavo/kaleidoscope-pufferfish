@@ -156,7 +156,7 @@ val generateModMetadata by tasks.registering(ProcessResources::class) {
 val generateItemModels = tasks.register<Sync>("generateItemModels") {
     val modelNames = dyeColors.flatMap { color ->
         listOf("${color}_pufferfish", "${color}_pufferfish_bucket")
-    } + listOf("netherite_pufferfish", "golden_pufferfish", "pufferfish_meat", "heavy_pufferfish")
+    } + listOf("netherite_pufferfish", "golden_pufferfish", "pufferfish_sashimi", "heavy_pufferfish")
     inputs.property("modId", modId)
     inputs.property("modelNames", modelNames)
     filteringCharset = "UTF-8"

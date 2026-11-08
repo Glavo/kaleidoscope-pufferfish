@@ -31,8 +31,8 @@ public final class PufferfishItems {
                     .effect(() -> new MobEffectInstance(MobEffects.WATER_BREATHING, 9600, 0), 1)
                     .effect(() -> new MobEffectInstance(MobEffects.POISON, 1200, 1), 1)
                     .build())));
-    /// Raw, edible pufferfish meat with two nutrition points and no status effects.
-    public static final DeferredItem<Item> MEAT = ITEMS.register("pufferfish_meat", () -> new Item(
+    /// Edible pufferfish sashimi with two nutrition points and no status effects.
+    public static final DeferredItem<Item> SASHIMI = ITEMS.register("pufferfish_sashimi", () -> new Item(
             new Item.Properties().food(new FoodProperties.Builder().nutrition(2).saturationModifier(0.1F).build())));
     /// The reusable flail crafted from an ordinary or dyed pufferfish and two chains.
     public static final DeferredItem<PufferfishFlailItem> FLAIL = ITEMS.register("pufferfish_flail",

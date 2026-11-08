@@ -9,18 +9,18 @@ import net.minecraft.client.resources.metadata.animation.FrameSize;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceMetadata;
 
-/// Supplies the built-in pale fillet sprite for raw pufferfish meat.
-public final class PufferfishMeatTexture {
-    /// Pixel rows using transparent, outline, shadow, flesh, and highlight palette entries.
+/// Supplies a built-in sprite of three thin ivory fish slices with pink grain and a green garnish.
+public final class PufferfishSashimiTexture {
+    /// Pixel rows using transparency, cool outlines, flesh shading, and two garnish greens.
     private static final String[] PIXELS = {
-            "................", ".........ooo....", ".......oossho...", "......osfhhfso..",
-            ".....osfhhffso..", "....osfhhfsfso..", "...osfhhfsfhso..", "..osfhhfsfhfso..",
-            "..ofhhfsfhffso..", "..ofhfsfhffsso..", "..osfsfhffsso...", "...osfhffsso....",
-            "....osssso......", ".....oooo.......", "................", "................"
+            "................", "...........oooo.", "..........ohhhho", ".........ohhffso",
+            "........ohhffso.", ".......oooosso..", "......ohhhhooo..", ".....ohhffso....",
+            "....ohhffso.....", "...oooosso......", "..ohhhhooo..gg..", ".ohhffso...glgg.",
+            "ohhffso...gllgg.", ".osssso....ggg..", "..oooo..........", "................"
     };
 
     /// Prevents construction of the sprite factory.
-    private PufferfishMeatTexture() {}
+    private PufferfishSashimiTexture() {}
 
     /// Creates a 16-by-16 sprite whose image is owned by the returned sprite contents.
     public static SpriteContents create(ResourceLocation id) {
@@ -28,10 +28,12 @@ public final class PufferfishMeatTexture {
         for (int y = 0; y < 16; y++) {
             for (int x = 0; x < PIXELS[y].length(); x++) {
                 int rgb = switch (PIXELS[y].charAt(x)) {
-                    case 'o' -> 0x896D64;
-                    case 's' -> 0xD4ADA1;
-                    case 'f' -> 0xF0D9C9;
-                    case 'h' -> 0xFFF3DF;
+                    case 'o' -> 0x72858C;
+                    case 's' -> 0xBAC9CC;
+                    case 'f' -> 0xEBD2CD;
+                    case 'h' -> 0xFFF8EC;
+                    case 'g' -> 0x4F7945;
+                    case 'l' -> 0x94B960;
                     default -> -1;
                 };
                 if (rgb >= 0) image.setPixelRGBA(x, y, 0xFF000000 | ((rgb & 255) << 16) | (rgb & 0xFF00) | (rgb >>> 16));

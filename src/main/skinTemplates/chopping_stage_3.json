@@ -2,7 +2,7 @@
   "textures": {
     "fish": "${fishTexture}",
     "skin": "${modId}:block/${blockName}",
-    "meat": "${modId}:item/pufferfish_meat"
+    "sashimi": "${modId}:item/pufferfish_sashimi"
   },
   "elements": [
     {
@@ -47,7 +47,7 @@
             16,
             16
           ],
-          "texture": "#meat"
+          "texture": "#sashimi"
         }
       }
     }

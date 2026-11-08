@@ -35,7 +35,7 @@ public final class PufferfishCuttingGameTests {
         if (ModList.get().isLoaded("farmersdelight")) event.register(FarmersDelightCuttingGameTests.class);
     }
 
-    /// Verifies recipe conditions for all colors and the meat's food-only behavior.
+    /// Verifies recipe conditions for all colors and the sashimi's food-only behavior.
     @GameTest(template = "empty")
     public static void cuttingRecipesFollowOptionalMods(GameTestHelper helper) {
         var manager = helper.getLevel().getRecipeManager();
@@ -46,10 +46,10 @@ public final class PufferfishCuttingGameTests {
             helper.assertTrue(manager.byKey(KaleidoscopePufferfish.id("cutting/" + name)).isPresent()
                     == ModList.get().isLoaded("farmersdelight"), "Farmer's Delight recipe condition failed");
         }
-        var meat = new ItemStack(PufferfishItems.MEAT.get());
-        var food = meat.getFoodProperties(null);
+        var sashimi = new ItemStack(PufferfishItems.SASHIMI.get());
+        var food = sashimi.getFoodProperties(null);
         helper.assertTrue(food != null && food.nutrition() == 2 && food.effects().isEmpty()
-                && !PufferfishItems.isWeapon(meat), "Meat must be plain food, not a throwable fish");
+                && !PufferfishItems.isWeapon(sashimi), "Sashimi must be plain food, not a throwable fish");
         helper.succeed();
     }
 
@@ -59,14 +59,14 @@ public final class PufferfishCuttingGameTests {
         return color == null ? stack : PufferfishColors.dye(stack, color);
     }
 
-    /// Checks for exactly one meat and one matching skin, then removes the dropped entities.
+    /// Checks for exactly one sashimi and one matching skin, then removes the dropped entities.
     public static void verifyDrops(GameTestHelper helper, BlockPos pos, DyeColor color) {
         var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(2));
         helper.assertTrue(drops.size() == 2
                 && drops.stream().allMatch(entity -> entity.getItem().getCount() == 1)
-                && drops.stream().anyMatch(entity -> entity.getItem().is(PufferfishItems.MEAT.get()))
+                && drops.stream().anyMatch(entity -> entity.getItem().is(PufferfishItems.SASHIMI.get()))
                 && drops.stream().anyMatch(entity -> entity.getItem().is(PufferfishBlocks.skin(color).asItem())),
-                "Cutting must drop exactly one meat and one matching skin");
+                "Cutting must drop exactly one sashimi and one matching skin");
         drops.forEach(ItemEntity::discard);
     }
 }

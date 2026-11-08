@@ -29,7 +29,7 @@ public final class CookeryCuttingGameTests {
 
     /// Verifies all colors, knife enforcement, persisted progress, and single-use output collection.
     @GameTest(template = "empty", templateNamespace = "kaleidoscope_pufferfish")
-    public static void cookeryCutsFishIntoMeatAndSkin(GameTestHelper helper) {
+    public static void cookeryCutsFishIntoSashimiAndSkin(GameTestHelper helper) {
         var level = helper.getLevel();
         var pos = helper.absolutePos(new BlockPos(1, 2, 1));
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
