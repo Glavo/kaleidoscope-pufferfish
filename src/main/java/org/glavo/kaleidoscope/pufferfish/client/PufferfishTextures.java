@@ -20,6 +20,8 @@ public final class PufferfishTextures implements ResourceManagerReloadListener {
     /// The RGB tint applied to the body pixels of the golden pufferfish item.
     public static final int GOLDEN_COLOR = 0xFFE040;
     public static final int NETHERITE_COLOR = 0x594F52;
+    public static final int NETHERITE_EYE_COLOR = 0xE5DED1;
+    public static final int HEAVY_EYE_COLOR = 0xE5F0FA;
     private static final ResourceLocation ORIGINAL = ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png");
     private static final Map<DyeColor, ResourceLocation> ENTITY_TEXTURES = new EnumMap<>(DyeColor.class);
     private static ResourceLocation netheriteTexture;
@@ -72,6 +74,7 @@ public final class PufferfishTextures implements ResourceManagerReloadListener {
         try (var stream = minecraft.getResourceManager().open(ORIGINAL)) {
             NativeImage image = NativeImage.read(stream);
             recolor(image, color);
+            if (variant.equals("netherite")) whiteEyes(image, true, NETHERITE_EYE_COLOR);
             ResourceLocation location = KaleidoscopePufferfish.id("textures/entity/" + variant + "_pufferfish.png");
             minecraft.getTextureManager().register(location, new DynamicTexture(image));
             return location;
@@ -83,6 +86,29 @@ public final class PufferfishTextures implements ResourceManagerReloadListener {
 
     public static void recolor(NativeImage image, DyeColor color) {
         recolor(image, color.getTextureDiffuseColor());
+    }
+
+    /// Replaces eye interiors at vanilla UV positions, preserving surrounding pixels and alpha at any resolution.
+    /// Square animation frames are processed independently; item and entity layouts use different eye masks.
+    public static void whiteEyes(NativeImage image, boolean entity, int color) {
+        int logicalSize = entity ? 32 : 16;
+        int rgba = (color & 255) << 16 | color & 0xFF00 | color >>> 16 & 255;
+        for (int y = 0; y < image.getHeight(); y++) {
+            int v = (y % image.getWidth()) * logicalSize / image.getWidth();
+            for (int x = 0; x < image.getWidth(); x++) {
+                int u = x * logicalSize / image.getWidth();
+                boolean eye = entity
+                        ? v == 9 && (u == 9 || u == 10 || u == 13 || u == 14)
+                            || v == 28 && (u == 17 || u == 21)
+                            || v == 29 && (u == 3 || u == 5)
+                            || (v == 6 || v == 7) && (u == 25 || u == 29)
+                        : v == 5 && (u == 9 || u == 10) || v == 6 && (u == 4 || u == 5);
+                if (eye) {
+                    int pixel = image.getPixelRGBA(x, y);
+                    if ((pixel >>> 24) != 0) image.setPixelRGBA(x, y, pixel & 0xFF000000 | rgba);
+                }
+            }
+        }
     }
 
     public static void recolor(NativeImage image, int target) {

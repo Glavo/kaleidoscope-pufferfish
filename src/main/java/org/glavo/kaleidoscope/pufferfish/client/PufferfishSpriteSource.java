@@ -65,6 +65,7 @@ public final class PufferfishSpriteSource implements SpriteSource {
                     .ifPresent(resource -> output.add(id, loader -> loader.loadSprite(id, resource, (name, size, image, metadata) -> {
                         if (itemName.equals("heavy_pufferfish")) HeavyPufferfishVisuals.recolor(image, false);
                         else PufferfishTextures.recolor(image, color);
+                        if (itemName.equals("netherite_pufferfish")) PufferfishTextures.whiteEyes(image, false, PufferfishTextures.NETHERITE_EYE_COLOR);
                         return new SpriteContents(name, size, image, metadata);
                     })));
         }

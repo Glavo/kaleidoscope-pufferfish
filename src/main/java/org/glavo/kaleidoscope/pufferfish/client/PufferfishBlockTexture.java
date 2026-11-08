@@ -19,6 +19,9 @@ public final class PufferfishBlockTexture {
             if (color != null) {
                 PufferfishTextures.recolor(source, color);
             }
+            if (id.getPath().equals("block/netherite_pufferfish_block")) {
+                PufferfishTextures.whiteEyes(source, false, PufferfishTextures.NETHERITE_EYE_COLOR);
+            }
             var image = new NativeImage(source.getWidth(), source.getHeight(), false);
             int background = color == null ? 0xC6A252 : color;
             for (int y = 0; y < image.getHeight(); y++) {

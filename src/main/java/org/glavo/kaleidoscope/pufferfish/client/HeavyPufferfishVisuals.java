@@ -42,6 +42,7 @@ public final class HeavyPufferfishVisuals {
                 image.setPixelRGBA(x, y, pixel & 0xFF000000 | b << 16 | g << 8 | r);
             }
         }
+        PufferfishTextures.whiteEyes(image, entity, PufferfishTextures.HEAVY_EYE_COLOR);
     }
 
     /// Emits occasional local gusts around equipped fish and along thrown heavy fish trajectories.

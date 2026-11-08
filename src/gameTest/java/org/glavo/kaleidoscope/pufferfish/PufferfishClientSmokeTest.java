@@ -95,6 +95,8 @@ public final class PufferfishClientSmokeTest {
         }
         verifyCuttingModels(minecraft);
         verifyHeavyModel(minecraft);
+        verifyWhiteEyes(minecraft);
+        PufferfishEyesClientPreview.save(minecraft);
         verifyModelDelegation(minecraft);
         PufferfishHeadgearClientTest.verify(minecraft);
         PufferfishGloveClientTest.verify(minecraft);
@@ -132,6 +134,31 @@ public final class PufferfishClientSmokeTest {
         } catch (java.io.IOException exception) {
             throw new IllegalStateException("Could not save heavy fish sprite preview", exception);
         }
+    }
+
+    /// Checks the actual generated sprites and entity UVs, including preserved mouths and small-fish eye sockets.
+    private static void verifyWhiteEyes(Minecraft minecraft) {
+        for (boolean heavy : new boolean[] {false, true}) {
+            int color = heavy ? 0xFFE5F0FA : 0xFFE5DED1;
+            int expected = (color & 0xFF00FF00) | (color & 255) << 16 | (color >>> 16 & 255);
+            var stack = new ItemStack(heavy ? PufferfishItems.HEAVY.get() : PufferfishItems.NETHERITE.get());
+            var item = minecraft.getItemRenderer().getModel(stack, null, null, 0).getParticleIcon().contents().getOriginalImage();
+            if (item.getPixelRGBA(4, 6) != expected || item.getPixelRGBA(5, 6) != expected
+                    || item.getPixelRGBA(9, 5) != expected || item.getPixelRGBA(10, 5) != expected
+                    || item.getPixelRGBA(7, 8) != 0xFF262C1D) {
+                throw new IllegalStateException("Metal pufferfish item eyes or mouth were incorrect");
+            }
+            var id = heavy ? PufferfishTextures.heavyEntity() : PufferfishTextures.netheriteEntity();
+            var texture = (net.minecraft.client.renderer.texture.DynamicTexture) minecraft.getTextureManager().getTexture(id);
+            var entity = texture.getPixels();
+            for (int[] eye : new int[][] {{9, 9}, {10, 9}, {13, 9}, {14, 9}, {17, 28}, {21, 28}, {3, 29}, {5, 29}, {25, 7}, {29, 7}}) {
+                if (entity.getPixelRGBA(eye[0], eye[1]) != expected) throw new IllegalStateException("Metal pufferfish entity retained a dark pupil");
+            }
+            if (entity.getPixelRGBA(24, 7) != 0xFF12140D) throw new IllegalStateException("Small pufferfish eye socket was overwritten");
+        }
+        var block = minecraft.getBlockRenderer().getBlockModel(PufferfishBlocks.NETHERITE.get().defaultBlockState())
+                .getParticleIcon().contents().getOriginalImage();
+        if (block.getPixelRGBA(4, 6) != 0xFFD1DEE5) throw new IllegalStateException("Netherite block retained a dark pupil");
     }
 
     /// Verifies the meat sprite and every Cookery cutting-stage model before and after resource reload.
