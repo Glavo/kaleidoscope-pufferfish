@@ -34,7 +34,7 @@ public final class PufferfishCombat {
                 .mapToInt(entry -> entry.getIntValue()).findFirst().orElse(0);
     }
 
-    /// Returns base weapon damage plus the flat Density bonus, excluding configurable fish melee adjustments.
+    /// Returns projectile or flail damage with the flat Density bonus; handheld fish melee uses separate rules.
     public static float damage(ItemStack stack) {
         int density = enchantmentLevel(stack, Enchantments.DENSITY);
         float base = PufferfishItems.isFlail(stack) ? (PufferfishItems.hasNetheriteCombat(stack) ? 12 : 6)
@@ -46,12 +46,7 @@ public final class PufferfishCombat {
     public static void attributes(ItemAttributeModifierEvent event) {
         if (!PufferfishItems.isWeapon(event.getItemStack())) return;
         var stack = event.getItemStack();
-        float meleeDamage = damage(stack);
-        if (PufferfishItems.isPufferfish(stack)) {
-            meleeDamage += PufferfishCombatConfig.value(PufferfishItems.isNetherite(stack)
-                    ? PufferfishCombatConfig.NETHERITE_MELEE_DAMAGE : PufferfishCombatConfig.NORMAL_MELEE_DAMAGE)
-                    - (PufferfishItems.isNetherite(stack) ? 10 : 2);
-        }
+        float meleeDamage = PufferfishItems.isPufferfish(stack) ? (float) (6 * meleeMultiplier(stack)) : damage(stack);
         event.addModifier(Attributes.ATTACK_DAMAGE, new AttributeModifier(Item.BASE_ATTACK_DAMAGE_ID,
                 meleeDamage - 1, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
         event.addModifier(Attributes.ATTACK_SPEED, new AttributeModifier(Item.BASE_ATTACK_SPEED_ID,
@@ -64,11 +59,21 @@ public final class PufferfishCombat {
                 && MaceItem.canSmashAttack(attacker);
     }
 
-    /// Returns the capped falling bonus for a nonnegative distance in blocks, excluding enchantments and critical hits.
-    public static float smashBonus(float distance) {
-        double bonus = Math.min(distance, 3) * PufferfishCombatConfig.value(PufferfishCombatConfig.FIRST_THREE_BLOCKS_DAMAGE)
+    /// Returns the configured multiplier for the supplied fish's base and unenchanted falling damage.
+    private static double meleeMultiplier(ItemStack stack) {
+        return PufferfishCombatConfig.value(PufferfishItems.isNetherite(stack)
+                ? PufferfishCombatConfig.NETHERITE_DAMAGE_MULTIPLIER : PufferfishCombatConfig.NORMAL_DAMAGE_MULTIPLIER);
+    }
+
+    /// Returns the capped falling bonus, including Density, before critical hits and armor.
+    /// The caller must supply a nonnegative fall distance in blocks and a fish performing a smash attack.
+    public static float smashBonus(ItemStack stack, float distance) {
+        double curve = Math.min(distance, 3) * PufferfishCombatConfig.value(PufferfishCombatConfig.FIRST_THREE_BLOCKS_DAMAGE)
                 + Math.min(Math.max(distance - 3, 0), 5) * PufferfishCombatConfig.value(PufferfishCombatConfig.NEXT_FIVE_BLOCKS_DAMAGE)
                 + Math.max(distance - 8, 0) * PufferfishCombatConfig.value(PufferfishCombatConfig.REMAINING_BLOCKS_DAMAGE);
+        double density = PufferfishCombatConfig.value(PufferfishItems.isNetherite(stack)
+                ? PufferfishCombatConfig.NETHERITE_DENSITY_DAMAGE : PufferfishCombatConfig.NORMAL_DENSITY_DAMAGE);
+        double bonus = curve * meleeMultiplier(stack) + distance * enchantmentLevel(stack, Enchantments.DENSITY) * density;
         double cap = PufferfishCombatConfig.value(PufferfishCombatConfig.MAX_SMASH_BONUS);
         return (float) (cap > 0 ? Math.min(bonus, cap) : bonus);
     }

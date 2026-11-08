@@ -24,7 +24,7 @@ public abstract class PufferfishSmashMixin {
     private void kaleidoscope$smashBonus(Entity target, float damage, DamageSource source, CallbackInfoReturnable<Float> callback) {
         if (source.getDirectEntity() instanceof LivingEntity attacker && attacker.getWeaponItem().getItem() == (Object) this
                 && PufferfishCombat.canSmash(attacker, attacker.getWeaponItem())) {
-            callback.setReturnValue(PufferfishCombat.smashBonus(attacker.fallDistance));
+            callback.setReturnValue(PufferfishCombat.smashBonus(attacker.getWeaponItem(), attacker.fallDistance));
         }
     }
 

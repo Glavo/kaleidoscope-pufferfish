@@ -16,7 +16,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
@@ -30,7 +29,6 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
-import org.glavo.kaleidoscope.pufferfish.entity.ThrownPufferfish;
 
 @GameTestHolder(KaleidoscopePufferfish.MODID)
 @PrefixGameTestTemplate(false)
@@ -70,15 +68,15 @@ public final class PufferfishMeleeGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void everyFishHasMatchingMeleeDamagePoisonAndAxeSpeed(GameTestHelper helper) {
+    public static void everyFishHasScaledMeleeDamagePoisonAndAxeSpeed(GameTestHelper helper) {
         for (var stack : variants()) {
             var player = player(helper, stack.copyWithCount(4));
             var target = target(helper);
             boolean netherite = PufferfishItems.isNetherite(stack);
-            helper.assertTrue(player.getAttributeValue(Attributes.ATTACK_DAMAGE) == (netherite ? 10 : 2)
+            helper.assertTrue(player.getAttributeValue(Attributes.ATTACK_DAMAGE) == (netherite ? 3 : 1.5)
                     && player.getAttributeValue(Attributes.ATTACK_SPEED) == 1, "Incorrect pufferfish melee attributes");
             player.attack(target);
-            helper.assertTrue(target.getHealth() == 20 - (netherite ? 10 : 2), "Charged melee damage differs from throwing");
+            helper.assertTrue(target.getHealth() == 20 - (netherite ? 3 : 1.5), "Charged melee damage does not match the mace multiplier");
             var poison = target.getEffect(MobEffects.POISON);
             helper.assertTrue(poison != null && poison.getDuration() == 120 && poison.getAmplifier() == (netherite ? 1 : 0),
                     "Melee poison differs from throwing");
@@ -89,33 +87,31 @@ public final class PufferfishMeleeGameTests {
         helper.succeed();
     }
 
+    /// Verifies Density does not change grounded hits and Breach still reduces armor protection.
     @GameTest(template = "empty")
-    public static void meleeEnchantmentsMatchProjectilesAgainstArmor(GameTestHelper helper) {
+    public static void meleeEnchantmentsRespectArmorAndSmashOnlyDensity(GameTestHelper helper) {
         for (boolean netherite : new boolean[] {false, true}) {
+            float baseline = 0;
             for (var key : List.of(Enchantments.DENSITY, Enchantments.BREACH)) {
                 int max = key == Enchantments.DENSITY ? 5 : 4;
-                for (int rank = 1; rank <= max; rank++) {
+                float previous = 0;
+                for (int rank = 0; rank <= max; rank++) {
                     var stack = new ItemStack(netherite ? PufferfishItems.NETHERITE.get() : Items.PUFFERFISH);
-                    enchant(helper, stack, key, rank);
+                    if (rank > 0) enchant(helper, stack, key, rank);
                     var player = player(helper, stack);
                     var melee = target(helper);
                     melee.getAttribute(Attributes.ARMOR).setBaseValue(20);
                     melee.getAttribute(Attributes.ARMOR_TOUGHNESS).setBaseValue(8);
                     player.attack(melee);
-                    float health = melee.getHealth();
+                    float damage = 20 - melee.getHealth();
+                    if (rank == 0) baseline = damage;
+                    if (key == Enchantments.DENSITY) {
+                        helper.assertTrue(Math.abs(damage - baseline) < 0.0001, "Density increased grounded melee damage");
+                    } else if (rank > 0) {
+                        helper.assertTrue(damage > previous && damage <= (netherite ? 3 : 1.5), "Breach did not progressively reduce armor protection");
+                    }
+                    previous = damage;
                     melee.discard();
-                    var ranged = target(helper);
-                    ranged.getAttribute(Attributes.ARMOR).setBaseValue(20);
-                    ranged.getAttribute(Attributes.ARMOR_TOUGHNESS).setBaseValue(8);
-                    var projectile = new ThrownPufferfish(helper.getLevel(), player);
-                    projectile.setItem(stack);
-                    projectile.setPos(ranged.getX(), ranged.getY() + 0.8, ranged.getZ() - 2);
-                    projectile.setDeltaMovement(0, 0, 3);
-                    helper.getLevel().addFreshEntity(projectile);
-                    projectile.tick();
-                    helper.assertTrue(Math.abs(ranged.getHealth() - health) < 0.0001, "Melee and projectile enchantment damage differ");
-                    helper.getLevel().getEntitiesOfClass(ItemEntity.class, ranged.getBoundingBox().inflate(3)).forEach(ItemEntity::discard);
-                    ranged.discard();
                 }
             }
         }

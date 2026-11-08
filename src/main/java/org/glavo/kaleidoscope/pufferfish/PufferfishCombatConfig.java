@@ -9,40 +9,49 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 public final class PufferfishCombatConfig {
     /// The combat configuration, synchronized from the server to connected clients.
     public static final ModConfigSpec SPEC;
-    /// Total unenchanted normal and dyed pufferfish melee damage at full attack strength.
-    public static final ModConfigSpec.DoubleValue NORMAL_MELEE_DAMAGE;
-    /// Total unenchanted netherite pufferfish melee damage at full attack strength.
-    public static final ModConfigSpec.DoubleValue NETHERITE_MELEE_DAMAGE;
+    /// Multiplier applied to mace base damage and the unenchanted falling curve for normal and dyed fish.
+    public static final ModConfigSpec.DoubleValue NORMAL_DAMAGE_MULTIPLIER;
+    /// Multiplier applied to mace base damage and the unenchanted falling curve for netherite fish.
+    public static final ModConfigSpec.DoubleValue NETHERITE_DAMAGE_MULTIPLIER;
     /// Whether handheld pufferfish perform falling smash attacks.
     public static final ModConfigSpec.BooleanValue SMASH_ENABLED;
-    /// Added damage per fallen block within the first three blocks.
+    /// Unscaled damage per fallen block within the first three blocks.
     public static final ModConfigSpec.DoubleValue FIRST_THREE_BLOCKS_DAMAGE;
-    /// Added damage per fallen block between three and eight blocks.
+    /// Unscaled damage per fallen block between three and eight blocks.
     public static final ModConfigSpec.DoubleValue NEXT_FIVE_BLOCKS_DAMAGE;
-    /// Added damage per fallen block beyond eight blocks.
+    /// Unscaled damage per fallen block beyond eight blocks.
     public static final ModConfigSpec.DoubleValue REMAINING_BLOCKS_DAMAGE;
-    /// Maximum falling damage bonus before critical-hit and armor calculations; zero means uncapped.
+    /// Density damage per enchantment level per fallen block for normal and dyed fish.
+    public static final ModConfigSpec.DoubleValue NORMAL_DENSITY_DAMAGE;
+    /// Density damage per enchantment level per fallen block for netherite fish.
+    public static final ModConfigSpec.DoubleValue NETHERITE_DENSITY_DAMAGE;
+    /// Maximum falling damage bonus, including Density, before critical hits and armor; zero means uncapped.
     public static final ModConfigSpec.DoubleValue MAX_SMASH_BONUS;
 
     static {
         var builder = new ModConfigSpec.Builder();
         builder.comment("Handheld pufferfish melee settings. One damage point is half a heart.",
                 "Does not change thrown pufferfish or flail damage. Reload the world/server after editing.").push("melee");
-        NORMAL_MELEE_DAMAGE = builder.comment("Normal and dyed pufferfish total base melee damage, before enchantments and critical hits.")
-                .worldRestart().defineInRange("normalDamage", 2.0, 1.0, 1024.0);
-        NETHERITE_MELEE_DAMAGE = builder.comment("Netherite pufferfish total base melee damage, before enchantments and critical hits.")
-                .worldRestart().defineInRange("netheriteDamage", 10.0, 1.0, 1024.0);
+        NORMAL_DAMAGE_MULTIPLIER = builder.comment("Normal and dyed pufferfish multiplier for mace base damage (6) and the unenchanted falling curve.")
+                .worldRestart().defineInRange("normalDamageMultiplier", 0.25, 0.01, 128.0);
+        NETHERITE_DAMAGE_MULTIPLIER = builder.comment("Netherite pufferfish multiplier for mace base damage (6) and the unenchanted falling curve.")
+                .worldRestart().defineInRange("netheriteDamageMultiplier", 0.5, 0.01, 128.0);
         builder.pop().push("smash");
         SMASH_ENABLED = builder.comment("Enable mace-style attacks after falling more than 1.5 blocks, excluding elytra flight.")
                 .worldRestart().define("enabled", true);
-        FIRST_THREE_BLOCKS_DAMAGE = builder.comment("Bonus damage per fallen block within the first three blocks.")
+        FIRST_THREE_BLOCKS_DAMAGE = builder.comment("Unscaled bonus per fallen block within the first three blocks; multiplied by the fish damage multiplier.")
                 .worldRestart().defineInRange("firstThreeBlocksDamage", 4.0, 0.0, 1024.0);
-        NEXT_FIVE_BLOCKS_DAMAGE = builder.comment("Bonus damage per fallen block between three and eight blocks.")
+        NEXT_FIVE_BLOCKS_DAMAGE = builder.comment("Unscaled bonus per fallen block between three and eight blocks; multiplied by the fish damage multiplier.")
                 .worldRestart().defineInRange("nextFiveBlocksDamage", 2.0, 0.0, 1024.0);
-        REMAINING_BLOCKS_DAMAGE = builder.comment("Bonus damage per fallen block beyond eight blocks.")
+        REMAINING_BLOCKS_DAMAGE = builder.comment("Unscaled bonus per fallen block beyond eight blocks; multiplied by the fish damage multiplier.")
                 .worldRestart().defineInRange("remainingBlocksDamage", 1.0, 0.0, 1024.0);
-        MAX_SMASH_BONUS = builder.comment("Maximum falling bonus before critical hits and armor. Zero disables the cap.",
-                "Existing Density flat-damage bonuses remain separate from this falling bonus.")
+        NORMAL_DENSITY_DAMAGE = builder.comment("Normal and dyed fish Density bonus per level per fallen block. Level V adds 1 damage per block by default.",
+                "Only applies to smash attacks and is not multiplied by normalDamageMultiplier.")
+                .worldRestart().defineInRange("normalDensityDamagePerLevel", 0.2, 0.0, 1024.0);
+        NETHERITE_DENSITY_DAMAGE = builder.comment("Netherite fish Density bonus per level per fallen block. Level V adds 1.5 damage per block by default.",
+                "Only applies to smash attacks and is not multiplied by netheriteDamageMultiplier.")
+                .worldRestart().defineInRange("netheriteDensityDamagePerLevel", 0.3, 0.0, 1024.0);
+        MAX_SMASH_BONUS = builder.comment("Maximum combined falling bonus after the fish multiplier and Density, before critical hits and armor. Zero disables the cap.")
                 .worldRestart().defineInRange("maxBonusDamage", 0.0, 0.0, 1048576.0);
         builder.pop();
         SPEC = builder.build();
