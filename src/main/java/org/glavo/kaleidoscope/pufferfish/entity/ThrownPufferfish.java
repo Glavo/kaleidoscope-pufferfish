@@ -33,6 +33,7 @@ import net.minecraft.world.phys.Vec3;
 import org.glavo.kaleidoscope.pufferfish.KaleidoscopePufferfish;
 import org.glavo.kaleidoscope.pufferfish.PufferfishCombat;
 import org.glavo.kaleidoscope.pufferfish.PufferfishChanneling;
+import org.glavo.kaleidoscope.pufferfish.PufferfishWindBurst;
 
 public class ThrownPufferfish extends ThrowableItemProjectile {
     private static final EntityDataAccessor<Boolean> RETURNING = SynchedEntityData.defineId(ThrownPufferfish.class, EntityDataSerializers.BOOLEAN);
@@ -196,6 +197,7 @@ public class ThrownPufferfish extends ThrowableItemProjectile {
                 // Keep the recovered item outside the block's collision surface.
                 position = position.add(Vec3.atLowerCornerOf(blockHit.getDirection().getNormal()).scale(0.25));
             }
+            PufferfishWindBurst.burst(this, position);
             if (entityData.get(RETURN_ACCELERATION) > 0 && canReturnToOwner()) {
                 setPos(position);
                 beginReturn();
