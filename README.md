@@ -41,3 +41,9 @@ Additional Resources:
 ==========
 Community Documentation: https://docs.neoforged.net/  
 NeoForged Discord: https://discord.neoforged.net/
+
+# License
+
+This project is licensed under the [Mozilla Public License 2.0](LICENSE), except
+where otherwise noted. The original NeoForge MDK template files retain their
+[MIT license notice](TEMPLATE_LICENSE.txt).

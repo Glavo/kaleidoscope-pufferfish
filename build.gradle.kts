@@ -151,6 +151,12 @@ tasks.test {
     useJUnitPlatform()
 }
 
+tasks.jar {
+    from(files("LICENSE", "TEMPLATE_LICENSE.txt")) {
+        into("META-INF")
+    }
+}
+
 idea {
     module {
         isDownloadSources = true
