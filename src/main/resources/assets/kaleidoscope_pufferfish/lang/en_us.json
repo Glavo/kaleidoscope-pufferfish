@@ -1,0 +1,13 @@
+{
+  "itemGroup.kaleidoscope_pufferfish": "Example Mod Tab",
+  "block.kaleidoscope_pufferfish.example_block": "Example Block",
+  "item.kaleidoscope_pufferfish.example_item": "Example Item",
+
+  "kaleidoscope_pufferfish.configuration.title": "Kaleidoscope Pufferfish Configs",
+  "kaleidoscope_pufferfish.configuration.section.kaleidoscope_pufferfish.common.toml": "Kaleidoscope Pufferfish Configs",
+  "kaleidoscope_pufferfish.configuration.section.kaleidoscope_pufferfish.common.toml.title": "Kaleidoscope Pufferfish Configs",
+  "kaleidoscope_pufferfish.configuration.items": "Item List",
+  "kaleidoscope_pufferfish.configuration.logDirtBlock": "Log Dirt Block",
+  "kaleidoscope_pufferfish.configuration.magicNumberIntroduction": "Magic Number Text",
+  "kaleidoscope_pufferfish.configuration.magicNumber": "Magic Number"
+}
