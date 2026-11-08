@@ -3,14 +3,16 @@
 
 package org.glavo.kaleidoscope.pufferfish;
 
+import net.minecraft.core.registries.Registries;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import org.glavo.kaleidoscope.pufferfish.entity.ThrownPufferfish;
 
-/// Handles pufferfish throwing with item-specific launch speeds and normal item consumption.
+/// Handles pufferfish throwing with item-specific speeds reduced by Density and normal item consumption.
 public final class PufferfishThrowing {
     /// Prevents construction of this interaction handler.
     private PufferfishThrowing() {}
@@ -31,6 +33,8 @@ public final class PufferfishThrowing {
             projectile.setItem(stack);
             float speed = PufferfishCombatConfig.value(PufferfishItems.isHeavy(stack) ? PufferfishCombatConfig.HEAVY_THROW_SPEED : PufferfishItems.isNetherite(stack)
                     ? PufferfishCombatConfig.NETHERITE_THROW_SPEED : PufferfishCombatConfig.NORMAL_THROW_SPEED).floatValue();
+            int density = stack.getEnchantmentLevel(level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.DENSITY));
+            speed /= 1 + PufferfishCombatConfig.value(PufferfishCombatConfig.DENSITY_THROW_SPEED_PENALTY) * density;
             projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, speed, 1.0F);
             if (!level.addFreshEntity(projectile)) {
                 event.setCancellationResult(InteractionResult.FAIL);

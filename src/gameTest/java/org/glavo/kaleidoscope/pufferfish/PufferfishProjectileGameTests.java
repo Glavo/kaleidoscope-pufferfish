@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
@@ -23,6 +24,8 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
@@ -105,6 +108,81 @@ public class PufferfishProjectileGameTests {
             PufferfishCombatConfig.NORMAL_THROW_SPEED.clearCache();
             PufferfishCombatConfig.NETHERITE_THROW_SPEED.set(netherite);
             PufferfishCombatConfig.NETHERITE_THROW_SPEED.clearCache();
+        }
+        helper.succeed();
+    }
+
+    /// Verifies real throws shorten progressively at every Density level for all fish variants and both hands.
+    @GameTest(template = "empty")
+    public static void densityProgressivelyShortensFishFlight(GameTestHelper helper) {
+        var density = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.DENSITY);
+        var variants = new ArrayList<ItemStack>();
+        variants.add(new ItemStack(Items.PUFFERFISH));
+        variants.add(new ItemStack(PufferfishItems.NETHERITE.get()));
+        variants.add(new ItemStack(PufferfishItems.HEAVY.get()));
+        for (var color : DyeColor.values()) variants.add(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
+        for (var hand : InteractionHand.values()) {
+            for (var variant : variants) {
+                double previousDistance = Double.POSITIVE_INFINITY;
+                for (int rank = 0; rank <= 5; rank++) {
+                    var stack = variant.copyWithCount(3);
+                    int level = rank;
+                    EnchantmentHelper.updateEnchantments(stack, entries -> entries.set(density, level));
+                    var original = stack.copyWithCount(1);
+                    var projectile = launch(helper, stack, hand);
+                    double expectedSpeed = (variant.is(Items.PUFFERFISH) ? 1.5 : 1.0) / (1 + 0.2 * rank);
+                    helper.assertTrue(Math.abs(projectile.getDeltaMovement().length() - expectedSpeed) < expectedSpeed * 0.04,
+                            "Density did not scale the launched fish's speed");
+                    helper.assertTrue(stack.getCount() == 2 && ItemStack.matches(projectile.getItem(), original),
+                            "Density throw lost components or consumed the wrong count");
+                    var start = projectile.position();
+                    for (int tick = 0; tick < 20; tick++) projectile.tick();
+                    double distance = projectile.position().subtract(start).horizontalDistance();
+                    helper.assertTrue(!projectile.isRemoved() && distance > 0 && distance < previousDistance
+                            && projectile.getY() < start.y, "Higher Density did not shorten falling flight");
+                    previousDistance = distance;
+                    projectile.discard();
+                }
+            }
+        }
+        helper.succeed();
+    }
+
+    /// Verifies the penalty combines with custom base speeds, can be disabled, and stays positive at command-level enchantments.
+    @GameTest(template = "empty")
+    public static void densitySpeedPenaltySupportsConfigurationAndHighLevels(GameTestHelper helper) {
+        var settings = List.of(PufferfishCombatConfig.NORMAL_THROW_SPEED, PufferfishCombatConfig.NETHERITE_THROW_SPEED,
+                PufferfishCombatConfig.HEAVY_THROW_SPEED, PufferfishCombatConfig.DENSITY_THROW_SPEED_PENALTY);
+        var previous = settings.stream().map(setting -> setting.get()).toList();
+        var items = List.of(Items.PUFFERFISH, PufferfishItems.NETHERITE.get(), PufferfishItems.HEAVY.get());
+        double[] speeds = {1.2, 0.8, 0.4};
+        var density = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.DENSITY);
+        try {
+            for (int index = 0; index < 3; index++) {
+                settings.get(index).set(speeds[index]);
+                settings.get(index).clearCache();
+            }
+            for (double penalty : new double[] {0, 0.5, 16}) {
+                settings.getLast().set(penalty);
+                settings.getLast().clearCache();
+                for (int index = 0; index < 3; index++) {
+                    for (int rank : new int[] {0, 5, 255}) {
+                        var stack = new ItemStack(items.get(index));
+                        EnchantmentHelper.updateEnchantments(stack, entries -> entries.set(density, rank));
+                        var projectile = launch(helper, stack, InteractionHand.MAIN_HAND);
+                        double actual = projectile.getDeltaMovement().length();
+                        double expected = speeds[index] / (1 + penalty * rank);
+                        helper.assertTrue(Double.isFinite(actual) && actual > 0 && Math.abs(actual - expected) < expected * 0.04,
+                                "Configured Density penalty produced the wrong launch speed");
+                        projectile.discard();
+                    }
+                }
+            }
+        } finally {
+            for (int index = 0; index < settings.size(); index++) {
+                settings.get(index).set(previous.get(index));
+                settings.get(index).clearCache();
+            }
         }
         helper.succeed();
     }

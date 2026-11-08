@@ -37,6 +37,8 @@ public final class PufferfishCombatConfig {
     public static final ModConfigSpec.DoubleValue NETHERITE_THROW_SPEED;
     /// Initial heavy fish projectile speed in blocks per tick, before spread and inherited player motion.
     public static final ModConfigSpec.DoubleValue HEAVY_THROW_SPEED;
+    /// Per-level Density penalty in the launch-speed divisor; zero disables the penalty.
+    public static final ModConfigSpec.DoubleValue DENSITY_THROW_SPEED_PENALTY;
 
     static {
         var builder = new ModConfigSpec.Builder();
@@ -76,6 +78,9 @@ public final class PufferfishCombatConfig {
                 .worldRestart().defineInRange("netheriteSpeed", 1.0, 0.1, 3.0);
         HEAVY_THROW_SPEED = builder.comment("Heavy pufferfish launch speed.")
                 .worldRestart().defineInRange("heavySpeed", 1.0, 0.1, 3.0);
+        DENSITY_THROW_SPEED_PENALTY = builder.comment("Launch speed is base speed / (1 + this value * Density level), before spread and inherited player motion.",
+                "Applies to normal, dyed, netherite, and heavy pufferfish. Zero disables the penalty; 0.2 halves speed at Density V.")
+                .worldRestart().defineInRange("densitySpeedPenaltyPerLevel", 0.2, 0.0, 16.0);
         builder.pop();
         SPEC = builder.build();
     }
