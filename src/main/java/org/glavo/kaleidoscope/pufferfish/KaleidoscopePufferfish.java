@@ -20,6 +20,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.common.crafting.IngredientType;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
@@ -32,6 +33,7 @@ public class KaleidoscopePufferfish {
     private static final DeferredRegister<AttachmentType<?>> ATTACHMENTS = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, MODID);
     private static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(Registries.ENTITY_TYPE, MODID);
     private static final DeferredRegister<RecipeSerializer<?>> RECIPES = DeferredRegister.create(Registries.RECIPE_SERIALIZER, MODID);
+    private static final DeferredRegister<IngredientType<?>> INGREDIENTS = DeferredRegister.create(NeoForgeRegistries.INGREDIENT_TYPES, MODID);
     private static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
 
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<DyeColor>> COLOR = COMPONENTS.register("color",
@@ -43,24 +45,30 @@ public class KaleidoscopePufferfish {
                     .sized(0.25F, 0.25F).clientTrackingRange(4).updateInterval(10).build(id("thrown_pufferfish").toString()));
     public static final DeferredHolder<RecipeSerializer<?>, SimpleCraftingRecipeSerializer<PufferfishDyeRecipe>> DYE_RECIPE =
             RECIPES.register("dye_pufferfish", () -> new SimpleCraftingRecipeSerializer<>(PufferfishDyeRecipe::new));
+    public static final DeferredHolder<IngredientType<?>, IngredientType<PufferfishIngredient>> PUFFERFISH_INGREDIENT =
+            INGREDIENTS.register("pufferfish", () -> new IngredientType<>(PufferfishIngredient.CODEC));
 
     static {
         TABS.register("pufferfish", () -> CreativeModeTab.builder()
                 .title(Component.translatable("itemGroup.kaleidoscope_pufferfish"))
                 .icon(() -> PufferfishColors.dye(new ItemStack(Items.PUFFERFISH_BUCKET), DyeColor.PURPLE))
                 .displayItems((parameters, output) -> {
+                    output.accept(PufferfishBlocks.get(null));
                     for (DyeColor color : DyeColor.values()) {
                         output.accept(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
                         output.accept(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH_BUCKET), color));
+                        output.accept(PufferfishBlocks.get(color));
                     }
                 }).build());
     }
 
     public KaleidoscopePufferfish(IEventBus bus) {
+        PufferfishBlocks.register(bus);
         COMPONENTS.register(bus);
         ATTACHMENTS.register(bus);
         ENTITIES.register(bus);
         RECIPES.register(bus);
+        INGREDIENTS.register(bus);
         TABS.register(bus);
         NeoForge.EVENT_BUS.addListener(PufferfishColors::interact);
         NeoForge.EVENT_BUS.addListener(PufferfishColors::colorDrops);

@@ -4,5 +4,22 @@
   "death.attack.kaleidoscope_pufferfish.thrown_pufferfish": "%1$s 被河豚砸死了",
   "death.attack.kaleidoscope_pufferfish.thrown_pufferfish.player": "%1$s 被 %2$s 用河豚砸死了",
   "item.kaleidoscope_pufferfish.dyed_pufferfish": "%s河豚",
-  "item.kaleidoscope_pufferfish.dyed_pufferfish_bucket": "%s河豚桶"
+  "item.kaleidoscope_pufferfish.dyed_pufferfish_bucket": "%s河豚桶",
+  "block.kaleidoscope_pufferfish.pufferfish_block": "河豚块",
+  "block.kaleidoscope_pufferfish.white_pufferfish_block": "白色河豚块",
+  "block.kaleidoscope_pufferfish.orange_pufferfish_block": "橙色河豚块",
+  "block.kaleidoscope_pufferfish.magenta_pufferfish_block": "品红色河豚块",
+  "block.kaleidoscope_pufferfish.light_blue_pufferfish_block": "淡蓝色河豚块",
+  "block.kaleidoscope_pufferfish.yellow_pufferfish_block": "黄色河豚块",
+  "block.kaleidoscope_pufferfish.lime_pufferfish_block": "黄绿色河豚块",
+  "block.kaleidoscope_pufferfish.pink_pufferfish_block": "粉红色河豚块",
+  "block.kaleidoscope_pufferfish.gray_pufferfish_block": "灰色河豚块",
+  "block.kaleidoscope_pufferfish.light_gray_pufferfish_block": "淡灰色河豚块",
+  "block.kaleidoscope_pufferfish.cyan_pufferfish_block": "青色河豚块",
+  "block.kaleidoscope_pufferfish.purple_pufferfish_block": "紫色河豚块",
+  "block.kaleidoscope_pufferfish.blue_pufferfish_block": "蓝色河豚块",
+  "block.kaleidoscope_pufferfish.brown_pufferfish_block": "棕色河豚块",
+  "block.kaleidoscope_pufferfish.green_pufferfish_block": "绿色河豚块",
+  "block.kaleidoscope_pufferfish.red_pufferfish_block": "红色河豚块",
+  "block.kaleidoscope_pufferfish.black_pufferfish_block": "黑色河豚块"
 }

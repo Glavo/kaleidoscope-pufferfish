@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "group": "${modId}:pufferfish_unpacking",
+  "ingredients": [{"item": "${blockId}"}],
+  "result": {
+    "id": "minecraft:pufferfish",
+    "count": 9,
+    "components": ${components}
+  }
+}

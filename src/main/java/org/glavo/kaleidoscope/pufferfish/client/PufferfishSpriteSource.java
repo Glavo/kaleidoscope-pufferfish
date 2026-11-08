@@ -10,6 +10,8 @@ import net.minecraft.client.renderer.texture.atlas.SpriteSourceType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.item.DyeColor;
+import org.glavo.kaleidoscope.pufferfish.KaleidoscopePufferfish;
+import org.glavo.kaleidoscope.pufferfish.PufferfishBlocks;
 
 public final class PufferfishSpriteSource implements SpriteSource {
     public static final SpriteSourceType TYPE = new SpriteSourceType(MapCodec.unit(PufferfishSpriteSource::new));
@@ -28,6 +30,23 @@ public final class PufferfishSpriteSource implements SpriteSource {
                 }
             });
         }
+        addBlock(manager, output, null);
+        for (DyeColor color : DyeColor.values()) {
+            addBlock(manager, output, color);
+        }
+    }
+
+    private static void addBlock(ResourceManager manager, Output output, DyeColor color) {
+        var id = KaleidoscopePufferfish.id("block/" + PufferfishBlocks.name(color));
+        var replacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(id));
+        if (replacement.isPresent()) {
+            output.add(id, replacement.get());
+            return;
+        }
+        var source = ResourceLocation.withDefaultNamespace("item/pufferfish");
+        manager.getResource(TEXTURE_ID_CONVERTER.idToFile(source)).ifPresent(resource ->
+                output.add(id, loader -> loader.loadSprite(id, resource, (name, size, image, metadata) ->
+                        PufferfishBlockTexture.create(name, size, image, metadata, color))));
     }
 
     @Override

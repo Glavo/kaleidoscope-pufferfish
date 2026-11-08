@@ -12,6 +12,12 @@ colors. Targets Minecraft 1.21.1 and NeoForge with Java 21.
 - Catch and release dyed fish with water buckets. Colors survive world saves,
   bucket storage, and death drops.
 - Find all colored items and buckets in the Kaleidoscope Pufferfish creative tab.
+- Fill a crafting table with nine undyed pufferfish or nine pufferfish of the same
+  color to craft a pufferfish block. Place it as a decorative storage block, break
+  it by hand to recover the block, or craft it back into nine matching pufferfish.
+  Mixed colors and buckets are not accepted. Compression retains color only;
+  custom fish names and other item data are not stored in the block. All 17 block
+  variants are also available in the creative tab.
 - Right-click with a pufferfish item to throw it. A successful hit deals 2 base
   damage and applies Poison I for 6 seconds, subject to normal damage and effect
   immunity. Survival mode consumes one fish; creative mode consumes none. The
@@ -30,6 +36,10 @@ are recolored while neutral pixels and water retain their colors. Resource packs
 that replace the yellow body with another hue may need custom models or textures.
 Explicit item model overrides from resource packs or other mods take precedence
 over the generated colored models.
+Block faces arrange nine fish from the same source texture on an opaque colored
+background. Resource packs can replace individual block textures at
+`assets/kaleidoscope_pufferfish/textures/block/<color>_pufferfish_block.png`
+(or `pufferfish_block.png` for the undyed variant).
 
 Entity colors use synchronized NeoForge data attachments. Item colors and names
 use vanilla data components, and item models use NeoForge's model baking event.
@@ -43,6 +53,10 @@ tooltip fallback until recolored.
 The 32 colored item models are generated from `src/main/modelTemplates/item.json`
 by the `generateItemModels` Gradle task. Builds, development runs, and IDE sync
 generate them automatically under `build/generated/resources/itemModels`.
+Block states, block and item models, loot tables, crafting recipes, and recipe
+unlock advancements use `src/main/blockTemplates/*.json`. The
+`generateBlockResources` task generates all 17 variants under
+`build/generated/resources/pufferfishBlocks` with the same build and IDE wiring.
 
 Optional integrations are Kaleidoscope Cookery 1.5.1 / 1.6.0 and Farmer's Delight
 1.3.4, resolved through Modrinth Maven. Both mods are available at compile time
@@ -73,6 +87,9 @@ the published JAR. CI runs game tests against both supported Cookery versions.
 Projectile tests cover item consumption, canceled spawns, collision damage,
 poison duration and immunity, item recovery, death messages, block impacts, and
 saved and synchronized colors.
+Block tests cover all 17 compression and unpacking recipes, mixed-color and
+invalid input rejection, ingredient network synchronization, placement, and
+block drops. The client smoke test also checks every block model and texture.
 
 ## License
 

@@ -5,6 +5,7 @@ package org.glavo.kaleidoscope.pufferfish;
 
 import com.mojang.logging.LogUtils;
 import java.util.Map;
+import net.minecraft.core.Direction;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.block.model.ItemOverrides;
@@ -66,6 +67,10 @@ public final class PufferfishClientSmokeTest {
                 throw new IllegalStateException("Missing dyed pufferfish entity texture: " + color);
             }
         }
+        verifyBlock(minecraft, null);
+        for (DyeColor color : DyeColor.values()) {
+            verifyBlock(minecraft, color);
+        }
         verifyModelDelegation(minecraft);
         if (!projectileRendererChecked) {
             throw new IllegalStateException("Projectile renderer registration was not checked");
@@ -75,8 +80,39 @@ public final class PufferfishClientSmokeTest {
             projectileRendererChecked = false;
             minecraft.reloadResourcePacks();
         } else {
-            LogUtils.getLogger().info("Pufferfish client smoke test passed: 32 models, 16 entity textures, projectile renderer, model override delegation, and resource reload");
+            LogUtils.getLogger().info("Pufferfish client smoke test passed: 32 item models, 17 blocks, 16 entity textures, projectile renderer, model override delegation, and resource reload");
             minecraft.stop();
+        }
+    }
+
+    private static void verifyBlock(Minecraft minecraft, DyeColor color) {
+        var block = PufferfishBlocks.get(color);
+        var state = block.defaultBlockState();
+        var stack = new ItemStack(block);
+        var blockModel = minecraft.getBlockRenderer().getBlockModel(state);
+        var itemModel = minecraft.getItemRenderer().getModel(stack, null, null, 0);
+        var texture = KaleidoscopePufferfish.id("block/" + PufferfishBlocks.name(color));
+        for (var model : new BakedModel[] {blockModel, itemModel}) {
+            if (model == minecraft.getModelManager().getMissingModel()
+                    || !model.getParticleIcon().contents().name().equals(texture)) {
+                throw new IllegalStateException("Missing pufferfish block model or texture: " + color);
+            }
+            for (var direction : Direction.values()) {
+                if (model.getQuads(state, direction, RandomSource.create()).isEmpty()) {
+                    throw new IllegalStateException("Missing pufferfish block face: " + color + ", " + direction);
+                }
+            }
+            var image = model.getParticleIcon().contents().getOriginalImage();
+            for (int y = 0; y < image.getHeight(); y++) {
+                for (int x = 0; x < image.getWidth(); x++) {
+                    if (image.getPixelRGBA(x, y) >>> 24 != 255) {
+                        throw new IllegalStateException("Pufferfish block texture is not opaque: " + color);
+                    }
+                }
+            }
+        }
+        if (stack.getHoverName().getString().startsWith("block.")) {
+            throw new IllegalStateException("Missing pufferfish block translation: " + color);
         }
     }
 

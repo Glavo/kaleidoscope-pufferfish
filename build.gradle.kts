@@ -1,3 +1,5 @@
+import groovy.json.JsonOutput
+
 plugins {
     id("java-library")
     id("maven-publish")
@@ -7,6 +9,10 @@ plugins {
 }
 
 val modId = providers.gradleProperty("mod_id").get()
+val dyeColors = listOf(
+    "white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray",
+    "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"
+)
 
 group = providers.gradleProperty("mod_group_id").get()
 version = providers.gradleProperty("mod_version").get()
@@ -134,11 +140,7 @@ val generateModMetadata by tasks.registering(ProcessResources::class) {
 }
 
 val generateItemModels = tasks.register<Sync>("generateItemModels") {
-    val colors = listOf(
-        "white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray",
-        "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"
-    )
-    val modelNames = colors.flatMap { color ->
+    val modelNames = dyeColors.flatMap { color ->
         listOf("${color}_pufferfish", "${color}_pufferfish_bucket")
     }
     inputs.property("modId", modId)
@@ -154,12 +156,61 @@ val generateItemModels = tasks.register<Sync>("generateItemModels") {
     }
 }
 
+val generateBlockResources = tasks.register<Sync>("generateBlockResources") {
+    inputs.property("modId", modId)
+    inputs.property("colors", dyeColors)
+    filteringCharset = "UTF-8"
+    into(layout.buildDirectory.dir("generated/resources/pufferfishBlocks"))
+    for (color in listOf("") + dyeColors) {
+        val blockName = if (color.isEmpty()) "pufferfish_block" else "${color}_pufferfish_block"
+        val blockId = "$modId:$blockName"
+        val components = if (color.isEmpty()) "{}" else JsonOutput.toJson(mapOf(
+            "$modId:color" to color,
+            "minecraft:item_name" to JsonOutput.toJson(mapOf(
+                "translate" to "item.$modId.dyed_pufferfish",
+                "with" to listOf(mapOf("translate" to "color.minecraft.$color"))
+            ))
+        ))
+        val properties = mapOf(
+            "modId" to modId,
+            "blockName" to blockName,
+            "blockId" to blockId,
+            "colorProperty" to if (color.isEmpty()) "" else ", \"color\": \"$color\"",
+            "components" to components
+        )
+        inputs.property(blockName, properties)
+        for ((template, target) in mapOf(
+            "blockstate" to "assets/$modId/blockstates/$blockName.json",
+            "block_model" to "assets/$modId/models/block/$blockName.json",
+            "item_model" to "assets/$modId/models/item/$blockName.json",
+            "loot" to "data/$modId/loot_table/blocks/$blockName.json",
+            "compress" to "data/$modId/recipe/$blockName.json",
+            "decompress" to "data/$modId/recipe/${blockName}_unpacking.json"
+        )) {
+            from("src/main/blockTemplates/$template.json") {
+                expand(properties)
+                into(target.substringBeforeLast('/'))
+                rename { target.substringAfterLast('/') }
+            }
+        }
+        for ((recipe, ingredient) in mapOf(blockName to "minecraft:pufferfish", "${blockName}_unpacking" to blockId)) {
+            from("src/main/blockTemplates/advancement.json") {
+                expand("recipe" to "$modId:$recipe", "ingredient" to ingredient)
+                into("data/$modId/advancement/recipes/misc")
+                rename { "$recipe.json" }
+            }
+        }
+    }
+}
+
 sourceSets.main {
     resources.srcDir(generateModMetadata)
     resources.srcDir(generateItemModels)
+    resources.srcDir(generateBlockResources)
 }
 neoForge.ideSyncTask(generateModMetadata)
 neoForge.ideSyncTask(generateItemModels)
+neoForge.ideSyncTask(generateBlockResources)
 
 publishing {
     publications {
