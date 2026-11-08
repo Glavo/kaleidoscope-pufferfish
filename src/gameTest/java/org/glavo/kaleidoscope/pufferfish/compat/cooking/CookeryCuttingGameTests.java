@@ -6,6 +6,12 @@ package org.glavo.kaleidoscope.pufferfish.compat.cooking;
 import com.github.ysbbbbbb.kaleidoscopecookery.blockentity.kitchen.ChoppingBoardBlockEntity;
 import com.github.ysbbbbbb.kaleidoscopecookery.init.ModBlocks;
 import com.github.ysbbbbbb.kaleidoscopecookery.init.ModItems;
+import com.github.ysbbbbbb.kaleidoscopecookery.crafting.container.StockpotInput;
+import com.github.ysbbbbbb.kaleidoscopecookery.crafting.recipe.StockpotRecipe;
+import com.github.ysbbbbbb.kaleidoscopecookery.crafting.recipe.FlexStockpotRecipe;
+import com.github.ysbbbbbb.kaleidoscopecookery.init.ModRecipes;
+import net.minecraft.core.NonNullList;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -26,6 +32,35 @@ import org.glavo.kaleidoscope.pufferfish.PufferfishItems;
 public final class CookeryCuttingGameTests {
     /// Prevents construction of the test holder.
     private CookeryCuttingGameTests() {}
+
+    /// Verifies whole fish, slices, and mixed batches in Cookery's strict and flexible soup recipes.
+    @GameTest(template = "empty", templateNamespace = "kaleidoscope_pufferfish")
+    public static void cookerySoupAcceptsWholeFishAndSashimi(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var manager = level.getRecipeManager();
+        var strict = (StockpotRecipe) manager.byKey(ResourceLocation.fromNamespaceAndPath("kaleidoscope_cookery", "stockpot/pufferfish_soup"))
+                .orElseThrow().value();
+        var flex = (FlexStockpotRecipe) manager.byKey(ResourceLocation.fromNamespaceAndPath("kaleidoscope_cookery", "flex_stockpot/pufferfish_soup"))
+                .orElseThrow().value();
+        for (int index = -1; index < 16; index++) {
+            var whole = PufferfishCuttingGameTests.fish(index < 0 ? null : DyeColor.byId(index)).copyWithCount(1);
+            var sashimi = new ItemStack(PufferfishItems.SASHIMI.get());
+            for (int mode = 0; mode < 3; mode++) {
+                var stacks = NonNullList.withSize(StockpotRecipe.RECIPES_SIZE, ItemStack.EMPTY);
+                stacks.set(0, mode == 0 ? sashimi : whole);
+                stacks.set(1, mode == 2 ? whole : sashimi);
+                for (int i = 2; i < 5; i++) stacks.set(i, new ItemStack(ModItems.LETTUCE.get()));
+                var input = new StockpotInput(stacks, strict.soupBase());
+                helper.assertTrue(strict.matches(input, level), "Strict soup rejected a whole, sliced, or mixed batch");
+                var selected = manager.getRecipeFor(ModRecipes.STOCKPOT_RECIPE, input, level).orElseThrow().value();
+                helper.assertTrue(selected.getResultItem(level.registryAccess()).is(ModItems.PUFFERFISH_SOUP.get()), "Strict soup resolved to the wrong dish");
+                var flexible = manager.getRecipeFor(ModRecipes.FLEX_STOCKPOT_RECIPE, input, level).orElseThrow().value();
+                helper.assertTrue(flexible.getResultItem(level.registryAccess()).is(ModItems.PUFFERFISH_SOUP.get()), "Flexible soup rejected or misclassified a mixed batch");
+                if (mode != 1) helper.assertTrue(flex.matches(input, level), "Flexible soup rejected an interchangeable fish ingredient");
+            }
+        }
+        helper.succeed();
+    }
 
     /// Verifies all colors, knife enforcement, persisted progress, and single-use output collection.
     @GameTest(template = "empty", templateNamespace = "kaleidoscope_pufferfish")

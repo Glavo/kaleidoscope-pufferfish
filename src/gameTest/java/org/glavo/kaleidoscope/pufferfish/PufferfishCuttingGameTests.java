@@ -4,9 +4,14 @@
 package org.glavo.kaleidoscope.pufferfish;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -35,7 +40,7 @@ public final class PufferfishCuttingGameTests {
         if (ModList.get().isLoaded("farmersdelight")) event.register(FarmersDelightCuttingGameTests.class);
     }
 
-    /// Verifies recipe conditions for all colors and the sashimi's food-only behavior.
+    /// Verifies recipe conditions for all colors and the sashimi's poisonous food behavior.
     @GameTest(template = "empty")
     public static void cuttingRecipesFollowOptionalMods(GameTestHelper helper) {
         var manager = helper.getLevel().getRecipeManager();
@@ -46,10 +51,44 @@ public final class PufferfishCuttingGameTests {
             helper.assertTrue(manager.byKey(KaleidoscopePufferfish.id("cutting/" + name)).isPresent()
                     == ModList.get().isLoaded("farmersdelight"), "Farmer's Delight recipe condition failed");
         }
-        var sashimi = new ItemStack(PufferfishItems.SASHIMI.get());
+        var sashimi = new ItemStack(PufferfishItems.SASHIMI.get(), 2);
         var food = sashimi.getFoodProperties(null);
-        helper.assertTrue(food != null && food.nutrition() == 2 && food.effects().isEmpty()
-                && !PufferfishItems.isWeapon(sashimi), "Sashimi must be plain food, not a throwable fish");
+        helper.assertTrue(food != null && food.nutrition() == 2
+                && !PufferfishItems.isWeapon(sashimi), "Sashimi must remain food rather than a throwable fish");
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.getFoodData().setFoodLevel(10);
+        sashimi.finishUsingItem(helper.getLevel(), player);
+        var poison = player.getEffect(MobEffects.POISON);
+        helper.assertTrue(sashimi.getCount() == 1 && player.getFoodData().getFoodLevel() == 12
+                && poison != null && poison.getDuration() == 1200 && poison.getAmplifier() == 1,
+                "Eating sashimi must consume one item, restore food, and apply one minute of Poison II");
+        helper.succeed();
+    }
+
+    /// Verifies poisonous fish and sashimi are cooking ingredients excluded from safe raw fish recipes.
+    @GameTest(template = "empty")
+    public static void cookingTagsDistinguishFoodFromEquipment(GameTestHelper helper) {
+        var pufferfish = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("c", "foods/raw_pufferfish"));
+        var rawFish = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("c", "foods/raw_fish"));
+        var safeFish = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("c", "foods/safe_raw_fish"));
+        var sashimi = new ItemStack(PufferfishItems.SASHIMI.get());
+        helper.assertTrue(sashimi.is(pufferfish) && sashimi.is(rawFish) && !sashimi.is(safeFish), "Poisonous sashimi cooking tags are incorrect");
+        for (int index = -1; index < 16; index++) {
+            var fish = fish(index < 0 ? null : DyeColor.byId(index));
+            helper.assertTrue(fish.is(pufferfish) && fish.is(rawFish) && !fish.is(safeFish), "Whole fish cooking tags are incorrect");
+        }
+        for (var item : new net.minecraft.world.item.Item[] {PufferfishItems.NETHERITE.get(), PufferfishItems.HEAVY.get(),
+                PufferfishItems.GOLDEN.get(), PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), Items.PUFFERFISH_BUCKET}) {
+            helper.assertTrue(!new ItemStack(item).is(pufferfish), "Equipment or special fish entered the raw pufferfish tag");
+        }
+        var manager = helper.getLevel().getRecipeManager();
+        var soup = ResourceLocation.fromNamespaceAndPath("kaleidoscope_cookery", "stockpot/pufferfish_soup");
+        helper.assertTrue(manager.byKey(soup).isPresent() == ModList.get().isLoaded("kaleidoscope_cookery"), "Soup override ignored its mod condition");
+        if (ModList.get().isLoaded("farmersdelight")) {
+            var stew = manager.byKey(ResourceLocation.fromNamespaceAndPath("farmersdelight", "cooking/fish_stew")).orElseThrow().value();
+            helper.assertTrue(!stew.getIngredients().getFirst().test(sashimi)
+                    && !stew.getIngredients().getFirst().test(new ItemStack(Items.PUFFERFISH)), "Fish stew did not preserve safe-fish filtering");
+        }
         helper.succeed();
     }
 
