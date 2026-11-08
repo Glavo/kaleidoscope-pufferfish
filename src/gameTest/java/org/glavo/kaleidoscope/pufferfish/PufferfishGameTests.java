@@ -3,8 +3,8 @@
 
 package org.glavo.kaleidoscope.pufferfish;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
@@ -12,25 +12,34 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
+import net.minecraft.server.level.ServerEntity;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Pufferfish;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.DyeItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.MobBucketItem;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.AABB;
+import net.neoforged.neoforge.attachment.AttachmentHolder;
+import net.neoforged.neoforge.attachment.AttachmentSync;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.common.util.FakePlayerFactory;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.network.bundle.PacketAndPayloadAcceptor;
+import net.neoforged.neoforge.network.payload.SyncAttachmentsPayload;
 
 @GameTestHolder(KaleidoscopePufferfish.MODID)
 @PrefixGameTestTemplate(false)
@@ -40,7 +49,7 @@ public class PufferfishGameTests {
         List<DyeColor> colorsAtJoin = new ArrayList<>();
         Consumer<EntityJoinLevelEvent> observer = event -> {
             if (event.getLevel() == helper.getLevel() && event.getEntity() instanceof Pufferfish fish) {
-                colorsAtJoin.add(((ColoredPufferfish) fish).kaleidoscope$getColor());
+                colorsAtJoin.add(initialTrackedColor(helper, fish));
             }
         };
         NeoForge.EVENT_BUS.addListener(observer);
@@ -60,20 +69,76 @@ public class PufferfishGameTests {
         helper.succeed();
     }
 
+    private static DyeColor initialTrackedColor(GameTestHelper helper, Pufferfish fish) {
+        Pufferfish receiver = EntityType.PUFFERFISH.create(helper.getLevel());
+        var tracker = new ServerEntity(helper.getLevel(), fish, 3, true, packet -> {});
+        tracker.sendPairingData(FakePlayerFactory.getMinecraft(helper.getLevel()), new PacketAndPayloadAcceptor<>(packet -> {
+            if (packet instanceof ClientboundCustomPayloadPacket custom && custom.payload() instanceof SyncAttachmentsPayload data) {
+                AttachmentSync.receiveSyncedDataAttachments(receiver, helper.getLevel().registryAccess(), data.types(), data.syncPayload());
+            }
+        }));
+        return PufferfishColors.get(receiver);
+    }
+
+    @GameTest(template = "empty")
+    public static void legacyEntityColorsMigrateToAttachments(GameTestHelper helper) {
+        for (DyeColor color : DyeColor.values()) {
+            CompoundTag legacy = new CompoundTag();
+            EntityType.PUFFERFISH.create(helper.getLevel()).saveWithoutId(legacy);
+            legacy.putString(PufferfishColors.COLOR_TAG, color.getName());
+            Pufferfish fish = EntityType.PUFFERFISH.create(helper.getLevel());
+            fish.load(legacy);
+            helper.assertTrue(PufferfishColors.get(fish) == color, "Legacy entity color was lost");
+            helper.assertTrue(initialTrackedColor(helper, fish) == color, "Migrated color was not synchronized");
+            CompoundTag migrated = new CompoundTag();
+            fish.saveWithoutId(migrated);
+            helper.assertTrue(!migrated.contains(PufferfishColors.COLOR_TAG), "Legacy color was written again");
+            helper.assertTrue(migrated.getCompound(AttachmentHolder.ATTACHMENTS_NBT_KEY)
+                    .getString(PufferfishColors.COLOR_TAG).equals(color.getName()), "Color was not saved as an attachment");
+            migrated.putString(PufferfishColors.COLOR_TAG, color == DyeColor.RED ? "blue" : "red");
+            Pufferfish restored = EntityType.PUFFERFISH.create(helper.getLevel());
+            restored.load(migrated);
+            helper.assertTrue(PufferfishColors.get(restored) == color, "Stale legacy data replaced the attachment");
+            PufferfishColors.set(restored, null);
+            helper.assertTrue(PufferfishColors.get(restored) == null
+                    && !restored.hasData(KaleidoscopePufferfish.ENTITY_COLOR), "Undyed fish retained a color attachment");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void itemNamesPreserveOverridesAndLegacyTooltips(GameTestHelper helper) {
+        for (var item : List.of(Items.PUFFERFISH, Items.PUFFERFISH_BUCKET)) {
+            for (DyeColor color : DyeColor.values()) {
+                ItemStack stack = PufferfishColors.dye(new ItemStack(item), DyeColor.BLACK);
+                PufferfishColors.dye(stack, color);
+                helper.assertTrue(stack.getHoverName().equals(PufferfishColors.name(stack, color)), "Recoloring left a stale item name");
+                stack.remove(DataComponents.ITEM_NAME);
+                var tooltip = stack.getTooltipLines(Item.TooltipContext.of(helper.getLevel()), null, TooltipFlag.NORMAL);
+                helper.assertTrue(tooltip.getFirst().getString().equals(PufferfishColors.name(stack, color).getString()), "Legacy tooltip lost its color name");
+                stack.set(DataComponents.ITEM_NAME, Component.literal("External item name"));
+                PufferfishColors.dye(stack, color);
+                helper.assertTrue(stack.getHoverName().getString().equals("External item name"), "An external item name was replaced");
+                stack.set(DataComponents.CUSTOM_NAME, Component.literal("Keepsake"));
+                PufferfishColors.dye(stack, color);
+                helper.assertTrue(stack.getHoverName().getString().equals("Keepsake"), "Custom name was replaced");
+            }
+        }
+        helper.succeed();
+    }
+
     @GameTest(template = "empty")
     public static void allColorsSurviveSaveAndBucketRelease(GameTestHelper helper) {
         for (DyeColor color : DyeColor.values()) {
             Pufferfish fish = EntityType.PUFFERFISH.create(helper.getLevel());
-            ((ColoredPufferfish) fish).kaleidoscope$setColor(color);
+            PufferfishColors.set(fish, color);
             fish.setCustomName(Component.literal("Keepsake"));
             fish.setHealth(2.0F);
             CompoundTag saved = new CompoundTag();
             fish.saveWithoutId(saved);
             Pufferfish restored = EntityType.PUFFERFISH.create(helper.getLevel());
-            restored.getEntityData().assignValues(fish.getEntityData().getNonDefaultValues());
-            helper.assertTrue(((ColoredPufferfish) restored).kaleidoscope$getColor() == color, "Entity color did not synchronize");
             restored.load(saved);
-            helper.assertTrue(((ColoredPufferfish) restored).kaleidoscope$getColor() == color, "Entity color was not saved");
+            helper.assertTrue(PufferfishColors.get(restored) == color, "Entity color was not saved");
             ItemStack bucket = restored.getBucketItemStack();
             restored.saveToBucketTag(bucket);
             helper.assertTrue(PufferfishColors.get(bucket) == color, "Captured bucket lost its color");
@@ -84,13 +149,13 @@ public class PufferfishGameTests {
             var released = helper.getLevel().getEntitiesOfClass(Pufferfish.class, new AABB(pos).inflate(1));
             helper.assertTrue(released.size() == 1, "Bucket did not release exactly one fish");
             Pufferfish result = released.getFirst();
-            helper.assertTrue(((ColoredPufferfish) result).kaleidoscope$getColor() == color, "Released fish lost its color");
+            helper.assertTrue(PufferfishColors.get(result) == color, "Released fish lost its color");
             helper.assertTrue(result.fromBucket() && result.getHealth() == 2.0F, "Bucket entity data was damaged");
             helper.assertTrue(Component.literal("Keepsake").equals(result.getCustomName()), "Custom name was lost");
             result.discard();
         }
         Pufferfish plain = EntityType.PUFFERFISH.create(helper.getLevel());
-        helper.assertTrue(((ColoredPufferfish) plain).kaleidoscope$getColor() == null, "Vanilla fish must remain undyed");
+        helper.assertTrue(PufferfishColors.get(plain) == null, "Vanilla fish must remain undyed");
         helper.succeed();
     }
 
@@ -141,18 +206,18 @@ public class PufferfishGameTests {
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.RED_DYE, 4));
         var event = new PlayerInteractEvent.EntityInteract(player, InteractionHand.MAIN_HAND, fish);
         NeoForge.EVENT_BUS.post(event);
-        helper.assertTrue(event.isCanceled() && ((ColoredPufferfish) fish).kaleidoscope$getColor() == DyeColor.RED, "Live dye interaction failed");
+        helper.assertTrue(event.isCanceled() && PufferfishColors.get(fish) == DyeColor.RED, "Live dye interaction failed");
         helper.assertTrue(player.getMainHandItem().getCount() == 3 && fish.isPersistenceRequired(), "Survival dye cost or persistence is incorrect");
         NeoForge.EVENT_BUS.post(new PlayerInteractEvent.EntityInteract(player, InteractionHand.MAIN_HAND, fish));
         helper.assertTrue(player.getMainHandItem().getCount() == 3, "Same-color dye was consumed");
         player.getAbilities().instabuild = true;
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BLUE_DYE));
         NeoForge.EVENT_BUS.post(new PlayerInteractEvent.EntityInteract(player, InteractionHand.MAIN_HAND, fish));
-        helper.assertTrue(player.getMainHandItem().getCount() == 1 && ((ColoredPufferfish) fish).kaleidoscope$getColor() == DyeColor.BLUE, "Creative dye interaction failed");
+        helper.assertTrue(player.getMainHandItem().getCount() == 1 && PufferfishColors.get(fish) == DyeColor.BLUE, "Creative dye interaction failed");
         player.getAbilities().mayBuild = false;
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.RED_DYE));
         NeoForge.EVENT_BUS.post(new PlayerInteractEvent.EntityInteract(player, InteractionHand.MAIN_HAND, fish));
-        helper.assertTrue(((ColoredPufferfish) fish).kaleidoscope$getColor() == DyeColor.BLUE, "Restricted player dyed a fish");
+        helper.assertTrue(PufferfishColors.get(fish) == DyeColor.BLUE, "Restricted player dyed a fish");
         helper.succeed();
     }
 
@@ -160,7 +225,7 @@ public class PufferfishGameTests {
     public static void deathDropsRetainEveryColor(GameTestHelper helper) {
         for (DyeColor color : DyeColor.values()) {
             Pufferfish fish = helper.spawn(EntityType.PUFFERFISH, new BlockPos(1, 1, 1));
-            ((ColoredPufferfish) fish).kaleidoscope$setColor(color);
+            PufferfishColors.set(fish, color);
             fish.hurt(helper.getLevel().damageSources().genericKill(), 1000.0F);
             var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, fish.getBoundingBox().inflate(2));
             var food = drops.stream().filter(drop -> drop.getItem().is(Items.PUFFERFISH)).toList();

@@ -21,6 +21,15 @@ add new dishes or change which fish other mods consider edible.
 Textures are derived from the active resource pack at load time: warm body pixels
 are recolored while neutral pixels and water retain their colors. Resource packs
 that replace the yellow body with another hue may need custom models or textures.
+Explicit item model overrides from resource packs or other mods take precedence
+over the generated colored models.
+
+Entity colors use synchronized NeoForge data attachments. Item colors and names
+use vanilla data components, and item models use NeoForge's model baking event.
+The remaining mixins handle bucket transfers, color initialization before entity
+tracking, entity textures, and migration of older entity saves. Existing colored
+items and buckets retain their colors; older items without name components use a
+tooltip fallback until recolored.
 
 ## Development
 
@@ -43,10 +52,11 @@ integration separately. Set both to `false` to run without either mod.
 .\gradlew.bat runClient -Pclient_smoke_test=true
 ```
 
-Game tests cover all colors, entity synchronization and persistence, bucket
-release, recipe data preservation, dye consumption, death drops, and Cookery
-recipe ingredients. The client smoke test checks all colored models and textures,
-reloads resource packs, and exits automatically. Test sources are excluded from
+Game tests cover all colors, initial tracking packets, persistence, legacy save
+migration, bucket release, item names, recipe data preservation, dye consumption,
+death drops, and Cookery recipe ingredients. The client smoke test checks all
+colored models and textures, verifies external model override delegation, reloads
+resource packs, and exits automatically. Test sources are excluded from
 the published JAR. CI runs game tests against both supported Cookery versions.
 
 ## License

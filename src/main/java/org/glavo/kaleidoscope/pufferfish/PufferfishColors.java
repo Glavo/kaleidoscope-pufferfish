@@ -3,8 +3,12 @@
 
 package org.glavo.kaleidoscope.pufferfish;
 
+import java.util.Objects;
 import javax.annotation.Nullable;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
@@ -14,6 +18,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
 import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 public final class PufferfishColors {
@@ -30,12 +35,50 @@ public final class PufferfishColors {
         return supports(stack) ? stack.get(KaleidoscopePufferfish.COLOR.get()) : null;
     }
 
+    @Nullable
+    public static DyeColor get(Pufferfish fish) {
+        return fish.getExistingDataOrNull(KaleidoscopePufferfish.ENTITY_COLOR);
+    }
+
+    public static void set(Pufferfish fish, @Nullable DyeColor color) {
+        if (!Objects.equals(get(fish), color)) {
+            if (color == null) {
+                fish.removeData(KaleidoscopePufferfish.ENTITY_COLOR);
+            } else {
+                fish.setData(KaleidoscopePufferfish.ENTITY_COLOR, color);
+            }
+        }
+    }
+
+    public static MutableComponent name(ItemStack stack, DyeColor color) {
+        String key = stack.is(Items.PUFFERFISH_BUCKET) ? "dyed_pufferfish_bucket" : "dyed_pufferfish";
+        return Component.translatable("item.kaleidoscope_pufferfish." + key,
+                Component.translatable("color.minecraft." + color.getName()));
+    }
+
     public static ItemStack dye(ItemStack stack, DyeColor color) {
         stack.set(KaleidoscopePufferfish.COLOR.get(), color);
+        Component previousName = stack.get(DataComponents.ITEM_NAME);
+        if (previousName == null || previousName.getContents() instanceof TranslatableContents translated
+                && (translated.getKey().equals("item.kaleidoscope_pufferfish.dyed_pufferfish")
+                || translated.getKey().equals("item.kaleidoscope_pufferfish.dyed_pufferfish_bucket"))) {
+            stack.set(DataComponents.ITEM_NAME, name(stack, color));
+        }
         if (stack.is(Items.PUFFERFISH_BUCKET)) {
             CustomData.update(DataComponents.BUCKET_ENTITY_DATA, stack, tag -> tag.putString(COLOR_TAG, color.getName()));
         }
         return stack;
+    }
+
+    public static void legacyTooltip(ItemTooltipEvent event) {
+        ItemStack stack = event.getItemStack();
+        DyeColor color = get(stack);
+        var lines = event.getToolTip();
+        // Older stacks have a color component but no item name component.
+        if (color != null && !stack.has(DataComponents.ITEM_NAME) && !stack.has(DataComponents.CUSTOM_NAME)
+                && !lines.isEmpty() && lines.getFirst().getString().equals(stack.getHoverName().getString())) {
+            lines.set(0, name(stack, color).withStyle(lines.getFirst().getStyle()));
+        }
     }
 
     public static void interact(PlayerInteractEvent.EntityInteract event) {
@@ -44,12 +87,11 @@ public final class PufferfishColors {
             return;
         }
         DyeColor color = DyeColor.getColor(event.getItemStack());
-        ColoredPufferfish colored = (ColoredPufferfish) fish;
-        if (color == null || color == colored.kaleidoscope$getColor()) {
+        if (color == null || color == get(fish)) {
             return;
         }
         if (!event.getLevel().isClientSide()) {
-            colored.kaleidoscope$setColor(color);
+            set(fish, color);
             fish.setPersistenceRequired();
             event.getLevel().playSound(null, fish, SoundEvents.DYE_USE, SoundSource.PLAYERS, 1.0F, 1.0F);
             if (!event.getEntity().getAbilities().instabuild) {
@@ -62,7 +104,7 @@ public final class PufferfishColors {
 
     public static void colorDrops(LivingDropsEvent event) {
         if (event.getEntity() instanceof Pufferfish fish) {
-            DyeColor color = ((ColoredPufferfish) fish).kaleidoscope$getColor();
+            DyeColor color = get(fish);
             if (color != null) {
                 for (var drop : event.getDrops()) {
                     if (drop.getItem().is(Items.PUFFERFISH)) {

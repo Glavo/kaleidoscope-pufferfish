@@ -4,9 +4,14 @@
 package org.glavo.kaleidoscope.pufferfish;
 
 import com.mojang.logging.LogUtils;
+import java.util.Map;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.block.model.ItemOverrides;
+import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -14,6 +19,8 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.model.BakedModelWrapper;
+import org.glavo.kaleidoscope.pufferfish.client.PufferfishItemModel;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishTextures;
 
 @EventBusSubscriber(modid = KaleidoscopePufferfish.MODID, value = Dist.CLIENT)
@@ -46,12 +53,40 @@ public final class PufferfishClientSmokeTest {
                 throw new IllegalStateException("Missing dyed pufferfish entity texture: " + color);
             }
         }
+        verifyModelDelegation(minecraft);
         phase++;
         if (phase == 1) {
             minecraft.reloadResourcePacks();
         } else {
-            LogUtils.getLogger().info("Pufferfish client smoke test passed: 32 models, 16 entity textures, and resource reload");
+            LogUtils.getLogger().info("Pufferfish client smoke test passed: 32 models, 16 entity textures, model override delegation, and resource reload");
             minecraft.stop();
+        }
+    }
+
+    private static void verifyModelDelegation(Minecraft minecraft) {
+        var plainStack = new ItemStack(Items.PUFFERFISH);
+        BakedModel plain = minecraft.getItemRenderer().getModel(plainStack, null, null, 0);
+        BakedModel red = minecraft.getModelManager().getModel(ModelResourceLocation.standalone(PufferfishTextures.item(DyeColor.RED, false)));
+        var wrapper = new PufferfishItemModel(plain, Map.of(DyeColor.RED, red));
+        if (wrapper.getOverrides().resolve(wrapper, plainStack, null, null, 0) != plain) {
+            throw new IllegalStateException("Undyed item model was replaced");
+        }
+        BakedModel external = new BakedModelWrapper<BakedModel>(plain) {};
+        BakedModel original = new BakedModelWrapper<BakedModel>(plain) {
+            @Override
+            public ItemOverrides getOverrides() {
+                return new ItemOverrides() {
+                    @Override
+                    public BakedModel resolve(BakedModel model, ItemStack stack, ClientLevel level, LivingEntity entity, int seed) {
+                        return external;
+                    }
+                };
+            }
+        };
+        wrapper = new PufferfishItemModel(original, Map.of(DyeColor.RED, red));
+        var redStack = PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), DyeColor.RED);
+        if (wrapper.getOverrides().resolve(wrapper, redStack, null, null, 0) != external) {
+            throw new IllegalStateException("External model override was replaced");
         }
     }
 }

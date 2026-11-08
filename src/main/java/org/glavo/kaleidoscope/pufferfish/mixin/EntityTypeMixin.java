@@ -8,12 +8,12 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.Pufferfish;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
-import org.glavo.kaleidoscope.pufferfish.ColoredPufferfish;
 import org.glavo.kaleidoscope.pufferfish.PufferfishColors;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -30,8 +30,8 @@ public abstract class EntityTypeMixin {
             DyeColor color = DyeColor.byName(tag.getString(PufferfishColors.COLOR_TAG), null);
             // Include the color in the initial tracking data, before the entity enters the world.
             cir.setReturnValue(cir.getReturnValue().andThen(entity -> {
-                if (entity instanceof ColoredPufferfish fish) {
-                    fish.kaleidoscope$setColor(color);
+                if (entity instanceof Pufferfish fish) {
+                    PufferfishColors.set(fish, color);
                 }
             }));
         }
