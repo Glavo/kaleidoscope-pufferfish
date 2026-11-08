@@ -33,5 +33,22 @@
   "gui.kaleidoscope_pufferfish.engine.running": "Running",
   "item.kaleidoscope_pufferfish.pufferfish_flail": "Pufferfish Flail",
   "item.kaleidoscope_pufferfish.netherite_pufferfish_flail": "Netherite Pufferfish Flail",
-  "entity.kaleidoscope_pufferfish.pufferfish_flail_head": "Pufferfish Flail Head"
+  "entity.kaleidoscope_pufferfish.pufferfish_flail_head": "Pufferfish Flail Head",
+  "block.kaleidoscope_pufferfish.pufferfish_carpet": "Pufferfish Carpet",
+  "block.kaleidoscope_pufferfish.white_pufferfish_carpet": "White Pufferfish Carpet",
+  "block.kaleidoscope_pufferfish.orange_pufferfish_carpet": "Orange Pufferfish Carpet",
+  "block.kaleidoscope_pufferfish.magenta_pufferfish_carpet": "Magenta Pufferfish Carpet",
+  "block.kaleidoscope_pufferfish.light_blue_pufferfish_carpet": "Light Blue Pufferfish Carpet",
+  "block.kaleidoscope_pufferfish.yellow_pufferfish_carpet": "Yellow Pufferfish Carpet",
+  "block.kaleidoscope_pufferfish.lime_pufferfish_carpet": "Lime Pufferfish Carpet",
+  "block.kaleidoscope_pufferfish.pink_pufferfish_carpet": "Pink Pufferfish Carpet",
+  "block.kaleidoscope_pufferfish.gray_pufferfish_carpet": "Gray Pufferfish Carpet",
+  "block.kaleidoscope_pufferfish.light_gray_pufferfish_carpet": "Light Gray Pufferfish Carpet",
+  "block.kaleidoscope_pufferfish.cyan_pufferfish_carpet": "Cyan Pufferfish Carpet",
+  "block.kaleidoscope_pufferfish.purple_pufferfish_carpet": "Purple Pufferfish Carpet",
+  "block.kaleidoscope_pufferfish.blue_pufferfish_carpet": "Blue Pufferfish Carpet",
+  "block.kaleidoscope_pufferfish.brown_pufferfish_carpet": "Brown Pufferfish Carpet",
+  "block.kaleidoscope_pufferfish.green_pufferfish_carpet": "Green Pufferfish Carpet",
+  "block.kaleidoscope_pufferfish.red_pufferfish_carpet": "Red Pufferfish Carpet",
+  "block.kaleidoscope_pufferfish.black_pufferfish_carpet": "Black Pufferfish Carpet"
 }

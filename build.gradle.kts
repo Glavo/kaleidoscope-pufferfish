@@ -224,14 +224,55 @@ val generateBlockResources = tasks.register<Sync>("generateBlockResources") {
     }
 }
 
+val generateCarpetResources = tasks.register<Sync>("generateCarpetResources") {
+    inputs.property("modId", modId)
+    inputs.property("colors", dyeColors)
+    filteringCharset = "UTF-8"
+    into(layout.buildDirectory.dir("generated/resources/pufferfishCarpets"))
+    for (color in listOf("") + dyeColors) {
+        val prefix = if (color.isEmpty()) "" else "${color}_"
+        val carpetName = "${prefix}pufferfish_carpet"
+        val properties = mapOf(
+            "modId" to modId,
+            "blockName" to carpetName,
+            "blockId" to "$modId:$carpetName",
+            "textureName" to "${prefix}pufferfish_block",
+            "ingredient" to JsonOutput.toJson(if (color.isEmpty()) mapOf("type" to "$modId:pufferfish")
+                else mapOf("type" to "$modId:pufferfish", "color" to color))
+        )
+        inputs.property(carpetName, properties)
+        for ((template, target) in mapOf(
+            "blockTemplates/blockstate" to "assets/$modId/blockstates/$carpetName.json",
+            "blockTemplates/item_model" to "assets/$modId/models/item/$carpetName.json",
+            "blockTemplates/loot" to "data/$modId/loot_table/blocks/$carpetName.json",
+            "carpetTemplates/block_model" to "assets/$modId/models/block/$carpetName.json",
+            "carpetTemplates/crafting" to "data/$modId/recipe/$carpetName.json",
+            "carpetTemplates/pressing" to "data/$modId/recipe/pressing/$carpetName.json"
+        )) {
+            from("src/main/$template.json") {
+                expand(properties)
+                into(target.substringBeforeLast('/'))
+                rename { target.substringAfterLast('/') }
+            }
+        }
+        from("src/main/blockTemplates/advancement.json") {
+            expand("recipe" to "$modId:$carpetName", "ingredient" to "minecraft:pufferfish")
+            into("data/$modId/advancement/recipes/decorations")
+            rename { "$carpetName.json" }
+        }
+    }
+}
+
 sourceSets.main {
     resources.srcDir(generateModMetadata)
     resources.srcDir(generateItemModels)
     resources.srcDir(generateBlockResources)
+    resources.srcDir(generateCarpetResources)
 }
 neoForge.ideSyncTask(generateModMetadata)
 neoForge.ideSyncTask(generateItemModels)
 neoForge.ideSyncTask(generateBlockResources)
+neoForge.ideSyncTask(generateCarpetResources)
 
 publishing {
     publications {

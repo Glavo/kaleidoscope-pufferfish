@@ -72,8 +72,10 @@ public final class PufferfishClientSmokeTest {
             }
         }
         verifyBlock(minecraft, null);
+        verifyCarpet(minecraft, null);
         for (DyeColor color : DyeColor.values()) {
             verifyBlock(minecraft, color);
+            verifyCarpet(minecraft, color);
         }
         verifyBlock(minecraft, PufferfishBlocks.NETHERITE.get(), "netherite_pufferfish_block");
         var netheriteModel = minecraft.getItemRenderer().getModel(new ItemStack(PufferfishItems.NETHERITE.get()), null, null, 0);
@@ -106,7 +108,7 @@ public final class PufferfishClientSmokeTest {
             projectileRendererChecked = false;
             minecraft.reloadResourcePacks();
         } else {
-            LogUtils.getLogger().info("Pufferfish client smoke test passed: 34 item models, 18 blocks, headgear, gloves, flails and conduit rendering, projectile renderers, model override delegation, and resource reload");
+            LogUtils.getLogger().info("Pufferfish client smoke test passed: 34 item models, 18 blocks, 17 carpets, headgear, gloves, flails and conduit rendering, projectile renderers, model override delegation, and resource reload");
             minecraft.stop();
         }
     }
@@ -142,6 +144,34 @@ public final class PufferfishClientSmokeTest {
         }
         if (stack.getHoverName().getString().startsWith("block.")) {
             throw new IllegalStateException("Missing pufferfish block translation: " + name);
+        }
+    }
+
+    /// Checks that each carpet's block and item models use the matching fish texture and a thin top face.
+    private static void verifyCarpet(Minecraft minecraft, DyeColor color) {
+        var block = PufferfishBlocks.carpet(color);
+        var state = block.defaultBlockState();
+        var stack = new ItemStack(block);
+        var texture = KaleidoscopePufferfish.id("block/" + PufferfishBlocks.name(color));
+        var blockModel = minecraft.getBlockRenderer().getBlockModel(state);
+        var itemModel = minecraft.getItemRenderer().getModel(stack, null, null, 0);
+        for (var model : new BakedModel[] {blockModel, itemModel}) {
+            if (model == minecraft.getModelManager().getMissingModel() || !model.getParticleIcon().contents().name().equals(texture)) {
+                throw new IllegalStateException("Missing carpet model or color texture: " + color);
+            }
+            var top = model.getQuads(state, null, RandomSource.create());
+            if (top.isEmpty()) throw new IllegalStateException("Missing carpet top face: " + color);
+            for (var quad : top) {
+                var vertices = quad.getVertices();
+                int stride = vertices.length / 4;
+                for (int vertex = 0; vertex < 4; vertex++) {
+                    float y = Float.intBitsToFloat(vertices[vertex * stride + 1]);
+                    if (Math.abs(y - 1.0F / 16) > 0.0001F) throw new IllegalStateException("Incorrect carpet model height: " + color);
+                }
+            }
+        }
+        if (stack.getHoverName().getString().startsWith("block.")) {
+            throw new IllegalStateException("Missing carpet translation: " + color);
         }
     }
 

@@ -13,6 +13,7 @@ import net.neoforged.neoforge.event.RegisterGameTestsEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.glavo.kaleidoscope.pufferfish.compat.create.PufferfishEngineGameTests;
+import org.glavo.kaleidoscope.pufferfish.compat.create.PufferfishCarpetPressingGameTests;
 
 @EventBusSubscriber(modid = KaleidoscopePufferfish.MODID)
 @GameTestHolder(KaleidoscopePufferfish.MODID)
@@ -22,6 +23,7 @@ public final class CreateGameTestRegistration {
     public static void register(RegisterGameTestsEvent event) {
         if (ModList.get().isLoaded("create")) {
             event.register(PufferfishEngineGameTests.class);
+            event.register(PufferfishCarpetPressingGameTests.class);
         }
     }
 
@@ -32,6 +34,13 @@ public final class CreateGameTestRegistration {
         helper.assertTrue(BuiltInRegistries.BLOCK.containsKey(id) == create, "Engine block optional registration failed");
         helper.assertTrue(BuiltInRegistries.ITEM.containsKey(id) == create, "Engine item optional registration failed");
         helper.assertTrue(helper.getLevel().getRecipeManager().byKey(id).isPresent() == create, "Engine recipe condition failed");
+        for (int color = -1; color < 16; color++) {
+            var name = PufferfishBlocks.carpetName(color < 0 ? null : net.minecraft.world.item.DyeColor.byId(color));
+            helper.assertTrue(helper.getLevel().getRecipeManager().byKey(KaleidoscopePufferfish.id("pressing/" + name)).isPresent() == create,
+                    "Carpet pressing recipe condition failed");
+            helper.assertTrue(helper.getLevel().getRecipeManager().byKey(KaleidoscopePufferfish.id(name)).isPresent(),
+                    "Carpet crafting recipe depends on Create");
+        }
         helper.succeed();
     }
 }

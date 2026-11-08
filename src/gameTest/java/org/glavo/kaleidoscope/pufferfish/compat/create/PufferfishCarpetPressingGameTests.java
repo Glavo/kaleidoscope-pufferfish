@@ -1,0 +1,63 @@
+// Copyright (c) 2026 Glavo
+// SPDX-License-Identifier: MPL-2.0
+
+package org.glavo.kaleidoscope.pufferfish.compat.create;
+
+import com.simibubi.create.content.kinetics.press.MechanicalPressBlockEntity;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import org.glavo.kaleidoscope.pufferfish.KaleidoscopePufferfish;
+import org.glavo.kaleidoscope.pufferfish.PufferfishBlocks;
+import org.glavo.kaleidoscope.pufferfish.PufferfishColors;
+import org.glavo.kaleidoscope.pufferfish.PufferfishItems;
+
+/// Verifies the mechanical press processes fish into carpets without losing their colors.
+@PrefixGameTestTemplate(false)
+public final class PufferfishCarpetPressingGameTests {
+    /// Prevents construction of the test holder.
+    private PufferfishCarpetPressingGameTests() {}
+
+    /// Verifies recipe lookup, simulation, and actual world-item processing for all seventeen variants.
+    @GameTest(template = "empty", templateNamespace = KaleidoscopePufferfish.MODID)
+    public static void pressingOneFishProducesOneMatchingCarpet(GameTestHelper helper) {
+        var pos = new BlockPos(1, 3, 1);
+        helper.setBlock(pos, BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("create", "mechanical_press")));
+        var press = (MechanicalPressBlockEntity) helper.getBlockEntity(pos);
+        var colors = new ArrayList<DyeColor>();
+        colors.add(null);
+        colors.addAll(Arrays.asList(DyeColor.values()));
+        var itemPos = Vec3.atCenterOf(helper.absolutePos(pos.below(2)));
+        for (var color : colors) {
+            var fish = new ItemStack(Items.PUFFERFISH);
+            if (color != null) PufferfishColors.dye(fish, color);
+            var recipe = press.getRecipe(fish).orElseThrow();
+            helper.assertTrue(recipe.id().equals(KaleidoscopePufferfish.id("pressing/" + PufferfishBlocks.carpetName(color))),
+                    "Press selected the wrong carpet color");
+            var entity = new ItemEntity(helper.getLevel(), itemPos.x, itemPos.y, itemPos.z, fish.copy());
+            helper.getLevel().addFreshEntity(entity);
+            helper.assertTrue(press.tryProcessInWorld(entity, true) && ItemStack.matches(fish, entity.getItem()),
+                    "Press simulation consumed or changed its fish");
+            helper.assertTrue(press.tryProcessInWorld(entity, false), "Press failed to process its fish");
+            var items = helper.getLevel().getEntitiesOfClass(ItemEntity.class, entity.getBoundingBox().inflate(1));
+            helper.assertTrue(items.size() == 1 && items.getFirst().getItem().is(PufferfishBlocks.carpet(color).asItem())
+                    && items.getFirst().getItem().getCount() == 1, "Press produced the wrong carpet or quantity");
+            items.forEach(ItemEntity::discard);
+        }
+        for (var item : List.of(Items.COD, Items.PUFFERFISH_BUCKET, PufferfishItems.NETHERITE.get(), PufferfishItems.GOLDEN.get())) {
+            helper.assertTrue(press.getRecipe(new ItemStack(item)).isEmpty(), "Press accepted an unsupported fish item");
+        }
+        helper.succeed();
+    }
+}

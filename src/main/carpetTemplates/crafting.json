@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "group": "${modId}:pufferfish_carpets",
+  "pattern": ["FFF"],
+  "key": {"F": ${ingredient}},
+  "result": {"id": "${blockId}", "count": 1}
+}

@@ -11,6 +11,7 @@ import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CarpetBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -32,12 +33,17 @@ public final class PufferfishBlocks {
             BlockBehaviour.Properties.ofFullCopy(Blocks.NETHERITE_BLOCK));
     private static final DeferredBlock<Block> PLAIN = registerBlock(null);
     private static final Map<DyeColor, DeferredBlock<Block>> COLORED = new EnumMap<>(DyeColor.class);
+    /// The carpet made from undyed pufferfish.
+    private static final DeferredBlock<CarpetBlock> PLAIN_CARPET = registerCarpet(null);
+    /// Carpets indexed by the dye color of their ingredient fish.
+    private static final Map<DyeColor, DeferredBlock<CarpetBlock>> COLORED_CARPETS = new EnumMap<>(DyeColor.class);
 
     static {
         ITEMS.registerSimpleBlockItem(CONDUIT);
         ITEMS.registerSimpleBlockItem(NETHERITE, new Item.Properties().fireResistant());
         for (DyeColor color : DyeColor.values()) {
             COLORED.put(color, registerBlock(color));
+            COLORED_CARPETS.put(color, registerCarpet(color));
         }
     }
 
@@ -55,6 +61,26 @@ public final class PufferfishBlocks {
         var block = BLOCKS.registerSimpleBlock(name(color), BlockBehaviour.Properties.of()
                 .mapColor(color == null ? MapColor.COLOR_YELLOW : color.getMapColor())
                 .strength(0.5F).sound(SoundType.WET_GRASS));
+        ITEMS.registerSimpleBlockItem(block);
+        return block;
+    }
+
+    /// Returns the registry path for the given carpet color, or the undyed carpet if null.
+    public static String carpetName(@Nullable DyeColor color) {
+        return color == null ? "pufferfish_carpet" : color.getName() + "_pufferfish_carpet";
+    }
+
+    /// Returns the registered carpet for the given color, or the undyed carpet if null.
+    public static CarpetBlock carpet(@Nullable DyeColor color) {
+        return (color == null ? PLAIN_CARPET : COLORED_CARPETS.get(color)).get();
+    }
+
+    /// Registers a carpet and its item with vanilla carpet shape and support requirements.
+    private static DeferredBlock<CarpetBlock> registerCarpet(@Nullable DyeColor color) {
+        var block = BLOCKS.registerBlock(carpetName(color), CarpetBlock::new,
+                BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CARPET)
+                        .mapColor(color == null ? MapColor.COLOR_YELLOW : color.getMapColor())
+                        .sound(SoundType.WET_GRASS));
         ITEMS.registerSimpleBlockItem(block);
         return block;
     }
