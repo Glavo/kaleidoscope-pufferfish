@@ -35,3 +35,12 @@ jobs:
 
       - name: Run game tests
         run: ./gradlew runGameTestServer -Pkaleidoscope_cookery_version=${{ matrix.cookery }} -Pinclude_create=${{ matrix.create }}
+
+      # Upload once, using the oldest supported Cookery version for the dependency metadata.
+      - name: Upload mod JAR
+        if: matrix.cookery == '1.5.1-neoforge+mc1.21.1' && matrix.create == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          path: build/libs/*.jar
+          if-no-files-found: error
+          archive: false
