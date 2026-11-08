@@ -5,6 +5,7 @@ package org.glavo.kaleidoscope.pufferfish.compat.cooking;
 
 import com.github.ysbbbbbb.kaleidoscopecookery.blockentity.kitchen.PotBlockEntity;
 import com.github.ysbbbbbb.kaleidoscopecookery.crafting.container.SimpleInput;
+import com.github.ysbbbbbb.kaleidoscopecookery.crafting.container.StockpotInput;
 import com.github.ysbbbbbb.kaleidoscopecookery.crafting.recipe.PotRecipe;
 import com.github.ysbbbbbb.kaleidoscopecookery.init.ModBlocks;
 import com.github.ysbbbbbb.kaleidoscopecookery.init.ModItems;
@@ -31,11 +32,54 @@ import org.glavo.kaleidoscope.pufferfish.KaleidoscopePufferfish;
 import org.glavo.kaleidoscope.pufferfish.PufferfishCuttingGameTests;
 import org.glavo.kaleidoscope.pufferfish.PufferfishItems;
 
-/// Exercises exact-count stir-frying and Cookery's rice bowl crafting and container behavior.
+/// Exercises stir-frying, rice soup, and Cookery's rice bowl crafting and container behavior.
 @PrefixGameTestTemplate(false)
 public final class CookeryDishGameTests {
     /// Prevents construction of the test holder.
     private CookeryDishGameTests() {}
+
+    /// Verifies raw rice upgrades all fish soup variants while preserving the original recipes without rice.
+    @GameTest(template = "empty", templateNamespace = "kaleidoscope_pufferfish")
+    public static void riceTurnsFishSoupIntoZosui(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var manager = level.getRecipeManager();
+        for (var riceId : List.of("kaleidoscope_cookery:rice", "farmersdelight:rice")) {
+            var location = ResourceLocation.parse(riceId);
+            if (!ModList.get().isLoaded(location.getNamespace())) continue;
+            for (boolean bucket : new boolean[] {false, true}) {
+                for (int color = -1; color < 16; color++) {
+                    for (int sliced = 0; sliced <= 2; sliced++) {
+                        var stacks = NonNullList.withSize(9, ItemStack.EMPTY);
+                        int index = 0;
+                        if (!bucket) {
+                            for (int i = 0; i < 2; i++) stacks.set(index++, i < sliced ? new ItemStack(PufferfishItems.SASHIMI.get())
+                                    : PufferfishCuttingGameTests.fish(color < 0 ? null : DyeColor.byId(color)).copyWithCount(1));
+                        }
+                        for (int i = 0; i < 3; i++) stacks.set(index++, new ItemStack(ModItems.LETTUCE.get()));
+                        stacks.set(index, new ItemStack(BuiltInRegistries.ITEM.get(location)));
+                        var base = bucket ? ResourceLocation.withDefaultNamespace("pufferfish_bucket")
+                                : ResourceLocation.withDefaultNamespace("water");
+                        var input = new StockpotInput(stacks, base);
+                        var strict = manager.getRecipeFor(ModRecipes.STOCKPOT_RECIPE, input, level).orElseThrow().value();
+                        var flexible = manager.getRecipeFor(ModRecipes.FLEX_STOCKPOT_RECIPE, input, level).orElseThrow().value();
+                        helper.assertTrue(strict.assemble(input, level.registryAccess()).is(PufferfishItems.ZOSUI.get())
+                                && flexible.assemble(input, level.registryAccess()).is(PufferfishItems.ZOSUI.get()),
+                                "Rice did not upgrade a whole, sliced, mixed, or bucket-based soup to zosui");
+                        for (var invalid : List.of(Items.WHEAT, ModItems.COOKED_RICE.get(), PufferfishItems.BRAISED_RICE_BOWL.get())) {
+                            stacks.set(index, new ItemStack(invalid));
+                            helper.assertTrue(!strict.matches(input, level) && !flexible.matches(input, level), "Zosui accepted cooked rice or another grain");
+                        }
+                        stacks.set(index, ItemStack.EMPTY);
+                        helper.assertTrue(manager.getRecipeFor(ModRecipes.STOCKPOT_RECIPE, input, level).orElseThrow().value()
+                                .assemble(input, level.registryAccess()).is(ModItems.PUFFERFISH_SOUP.get()), "Rice-free soup changed its result");
+                        helper.assertTrue(manager.getRecipeFor(ModRecipes.FLEX_STOCKPOT_RECIPE, input, level).orElseThrow().value()
+                                .assemble(input, level.registryAccess()).is(ModItems.PUFFERFISH_SOUP.get()), "Rice-free flexible soup changed its result");
+                    }
+                }
+            }
+        }
+        helper.succeed();
+    }
 
     /// Verifies four interchangeable fish ingredients, rejects other counts, and cooks a mixed batch in a real pot.
     @GameTest(template = "empty", templateNamespace = "kaleidoscope_pufferfish")

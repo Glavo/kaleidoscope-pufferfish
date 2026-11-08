@@ -23,20 +23,22 @@ public final class PufferfishDishGameTests {
     /// Verifies food recovery and bowl returns for single and stacked meals without applying raw-fish poison.
     @GameTest(template = "empty")
     public static void cookedDishesRestoreFoodAndReturnBowls(GameTestHelper helper) {
-        for (var item : List.of(PufferfishItems.BRAISED.get(), PufferfishItems.BRAISED_RICE_BOWL.get())) {
+        for (var item : List.of(PufferfishItems.BRAISED.get(), PufferfishItems.BRAISED_RICE_BOWL.get(), PufferfishItems.ZOSUI.get())) {
             for (int count : new int[] {1, 2}) {
                 var player = helper.makeMockPlayer(GameType.SURVIVAL);
                 player.getFoodData().setFoodLevel(0);
                 var stack = new ItemStack(item, count);
                 var result = stack.finishUsingItem(helper.getLevel(), player);
-                helper.assertTrue(player.getFoodData().getFoodLevel() == (item == PufferfishItems.BRAISED.get() ? 9 : 14)
+                int nutrition = item == PufferfishItems.BRAISED.get() ? 9 : item == PufferfishItems.ZOSUI.get() ? 10 : 14;
+                helper.assertTrue(player.getFoodData().getFoodLevel() == nutrition
                         && player.getActiveEffects().isEmpty() && !PufferfishItems.isWeapon(stack), "Cooked meal nutrition or effects are incorrect");
                 helper.assertTrue(count == 1 ? result.is(Items.BOWL) && result.getCount() == 1
                         : result.is(item) && result.getCount() == 1 && player.getInventory().countItem(Items.BOWL) == 1,
                         "Eating a meal lost or duplicated its bowl");
             }
         }
-        for (var name : List.of("braised_pufferfish", "braised_pufferfish_rice_bowl")) {
+        for (var name : List.of("braised_pufferfish", "braised_pufferfish_rice_bowl", "pufferfish_zosui",
+                "pufferfish_zosui_flexible", "pufferfish_zosui_mixed", "pufferfish_zosui_entity", "pufferfish_zosui_entity_flexible")) {
             helper.assertTrue(helper.getLevel().getRecipeManager().byKey(KaleidoscopePufferfish.id("compat/cookery/" + name)).isPresent()
                     == ModList.get().isLoaded("kaleidoscope_cookery"), "Cookery dish recipe ignored its mod condition");
         }

@@ -9,7 +9,7 @@ import net.minecraft.client.resources.metadata.animation.FrameSize;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceMetadata;
 
-/// Supplies glazed fish dishes in shallow brown bowls with sauce highlights and green garnish.
+/// Supplies fish dishes and rice soup in brown bowls with food highlights and green garnish.
 public final class PufferfishDishTexture {
     /// Pixel rows for overlapping fish slices in a wide, shallow serving bowl.
     private static final String[] DISH = {
@@ -26,12 +26,29 @@ public final class PufferfishDishTexture {
             "......pppp......", "................", "................", "................"
     };
 
+    /// Pixel rows for pale fish broth, rice grains, sliced fish, and lettuce in a shallow bowl.
+    private static final String[] ZOSUI = {
+            "................", "................", "................", "................",
+            "....oooooooo....", "..ootwkwtgcwoo..", ".ootwwhhtwctkso.", ".omkkhhwwtwwksp.",
+            ".omsskwtwkkoosp.", "..ommskkooossp..", "..osmmssmmsssp..", "...oosssssppp...",
+            ".....pppppp.....", "................", "................", "................"
+    };
+
     /// Prevents construction of this sprite factory.
     private PufferfishDishTexture() {}
 
     /// Creates a 16-by-16 dish sprite, optionally with rice; the returned contents own the image.
     public static SpriteContents create(ResourceLocation id, boolean rice) {
-        var rows = rice ? RICE : DISH;
+        return create(id, rice ? RICE : DISH);
+    }
+
+    /// Creates a 16-by-16 rice soup sprite whose image is owned by the returned contents.
+    public static SpriteContents createZosui(ResourceLocation id) {
+        return create(id, ZOSUI);
+    }
+
+    /// Converts the supplied sixteen pixel rows to a sprite using the shared food and bowl palette.
+    private static SpriteContents create(ResourceLocation id, String[] rows) {
         var image = new NativeImage(16, 16, true);
         for (int y = 0; y < rows.length; y++) {
             for (int x = 0; x < rows[y].length(); x++) {
@@ -53,6 +70,7 @@ public final class PufferfishDishTexture {
                     case 't' -> 0xE8E3D8;
                     case 'u' -> 0xD2C6B4;
                     case 'v' -> 0xB7A98F;
+                    case 'k' -> 0xEBCD99;
                     default -> -1;
                 };
                 if (rgb >= 0) image.setPixelRGBA(x, y, 0xFF000000 | (rgb & 255) << 16 | rgb & 0xFF00 | rgb >>> 16);

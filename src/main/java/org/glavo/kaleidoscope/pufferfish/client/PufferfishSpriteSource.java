@@ -33,6 +33,7 @@ public final class PufferfishSpriteSource implements SpriteSource {
         addSashimi(manager, output);
         addDish(manager, output, false);
         addDish(manager, output, true);
+        addZosui(manager, output);
         addBlock(manager, output, null);
         addSkin(manager, output, null);
         for (DyeColor color : DyeColor.values()) {
@@ -51,6 +52,14 @@ public final class PufferfishSpriteSource implements SpriteSource {
         var replacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(id));
         if (replacement.isPresent()) output.add(id, replacement.get());
         else output.add(id, loader -> PufferfishDishTexture.create(id, rice));
+    }
+
+    /// Adds a resource-pack rice soup sprite or the built-in fish and rice soup sprite.
+    private static void addZosui(ResourceManager manager, Output output) {
+        var id = KaleidoscopePufferfish.id("item/pufferfish_zosui");
+        var replacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(id));
+        if (replacement.isPresent()) output.add(id, replacement.get());
+        else output.add(id, loader -> PufferfishDishTexture.createZosui(id));
     }
 
     /// Adds a resource-pack sashimi sprite or the built-in sliced-fish sprite.
