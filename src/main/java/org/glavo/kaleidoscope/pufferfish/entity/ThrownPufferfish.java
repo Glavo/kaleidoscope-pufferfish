@@ -16,11 +16,8 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageType;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
@@ -28,14 +25,13 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.glavo.kaleidoscope.pufferfish.KaleidoscopePufferfish;
-import org.glavo.kaleidoscope.pufferfish.PufferfishItems;
+import org.glavo.kaleidoscope.pufferfish.PufferfishCombat;
 
 public class ThrownPufferfish extends ThrowableItemProjectile {
     private static final EntityDataAccessor<Boolean> RETURNING = SynchedEntityData.defineId(ThrownPufferfish.class, EntityDataSerializers.BOOLEAN);
@@ -172,21 +168,8 @@ public class ThrownPufferfish extends ThrowableItemProjectile {
                             : Component.translatable(key + ".player", victim.getDisplayName(), attacker.getDisplayName());
                 }
             };
-            boolean netherite = PufferfishItems.isNetherite(getItem());
-            var enchantments = registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
-            int density = EnchantmentHelper.getItemEnchantmentLevel(enchantments.getOrThrow(Enchantments.DENSITY), getItem());
-            float amount = (netherite ? 10.0F : 2.0F) + (density > 0 ? 0.5F + 0.5F * density : 0);
-            if (target.hurt(damage, amount) && target instanceof LivingEntity living) {
-                living.addEffect(new MobEffectInstance(MobEffects.POISON, 120, netherite ? 1 : 0), getEffectSource());
-                // Punch's vanilla effect requires an arrow; apply its knockback to this projectile explicitly.
-                int punch = EnchantmentHelper.getItemEnchantmentLevel(enchantments.getOrThrow(Enchantments.PUNCH), getItem());
-                if (punch > 0) {
-                    double resistance = Math.max(0, 1 - living.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE));
-                    Vec3 push = getDeltaMovement().multiply(1, 0, 1).normalize().scale(punch * 0.6 * resistance);
-                    if (push.lengthSqr() > 0) {
-                        living.push(push.x, 0.1, push.z);
-                    }
-                }
+            if (target.hurt(damage, PufferfishCombat.damage(getItem())) && target instanceof LivingEntity living) {
+                PufferfishCombat.hitEffects(getItem(), living, getEffectSource(), getDeltaMovement());
             }
         }
     }

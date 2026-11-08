@@ -10,7 +10,8 @@
   ],
   "client": [
     "PufferfishRendererMixin",
-    "PufferfishHeadLayerMixin"
+    "PufferfishHeadLayerMixin",
+    "PufferfishHandLayerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

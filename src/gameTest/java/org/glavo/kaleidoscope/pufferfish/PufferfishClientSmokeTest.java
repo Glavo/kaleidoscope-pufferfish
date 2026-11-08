@@ -80,6 +80,7 @@ public final class PufferfishClientSmokeTest {
         }
         verifyModelDelegation(minecraft);
         PufferfishHeadgearClientTest.verify(minecraft);
+        PufferfishGloveClientTest.verify(minecraft);
         if (net.neoforged.fml.ModList.get().isLoaded("create")) {
             org.glavo.kaleidoscope.pufferfish.compat.create.PufferfishEngineClientTest.verify(minecraft);
         }
@@ -91,7 +92,7 @@ public final class PufferfishClientSmokeTest {
             projectileRendererChecked = false;
             minecraft.reloadResourcePacks();
         } else {
-            LogUtils.getLogger().info("Pufferfish client smoke test passed: 33 item models, 18 blocks, dyed and netherite headgear rendering, projectile renderer, model override delegation, and resource reload");
+            LogUtils.getLogger().info("Pufferfish client smoke test passed: 33 item models, 18 blocks, headgear and glove rendering, projectile renderer, model override delegation, and resource reload");
             minecraft.stop();
         }
     }

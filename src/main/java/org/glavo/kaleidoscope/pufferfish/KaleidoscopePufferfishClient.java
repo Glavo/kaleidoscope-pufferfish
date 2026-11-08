@@ -22,6 +22,7 @@ import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import net.neoforged.neoforge.client.event.RegisterSpriteSourceTypesEvent;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishItemModel;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishHeadRenderer;
+import org.glavo.kaleidoscope.pufferfish.client.PufferfishGloveRenderer;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishSpriteSource;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishTextures;
 
@@ -38,6 +39,7 @@ public class KaleidoscopePufferfishClient {
         bus.addListener(this::registerRenderers);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishHeadRenderer::beforePlayer);
         NeoForge.EVENT_BUS.addListener(PufferfishHeadRenderer::afterPlayer);
+        NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishGloveRenderer::renderHand);
     }
 
     private void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
@@ -57,6 +59,7 @@ public class KaleidoscopePufferfishClient {
 
     private void registerReloadListeners(RegisterClientReloadListenersEvent event) {
         event.registerReloadListener(new PufferfishTextures());
+        event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener) manager -> PufferfishGloveRenderer.reset());
     }
 
     private void wrapModels(ModelEvent.ModifyBakingResult event) {
