@@ -58,6 +58,7 @@ public class KaleidoscopePufferfish {
                 .title(Component.translatable("itemGroup.kaleidoscope_pufferfish"))
                 .icon(() -> PufferfishColors.dye(new ItemStack(Items.PUFFERFISH_BUCKET), DyeColor.PURPLE))
                 .displayItems((parameters, output) -> {
+                    output.accept(PufferfishBlocks.CONDUIT);
                     if (ModList.get().isLoaded("create")) {
                         output.accept(CreateIntegration.ENGINE_ITEM.get());
                     }

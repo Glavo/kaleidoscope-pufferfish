@@ -1,0 +1,4 @@
+{
+  "parent": "minecraft:item/conduit",
+  "textures": {"particle": "minecraft:item/pufferfish"}
+}

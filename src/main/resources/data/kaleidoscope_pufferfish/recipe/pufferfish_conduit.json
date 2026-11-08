@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": ["PPP", "PHP", "PPP"],
+  "key": {
+    "P": {"tag": "kaleidoscope_pufferfish:pufferfish"},
+    "H": {"item": "minecraft:heart_of_the_sea"}
+  },
+  "result": {"id": "kaleidoscope_pufferfish:pufferfish_conduit", "count": 1}
+}

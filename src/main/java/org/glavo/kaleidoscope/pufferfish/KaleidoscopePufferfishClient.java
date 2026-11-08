@@ -19,12 +19,14 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.ModelEvent;
 import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
+import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.neoforged.neoforge.client.event.RegisterSpriteSourceTypesEvent;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishItemModel;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishHeadRenderer;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishGloveRenderer;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishSpriteSource;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishTextures;
+import org.glavo.kaleidoscope.pufferfish.client.PufferfishConduitRenderer;
 
 @Mod(value = KaleidoscopePufferfish.MODID, dist = Dist.CLIENT)
 public class KaleidoscopePufferfishClient {
@@ -37,6 +39,7 @@ public class KaleidoscopePufferfishClient {
         bus.addListener(EventPriority.LOWEST, this::wrapModels);
         bus.addListener(this::registerReloadListeners);
         bus.addListener(this::registerRenderers);
+        bus.addListener(this::registerItemExtensions);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishHeadRenderer::beforePlayer);
         NeoForge.EVENT_BUS.addListener(PufferfishHeadRenderer::afterPlayer);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishGloveRenderer::renderHand);
@@ -44,6 +47,11 @@ public class KaleidoscopePufferfishClient {
 
     private void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(KaleidoscopePufferfish.THROWN_PUFFERFISH.get(), ThrownItemRenderer::new);
+        event.registerBlockEntityRenderer(PufferfishBlocks.CONDUIT_ENTITY.get(), PufferfishConduitRenderer::new);
+    }
+
+    private void registerItemExtensions(RegisterClientExtensionsEvent event) {
+        event.registerItem(PufferfishConduitRenderer.itemExtensions(), PufferfishBlocks.CONDUIT.get().asItem());
     }
 
     private void registerSprites(RegisterSpriteSourceTypesEvent event) {

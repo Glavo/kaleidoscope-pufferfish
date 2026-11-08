@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
+    "kaleidoscope_pufferfish:pufferfish_conduit",
     "kaleidoscope_pufferfish:netherite_pufferfish_block",
     {
       "id": "kaleidoscope_pufferfish:pufferfish_engine",
