@@ -15,8 +15,10 @@ colors. Targets Minecraft 1.21.1 and NeoForge with Java 21.
 - Right-click with a pufferfish item to throw it. A successful hit deals 2 base
   damage and applies Poison I for 6 seconds, subject to normal damage and effect
   immunity. Survival mode consumes one fish; creative mode consumes none. The
-  projectile retains its color and disappears on impact. Sneak-right-click to eat
-  the fish instead. Pufferfish buckets retain their normal use.
+  projectile becomes a recoverable item on impact, preserving its color and name.
+  Fatal impacts use a dedicated pufferfish death message that names the thrower
+  when known. Sneak-right-click to eat the fish instead. Pufferfish buckets retain
+  their normal use.
 
 Undyed fish retain their vanilla appearance and behavior. Dyed items retain the
 vanilla item IDs and food properties, including pufferfish poisoning. Existing
@@ -69,7 +71,8 @@ override delegation, reloads
 resource packs, and exits automatically. Test sources are excluded from
 the published JAR. CI runs game tests against both supported Cookery versions.
 Projectile tests cover item consumption, canceled spawns, collision damage,
-poison duration and immunity, block impacts, and saved and synchronized colors.
+poison duration and immunity, item recovery, death messages, block impacts, and
+saved and synchronized colors.
 
 ## License
 

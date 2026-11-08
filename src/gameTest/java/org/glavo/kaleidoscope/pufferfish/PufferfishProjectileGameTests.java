@@ -3,6 +3,8 @@
 
 package org.glavo.kaleidoscope.pufferfish;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
@@ -10,11 +12,14 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -23,6 +28,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -140,8 +146,19 @@ public class PufferfishProjectileGameTests {
     }
 
     private static ThrownPufferfish hit(GameTestHelper helper, LivingEntity target) {
+        return hit(helper, target, new ItemStack(Items.PUFFERFISH));
+    }
+
+    private static ThrownPufferfish hit(GameTestHelper helper, LivingEntity target, ItemStack stack) {
+        return hit(helper, target, stack, true);
+    }
+
+    private static ThrownPufferfish hit(GameTestHelper helper, LivingEntity target, ItemStack stack, boolean hasOwner) {
         var owner = helper.makeMockPlayer(GameType.SURVIVAL);
-        var projectile = new ThrownPufferfish(helper.getLevel(), owner);
+        owner.setItemInHand(InteractionHand.MAIN_HAND, stack.copy());
+        var projectile = hasOwner ? new ThrownPufferfish(helper.getLevel(), owner)
+                : KaleidoscopePufferfish.THROWN_PUFFERFISH.get().create(helper.getLevel());
+        projectile.setItem(stack);
         projectile.setPos(target.getX(), target.getY() + target.getBbHeight() * 0.5, target.getZ() - 2.0);
         projectile.setDeltaMovement(0.0, 0.0, 3.0);
         helper.getLevel().addFreshEntity(projectile);
@@ -150,16 +167,94 @@ public class PufferfishProjectileGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void blockImpactsRemoveProjectiles(GameTestHelper helper) {
+    public static void blockImpactsLeaveRecoverableItems(GameTestHelper helper) {
         helper.setBlock(new BlockPos(2, 1, 3), Blocks.STONE);
         var projectile = KaleidoscopePufferfish.THROWN_PUFFERFISH.get().create(helper.getLevel());
+        var stack = PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), DyeColor.RED);
+        projectile.setItem(stack);
         BlockPos pos = helper.absolutePos(new BlockPos(2, 1, 1));
         projectile.setPos(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
         projectile.setDeltaMovement(0.0, 0.0, 3.0);
         helper.getLevel().addFreshEntity(projectile);
         projectile.tick();
         helper.assertTrue(projectile.isRemoved(), "Projectile survived a block impact");
+        var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(4))
+                .stream().filter(drop -> drop.getItem().is(Items.PUFFERFISH)).toList();
+        helper.assertTrue(drops.size() == 1 && ItemStack.isSameItemSameComponents(drops.getFirst().getItem(), stack),
+                "Block impact did not recover exactly one matching fish");
+        helper.assertTrue(helper.getLevel().getBlockState(drops.getFirst().blockPosition()).isAir(),
+                "Recovered fish was embedded in the block");
+        drops.forEach(ItemEntity::discard);
         helper.assertBlockPresent(Blocks.STONE, new BlockPos(2, 1, 3));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void entityImpactsRecoverAllColorsAndNames(GameTestHelper helper) {
+        for (DyeColor color : DyeColor.values()) {
+            var target = helper.spawn(EntityType.PIG, new BlockPos(2, 1, 3));
+            var stack = PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color);
+            stack.set(DataComponents.CUSTOM_NAME, Component.literal("Keepsake"));
+            var projectile = hit(helper, target, stack);
+            var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, target.getBoundingBox().inflate(3))
+                    .stream().filter(drop -> drop.getItem().is(Items.PUFFERFISH)).toList();
+            helper.assertTrue(projectile.isRemoved() && drops.size() == 1, "Impact did not recover exactly one fish");
+            var recovered = drops.getFirst();
+            helper.assertTrue(recovered.getItem().getCount() == 1 && ItemStack.isSameItemSameComponents(recovered.getItem(), stack),
+                    "Recovered fish lost its color or name");
+            var player = helper.makeMockPlayer(GameType.SURVIVAL);
+            recovered.setNoPickUpDelay();
+            recovered.playerTouch(player);
+            helper.assertTrue(recovered.isRemoved() && ItemStack.isSameItemSameComponents(player.getInventory().getItem(0), stack),
+                    "Recovered fish could not be picked up");
+            target.discard();
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void fatalImpactsUseDedicatedDeathMessages(GameTestHelper helper) {
+        for (boolean hasOwner : new boolean[] {false, true}) {
+            for (boolean namedItem : new boolean[] {false, true}) {
+                var target = helper.spawn(EntityType.PIG, new BlockPos(2, 1, 3));
+                target.setCustomName(Component.literal("Target"));
+                target.setHealth(1.0F);
+                var stack = new ItemStack(Items.PUFFERFISH);
+                if (namedItem) {
+                    stack.set(DataComponents.CUSTOM_NAME, Component.literal("Keepsake"));
+                }
+                List<Component> messages = new ArrayList<>();
+                Consumer<LivingDeathEvent> onDeath = event -> {
+                    if (event.getEntity() == target) {
+                        messages.add(target.getCombatTracker().getDeathMessage());
+                    }
+                };
+                NeoForge.EVENT_BUS.addListener(onDeath);
+                ThrownPufferfish projectile;
+                try {
+                    projectile = hit(helper, target, stack, hasOwner);
+                } finally {
+                    NeoForge.EVENT_BUS.unregister(onDeath);
+                }
+                helper.assertTrue(target.isDeadOrDying(), "Pufferfish impact was not fatal");
+                var source = target.getLastDamageSource();
+                helper.assertTrue(source != null && source.is(ThrownPufferfish.DAMAGE_TYPE) && source.is(DamageTypeTags.IS_PROJECTILE),
+                        "Impact did not use the dedicated projectile damage type");
+                helper.assertTrue(source.getEntity() == projectile.getOwner() && source.getDirectEntity() == projectile,
+                        "Damage attribution was lost");
+                helper.assertTrue(messages.size() == 1, "Expected exactly one death message");
+                var message = messages.getFirst();
+                String expectedKey = "death.attack.kaleidoscope_pufferfish.thrown_pufferfish" + (hasOwner ? ".player" : "");
+                helper.assertTrue(message.getContents() instanceof TranslatableContents translated && translated.getKey().equals(expectedKey),
+                        "Combat tracker selected the wrong death message");
+                String expectedMessage = hasOwner
+                        ? "Target was struck down by " + projectile.getOwner().getDisplayName().getString() + " with a pufferfish"
+                        : "Target was struck down by a pufferfish";
+                helper.assertTrue(message.getString().equals(expectedMessage), "Death message did not resolve correctly");
+                helper.getLevel().getEntitiesOfClass(ItemEntity.class, target.getBoundingBox().inflate(3)).forEach(ItemEntity::discard);
+                target.discard();
+            }
+        }
         helper.succeed();
     }
 

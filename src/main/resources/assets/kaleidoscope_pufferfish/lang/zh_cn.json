@@ -1,6 +1,8 @@
 {
   "itemGroup.kaleidoscope_pufferfish": "森罗河豚",
   "entity.kaleidoscope_pufferfish.thrown_pufferfish": "投掷的河豚",
+  "death.attack.kaleidoscope_pufferfish.thrown_pufferfish": "%1$s 被河豚砸死了",
+  "death.attack.kaleidoscope_pufferfish.thrown_pufferfish.player": "%1$s 被 %2$s 用河豚砸死了",
   "item.kaleidoscope_pufferfish.dyed_pufferfish": "%s河豚",
   "item.kaleidoscope_pufferfish.dyed_pufferfish_bucket": "%s河豚桶"
 }

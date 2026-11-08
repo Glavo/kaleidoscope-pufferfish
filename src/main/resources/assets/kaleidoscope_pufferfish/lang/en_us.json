@@ -1,6 +1,8 @@
 {
   "itemGroup.kaleidoscope_pufferfish": "Kaleidoscope Pufferfish",
   "entity.kaleidoscope_pufferfish.thrown_pufferfish": "Thrown Pufferfish",
+  "death.attack.kaleidoscope_pufferfish.thrown_pufferfish": "%1$s was struck down by a pufferfish",
+  "death.attack.kaleidoscope_pufferfish.thrown_pufferfish.player": "%1$s was struck down by %2$s with a pufferfish",
   "item.kaleidoscope_pufferfish.dyed_pufferfish": "%s Pufferfish",
   "item.kaleidoscope_pufferfish.dyed_pufferfish_bucket": "Bucket of %s Pufferfish"
 }
