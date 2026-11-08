@@ -5,6 +5,7 @@
   "mixins": [
     "PufferfishMixin",
     "AbstractFishMixin",
+    "EntityTypeMixin",
     "ItemMixin"
   ],
   "client": [

@@ -4,6 +4,8 @@
 package org.glavo.kaleidoscope.pufferfish;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTest;
@@ -25,6 +27,7 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -32,6 +35,31 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(KaleidoscopePufferfish.MODID)
 @PrefixGameTestTemplate(false)
 public class PufferfishGameTests {
+    @GameTest(template = "empty")
+    public static void bucketColorsAreReadyBeforeTracking(GameTestHelper helper) {
+        List<DyeColor> colorsAtJoin = new ArrayList<>();
+        Consumer<EntityJoinLevelEvent> observer = event -> {
+            if (event.getLevel() == helper.getLevel() && event.getEntity() instanceof Pufferfish fish) {
+                colorsAtJoin.add(((ColoredPufferfish) fish).kaleidoscope$getColor());
+            }
+        };
+        NeoForge.EVENT_BUS.addListener(observer);
+        try {
+            for (DyeColor color : DyeColor.values()) {
+                colorsAtJoin.clear();
+                ItemStack bucket = PufferfishColors.dye(new ItemStack(Items.PUFFERFISH_BUCKET), color);
+                BlockPos pos = helper.absolutePos(new BlockPos(1, 1, 1));
+                ((MobBucketItem) bucket.getItem()).checkExtraContent(null, helper.getLevel(), bucket, pos);
+                helper.getLevel().getEntitiesOfClass(Pufferfish.class, new AABB(pos).inflate(1)).forEach(Pufferfish::discard);
+                helper.assertTrue(colorsAtJoin.size() == 1 && colorsAtJoin.getFirst() == color,
+                        "Bucket color was not initialized before entity tracking: " + color);
+            }
+        } finally {
+            NeoForge.EVENT_BUS.unregister(observer);
+        }
+        helper.succeed();
+    }
+
     @GameTest(template = "empty")
     public static void allColorsSurviveSaveAndBucketRelease(GameTestHelper helper) {
         for (DyeColor color : DyeColor.values()) {
