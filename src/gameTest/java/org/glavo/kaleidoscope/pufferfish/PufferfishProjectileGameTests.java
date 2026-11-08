@@ -207,6 +207,9 @@ public class PufferfishProjectileGameTests {
                 helper.assertTrue(projectile.getOwner() == player && projectile.getDeltaMovement().length() > 1.0,
                         "Projectile owner or launch velocity is incorrect");
                 projectile.discard();
+                for (int tick = 0; tick < PufferfishCombatConfig.value(PufferfishCombatConfig.THROW_COOLDOWN_TICKS); tick++) {
+                    player.getCooldowns().tick();
+                }
             }
         }
         var creative = helper.makeMockPlayer(GameType.CREATIVE);
@@ -251,6 +254,9 @@ public class PufferfishProjectileGameTests {
             NeoForge.EVENT_BUS.post(event);
             helper.assertTrue(event.getCancellationResult() == InteractionResult.FAIL && player.getMainHandItem().getCount() == 1,
                     "Canceled spawn consumed a fish");
+            for (var item : List.of(Items.PUFFERFISH, PufferfishItems.NETHERITE.get(), PufferfishItems.HEAVY.get())) {
+                helper.assertTrue(!player.getCooldowns().isOnCooldown(item), "Canceled spawn started a throw cooldown");
+            }
         } finally {
             NeoForge.EVENT_BUS.unregister(denySpawn);
         }
@@ -259,6 +265,91 @@ public class PufferfishProjectileGameTests {
         event = new PlayerInteractEvent.RightClickItem(spectator, InteractionHand.MAIN_HAND);
         NeoForge.EVENT_BUS.post(event);
         helper.assertTrue(!event.isCanceled(), "Spectator threw a fish");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void throwCooldownIsSharedAcrossVariantsAndHands(GameTestHelper helper) {
+        var variants = new ArrayList<ItemStack>();
+        variants.add(new ItemStack(Items.PUFFERFISH));
+        for (var color : DyeColor.values()) variants.add(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
+        variants.add(new ItemStack(PufferfishItems.NETHERITE.get()));
+        variants.add(new ItemStack(PufferfishItems.HEAVY.get()));
+        helper.assertTrue(PufferfishCombatConfig.value(PufferfishCombatConfig.THROW_COOLDOWN_TICKS) == 20,
+                "Default throw cooldown is not one second");
+        var pos = helper.absolutePos(new BlockPos(2, 2, 2));
+        var bounds = new AABB(pos).inflate(3);
+        for (var mode : List.of(GameType.SURVIVAL, GameType.CREATIVE)) {
+            for (var hand : InteractionHand.values()) {
+                for (var original : variants) {
+                    var player = helper.makeMockPlayer(mode);
+                    player.getAbilities().instabuild = mode == GameType.CREATIVE;
+                    player.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+                    var stack = original.copyWithCount(3);
+                    player.setItemInHand(hand, stack);
+                    NeoForge.EVENT_BUS.post(new PlayerInteractEvent.RightClickItem(player, hand));
+                    var launched = helper.getLevel().getEntitiesOfClass(ThrownPufferfish.class, bounds);
+                    helper.assertTrue(launched.size() == 1 && stack.getCount() == (mode == GameType.CREATIVE ? 3 : 2),
+                            "Initial throw did not succeed");
+                    launched.forEach(ThrownPufferfish::discard);
+                    for (var blockedHand : InteractionHand.values()) {
+                        for (var variant : variants) {
+                            var blocked = variant.copyWithCount(3);
+                            player.setItemInHand(blockedHand, blocked);
+                            helper.assertTrue(player.getCooldowns().isOnCooldown(blocked.getItem()), "Variant did not share cooldown");
+                            NeoForge.EVENT_BUS.post(new PlayerInteractEvent.RightClickItem(player, blockedHand));
+                            helper.assertTrue(blocked.getCount() == 3 && helper.getLevel().getEntitiesOfClass(ThrownPufferfish.class, bounds).isEmpty(),
+                                    "Switching hands or fish bypassed cooldown");
+                        }
+                    }
+                    helper.assertTrue(!player.getCooldowns().isOnCooldown(PufferfishItems.FLAIL.get())
+                            && !player.getCooldowns().isOnCooldown(PufferfishItems.NETHERITE_FLAIL.get()), "Fish throw changed flail cooldowns");
+                    for (int tick = 0; tick < 19; tick++) player.getCooldowns().tick();
+                    helper.assertTrue(player.getCooldowns().isOnCooldown(Items.PUFFERFISH), "Cooldown expired before 20 ticks");
+                    player.getCooldowns().tick();
+                    for (var variant : variants) {
+                        helper.assertTrue(!player.getCooldowns().isOnCooldown(variant.getItem()), "Shared cooldown did not expire together");
+                    }
+                    player.setItemInHand(hand, original.copyWithCount(3));
+                    NeoForge.EVENT_BUS.post(new PlayerInteractEvent.RightClickItem(player, hand));
+                    launched = helper.getLevel().getEntitiesOfClass(ThrownPufferfish.class, bounds);
+                    helper.assertTrue(launched.size() == 1, "Throwing did not resume after cooldown");
+                    launched.forEach(ThrownPufferfish::discard);
+                }
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void throwCooldownCanBeConfiguredOrDisabled(GameTestHelper helper) {
+        var setting = PufferfishCombatConfig.THROW_COOLDOWN_TICKS;
+        int previous = setting.get();
+        var pos = helper.absolutePos(new BlockPos(2, 2, 2));
+        var bounds = new AABB(pos).inflate(3);
+        try {
+            for (int duration : new int[] {0, 1, 35}) {
+                setting.set(duration);
+                setting.clearCache();
+                var player = helper.makeMockPlayer(GameType.SURVIVAL);
+                player.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+                var stack = new ItemStack(PufferfishItems.HEAVY.get(), 3);
+                player.setItemInHand(InteractionHand.OFF_HAND, stack);
+                NeoForge.EVENT_BUS.post(new PlayerInteractEvent.RightClickItem(player, InteractionHand.OFF_HAND));
+                for (int tick = 0; tick < duration; tick++) {
+                    helper.assertTrue(player.getCooldowns().isOnCooldown(Items.PUFFERFISH), "Configured cooldown expired early");
+                    player.getCooldowns().tick();
+                }
+                helper.assertTrue(!player.getCooldowns().isOnCooldown(stack.getItem()), "Configured cooldown did not expire");
+                NeoForge.EVENT_BUS.post(new PlayerInteractEvent.RightClickItem(player, InteractionHand.OFF_HAND));
+                var launched = helper.getLevel().getEntitiesOfClass(ThrownPufferfish.class, bounds);
+                helper.assertTrue(launched.size() == 2 && stack.getCount() == 1, "Configured cooldown prevented valid subsequent throws");
+                launched.forEach(ThrownPufferfish::discard);
+            }
+        } finally {
+            setting.set(previous);
+            setting.clearCache();
+        }
         helper.succeed();
     }
 

@@ -5,7 +5,7 @@ package org.glavo.kaleidoscope.pufferfish;
 
 import net.neoforged.neoforge.common.ModConfigSpec;
 
-/// Defines server-authoritative melee damage, falling-smash settings, and throwing speeds for handheld pufferfish.
+/// Defines server-authoritative melee, falling-smash, and throwing settings for handheld pufferfish.
 public final class PufferfishCombatConfig {
     /// The combat configuration, synchronized from the server to connected clients.
     public static final ModConfigSpec SPEC;
@@ -39,6 +39,8 @@ public final class PufferfishCombatConfig {
     public static final ModConfigSpec.DoubleValue HEAVY_THROW_SPEED;
     /// Per-level Density penalty in the launch-speed divisor; zero disables the penalty.
     public static final ModConfigSpec.DoubleValue DENSITY_THROW_SPEED_PENALTY;
+    /// Shared cooldown after a successful fish throw, in ticks; zero disables it.
+    public static final ModConfigSpec.IntValue THROW_COOLDOWN_TICKS;
 
     static {
         var builder = new ModConfigSpec.Builder();
@@ -81,6 +83,9 @@ public final class PufferfishCombatConfig {
         DENSITY_THROW_SPEED_PENALTY = builder.comment("Launch speed is base speed / (1 + this value * Density level), before spread and inherited player motion.",
                 "Applies to normal, dyed, netherite, and heavy pufferfish. Zero disables the penalty; 0.2 halves speed at Density V.")
                 .worldRestart().defineInRange("densitySpeedPenaltyPerLevel", 0.2, 0.0, 16.0);
+        THROW_COOLDOWN_TICKS = builder.comment("Cooldown after a successful throw, shared by normal, dyed, netherite, and heavy pufferfish in both hands.",
+                "20 ticks equal one second. Zero disables the cooldown. Does not affect flails.")
+                .worldRestart().defineInRange("cooldownTicks", 20, 0, 1200);
         builder.pop();
         SPEC = builder.build();
     }

@@ -8,6 +8,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import org.glavo.kaleidoscope.pufferfish.entity.ThrownPufferfish;
@@ -39,6 +40,12 @@ public final class PufferfishThrowing {
             if (!level.addFreshEntity(projectile)) {
                 event.setCancellationResult(InteractionResult.FAIL);
                 return;
+            }
+            int cooldown = PufferfishCombatConfig.value(PufferfishCombatConfig.THROW_COOLDOWN_TICKS);
+            if (cooldown > 0) {
+                player.getCooldowns().addCooldown(Items.PUFFERFISH, cooldown);
+                player.getCooldowns().addCooldown(PufferfishItems.NETHERITE.get(), cooldown);
+                player.getCooldowns().addCooldown(PufferfishItems.HEAVY.get(), cooldown);
             }
             level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.SNOWBALL_THROW,
                     SoundSource.PLAYERS, 0.5F, 0.4F / (level.getRandom().nextFloat() * 0.4F + 0.8F));
