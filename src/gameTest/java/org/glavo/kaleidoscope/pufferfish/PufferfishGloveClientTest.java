@@ -55,6 +55,7 @@ public final class PufferfishGloveClientTest {
         stacks.add(new ItemStack(Items.PUFFERFISH));
         for (var color : DyeColor.values()) stacks.add(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
         stacks.add(new ItemStack(PufferfishItems.NETHERITE.get()));
+        stacks.add(new ItemStack(PufferfishItems.HEAVY.get()));
         var glove = new PufferfishGloveRenderer();
         for (boolean slim : new boolean[] {false, true}) {
             var renderer = new PlayerRenderer(context, slim);
@@ -115,7 +116,8 @@ public final class PufferfishGloveClientTest {
 
     private static RenderType type(ItemStack stack) {
         var color = PufferfishColors.get(stack);
-        return RenderType.entityCutoutNoCull(PufferfishItems.isNetherite(stack) ? PufferfishTextures.netheriteEntity()
+        return RenderType.entityCutoutNoCull(PufferfishItems.isHeavy(stack) ? PufferfishTextures.heavyEntity()
+                : PufferfishItems.isNetherite(stack) ? PufferfishTextures.netheriteEntity()
                 : color == null ? ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png") : PufferfishTextures.entity(color));
     }
 
@@ -146,14 +148,15 @@ public final class PufferfishGloveClientTest {
                 model.renderToBuffer(pose, buffers.getBuffer(RenderType.entityCutoutNoCull(player.getSkin().texture())), LIGHT, OverlayTexture.NO_OVERLAY);
                 glove.renderAttached(model, player, PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), DyeColor.RED), HumanoidArm.RIGHT,
                         pose, buffers, LIGHT, 0);
-                glove.renderAttached(model, player, new ItemStack(PufferfishItems.NETHERITE.get()), HumanoidArm.LEFT, pose, buffers, LIGHT, 0);
+                glove.renderAttached(model, player, new ItemStack(i < 2 ? PufferfishItems.NETHERITE.get() : PufferfishItems.HEAVY.get()),
+                        HumanoidArm.LEFT, pose, buffers, LIGHT, 0);
                 buffers.endBatch();
             }
             for (int i = 0; i < 4; i++) {
                 var pose = new PoseStack();
                 pose.translate(150 + i * 300, 620, 0);
                 pose.scale(160, -160, 160);
-                glove.renderFirstPerson(player, new ItemStack(Items.PUFFERFISH), i % 2 == 0 ? HumanoidArm.RIGHT : HumanoidArm.LEFT,
+                glove.renderFirstPerson(player, new ItemStack(i < 2 ? Items.PUFFERFISH : PufferfishItems.HEAVY.get()), i % 2 == 0 ? HumanoidArm.RIGHT : HumanoidArm.LEFT,
                         0, i < 2 ? 0 : 0.4F, pose, buffers, LIGHT);
                 buffers.endBatch();
             }

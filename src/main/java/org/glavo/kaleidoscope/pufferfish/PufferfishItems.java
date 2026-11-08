@@ -53,6 +53,24 @@ public final class PufferfishItems {
         }
     });
 
+    /// A fire-resistant mace-strength fish granting head armor, toughness, knockback resistance, and reduced movement speed.
+    public static final DeferredItem<HeavyPufferfishItem> HEAVY = ITEMS.register("heavy_pufferfish", () -> new HeavyPufferfishItem(
+            new Item.Properties().rarity(Rarity.EPIC).fireResistant().attributes(ItemAttributeModifiers.builder()
+                    .add(Attributes.ARMOR, new AttributeModifier(KaleidoscopePufferfish.id("heavy_head_armor"),
+                            4, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD)
+                    .add(Attributes.ARMOR_TOUGHNESS, new AttributeModifier(KaleidoscopePufferfish.id("heavy_head_toughness"),
+                            4, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD)
+                    .add(Attributes.KNOCKBACK_RESISTANCE, new AttributeModifier(KaleidoscopePufferfish.id("heavy_head_knockback_resistance"),
+                            0.5, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD)
+                    .add(Attributes.MOVEMENT_SPEED, new AttributeModifier(KaleidoscopePufferfish.id("heavy_head_movement_speed"),
+                            -0.15, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL), EquipmentSlotGroup.HEAD)
+                    .build())));
+
+    /// Returns whether the stack contains a heavy pufferfish.
+    public static boolean isHeavy(ItemStack stack) {
+        return stack.is(HEAVY.get());
+    }
+
     private PufferfishItems() {}
 
     public static boolean isNetherite(ItemStack stack) {
@@ -60,7 +78,7 @@ public final class PufferfishItems {
     }
 
     public static boolean isPufferfish(ItemStack stack) {
-        return stack.is(Items.PUFFERFISH) || isNetherite(stack);
+        return stack.is(Items.PUFFERFISH) || isNetherite(stack) || isHeavy(stack);
     }
 
     /// Returns whether the stack is either flail variant.
@@ -70,7 +88,7 @@ public final class PufferfishItems {
 
     /// Returns whether the stack is a fish or flail with netherite combat properties.
     public static boolean hasNetheriteCombat(ItemStack stack) {
-        return isNetherite(stack) || stack.is(NETHERITE_FLAIL.get());
+        return isNetherite(stack) || isHeavy(stack) || stack.is(NETHERITE_FLAIL.get());
     }
 
     /// Returns whether the stack supports pufferfish melee damage and poison.

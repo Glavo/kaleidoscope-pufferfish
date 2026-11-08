@@ -94,6 +94,7 @@ public final class PufferfishClientSmokeTest {
             throw new IllegalStateException("Missing golden pufferfish item model, texture, or translation");
         }
         verifyCuttingModels(minecraft);
+        verifyHeavyModel(minecraft);
         verifyModelDelegation(minecraft);
         PufferfishHeadgearClientTest.verify(minecraft);
         PufferfishGloveClientTest.verify(minecraft);
@@ -110,8 +111,26 @@ public final class PufferfishClientSmokeTest {
             projectileRendererChecked = false;
             minecraft.reloadResourcePacks();
         } else {
-            LogUtils.getLogger().info("Pufferfish client smoke test passed: 35 item models, 18 blocks, 17 skins, cutting models, headgear, gloves, flails and conduit rendering, projectile renderers, model override delegation, and resource reload");
+            LogUtils.getLogger().info("Pufferfish client smoke test passed: 36 item models, 18 blocks, 17 skins, cutting models, headgear, gloves, flails and conduit rendering, projectile renderers, model override delegation, and resource reload");
             minecraft.stop();
+        }
+    }
+
+    /// Verifies the heavy fish's item sprite, translation, and generated entity texture on each resource load.
+    private static void verifyHeavyModel(Minecraft minecraft) {
+        var stack = new ItemStack(PufferfishItems.HEAVY.get());
+        var model = minecraft.getItemRenderer().getModel(stack, null, null, 0);
+        if (model == minecraft.getModelManager().getMissingModel()
+                || model.getQuads(null, null, RandomSource.create()).isEmpty()
+                || !model.getParticleIcon().contents().name().equals(KaleidoscopePufferfish.id("item/heavy_pufferfish"))
+                || stack.getHoverName().getString().startsWith("item.")
+                || !PufferfishTextures.heavyEntity().getNamespace().equals(KaleidoscopePufferfish.MODID)) {
+            throw new IllegalStateException("Missing heavy pufferfish model, sprite, texture, or translation");
+        }
+        try {
+            model.getParticleIcon().contents().getOriginalImage().writeToFile(java.nio.file.Path.of("heavy-pufferfish-item-preview.png"));
+        } catch (java.io.IOException exception) {
+            throw new IllegalStateException("Could not save heavy fish sprite preview", exception);
         }
     }
 

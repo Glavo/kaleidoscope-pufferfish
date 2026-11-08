@@ -82,6 +82,7 @@ public final class PufferfishEngineGameTests {
             result.add(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
         }
         result.add(new ItemStack(PufferfishItems.NETHERITE.get()));
+        result.add(new ItemStack(PufferfishItems.HEAVY.get()));
         return result;
     }
 
@@ -103,7 +104,7 @@ public final class PufferfishEngineGameTests {
                 use(engine, player, new ItemStack(Items.WATER_BUCKET));
                 helper.assertTrue(player.getMainHandItem().is(Items.BUCKET), "Water bucket was not returned");
             }
-            int capacity = PufferfishItems.isNetherite(variant) ? 1024 : 256;
+            int capacity = PufferfishItems.hasNetheriteCombat(variant) ? 1024 : 256;
             helper.assertTrue(engine.getGeneratedSpeed() == 16 && engine.calculateAddedStressCapacity() * 16 == capacity,
                     "Wrong engine speed or total capacity");
             var extra = new ItemStack(Items.PUFFERFISH, 2);

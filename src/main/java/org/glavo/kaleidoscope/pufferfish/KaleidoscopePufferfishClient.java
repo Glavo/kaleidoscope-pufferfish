@@ -54,6 +54,7 @@ public class KaleidoscopePufferfishClient {
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishHeadRenderer::beforePlayer);
         NeoForge.EVENT_BUS.addListener(PufferfishHeadRenderer::afterPlayer);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishGloveRenderer::renderHand);
+        NeoForge.EVENT_BUS.addListener(org.glavo.kaleidoscope.pufferfish.client.HeavyPufferfishVisuals::tick);
     }
 
     private void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {

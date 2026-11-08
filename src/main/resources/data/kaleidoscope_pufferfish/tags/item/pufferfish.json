@@ -1,4 +1,8 @@
 {
   "replace": false,
-  "values": ["minecraft:pufferfish", "kaleidoscope_pufferfish:netherite_pufferfish"]
+  "values": [
+    "minecraft:pufferfish",
+    "kaleidoscope_pufferfish:netherite_pufferfish",
+    "kaleidoscope_pufferfish:heavy_pufferfish"
+  ]
 }

@@ -50,7 +50,8 @@ public final class PufferfishHeadRenderer {
             LivingEntity wearer, float ageInTicks) {
         var stack = wearer.getItemBySlot(EquipmentSlot.HEAD);
         var color = PufferfishColors.get(stack);
-        var texture = PufferfishItems.isNetherite(stack) ? PufferfishTextures.netheriteEntity()
+        var texture = PufferfishItems.isHeavy(stack) ? PufferfishTextures.heavyEntity()
+                : PufferfishItems.isNetherite(stack) ? PufferfishTextures.netheriteEntity()
                 : color == null ? ORIGINAL : PufferfishTextures.entity(color);
         pose.pushPose();
         head.translateAndRotate(pose);

@@ -49,7 +49,7 @@ public final class PufferfishHeadgear {
                 || attacker == wearer || event.getNewDamage() + event.getReduction(DamageContainer.Reduction.ABSORPTION) <= 0) {
             return;
         }
-        boolean netherite = PufferfishItems.isNetherite(wearer.getItemBySlot(EquipmentSlot.HEAD));
+        boolean netherite = PufferfishItems.hasNetheriteCombat(wearer.getItemBySlot(EquipmentSlot.HEAD));
         attacker.addEffect(new MobEffectInstance(MobEffects.POISON, netherite ? 120 : 60, netherite ? 1 : 0), wearer);
         var thorns = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.THORNS);
         thorns.value().doPostAttack(level, netherite ? 3 : 1,

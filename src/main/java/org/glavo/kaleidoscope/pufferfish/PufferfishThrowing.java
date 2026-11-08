@@ -29,7 +29,7 @@ public final class PufferfishThrowing {
         if (!level.isClientSide()) {
             var projectile = new ThrownPufferfish(level, player);
             projectile.setItem(stack);
-            float speed = PufferfishCombatConfig.value(PufferfishItems.isNetherite(stack)
+            float speed = PufferfishCombatConfig.value(PufferfishItems.hasNetheriteCombat(stack)
                     ? PufferfishCombatConfig.NETHERITE_THROW_SPEED : PufferfishCombatConfig.NORMAL_THROW_SPEED).floatValue();
             projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, speed, 1.0F);
             if (!level.addFreshEntity(projectile)) {

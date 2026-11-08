@@ -94,7 +94,7 @@ public final class PufferfishEngineBlockEntity extends GeneratingKineticBlockEnt
     public void refreshPower() {
         boolean nextPowered = level.hasNeighborSignal(worldPosition);
         int nextSpeed = CreateIntegration.SPEED.get();
-        int nextCapacity = (PufferfishItems.isNetherite(fish) ? CreateIntegration.NETHERITE_CAPACITY : CreateIntegration.NORMAL_CAPACITY).get();
+        int nextCapacity = (PufferfishItems.hasNetheriteCombat(fish) ? CreateIntegration.NETHERITE_CAPACITY : CreateIntegration.NORMAL_CAPACITY).get();
         if (powered != nextPowered || configuredSpeed != nextSpeed || configuredCapacity != nextCapacity) {
             powered = nextPowered;
             configuredSpeed = nextSpeed;
@@ -139,7 +139,7 @@ public final class PufferfishEngineBlockEntity extends GeneratingKineticBlockEnt
             }
             return ItemInteractionResult.sidedSuccess(level.isClientSide());
         }
-        if (water && held.is(Items.BUCKET) && !PufferfishItems.isNetherite(fish)) {
+        if (water && held.is(Items.BUCKET) && !PufferfishItems.hasNetheriteCombat(fish)) {
             if (!level.isClientSide()) {
                 ItemStack result = fish.isEmpty() ? new ItemStack(Items.WATER_BUCKET) : convertFish(fish, true);
                 fish = ItemStack.EMPTY;

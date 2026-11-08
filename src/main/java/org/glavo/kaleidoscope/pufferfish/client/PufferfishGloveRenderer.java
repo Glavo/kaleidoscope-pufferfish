@@ -54,7 +54,8 @@ public final class PufferfishGloveRenderer {
         pose.scale(0.75F, 0.75F, 0.75F);
         pose.translate(0, -18.0F / 16, 0);
         var color = PufferfishColors.get(stack);
-        var texture = PufferfishItems.isNetherite(stack) ? PufferfishTextures.netheriteEntity()
+        var texture = PufferfishItems.isHeavy(stack) ? PufferfishTextures.heavyEntity()
+                : PufferfishItems.isNetherite(stack) ? PufferfishTextures.netheriteEntity()
                 : color == null ? ORIGINAL : PufferfishTextures.entity(color);
         model.setupAnim(player, 0, 0, age, 0, 0);
         model.renderToBuffer(pose, ItemRenderer.getFoilBufferDirect(buffers, RenderType.entityCutoutNoCull(texture),

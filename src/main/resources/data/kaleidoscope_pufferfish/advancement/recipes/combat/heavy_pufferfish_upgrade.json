@@ -1,0 +1,15 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_heavy_core": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {"items": [{"items": "minecraft:heavy_core"}]}
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {"recipe": "kaleidoscope_pufferfish:heavy_pufferfish_upgrade"}
+    }
+  },
+  "requirements": [["has_heavy_core", "has_the_recipe"]],
+  "rewards": {"recipes": ["kaleidoscope_pufferfish:heavy_pufferfish_upgrade"]}
+}

@@ -23,6 +23,8 @@ public final class PufferfishTextures implements ResourceManagerReloadListener {
     private static final ResourceLocation ORIGINAL = ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png");
     private static final Map<DyeColor, ResourceLocation> ENTITY_TEXTURES = new EnumMap<>(DyeColor.class);
     private static ResourceLocation netheriteTexture;
+    /// The loaded heavy fish texture, released on resource reload.
+    private static ResourceLocation heavyTexture;
 
     public static ResourceLocation item(DyeColor color, boolean bucket) {
         return KaleidoscopePufferfish.id("item/" + color.getName() + (bucket ? "_pufferfish_bucket" : "_pufferfish"));
@@ -41,6 +43,28 @@ public final class PufferfishTextures implements ResourceManagerReloadListener {
             netheriteTexture = loadEntityTexture("netherite", NETHERITE_COLOR);
         }
         return netheriteTexture;
+    }
+
+    /// Returns the heavy fish entity texture, loading a resource-pack replacement or generated steel-and-wind texture.
+    public static ResourceLocation heavyEntity() {
+        if (heavyTexture == null) {
+            var minecraft = Minecraft.getInstance();
+            var id = KaleidoscopePufferfish.id("textures/entity/heavy_pufferfish.png");
+            if (minecraft.getResourceManager().getResource(id).isPresent()) {
+                heavyTexture = id;
+            } else {
+                try (var stream = minecraft.getResourceManager().open(ORIGINAL)) {
+                    var image = NativeImage.read(stream);
+                    HeavyPufferfishVisuals.recolor(image, true);
+                    minecraft.getTextureManager().register(id, new DynamicTexture(image));
+                    heavyTexture = id;
+                } catch (IOException exception) {
+                    LogUtils.getLogger().error("Failed to load heavy pufferfish texture", exception);
+                    heavyTexture = ORIGINAL;
+                }
+            }
+        }
+        return heavyTexture;
     }
 
     private static ResourceLocation loadEntityTexture(String variant, int color) {
@@ -89,5 +113,7 @@ public final class PufferfishTextures implements ResourceManagerReloadListener {
             textures.release(netheriteTexture);
         }
         netheriteTexture = null;
+        if (heavyTexture != null && !heavyTexture.equals(ORIGINAL)) textures.release(heavyTexture);
+        heavyTexture = null;
     }
 }

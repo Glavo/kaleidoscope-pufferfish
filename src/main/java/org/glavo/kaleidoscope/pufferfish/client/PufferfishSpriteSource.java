@@ -39,6 +39,7 @@ public final class PufferfishSpriteSource implements SpriteSource {
         }
         addItem(manager, output, "netherite_pufferfish", PufferfishTextures.NETHERITE_COLOR);
         addItem(manager, output, "golden_pufferfish", PufferfishTextures.GOLDEN_COLOR);
+        addItem(manager, output, "heavy_pufferfish", 0);
         addBlock(manager, output, "netherite_pufferfish_block", PufferfishTextures.NETHERITE_COLOR);
     }
 
@@ -62,7 +63,8 @@ public final class PufferfishSpriteSource implements SpriteSource {
         } else {
             manager.getResource(TEXTURE_ID_CONVERTER.idToFile(ResourceLocation.withDefaultNamespace("item/pufferfish")))
                     .ifPresent(resource -> output.add(id, loader -> loader.loadSprite(id, resource, (name, size, image, metadata) -> {
-                        PufferfishTextures.recolor(image, color);
+                        if (itemName.equals("heavy_pufferfish")) HeavyPufferfishVisuals.recolor(image, false);
+                        else PufferfishTextures.recolor(image, color);
                         return new SpriteContents(name, size, image, metadata);
                     })));
         }
