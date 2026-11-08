@@ -1,7 +1,6 @@
 {
   "replace": false,
-  "values": [],
-  "remove": [
+  "values": [
     "kaleidoscope_pufferfish:pufferfish_sashimi"
   ]
 }

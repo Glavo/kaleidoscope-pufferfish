@@ -31,10 +31,9 @@ public final class PufferfishItems {
                     .effect(() -> new MobEffectInstance(MobEffects.WATER_BREATHING, 9600, 0), 1)
                     .effect(() -> new MobEffectInstance(MobEffects.POISON, 1200, 1), 1)
                     .build())));
-    /// Edible pufferfish sashimi with two nutrition points and one minute of Poison II.
+    /// Edible pufferfish sashimi with two nutrition points and no status effects.
     public static final DeferredItem<Item> SASHIMI = ITEMS.register("pufferfish_sashimi", () -> new Item(
-            new Item.Properties().food(new FoodProperties.Builder().nutrition(2).saturationModifier(0.1F)
-                    .effect(() -> new MobEffectInstance(MobEffects.POISON, 1200, 1), 1).build())));
+            new Item.Properties().food(new FoodProperties.Builder().nutrition(2).saturationModifier(0.1F).build())));
     /// A cooked fish dish restoring nine nutrition points and returning a bowl when eaten.
     public static final DeferredItem<Item> BRAISED = ITEMS.register("braised_pufferfish", () -> new Item(
             new Item.Properties().food(new FoodProperties.Builder().nutrition(9).saturationModifier(0.6F)

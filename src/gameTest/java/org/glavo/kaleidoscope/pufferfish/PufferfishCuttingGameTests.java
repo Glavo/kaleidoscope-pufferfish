@@ -10,7 +10,6 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
@@ -42,7 +41,7 @@ public final class PufferfishCuttingGameTests {
         if (ModList.get().isLoaded("farmersdelight")) event.register(FarmersDelightCuttingGameTests.class);
     }
 
-    /// Verifies recipe conditions for all colors and the sashimi's poisonous food behavior.
+    /// Verifies recipe conditions for all colors and eating sashimi without status effects.
     @GameTest(template = "empty")
     public static void cuttingRecipesFollowOptionalMods(GameTestHelper helper) {
         var manager = helper.getLevel().getRecipeManager();
@@ -55,26 +54,25 @@ public final class PufferfishCuttingGameTests {
         }
         var sashimi = new ItemStack(PufferfishItems.SASHIMI.get(), 2);
         var food = sashimi.getFoodProperties(null);
-        helper.assertTrue(food != null && food.nutrition() == 2
+        helper.assertTrue(food != null && food.nutrition() == 2 && food.effects().isEmpty()
                 && !PufferfishItems.isWeapon(sashimi), "Sashimi must remain food rather than a throwable fish");
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         player.getFoodData().setFoodLevel(10);
         sashimi.finishUsingItem(helper.getLevel(), player);
-        var poison = player.getEffect(MobEffects.POISON);
         helper.assertTrue(sashimi.getCount() == 1 && player.getFoodData().getFoodLevel() == 12
-                && poison != null && poison.getDuration() == 1200 && poison.getAmplifier() == 1,
-                "Eating sashimi must consume one item, restore food, and apply one minute of Poison II");
+                && player.getActiveEffects().isEmpty(),
+                "Eating sashimi must consume one item and restore food without applying status effects");
         helper.succeed();
     }
 
-    /// Verifies poisonous fish and sashimi are cooking ingredients excluded from safe raw fish recipes.
+    /// Verifies safe sashimi is accepted by cooking recipes while poisonous whole fish remain excluded.
     @GameTest(template = "empty")
     public static void cookingTagsDistinguishFoodFromEquipment(GameTestHelper helper) {
         var pufferfish = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("c", "foods/raw_pufferfish"));
         var rawFish = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("c", "foods/raw_fish"));
         var safeFish = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("c", "foods/safe_raw_fish"));
         var sashimi = new ItemStack(PufferfishItems.SASHIMI.get());
-        helper.assertTrue(sashimi.is(pufferfish) && sashimi.is(rawFish) && !sashimi.is(safeFish), "Poisonous sashimi cooking tags are incorrect");
+        helper.assertTrue(sashimi.is(pufferfish) && sashimi.is(rawFish) && sashimi.is(safeFish), "Safe sashimi cooking tags are incorrect");
         for (int index = -1; index < 16; index++) {
             var fish = fish(index < 0 ? null : DyeColor.byId(index));
             helper.assertTrue(fish.is(pufferfish) && fish.is(rawFish) && !fish.is(safeFish), "Whole fish cooking tags are incorrect");
@@ -88,7 +86,7 @@ public final class PufferfishCuttingGameTests {
         helper.assertTrue(manager.byKey(soup).isPresent() == ModList.get().isLoaded("kaleidoscope_cookery"), "Soup override ignored its mod condition");
         if (ModList.get().isLoaded("farmersdelight")) {
             var stew = manager.byKey(ResourceLocation.fromNamespaceAndPath("farmersdelight", "cooking/fish_stew")).orElseThrow().value();
-            helper.assertTrue(!stew.getIngredients().getFirst().test(sashimi)
+            helper.assertTrue(stew.getIngredients().getFirst().test(sashimi)
                     && !stew.getIngredients().getFirst().test(new ItemStack(Items.PUFFERFISH)), "Fish stew did not preserve safe-fish filtering");
         }
         helper.succeed();
