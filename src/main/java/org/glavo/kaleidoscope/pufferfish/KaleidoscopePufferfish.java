@@ -72,6 +72,7 @@ public class KaleidoscopePufferfish {
                         output.accept(CreateIntegration.ENGINE_ITEM.get());
                     }
                     output.accept(PufferfishItems.NETHERITE);
+                    output.accept(PufferfishItems.GOLDEN);
                     output.accept(PufferfishItems.FLAIL);
                     output.accept(PufferfishItems.NETHERITE_FLAIL);
                     output.accept(PufferfishBlocks.NETHERITE);

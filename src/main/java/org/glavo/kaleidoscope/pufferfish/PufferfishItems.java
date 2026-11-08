@@ -4,12 +4,16 @@
 package org.glavo.kaleidoscope.pufferfish;
 
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.Rarity;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -17,6 +21,16 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 
 public final class PufferfishItems {
     private static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(KaleidoscopePufferfish.MODID);
+    /// An always-edible food with golden apple nutrition and effects, eight minutes of
+    /// Water Breathing I, and one minute of Poison II. It is not a pufferfish weapon.
+    public static final DeferredItem<Item> GOLDEN = ITEMS.register("golden_pufferfish", () -> new Item(
+            new Item.Properties().rarity(Rarity.RARE).food(new FoodProperties.Builder()
+                    .nutrition(4).saturationModifier(1.2F).alwaysEdible()
+                    .effect(() -> new MobEffectInstance(MobEffects.REGENERATION, 100, 1), 1)
+                    .effect(() -> new MobEffectInstance(MobEffects.ABSORPTION, 2400, 0), 1)
+                    .effect(() -> new MobEffectInstance(MobEffects.WATER_BREATHING, 9600, 0), 1)
+                    .effect(() -> new MobEffectInstance(MobEffects.POISON, 1200, 1), 1)
+                    .build())));
     /// The reusable flail crafted from an ordinary or dyed pufferfish and two chains.
     public static final DeferredItem<PufferfishFlailItem> FLAIL = ITEMS.register("pufferfish_flail",
             () -> new PufferfishFlailItem(new Item.Properties().stacksTo(1)));

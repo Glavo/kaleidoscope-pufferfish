@@ -82,6 +82,14 @@ public final class PufferfishClientSmokeTest {
                 || !netheriteModel.getParticleIcon().contents().name().equals(KaleidoscopePufferfish.id("item/netherite_pufferfish"))) {
             throw new IllegalStateException("Missing netherite pufferfish item model or texture");
         }
+        var goldenStack = new ItemStack(PufferfishItems.GOLDEN.get());
+        var goldenModel = minecraft.getItemRenderer().getModel(goldenStack, null, null, 0);
+        if (goldenModel == minecraft.getModelManager().getMissingModel()
+                || goldenModel.getQuads(null, null, RandomSource.create()).isEmpty()
+                || !goldenModel.getParticleIcon().contents().name().equals(KaleidoscopePufferfish.id("item/golden_pufferfish"))
+                || goldenStack.getHoverName().getString().startsWith("item.")) {
+            throw new IllegalStateException("Missing golden pufferfish item model, texture, or translation");
+        }
         verifyModelDelegation(minecraft);
         PufferfishHeadgearClientTest.verify(minecraft);
         PufferfishGloveClientTest.verify(minecraft);
@@ -98,7 +106,7 @@ public final class PufferfishClientSmokeTest {
             projectileRendererChecked = false;
             minecraft.reloadResourcePacks();
         } else {
-            LogUtils.getLogger().info("Pufferfish client smoke test passed: 33 item models, 18 blocks, headgear, gloves, flails and conduit rendering, projectile renderers, model override delegation, and resource reload");
+            LogUtils.getLogger().info("Pufferfish client smoke test passed: 34 item models, 18 blocks, headgear, gloves, flails and conduit rendering, projectile renderers, model override delegation, and resource reload");
             minecraft.stop();
         }
     }

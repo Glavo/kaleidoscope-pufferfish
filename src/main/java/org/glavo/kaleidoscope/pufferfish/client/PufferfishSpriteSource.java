@@ -34,18 +34,24 @@ public final class PufferfishSpriteSource implements SpriteSource {
         for (DyeColor color : DyeColor.values()) {
             addBlock(manager, output, color);
         }
-        var netheriteItem = KaleidoscopePufferfish.id("item/netherite_pufferfish");
-        var replacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(netheriteItem));
+        addItem(manager, output, "netherite_pufferfish", PufferfishTextures.NETHERITE_COLOR);
+        addItem(manager, output, "golden_pufferfish", PufferfishTextures.GOLDEN_COLOR);
+        addBlock(manager, output, "netherite_pufferfish_block", PufferfishTextures.NETHERITE_COLOR);
+    }
+
+    /// Adds an item sprite from a resource-pack replacement or a recolored vanilla pufferfish.
+    private static void addItem(ResourceManager manager, Output output, String itemName, int color) {
+        var id = KaleidoscopePufferfish.id("item/" + itemName);
+        var replacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(id));
         if (replacement.isPresent()) {
-            output.add(netheriteItem, replacement.get());
+            output.add(id, replacement.get());
         } else {
             manager.getResource(TEXTURE_ID_CONVERTER.idToFile(ResourceLocation.withDefaultNamespace("item/pufferfish")))
-                    .ifPresent(resource -> output.add(netheriteItem, loader -> loader.loadSprite(netheriteItem, resource, (name, size, image, metadata) -> {
-                        PufferfishTextures.recolor(image, PufferfishTextures.NETHERITE_COLOR);
+                    .ifPresent(resource -> output.add(id, loader -> loader.loadSprite(id, resource, (name, size, image, metadata) -> {
+                        PufferfishTextures.recolor(image, color);
                         return new SpriteContents(name, size, image, metadata);
                     })));
         }
-        addBlock(manager, output, "netherite_pufferfish_block", PufferfishTextures.NETHERITE_COLOR);
     }
 
     private static void addBlock(ResourceManager manager, Output output, DyeColor color) {
