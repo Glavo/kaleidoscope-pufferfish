@@ -7,6 +7,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -131,11 +132,11 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
     /// Applies the weapon's damage and poison once, on a successful outward impact.
     @Override
     protected void onHitEntity(EntityHitResult result) {
-        if (level().isClientSide() || isReturning()) return;
+        if (!(level() instanceof ServerLevel server) || isReturning()) return;
         var target = result.getEntity();
         var source = new DamageSource(registryAccess().registryOrThrow(Registries.DAMAGE_TYPE)
                 .getHolderOrThrow(ThrownPufferfish.DAMAGE_TYPE), this, getOwner());
-        if (target.hurt(source, PufferfishCombat.damage(getItem())) && target instanceof LivingEntity living) {
+        if (target.hurt(source, PufferfishCombat.projectileDamage(server, getItem(), target, source)) && target instanceof LivingEntity living) {
             PufferfishCombat.hitEffects(getItem(), living, getEffectSource(), getDeltaMovement());
         }
     }

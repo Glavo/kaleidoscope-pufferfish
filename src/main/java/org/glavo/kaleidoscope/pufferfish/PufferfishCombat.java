@@ -4,6 +4,8 @@
 package org.glavo.kaleidoscope.pufferfish;
 
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -17,6 +19,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.MaceItem;
 import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.event.ItemAttributeModifierEvent;
@@ -40,6 +43,11 @@ public final class PufferfishCombat {
         float base = PufferfishItems.isFlail(stack) ? (PufferfishItems.hasNetheriteCombat(stack) ? 12 : 6)
                 : (PufferfishItems.hasNetheriteCombat(stack) ? 10 : 2);
         return base + (density > 0 ? 0.5F + 0.5F * density : 0);
+    }
+
+    /// Applies target-dependent enchantment damage using the projectile's carried weapon, independently of the owner's current hand.
+    public static float projectileDamage(ServerLevel level, ItemStack stack, Entity target, DamageSource source) {
+        return EnchantmentHelper.modifyDamage(level, stack, target, source, damage(stack));
     }
 
     /// Adds main-hand weapon attributes, applying configured base damage only to handheld fish.

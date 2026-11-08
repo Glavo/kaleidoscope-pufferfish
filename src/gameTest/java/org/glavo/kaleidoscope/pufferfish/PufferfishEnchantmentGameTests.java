@@ -40,7 +40,9 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class PufferfishEnchantmentGameTests {
     private static final List<ResourceKey<Enchantment>> SUPPORTED = List.of(
-            Enchantments.AQUA_AFFINITY, Enchantments.LOYALTY, Enchantments.DENSITY, Enchantments.BREACH, Enchantments.PUNCH);
+            Enchantments.AQUA_AFFINITY, Enchantments.LOYALTY, Enchantments.DENSITY, Enchantments.BREACH, Enchantments.PUNCH,
+            Enchantments.WIND_BURST, Enchantments.SMITE, Enchantments.BANE_OF_ARTHROPODS,
+            Enchantments.VANISHING_CURSE, Enchantments.BINDING_CURSE);
 
     private static ItemStack enchant(GameTestHelper helper, ItemStack stack, ResourceKey<Enchantment> key, int level) {
         var holder = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(key);
@@ -58,6 +60,7 @@ public final class PufferfishEnchantmentGameTests {
         result.add(new ItemStack(Items.PUFFERFISH));
         for (var color : DyeColor.values()) result.add(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
         result.add(new ItemStack(PufferfishItems.NETHERITE.get()));
+        result.add(new ItemStack(PufferfishItems.HEAVY.get()));
         return result;
     }
 

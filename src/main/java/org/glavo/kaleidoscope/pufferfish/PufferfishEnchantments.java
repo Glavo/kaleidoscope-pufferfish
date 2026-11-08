@@ -22,7 +22,9 @@ public final class PufferfishEnchantments {
     public static boolean supports(Holder<Enchantment> enchantment) {
         return enchantment.is(Enchantments.AQUA_AFFINITY) || enchantment.is(Enchantments.LOYALTY)
                 || enchantment.is(Enchantments.DENSITY) || enchantment.is(Enchantments.BREACH)
-                || enchantment.is(Enchantments.PUNCH);
+                || enchantment.is(Enchantments.PUNCH) || enchantment.is(Enchantments.WIND_BURST)
+                || enchantment.is(Enchantments.SMITE) || enchantment.is(Enchantments.BANE_OF_ARTHROPODS)
+                || enchantment.is(Enchantments.VANISHING_CURSE) || enchantment.is(Enchantments.BINDING_CURSE);
     }
 
     public static void applyBook(AnvilUpdateEvent event) {
@@ -33,10 +35,10 @@ public final class PufferfishEnchantments {
         }
         var stored = book.getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY);
         // Sort registry IDs so conflicting mixed books have a stable result.
-        List<Holder<Enchantment>> supported = stored.keySet().stream().filter(enchantment -> supports(enchantment)
-                        || PufferfishItems.isHeavy(fish) && enchantment.is(Enchantments.WIND_BURST))
+        List<Holder<Enchantment>> supported = stored.keySet().stream().filter(PufferfishEnchantments::supports)
                 .filter(enchantment -> !PufferfishItems.isFlail(fish)
-                        || !enchantment.is(Enchantments.AQUA_AFFINITY) && !enchantment.is(Enchantments.LOYALTY))
+                        || !enchantment.is(Enchantments.AQUA_AFFINITY) && !enchantment.is(Enchantments.LOYALTY)
+                            && !enchantment.is(Enchantments.WIND_BURST) && !enchantment.is(Enchantments.BINDING_CURSE))
                 .sorted(Comparator.comparing(holder -> holder.getRegisteredName())).toList();
         if (supported.isEmpty()) {
             return;

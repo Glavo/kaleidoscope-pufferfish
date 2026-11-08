@@ -155,7 +155,7 @@ public class ThrownPufferfish extends ThrowableItemProjectile {
     @Override
     protected void onHitEntity(EntityHitResult result) {
         super.onHitEntity(result);
-        if (!level().isClientSide()) {
+        if (level() instanceof ServerLevel server) {
             var target = result.getEntity();
             var damage = new DamageSource(registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(DAMAGE_TYPE),
                     this, getOwner()) {
@@ -168,7 +168,7 @@ public class ThrownPufferfish extends ThrowableItemProjectile {
                             : Component.translatable(key + ".player", victim.getDisplayName(), attacker.getDisplayName());
                 }
             };
-            if (target.hurt(damage, PufferfishCombat.damage(getItem())) && target instanceof LivingEntity living) {
+            if (target.hurt(damage, PufferfishCombat.projectileDamage(server, getItem(), target, damage)) && target instanceof LivingEntity living) {
                 PufferfishCombat.hitEffects(getItem(), living, getEffectSource(), getDeltaMovement());
             }
         }
