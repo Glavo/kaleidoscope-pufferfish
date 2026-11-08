@@ -25,7 +25,7 @@ public final class PufferfishEnchantments {
                 || enchantment.is(Enchantments.PUNCH) || enchantment.is(Enchantments.WIND_BURST)
                 || enchantment.is(Enchantments.SMITE) || enchantment.is(Enchantments.BANE_OF_ARTHROPODS)
                 || enchantment.is(Enchantments.VANISHING_CURSE) || enchantment.is(Enchantments.BINDING_CURSE)
-                || enchantment.is(Enchantments.THORNS);
+                || enchantment.is(Enchantments.THORNS) || enchantment.is(Enchantments.CHANNELING);
     }
 
     public static void applyBook(AnvilUpdateEvent event) {

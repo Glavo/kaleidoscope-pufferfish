@@ -25,6 +25,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.inventory.AnvilMenu;
@@ -37,6 +38,7 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.level.ExplosionEvent;
@@ -218,6 +220,118 @@ public final class PufferfishExtraEnchantmentGameTests {
             rule.set(previous, helper.getLevel().getServer());
         }
         helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void channelingChecksWeatherSkyAndDamageAndPreservesRecovery(GameTestHelper helper) {
+        var level = helper.getLevel();
+        float rain = level.getRainLevel(1);
+        float thunder = level.getThunderLevel(1);
+        var roof = new BlockPos(2, 6, 3);
+        helper.setBlock(roof, Blocks.STONE);
+        helper.startSequence().thenWaitUntil(() -> helper.assertTrue(
+                !level.canSeeSky(helper.absolutePos(new BlockPos(2, 2, 3)))
+                        && level.canSeeSky(helper.absolutePos(new BlockPos(4, 2, 3))), "Sky lighting is not ready"))
+                .thenExecute(() -> {
+            try {
+                for (var original : fish()) {
+                    for (int scenario = 0; scenario < 6; scenario++) {
+                        for (boolean loyal : new boolean[] {false, true}) {
+                            level.setRainLevel(scenario == 0 ? 0 : 1);
+                            level.setThunderLevel(scenario < 2 ? 0 : 1);
+                            var stack = original.copy();
+                            if (scenario != 4) enchant(helper, stack, Enchantments.CHANNELING, 1);
+                            if (loyal) enchant(helper, stack, Enchantments.LOYALTY, 3);
+                            var owner = serverPlayer(helper);
+                            var target = helper.spawn(EntityType.VILLAGER, new BlockPos(scenario == 3 ? 2 : 4, 2, 3));
+                            target.setNoAi(true);
+                            target.setInvulnerable(scenario == 5);
+                            var projectile = new ThrownPufferfish(level, owner);
+                            projectile.setItem(stack);
+                            projectile.setPos(target.getX(), target.getY() + 0.5, target.getZ() - 2);
+                            projectile.setDeltaMovement(0, 0, 3);
+                            level.addFreshEntity(projectile);
+                            projectile.tick();
+                            var bolts = level.getEntitiesOfClass(LightningBolt.class, target.getBoundingBox().inflate(4));
+                            helper.assertTrue(bolts.size() == (scenario == 2 ? 1 : 0),
+                                    "Channeling ignored weather, sky, enchantment, or damage: scenario=" + scenario);
+                            for (var bolt : bolts) {
+                                helper.assertTrue(bolt.getCause() == owner && bolt.position().distanceToSqr(target.position()) < 0.001,
+                                        "Channeling lost its owner or struck the wrong position");
+                                bolt.discard();
+                            }
+                            if (loyal) {
+                                helper.assertTrue(projectile.isReturning(), "Channeling prevented Loyalty return");
+                                for (int tick = 0; tick < 100 && !projectile.isRemoved(); tick++) projectile.tick();
+                                helper.assertTrue(projectile.isRemoved() && ItemStack.isSameItemSameComponents(owner.getInventory().getItem(0), stack),
+                                        "Loyalty lost the fish or its enchantments");
+                            }
+                            var drops = level.getEntitiesOfClass(ItemEntity.class, target.getBoundingBox().inflate(4));
+                            helper.assertTrue(loyal ? drops.isEmpty() : drops.size() == 1
+                                            && ItemStack.isSameItemSameComponents(drops.getFirst().getItem(), stack),
+                                    "Channeling changed immediate fish recovery");
+                            drops.forEach(ItemEntity::discard);
+                            target.discard();
+                            projectile.discard();
+                        }
+                    }
+                }
+            } finally {
+                level.setRainLevel(rain);
+                level.setThunderLevel(thunder);
+                helper.setBlock(roof, Blocks.AIR);
+            }
+        }).thenSucceed();
+    }
+
+    @GameTest(template = "empty")
+    public static void channelingStrikesOnlyExposedLightningRods(GameTestHelper helper) {
+        var level = helper.getLevel();
+        float rain = level.getRainLevel(1);
+        float thunder = level.getThunderLevel(1);
+        var covered = new BlockPos(2, 2, 3);
+        var exposed = new BlockPos(4, 2, 3);
+        var roof = covered.above(4);
+        helper.setBlock(roof, Blocks.STONE);
+        helper.startSequence().thenWaitUntil(() -> helper.assertTrue(
+                !level.canSeeSky(helper.absolutePos(covered)) && level.canSeeSky(helper.absolutePos(exposed)),
+                "Sky lighting is not ready")).thenExecute(() -> {
+            try {
+                for (boolean flail : new boolean[] {false, true}) {
+                    for (int scenario = 0; scenario < 5; scenario++) {
+                        level.setRainLevel(1);
+                        level.setThunderLevel(scenario == 1 ? 0 : 1);
+                        var block = scenario == 2 ? covered : exposed;
+                        helper.setBlock(block, scenario == 3 ? Blocks.STONE : Blocks.LIGHTNING_ROD);
+                        var owner = serverPlayer(helper);
+                        var stack = new ItemStack(flail ? PufferfishItems.FLAIL.get() : Items.PUFFERFISH);
+                        if (scenario != 4) enchant(helper, stack, Enchantments.CHANNELING, 1);
+                        owner.setItemInHand(InteractionHand.MAIN_HAND, stack);
+                        var projectile = flail ? new PufferfishFlailHead(level, owner, InteractionHand.MAIN_HAND)
+                                : new ThrownPufferfish(level, owner);
+                        projectile.setItem(stack);
+                        var pos = helper.absolutePos(block);
+                        projectile.setPos(pos.getX() + 0.5, pos.getY() + 2, pos.getZ() + 0.5);
+                        projectile.setDeltaMovement(0, -3, 0);
+                        level.addFreshEntity(projectile);
+                        projectile.tick();
+                        var bounds = new net.minecraft.world.phys.AABB(pos).inflate(4);
+                        var bolts = level.getEntitiesOfClass(LightningBolt.class, bounds);
+                        helper.assertTrue(bolts.size() == (scenario == 0 ? 1 : 0),
+                                "Channeling ignored lightning rod conditions: scenario=" + scenario + ", flail=" + flail);
+                        bolts.forEach(LightningBolt::discard);
+                        level.getEntitiesOfClass(ItemEntity.class, bounds).forEach(ItemEntity::discard);
+                        projectile.discard();
+                    }
+                }
+            } finally {
+                level.setRainLevel(rain);
+                level.setThunderLevel(thunder);
+                helper.setBlock(covered, Blocks.AIR);
+                helper.setBlock(exposed, Blocks.AIR);
+                helper.setBlock(roof, Blocks.AIR);
+            }
+        }).thenSucceed();
     }
 
     @GameTest(template = "empty")

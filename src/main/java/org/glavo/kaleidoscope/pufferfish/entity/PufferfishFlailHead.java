@@ -19,10 +19,12 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.glavo.kaleidoscope.pufferfish.KaleidoscopePufferfish;
 import org.glavo.kaleidoscope.pufferfish.PufferfishCombat;
+import org.glavo.kaleidoscope.pufferfish.PufferfishChanneling;
 import org.glavo.kaleidoscope.pufferfish.PufferfishItems;
 
 /// A temporary flail head that returns after impact or reaching its tether length.
@@ -136,9 +138,18 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
         var target = result.getEntity();
         var source = new DamageSource(registryAccess().registryOrThrow(Registries.DAMAGE_TYPE)
                 .getHolderOrThrow(ThrownPufferfish.DAMAGE_TYPE), this, getOwner());
-        if (target.hurt(source, PufferfishCombat.projectileDamage(server, getItem(), target, source)) && target instanceof LivingEntity living) {
-            PufferfishCombat.hitEffects(getItem(), living, getEffectSource(), getDeltaMovement());
+        if (target.hurt(source, PufferfishCombat.projectileDamage(server, getItem(), target, source))) {
+            if (target instanceof LivingEntity living) {
+                PufferfishCombat.hitEffects(getItem(), living, getEffectSource(), getDeltaMovement());
+            }
+            PufferfishChanneling.hitEntity(this, getItem(), target);
         }
+    }
+
+    @Override
+    protected void onHitBlock(BlockHitResult result) {
+        super.onHitBlock(result);
+        PufferfishChanneling.hitBlock(this, getItem(), result);
     }
 
     /// Starts returning after the first impact, including an impact that deals no damage.

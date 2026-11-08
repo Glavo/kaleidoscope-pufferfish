@@ -32,6 +32,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.glavo.kaleidoscope.pufferfish.KaleidoscopePufferfish;
 import org.glavo.kaleidoscope.pufferfish.PufferfishCombat;
+import org.glavo.kaleidoscope.pufferfish.PufferfishChanneling;
 
 public class ThrownPufferfish extends ThrowableItemProjectile {
     private static final EntityDataAccessor<Boolean> RETURNING = SynchedEntityData.defineId(ThrownPufferfish.class, EntityDataSerializers.BOOLEAN);
@@ -168,10 +169,19 @@ public class ThrownPufferfish extends ThrowableItemProjectile {
                             : Component.translatable(key + ".player", victim.getDisplayName(), attacker.getDisplayName());
                 }
             };
-            if (target.hurt(damage, PufferfishCombat.projectileDamage(server, getItem(), target, damage)) && target instanceof LivingEntity living) {
-                PufferfishCombat.hitEffects(getItem(), living, getEffectSource(), getDeltaMovement());
+            if (target.hurt(damage, PufferfishCombat.projectileDamage(server, getItem(), target, damage))) {
+                if (target instanceof LivingEntity living) {
+                    PufferfishCombat.hitEffects(getItem(), living, getEffectSource(), getDeltaMovement());
+                }
+                PufferfishChanneling.hitEntity(this, getItem(), target);
             }
         }
+    }
+
+    @Override
+    protected void onHitBlock(BlockHitResult result) {
+        super.onHitBlock(result);
+        PufferfishChanneling.hitBlock(this, getItem(), result);
     }
 
     @Override
