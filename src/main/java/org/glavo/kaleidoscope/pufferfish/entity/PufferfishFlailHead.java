@@ -29,8 +29,12 @@ import org.glavo.kaleidoscope.pufferfish.PufferfishItems;
 public final class PufferfishFlailHead extends ThrowableItemProjectile {
     /// The maximum outward distance from the owner's eye position, in blocks.
     public static final double REACH = 6;
+    /// The maximum return speed, in blocks per tick.
+    private static final double RETURN_SPEED = 0.4;
+    /// The distance from the return target at which the head is removed, in blocks.
+    private static final double RETURN_DISTANCE = 0.2;
     /// The maximum lifetime in ticks, shorter than the weapon's launch cooldown.
-    private static final int LIFETIME = 24;
+    private static final int LIFETIME = 29;
     /// Whether the head has finished its damaging outward flight.
     private static final EntityDataAccessor<Boolean> RETURNING = SynchedEntityData.defineId(PufferfishFlailHead.class, EntityDataSerializers.BOOLEAN);
     /// Whether the weapon was launched from the off hand.
@@ -100,11 +104,11 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
         if (isReturning()) {
             baseTick();
             Vec3 offset = target.subtract(position());
-            if (offset.lengthSqr() <= 0.64) {
+            if (offset.lengthSqr() <= RETURN_DISTANCE * RETURN_DISTANCE) {
                 if (!level().isClientSide()) discard();
                 return;
             }
-            setDeltaMovement(offset.normalize().scale(Math.min(1.4, offset.length())));
+            setDeltaMovement(offset.normalize().scale(Math.min(RETURN_SPEED, offset.length())));
             setPos(position().add(getDeltaMovement()));
             updateRotation();
         } else {

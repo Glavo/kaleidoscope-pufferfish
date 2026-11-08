@@ -167,20 +167,29 @@ public final class PufferfishFlailGameTests {
         helper.succeed();
     }
 
-    /// Verifies the tether limits outward flight and returns without creating an item entity.
+    /// Verifies a visible return flight reaches the owner before cooldown ends without duplicating the weapon.
     @GameTest(template = "empty")
     public static void tetherReturnsWithoutDroppingAnotherWeapon(GameTestHelper helper) {
         var player = player(helper, new ItemStack(PufferfishItems.FLAIL.get()));
         var head = new PufferfishFlailHead(helper.getLevel(), player, InteractionHand.MAIN_HAND);
+        // Start near the tether limit at the latest outward tick to exercise the full return budget.
+        head.setPos(player.getEyePosition().add(0, 5.9, 0));
+        head.tickCount = 7;
         head.setDeltaMovement(0, 1.2, 0);
         helper.getLevel().addFreshEntity(head);
         boolean returned = false;
-        for (int i = 0; i < 26 && !head.isRemoved(); i++) {
+        int returnTicks = 0;
+        for (int i = 0; i < PufferfishFlailItem.COOLDOWN && !head.isRemoved(); i++) {
+            head.tickCount++;
             head.tick();
             returned |= head.isReturning();
+            if (head.isReturning()) returnTicks++;
             helper.assertTrue(head.position().distanceTo(player.getEyePosition()) <= PufferfishFlailHead.REACH, "Head exceeded its tether range");
         }
         helper.assertTrue(returned && head.isRemoved() && player.getMainHandItem().getCount() == 1, "Head did not return to its retained weapon");
+        helper.assertTrue(returnTicks >= 10, "Distant head returned too quickly to show the retraction");
+        helper.assertTrue(head.position().distanceTo(player.getEyePosition().add(0, -0.3, 0)) <= 0.21
+                && head.tickCount < PufferfishFlailItem.COOLDOWN, "Head expired before reaching the owner or outlasted the cooldown");
         helper.assertTrue(helper.getLevel().getEntitiesOfClass(ItemEntity.class, player.getBoundingBox().inflate(8)).isEmpty(), "Return duplicated the weapon");
         head = new PufferfishFlailHead(helper.getLevel(), player, InteractionHand.MAIN_HAND);
         helper.getLevel().addFreshEntity(head);
