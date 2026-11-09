@@ -55,7 +55,10 @@ public final class FarmersDelightCuttingGameTests {
         }
         for (var entry : java.util.Map.of(PufferfishItems.GOLDEN.get(), PufferfishBlocks.GOLDEN_SKIN.get(),
                 PufferfishItems.NETHERITE.get(), PufferfishBlocks.NETHERITE_SKIN.get(),
-                PufferfishItems.HEAVY.get(), PufferfishBlocks.HEAVY_SKIN.get()).entrySet()) {
+                PufferfishItems.HEAVY.get(), PufferfishBlocks.HEAVY_SKIN.get(),
+                PufferfishItems.COPPER.get(), PufferfishBlocks.COPPER_SKIN.get(),
+                PufferfishItems.IRON.get(), PufferfishBlocks.IRON_SKIN.get(),
+                PufferfishItems.DIAMOND.get(), PufferfishBlocks.DIAMOND_SKIN.get()).entrySet()) {
             var special = new ItemStack(entry.getKey(), 2);
             helper.assertTrue(board.addItem(special).isEmpty(), "Board rejected special fish");
             helper.assertTrue(!board.processStoredItemUsingTool(new ItemStack(Items.STICK), player), "Stick cut a special fish");

@@ -44,6 +44,10 @@ public final class PufferfishCombat {
     }
 
     private static float throwingBaseDamage(ItemStack stack) {
+        if (stack.is(PufferfishItems.COPPER.get())) return PufferfishCombatConfig.value(PufferfishCombatConfig.COPPER_DAMAGE).floatValue();
+        if (stack.is(PufferfishItems.IRON.get())) return PufferfishCombatConfig.value(PufferfishCombatConfig.IRON_DAMAGE).floatValue();
+        if (stack.is(PufferfishItems.DIAMOND.get())) return PufferfishCombatConfig.value(PufferfishCombatConfig.DIAMOND_DAMAGE).floatValue();
+        if (stack.is(PufferfishItems.GOLDEN.get())) return PufferfishCombatConfig.value(PufferfishCombatConfig.GOLDEN_DAMAGE).floatValue();
         return PufferfishItems.hasHeavyCombat(stack) ? 10 : PufferfishCombatConfig.value(PufferfishItems.hasNetheriteCombat(stack)
                 ? PufferfishCombatConfig.NETHERITE_DAMAGE : PufferfishCombatConfig.NORMAL_DAMAGE).floatValue();
     }

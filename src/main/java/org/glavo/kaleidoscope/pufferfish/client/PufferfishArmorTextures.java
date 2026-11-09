@@ -27,7 +27,14 @@ public final class PufferfishArmorTextures implements ResourceManagerReloadListe
 
     public static void skin(ResourceManager manager, NativeImage mask, String name, boolean worn) {
         String prefix = name.substring(0, name.indexOf("pufferfish_skin"));
-        int ventral = prefix.equals("heavy_") ? 0xCADFE4 : prefix.equals("netherite_") ? 0xBAB4B3 : 0xF4E4B0;
+        int ventral = switch (prefix) {
+            case "heavy_" -> 0xCADFE4;
+            case "netherite_" -> 0xBAB4B3;
+            case "copper_" -> 0xFFD3AC;
+            case "iron_" -> 0xEDF1EE;
+            case "diamond_" -> 0xBAFFF1;
+            default -> 0xF4E4B0;
+        };
         int tint = -1;
         for (var color : DyeColor.values()) if (prefix.equals(color.getName() + "_")) tint = color.getTextureDiffuseColor();
         String overlayPath = worn ? "textures/models/armor/leather_layer_" + (name.endsWith("_leggings") ? 2 : 1) + "_overlay.png"

@@ -116,6 +116,9 @@ public final class PufferfishSkinGameTests {
         skins.add(PufferfishBlocks.GOLDEN_SKIN.get());
         skins.add(PufferfishBlocks.NETHERITE_SKIN.get());
         skins.add(PufferfishBlocks.HEAVY_SKIN.get());
+        skins.add(PufferfishBlocks.COPPER_SKIN.get());
+        skins.add(PufferfishBlocks.IRON_SKIN.get());
+        skins.add(PufferfishBlocks.DIAMOND_SKIN.get());
         for (var block : skins) {
             for (var normal : Direction.values()) {
                 var pos = base.relative(normal);

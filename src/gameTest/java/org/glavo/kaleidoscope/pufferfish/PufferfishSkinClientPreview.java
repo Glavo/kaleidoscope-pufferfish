@@ -21,24 +21,25 @@ public final class PufferfishSkinClientPreview {
     /// Prevents construction of this preview utility.
     private PufferfishSkinClientPreview() {}
 
-    /// Renders three 3-by-3 skin patches into a PNG in the client's working directory.
+    /// Renders six 3-by-3 skin patches into a PNG in the client's working directory.
     public static void save(Minecraft minecraft) {
-        var target = new TextureTarget(900, 360, true, Minecraft.ON_OSX);
+        var target = new TextureTarget(900, 720, true, Minecraft.ON_OSX);
         target.setClearColor(0.08F, 0.14F, 0.2F, 1);
         target.clear(Minecraft.ON_OSX);
         target.bindWrite(true);
         RenderSystem.backupProjectionMatrix();
-        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 900, 360, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
+        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 900, 720, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
         var view = RenderSystem.getModelViewStack();
         view.pushMatrix().identity();
         RenderSystem.applyModelViewMatrix();
         Lighting.setupFor3DItems();
         RenderSystem.setShaderColor(1, 1, 1, 1);
         try {
-            var skins = new PufferfishSkinBlock[] {PufferfishBlocks.skin(null), PufferfishBlocks.NETHERITE_SKIN.get(), PufferfishBlocks.HEAVY_SKIN.get()};
+            var skins = new PufferfishSkinBlock[] {PufferfishBlocks.skin(null), PufferfishBlocks.NETHERITE_SKIN.get(), PufferfishBlocks.HEAVY_SKIN.get(),
+                    PufferfishBlocks.COPPER_SKIN.get(), PufferfishBlocks.IRON_SKIN.get(), PufferfishBlocks.DIAMOND_SKIN.get()};
             for (int i = 0; i < skins.length; i++) {
                 var pose = new PoseStack();
-                pose.translate(150 + i * 300, 180, 0);
+                pose.translate(150 + i % 3 * 300, 180 + i / 3 * 360, 0);
                 pose.scale(72, -72, 72);
                 pose.mulPose(Axis.XP.rotationDegrees(65));
                 pose.mulPose(Axis.YP.rotationDegrees(15));

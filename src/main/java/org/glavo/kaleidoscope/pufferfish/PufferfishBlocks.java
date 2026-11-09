@@ -34,6 +34,9 @@ public final class PufferfishBlocks {
                     .mapColor(MapColor.GOLD).sound(SoundType.WET_GRASS));
     public static final DeferredBlock<PufferfishSkinBlock> NETHERITE_SKIN = registerMetalSkin("netherite", MapColor.COLOR_BLACK);
     public static final DeferredBlock<PufferfishSkinBlock> HEAVY_SKIN = registerMetalSkin("heavy", MapColor.COLOR_LIGHT_BLUE);
+    public static final DeferredBlock<PufferfishSkinBlock> COPPER_SKIN = registerCraftedSkin("copper", MapColor.COLOR_ORANGE);
+    public static final DeferredBlock<PufferfishSkinBlock> IRON_SKIN = registerCraftedSkin("iron", MapColor.METAL);
+    public static final DeferredBlock<PufferfishSkinBlock> DIAMOND_SKIN = registerCraftedSkin("diamond", MapColor.DIAMOND);
     /// The placeable skin obtained from undyed pufferfish.
     private static final DeferredBlock<PufferfishSkinBlock> PLAIN_SKIN = registerSkin(null);
     /// Placeable skins indexed by the dye color of their ingredient fish.
@@ -62,6 +65,9 @@ public final class PufferfishBlocks {
     /// Returns the skin produced by processing a whole fish, or null for unsupported items.
     @Nullable
     public static PufferfishSkinBlock skinForFish(ItemStack stack) {
+        if (stack.is(PufferfishItems.COPPER.get())) return COPPER_SKIN.get();
+        if (stack.is(PufferfishItems.IRON.get())) return IRON_SKIN.get();
+        if (stack.is(PufferfishItems.DIAMOND.get())) return DIAMOND_SKIN.get();
         if (stack.is(PufferfishItems.GOLDEN.get())) return GOLDEN_SKIN.get();
         if (stack.is(PufferfishItems.NETHERITE.get())) return NETHERITE_SKIN.get();
         if (stack.is(PufferfishItems.HEAVY.get())) return HEAVY_SKIN.get();
@@ -72,6 +78,13 @@ public final class PufferfishBlocks {
         var block = BLOCKS.registerBlock(name + "_pufferfish_skin", PufferfishSkinBlock::new,
                 BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CARPET).mapColor(color).sound(SoundType.WET_GRASS));
         ITEMS.registerSimpleBlockItem(block, new Item.Properties().fireResistant());
+        return block;
+    }
+
+    private static DeferredBlock<PufferfishSkinBlock> registerCraftedSkin(String name, MapColor color) {
+        var block = BLOCKS.registerBlock(name + "_pufferfish_skin", PufferfishSkinBlock::new,
+                BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CARPET).mapColor(color).sound(SoundType.WET_GRASS));
+        ITEMS.registerSimpleBlockItem(block);
         return block;
     }
 

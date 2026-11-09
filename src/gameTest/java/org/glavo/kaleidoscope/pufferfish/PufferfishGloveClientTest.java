@@ -56,6 +56,7 @@ public final class PufferfishGloveClientTest {
         for (var color : DyeColor.values()) stacks.add(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
         stacks.add(new ItemStack(PufferfishItems.NETHERITE.get()));
         stacks.add(new ItemStack(PufferfishItems.HEAVY.get()));
+        stacks.add(new ItemStack(PufferfishItems.GOLDEN.get()));
         stacks.addAll(java.util.List.of(new ItemStack(PufferfishItems.COPPER.get()), new ItemStack(PufferfishItems.IRON.get()), new ItemStack(PufferfishItems.DIAMOND.get())));
         var glove = new PufferfishGloveRenderer();
         for (boolean slim : new boolean[] {false, true}) {

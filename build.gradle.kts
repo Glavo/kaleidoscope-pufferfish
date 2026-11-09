@@ -13,7 +13,8 @@ val dyeColors = listOf(
     "white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray",
     "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"
 )
-val skinVariants = listOf("") + dyeColors + listOf("golden", "netherite", "heavy")
+val boatSkinVariants = listOf("") + dyeColors + listOf("golden", "netherite", "heavy")
+val skinVariants = listOf("") + dyeColors + listOf("golden", "copper", "iron", "diamond", "netherite", "heavy")
 
 group = providers.gradleProperty("mod_group_id").get()
 version = providers.gradleProperty("mod_version").get()
@@ -194,7 +195,7 @@ val generateSkinResources = tasks.register<Sync>("generateSkinResources") {
             "blockId" to "$modId:$skinName",
             "ingredient" to JsonOutput.toJson(when (color) {
                 "" -> mapOf("type" to "$modId:pufferfish")
-                "netherite", "heavy" -> mapOf("item" to "$modId:${color}_pufferfish")
+                "netherite", "heavy", "copper", "iron", "diamond" -> mapOf("item" to "$modId:${color}_pufferfish")
                 else -> mapOf("type" to "$modId:pufferfish", "color" to color)
             })
         )
@@ -321,10 +322,10 @@ val generateArmorResources = tasks.register<Sync>("generateArmorResources") {
 
 val generateBoatResources = tasks.register<Sync>("generateBoatResources") {
     inputs.property("modId", modId)
-    inputs.property("variants", skinVariants)
+    inputs.property("variants", boatSkinVariants)
     filteringCharset = "UTF-8"
     into(layout.buildDirectory.dir("generated/resources/pufferfishBoats"))
-    for (color in skinVariants) {
+    for (color in boatSkinVariants) {
         val prefix = if (color.isEmpty()) "" else "${color}_"
         val skinName = "${prefix}pufferfish_skin"
         val boatName = "${skinName}_boat"

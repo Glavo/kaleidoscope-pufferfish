@@ -25,7 +25,7 @@ public final class PufferfishItems {
     public static final DeferredItem<Item> IRON = registerMaterialFish("iron");
     public static final DeferredItem<Item> DIAMOND = registerMaterialFish("diamond");
     /// An always-edible food with golden apple nutrition and effects, eight minutes of
-    /// Water Breathing I, and one minute of Poison II. It is not a pufferfish weapon.
+    /// Water Breathing I, and one minute of Poison II. Right-clicking eats it instead of throwing it.
     public static final DeferredItem<Item> GOLDEN = ITEMS.register("golden_pufferfish", () -> new Item(
             new Item.Properties().rarity(Rarity.RARE).food(new FoodProperties.Builder()
                     .nutrition(4).saturationModifier(1.2F).alwaysEdible()
@@ -33,7 +33,10 @@ public final class PufferfishItems {
                     .effect(() -> new MobEffectInstance(MobEffects.ABSORPTION, 2400, 0), 1)
                     .effect(() -> new MobEffectInstance(MobEffects.WATER_BREATHING, 9600, 0), 1)
                     .effect(() -> new MobEffectInstance(MobEffects.POISON, 1200, 1), 1)
-                    .build())));
+                    .build())) {
+        @Override
+        public EquipmentSlot getEquipmentSlot(ItemStack stack) { return EquipmentSlot.HEAD; }
+    });
     /// Edible pufferfish sashimi with two nutrition points and no status effects.
     public static final DeferredItem<Item> SASHIMI = ITEMS.register("pufferfish_sashimi", () -> new Item(
             new Item.Properties().food(new FoodProperties.Builder().nutrition(2).saturationModifier(0.1F).build())));
@@ -109,6 +112,7 @@ public final class PufferfishItems {
         if (stack.is(COPPER.get())) return "copper";
         if (stack.is(IRON.get())) return "iron";
         if (stack.is(DIAMOND.get())) return "diamond";
+        if (stack.is(GOLDEN.get())) return "golden";
         return null;
     }
 
@@ -118,6 +122,10 @@ public final class PufferfishItems {
 
     public static boolean isPufferfish(ItemStack stack) {
         return stack.is(Items.PUFFERFISH) || isNetherite(stack) || isHeavy(stack) || materialName(stack) != null;
+    }
+
+    public static boolean canThrow(ItemStack stack) {
+        return isPufferfish(stack) && !stack.is(GOLDEN.get());
     }
 
     /// Returns whether the stack is a flail variant.

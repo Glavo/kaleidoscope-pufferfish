@@ -83,6 +83,7 @@ public final class PufferfishEngineGameTests {
         }
         result.add(new ItemStack(PufferfishItems.NETHERITE.get()));
         result.add(new ItemStack(PufferfishItems.HEAVY.get()));
+        result.add(new ItemStack(PufferfishItems.GOLDEN.get()));
         result.addAll(List.of(new ItemStack(PufferfishItems.COPPER.get()), new ItemStack(PufferfishItems.IRON.get()), new ItemStack(PufferfishItems.DIAMOND.get())));
         return result;
     }

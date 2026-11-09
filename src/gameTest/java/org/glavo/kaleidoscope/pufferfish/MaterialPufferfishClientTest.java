@@ -29,12 +29,12 @@ public final class MaterialPufferfishClientTest {
     private MaterialPufferfishClientTest() {}
 
     public static void verify(Minecraft minecraft) {
-        var target = new TextureTarget(768, 280, true, Minecraft.ON_OSX);
+        var target = new TextureTarget(1024, 280, true, Minecraft.ON_OSX);
         target.setClearColor(0.16F, 0.18F, 0.21F, 1);
         target.clear(Minecraft.ON_OSX);
         target.bindWrite(true);
         RenderSystem.backupProjectionMatrix();
-        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 768, 280, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
+        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 1024, 280, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
         var view = RenderSystem.getModelViewStack();
         view.pushMatrix();
         view.identity();
@@ -42,7 +42,7 @@ public final class MaterialPufferfishClientTest {
         Lighting.setupFor3DItems();
         RenderSystem.setShaderColor(1, 1, 1, 1);
         try {
-            var items = List.of(PufferfishItems.COPPER.get(), PufferfishItems.IRON.get(), PufferfishItems.DIAMOND.get());
+            var items = List.of(PufferfishItems.COPPER.get(), PufferfishItems.IRON.get(), PufferfishItems.DIAMOND.get(), PufferfishItems.GOLDEN.get());
             var fish = new PufferfishBigModel<Entity>(minecraft.getEntityModels().bakeLayer(ModelLayers.PUFFERFISH_BIG));
             fish.setupAnim(null, 0, 0, 0, 0, 0);
             for (int i = 0; i < items.size(); i++) {

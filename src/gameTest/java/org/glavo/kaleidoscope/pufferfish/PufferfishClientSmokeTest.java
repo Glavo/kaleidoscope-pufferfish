@@ -76,6 +76,9 @@ public final class PufferfishClientSmokeTest {
         verifySkin(minecraft, PufferfishBlocks.GOLDEN_SKIN.get(), "golden_pufferfish_skin");
         verifySkin(minecraft, PufferfishBlocks.NETHERITE_SKIN.get(), "netherite_pufferfish_skin");
         verifySkin(minecraft, PufferfishBlocks.HEAVY_SKIN.get(), "heavy_pufferfish_skin");
+        verifySkin(minecraft, PufferfishBlocks.COPPER_SKIN.get(), "copper_pufferfish_skin");
+        verifySkin(minecraft, PufferfishBlocks.IRON_SKIN.get(), "iron_pufferfish_skin");
+        verifySkin(minecraft, PufferfishBlocks.DIAMOND_SKIN.get(), "diamond_pufferfish_skin");
         for (DyeColor color : DyeColor.values()) {
             verifySkin(minecraft, color);
         }
@@ -134,7 +137,7 @@ public final class PufferfishClientSmokeTest {
             projectileRendererChecked = false;
             minecraft.reloadResourcePacks();
         } else {
-            LogUtils.getLogger().info("Pufferfish client smoke test passed: fish models, 20 skins, cutting models, headgear, gloves, flails, shields, armor, boats and conduit rendering, projectile renderers, model override delegation, and resource reload");
+            LogUtils.getLogger().info("Pufferfish client smoke test passed: fish models, 23 skins, cutting models, headgear, gloves, flails, shields, armor, boats and conduit rendering, projectile renderers, model override delegation, and resource reload");
             minecraft.stop();
         }
     }

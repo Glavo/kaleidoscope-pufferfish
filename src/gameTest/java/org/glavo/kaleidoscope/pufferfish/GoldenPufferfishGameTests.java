@@ -28,7 +28,7 @@ import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.glavo.kaleidoscope.pufferfish.entity.ThrownPufferfish;
 
-/// Verifies golden pufferfish crafting, food effects, and exclusion from fish weapon behavior.
+/// Verifies golden pufferfish crafting, food effects, melee, and headgear without throwing.
 @GameTestHolder(KaleidoscopePufferfish.MODID)
 @PrefixGameTestTemplate(false)
 public final class GoldenPufferfishGameTests {
@@ -109,9 +109,9 @@ public final class GoldenPufferfishGameTests {
                 "Incorrect golden pufferfish effect: " + type.getRegisteredName());
     }
 
-    /// Verifies use reaches the food handler and neither combat nor headgear recognizes the item as a fish.
+    /// Verifies right-click remains edible while melee and headgear use the fish mechanics.
     @GameTest(template = "empty")
-    public static void goldenPufferfishIsFoodRatherThanAWeapon(GameTestHelper helper) {
+    public static void goldenPufferfishCanAttackAndEquipWithoutThrowing(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         var stack = new ItemStack(PufferfishItems.GOLDEN.get());
         player.setItemInHand(InteractionHand.MAIN_HAND, stack);
@@ -121,12 +121,18 @@ public final class GoldenPufferfishGameTests {
                 && helper.getLevel().getEntitiesOfClass(ThrownPufferfish.class, player.getBoundingBox().inflate(4)).isEmpty(),
                 "Golden pufferfish use was intercepted for throwing");
         player.tick();
-        helper.assertTrue(!PufferfishItems.isWeapon(stack) && !PufferfishColors.supports(stack)
-                && player.getAttributeValue(Attributes.ATTACK_DAMAGE) == 1 && player.getAttributeValue(Attributes.ATTACK_SPEED) == 4,
-                "Golden pufferfish gained fish weapon attributes");
-        helper.assertTrue(player.getEquipmentSlotForItem(stack) == EquipmentSlot.MAINHAND, "Golden pufferfish was wearable");
+        helper.assertTrue(PufferfishItems.isWeapon(stack) && !PufferfishItems.canThrow(stack) && !PufferfishColors.supports(stack)
+                && player.getAttributeValue(Attributes.ATTACK_DAMAGE) == 2 && player.getAttributeValue(Attributes.ATTACK_SPEED) == 3,
+                "Golden pufferfish did not receive golden pickaxe damage and ordinary fish speed");
+        helper.assertTrue(stack.use(helper.getLevel(), player, InteractionHand.MAIN_HAND).getResult().consumesAction()
+                && player.isUsingItem(), "Golden pufferfish right-click did not start eating");
+        player.stopUsingItem();
+        helper.assertTrue(player.getEquipmentSlotForItem(stack) == EquipmentSlot.HEAD
+                && player.inventoryMenu.getSlot(5).mayPlace(stack), "Golden pufferfish could not be equipped on the head");
         player.setItemSlot(EquipmentSlot.HEAD, stack);
-        helper.assertTrue(!PufferfishHeadgear.isWearing(player), "Golden pufferfish granted headgear effects");
+        PufferfishHeadgear.breathe(new net.neoforged.neoforge.event.tick.PlayerTickEvent.Post(player));
+        helper.assertTrue(PufferfishHeadgear.isWearing(player) && player.getEffect(MobEffects.WATER_BREATHING).getDuration() == 200,
+                "Golden pufferfish did not grant the breathing reserve");
         helper.succeed();
     }
 }

@@ -139,7 +139,10 @@ public final class CookeryCuttingGameTests {
         }
         for (var entry : java.util.Map.of(PufferfishItems.GOLDEN.get(), PufferfishBlocks.GOLDEN_SKIN.get(),
                 PufferfishItems.NETHERITE.get(), PufferfishBlocks.NETHERITE_SKIN.get(),
-                PufferfishItems.HEAVY.get(), PufferfishBlocks.HEAVY_SKIN.get()).entrySet()) {
+                PufferfishItems.HEAVY.get(), PufferfishBlocks.HEAVY_SKIN.get(),
+                PufferfishItems.COPPER.get(), PufferfishBlocks.COPPER_SKIN.get(),
+                PufferfishItems.IRON.get(), PufferfishBlocks.IRON_SKIN.get(),
+                PufferfishItems.DIAMOND.get(), PufferfishBlocks.DIAMOND_SKIN.get()).entrySet()) {
             var special = new ItemStack(entry.getKey(), 2);
             special.set(KaleidoscopePufferfish.COLOR.get(), DyeColor.RED);
             helper.assertTrue(board.onPutItem(level, player, special) && special.getCount() == 1, "Board did not consume one special fish");

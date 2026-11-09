@@ -46,6 +46,9 @@ public final class PufferfishSkinPressingGameTests {
             variants.put(fish, PufferfishBlocks.skin(color));
         }
         variants.put(new ItemStack(PufferfishItems.GOLDEN.get()), PufferfishBlocks.GOLDEN_SKIN.get());
+        variants.put(new ItemStack(PufferfishItems.COPPER.get()), PufferfishBlocks.COPPER_SKIN.get());
+        variants.put(new ItemStack(PufferfishItems.IRON.get()), PufferfishBlocks.IRON_SKIN.get());
+        variants.put(new ItemStack(PufferfishItems.DIAMOND.get()), PufferfishBlocks.DIAMOND_SKIN.get());
         variants.put(new ItemStack(PufferfishItems.NETHERITE.get()), PufferfishBlocks.NETHERITE_SKIN.get());
         variants.put(new ItemStack(PufferfishItems.HEAVY.get()), PufferfishBlocks.HEAVY_SKIN.get());
         for (var entry : variants.entrySet()) {

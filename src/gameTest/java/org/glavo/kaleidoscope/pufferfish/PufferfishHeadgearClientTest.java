@@ -106,6 +106,7 @@ public final class PufferfishHeadgearClientTest {
             }
             headgear.add(new ItemStack(PufferfishItems.NETHERITE.get()));
             headgear.add(new ItemStack(PufferfishItems.HEAVY.get()));
+            headgear.add(new ItemStack(PufferfishItems.GOLDEN.get()));
             headgear.addAll(List.of(new ItemStack(PufferfishItems.COPPER.get()), new ItemStack(PufferfishItems.IRON.get()), new ItemStack(PufferfishItems.DIAMOND.get())));
             for (var stack : headgear) {
                 player.setItemSlot(EquipmentSlot.HEAD, stack);

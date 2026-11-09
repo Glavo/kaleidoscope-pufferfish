@@ -58,6 +58,7 @@ public final class PufferfishEngineClientTest {
             variants.add(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
         }
         variants.add(new ItemStack(PufferfishItems.NETHERITE.get()));
+        variants.add(new ItemStack(PufferfishItems.GOLDEN.get()));
         variants.addAll(List.of(new ItemStack(PufferfishItems.COPPER.get()), new ItemStack(PufferfishItems.IRON.get()), new ItemStack(PufferfishItems.DIAMOND.get())));
         HolderLookup.Provider registries = RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY);
         for (var direction : Direction.Plane.HORIZONTAL) {

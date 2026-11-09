@@ -19,6 +19,9 @@ public final class PufferfishSkinTexture {
     public static void recolorSource(NativeImage image, String name) {
         if (name.startsWith("netherite_")) PufferfishTextures.recolor(image, PufferfishTextures.NETHERITE_COLOR);
         else if (name.startsWith("heavy_")) HeavyPufferfishVisuals.recolor(image, true);
+        else if (name.startsWith("copper_") || name.startsWith("iron_") || name.startsWith("diamond_")) {
+            MaterialPufferfishTexture.recolor(image, name.substring(0, name.indexOf('_')), true);
+        }
     }
 
     /// Creates a skin sprite with a dorsal center and pale belly edges, excluding eyes and fins.

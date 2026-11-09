@@ -10,6 +10,7 @@ public final class MaterialPufferfishTexture {
     private static final int[] COPPER = {0x653322, 0x985035, 0xC5724B, 0xE5A076, 0xFFD3AC, 0xFFF0D5};
     private static final int[] IRON = {0x45474C, 0x73787F, 0xA3A9AD, 0xCDD2D3, 0xEDF1EE, 0xFFFFFF};
     private static final int[] DIAMOND = {0x155B63, 0x258C91, 0x39B8B3, 0x6EE1D6, 0xBAFFF1, 0xE9FFFA};
+    private static final int[] GOLDEN = {0x752802, 0xB26411, 0xDC9613, 0xFAD64A, 0xFDF55F, 0xFFFDE0};
 
     private MaterialPufferfishTexture() {}
 
@@ -18,6 +19,7 @@ public final class MaterialPufferfishTexture {
             case "copper" -> COPPER;
             case "iron" -> IRON;
             case "diamond" -> DIAMOND;
+            case "golden" -> GOLDEN;
             default -> throw new IllegalArgumentException("Unknown pufferfish material: " + material);
         };
         int size = entity ? 32 : 16;

@@ -74,18 +74,23 @@ public final class MaterialPufferfishGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void materialFishUseNormalCombatAndHeadgear(GameTestHelper helper) {
+    public static void materialFishUsePickaxeDamageAndFishHeadgear(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         var rawFish = TagKey.create(Registries.ITEM, ResourceLocation.parse("c:foods/raw_pufferfish"));
         for (var item : fish()) {
             var stack = new ItemStack(item);
             helper.assertTrue(player.inventoryMenu.getSlot(5).mayPlace(stack) && !stack.is(rawFish)
                     && !PufferfishItems.hasNetheriteCombat(stack), "Material fish equipment or ingredient classification is incorrect");
+            var pickaxe = item == PufferfishItems.COPPER.get() ? Items.STONE_PICKAXE
+                    : item == PufferfishItems.IRON.get() ? Items.IRON_PICKAXE : Items.DIAMOND_PICKAXE;
+            player.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(pickaxe));
+            player.tick();
+            double pickaxeDamage = player.getAttributeValue(Attributes.ATTACK_DAMAGE);
             player.setItemSlot(EquipmentSlot.MAINHAND, stack);
             player.tick();
-            helper.assertTrue(player.getAttributeValue(Attributes.ATTACK_DAMAGE) == PufferfishCombat.damage(new ItemStack(Items.PUFFERFISH))
+            helper.assertTrue(player.getAttributeValue(Attributes.ATTACK_DAMAGE) == pickaxeDamage && PufferfishCombat.damage(stack) == pickaxeDamage
                     && player.getAttributeValue(Attributes.ATTACK_SPEED) == PufferfishCombatConfig.value(PufferfishCombatConfig.NORMAL_ATTACK_SPEED),
-                    "Material fish did not use ordinary fish combat attributes");
+                    "Material fish did not use pickaxe damage and ordinary fish attack speed");
             player.setItemSlot(EquipmentSlot.HEAD, stack);
             player.removeAllEffects();
             PufferfishHeadgear.breathe(new PlayerTickEvent.Post(player));

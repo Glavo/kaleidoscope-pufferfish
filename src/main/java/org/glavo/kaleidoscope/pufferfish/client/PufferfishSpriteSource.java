@@ -58,6 +58,9 @@ public final class PufferfishSpriteSource implements SpriteSource {
         addSkin(manager, output, "golden_pufferfish_skin", null);
         addSkin(manager, output, "netherite_pufferfish_skin", null);
         addSkin(manager, output, "heavy_pufferfish_skin", null);
+        for (var material : new String[] {"copper", "iron", "diamond"}) {
+            addSkin(manager, output, material + "_pufferfish_skin", null);
+        }
         for (DyeColor color : DyeColor.values()) {
             addSkin(manager, output, color);
         }

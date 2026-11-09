@@ -13,6 +13,10 @@ public final class PufferfishCombatConfig {
     public static final ModConfigSpec.DoubleValue NORMAL_DAMAGE;
     /// Base damage shared by netherite fish melee attacks and projectiles.
     public static final ModConfigSpec.DoubleValue NETHERITE_DAMAGE;
+    public static final ModConfigSpec.DoubleValue COPPER_DAMAGE;
+    public static final ModConfigSpec.DoubleValue IRON_DAMAGE;
+    public static final ModConfigSpec.DoubleValue DIAMOND_DAMAGE;
+    public static final ModConfigSpec.DoubleValue GOLDEN_DAMAGE;
     public static final ModConfigSpec.DoubleValue NORMAL_ATTACK_SPEED;
     public static final ModConfigSpec.DoubleValue NETHERITE_ATTACK_SPEED;
     /// Multiplier applied to mace base damage and the unenchanted falling curve for heavy fish.
@@ -53,6 +57,14 @@ public final class PufferfishCombatConfig {
                 .worldRestart().defineInRange("normalDamage", 1.0, 0.0, 1024.0);
         NETHERITE_DAMAGE = builder.comment("Netherite pufferfish base melee and throwing damage, before enchantments.")
                 .worldRestart().defineInRange("netheriteDamage", 6.0, 0.0, 1024.0);
+        COPPER_DAMAGE = builder.comment("Copper pufferfish melee and throwing damage; defaults to stone pickaxe damage.")
+                .worldRestart().defineInRange("copperDamage", 3.0, 0.0, 1024.0);
+        IRON_DAMAGE = builder.comment("Iron pufferfish melee and throwing damage; defaults to iron pickaxe damage.")
+                .worldRestart().defineInRange("ironDamage", 4.0, 0.0, 1024.0);
+        DIAMOND_DAMAGE = builder.comment("Diamond pufferfish melee and throwing damage; defaults to diamond pickaxe damage.")
+                .worldRestart().defineInRange("diamondDamage", 5.0, 0.0, 1024.0);
+        GOLDEN_DAMAGE = builder.comment("Golden pufferfish melee damage; defaults to golden pickaxe damage. Golden fish cannot be thrown.")
+                .worldRestart().defineInRange("goldenDamage", 2.0, 0.0, 1024.0);
         NORMAL_ATTACK_SPEED = builder.comment("Normal and dyed pufferfish attacks per second.")
                 .worldRestart().defineInRange("normalAttackSpeed", 3.0, 0.1, 20.0);
         NETHERITE_ATTACK_SPEED = builder.comment("Netherite pufferfish attacks per second.")

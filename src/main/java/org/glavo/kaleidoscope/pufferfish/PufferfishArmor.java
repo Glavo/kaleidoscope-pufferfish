@@ -47,6 +47,9 @@ public final class PufferfishArmor {
         add(variants, "", () -> PufferfishBlocks.skin(null).asItem());
         for (var color : DyeColor.values()) add(variants, color.getName() + "_", () -> PufferfishBlocks.skin(color).asItem());
         add(variants, "golden_", () -> PufferfishBlocks.GOLDEN_SKIN.get().asItem());
+        add(variants, "copper_", () -> PufferfishBlocks.COPPER_SKIN.get().asItem());
+        add(variants, "iron_", () -> PufferfishBlocks.IRON_SKIN.get().asItem());
+        add(variants, "diamond_", () -> PufferfishBlocks.DIAMOND_SKIN.get().asItem());
         add(variants, "netherite_", () -> PufferfishBlocks.NETHERITE_SKIN.get().asItem());
         add(variants, "heavy_", () -> PufferfishBlocks.HEAVY_SKIN.get().asItem());
         VARIANTS = Collections.unmodifiableMap(variants);
@@ -59,6 +62,8 @@ public final class PufferfishArmor {
         var material = MATERIALS.register(name, () -> {
             var protection = switch (prefix) {
                 case "golden_" -> ArmorMaterials.GOLD;
+                case "iron_" -> ArmorMaterials.IRON;
+                case "diamond_" -> ArmorMaterials.DIAMOND;
                 case "netherite_", "heavy_" -> ArmorMaterials.NETHERITE;
                 default -> ArmorMaterials.LEATHER;
             };

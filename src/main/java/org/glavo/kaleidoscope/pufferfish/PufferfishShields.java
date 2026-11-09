@@ -33,6 +33,9 @@ public final class PufferfishShields {
         register(variants, "");
         for (var color : DyeColor.values()) register(variants, color.getName() + "_");
         register(variants, "golden_");
+        register(variants, "copper_");
+        register(variants, "iron_");
+        register(variants, "diamond_");
         register(variants, "netherite_");
         register(variants, "heavy_");
         VARIANTS = java.util.Collections.unmodifiableMap(variants);

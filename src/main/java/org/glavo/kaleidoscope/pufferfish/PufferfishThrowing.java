@@ -22,7 +22,7 @@ public final class PufferfishThrowing {
     public static void use(PlayerInteractEvent.RightClickItem event) {
         var player = event.getEntity();
         var stack = event.getItemStack();
-        if (!PufferfishItems.isPufferfish(stack) || player.isShiftKeyDown() || player.isSpectator()
+        if (!PufferfishItems.canThrow(stack) || player.isShiftKeyDown() || player.isSpectator()
                 || player.getCooldowns().isOnCooldown(stack.getItem())) {
             return;
         }
