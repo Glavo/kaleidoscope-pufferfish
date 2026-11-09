@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_skin": {"trigger": "minecraft:inventory_changed", "conditions": {"items": [{"items": "${modId}:${skinName}"}]}},
+    "has_recipe": {"trigger": "minecraft:recipe_unlocked", "conditions": {"recipe": "${modId}:${armorName}"}}
+  },
+  "requirements": [["has_skin", "has_recipe"]],
+  "rewards": {"recipes": ["${modId}:${armorName}"]}
+}

@@ -91,6 +91,7 @@ public class KaleidoscopePufferfish {
                     output.accept(PufferfishBlocks.skin(null));
                     output.accept(PufferfishBlocks.GOLDEN_SKIN);
                     PufferfishShields.VARIANTS.values().forEach(output::accept);
+                    PufferfishArmor.VARIANTS.values().forEach(output::accept);
                     for (DyeColor color : DyeColor.values()) {
                         output.accept(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
                         output.accept(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH_BUCKET), color));
@@ -107,6 +108,7 @@ public class KaleidoscopePufferfish {
         }
         PufferfishItems.register(bus);
         PufferfishShields.register(bus);
+        PufferfishArmor.register(bus);
         PufferfishBlocks.register(bus);
         COMPONENTS.register(bus);
         ATTACHMENTS.register(bus);
@@ -128,6 +130,7 @@ public class KaleidoscopePufferfish {
         NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::breathe);
         NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::protect);
         NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::retaliate);
+        NeoForge.EVENT_BUS.addListener(PufferfishArmor::retaliate);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishShields::retaliate);
     }
 

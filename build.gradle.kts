@@ -266,7 +266,31 @@ val generateShieldResources = tasks.register<Sync>("generateShieldResources") {
     }
 }
 
+val generateArmorResources = tasks.register<Sync>("generateArmorResources") {
+    inputs.property("modId", modId)
+    inputs.property("colors", dyeColors)
+    filteringCharset = "UTF-8"
+    into(layout.buildDirectory.dir("generated/resources/pufferfishArmor"))
+    for (color in listOf("") + dyeColors + "golden") {
+        val prefix = if (color.isEmpty()) "" else "${color}_"
+        val skinName = "${prefix}pufferfish_skin"
+        val armorName = "${skinName}_chestplate"
+        for ((template, target) in mapOf(
+            "recipe" to "data/$modId/recipe/$armorName.json",
+            "model" to "assets/$modId/models/item/$armorName.json",
+            "advancement" to "data/$modId/advancement/recipes/combat/$armorName.json"
+        )) {
+            from("src/main/armorTemplates/$template.json") {
+                expand("modId" to modId, "skinName" to skinName, "armorName" to armorName)
+                into(target.substringBeforeLast('/'))
+                rename { target.substringAfterLast('/') }
+            }
+        }
+    }
+}
+
 sourceSets.main {
+    resources.srcDir(generateArmorResources)
     resources.srcDir(generateShieldResources)
     resources.srcDir(generateModMetadata)
     resources.srcDir(generateItemModels)
@@ -276,6 +300,7 @@ neoForge.ideSyncTask(generateModMetadata)
 neoForge.ideSyncTask(generateItemModels)
 neoForge.ideSyncTask(generateSkinResources)
 neoForge.ideSyncTask(generateShieldResources)
+neoForge.ideSyncTask(generateArmorResources)
 
 publishing {
     publications {

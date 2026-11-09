@@ -101,6 +101,7 @@ public class KaleidoscopePufferfishClient {
 
     private void registerReloadListeners(RegisterClientReloadListenersEvent event) {
         event.registerReloadListener(new PufferfishTextures());
+        event.registerReloadListener(new org.glavo.kaleidoscope.pufferfish.client.PufferfishArmorTextures());
         event.registerReloadListener(flailRenderer());
         event.registerReloadListener(shieldRenderer());
         event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener) manager -> PufferfishGloveRenderer.reset());
