@@ -9,14 +9,14 @@ import net.minecraft.client.resources.metadata.animation.FrameSize;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceMetadata;
 
-/// Supplies ordinary and golden sliced-fish sprites with a green garnish.
+/// Supplies overlapping fan-shaped fish slices with a green garnish.
 public final class PufferfishSashimiTexture {
-    /// Pixel rows using transparency, outlines, flesh shading, and two garnish greens.
+    /// Pixel rows using transparency, flesh shading, curved grain, and two garnish greens.
     private static final String[] PIXELS = {
-            "................", "...........oooo.", "..........ohhhho", ".........ohhffso",
-            "........ohhffso.", ".......oooosso..", "......ohhhhooo..", ".....ohhffso....",
-            "....ohhffso.....", "...oooosso......", "..ohhhhooo..gg..", ".ohhffso...glgg.",
-            "ohhffso...gllgg.", ".osssso....ggg..", "..oooo..........", "................"
+            "................", "........oooo....", "......oohhhhso..", ".....ohhfffvvso.",
+            ".....ohfffvffso.", "....oooofvffso..", "...ohhhhossso...", "..ohhfffvvsoo...",
+            "..ohfffvffso....", ".oooofvffso..g..", "ohhhhosso...glg.", "ohhfffvvso.gllgg",
+            ".ohfffvfso..glg.", "..ossssso...gg..", "...oooo.........", "................"
     };
 
     /// Prevents construction of the sprite factory.
@@ -28,10 +28,11 @@ public final class PufferfishSashimiTexture {
         for (int y = 0; y < 16; y++) {
             for (int x = 0; x < PIXELS[y].length(); x++) {
                 int rgb = switch (PIXELS[y].charAt(x)) {
-                    case 'o' -> golden ? 0x98702E : 0x72858C;
-                    case 's' -> golden ? 0xD49E37 : 0xBAC9CC;
-                    case 'f' -> golden ? 0xF4CF64 : 0xEBD2CD;
-                    case 'h' -> golden ? 0xFFF3B0 : 0xFFF8EC;
+                    case 'o' -> golden ? 0x98702E : 0x7E8A8E;
+                    case 's' -> golden ? 0xD49E37 : 0xC5CDD0;
+                    case 'f' -> golden ? 0xF4CF64 : 0xFFEDE3;
+                    case 'h' -> golden ? 0xFFF3B0 : 0xFFFAF3;
+                    case 'v' -> golden ? 0xE4AE46 : 0xE8C9C4;
                     case 'g' -> 0x4F7945;
                     case 'l' -> 0x94B960;
                     default -> -1;
