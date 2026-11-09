@@ -352,13 +352,21 @@ val generatePieModels = tasks.register<Sync>("generatePieModels") {
             mapOf("texture" to "#pie", "uv" to uv(if (it == "up") top else tile))
         }
     )
-    fun fish(x: Double, z: Double): List<Map<String, Any>> = listOf(
-        box(x - 1.7, 4.0, z - 1.7, 3.4, 4.0, 3.4, 1, 0),
-        box(x - 2.4, 5.0, z - 0.5, 0.7, 1.0, 1.0, 5),
-        box(x + 1.7, 5.0, z - 0.5, 0.7, 1.0, 1.0, 5),
-        box(x - 0.4, 5.5, z - 2.4, 0.8, 0.8, 0.7, 5),
-        box(x - 0.4, 5.5, z + 1.7, 0.8, 0.8, 0.7, 5)
-    )
+    fun fish(x: Double, z: Double): List<Map<String, Any>> {
+        val body = box(x - 1.8, 3.8, z - 1.8, 3.6, 3.6, 3.6, 1, 0).toMutableMap()
+        body["faces"] = mapOf("north" to 1, "south" to 6, "east" to 7, "west" to 8, "up" to 0, "down" to 1)
+            .mapValues { (_, tile) -> mapOf("texture" to "#pie", "uv" to uv(tile)) }
+        val fins = listOf(box(x - 2.8, 6.2, z - 0.6, 1.0, 0.3, 1.2, 5),
+            box(x + 1.8, 6.2, z - 0.6, 1.0, 0.3, 1.2, 5))
+        val spines = listOf(-1.0, 1.0).flatMap { side ->
+            listOf(-1.2, 1.2).flatMap { offset -> listOf(
+                box(x + side * 1.6 - 0.2, 7.4, z + offset - 0.2, 0.4, 0.8, 0.4, 9),
+                box(x + side * 2.15 - 0.35, 5.0, z + offset - 0.2, 0.7, 0.4, 0.4, 9),
+                box(x + offset - 0.2, 5.6, z + side * 2.15 - 0.35, 0.4, 0.4, 0.7, 9)
+            ) }
+        }
+        return listOf(body) + fins + spines
+    }
     val plate = listOf(box(2.0, 0.0, 1.0, 12.0, 1.0, 14.0, 4), box(1.0, 0.0, 2.0, 1.0, 1.0, 12.0, 4),
         box(14.0, 0.0, 2.0, 1.0, 1.0, 12.0, 4))
     val portions = listOf(2.0 to 2.0, 8.0 to 2.0, 2.0 to 8.0, 8.0 to 8.0).mapIndexed { index, (x, z) ->
