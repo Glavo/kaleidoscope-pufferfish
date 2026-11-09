@@ -322,8 +322,9 @@
 
   "death.attack.kaleidoscope_pufferfish.thrown_pufferfish": "%1$s was struck down by a pufferfish",
   "death.attack.kaleidoscope_pufferfish.thrown_pufferfish.player": "%1$s was struck down by %2$s with a pufferfish",
-  "death.attack.kaleidoscope_pufferfish.pufferfish_prick": "%1$s was pricked to death by a pufferfish",
-  "death.attack.kaleidoscope_pufferfish.pufferfish_prick.player": "%1$s was pricked to death by a pufferfish",
+  "death.attack.kaleidoscope_pufferfish.falling_pufferfish": "%1$s was squashed by a falling pufferfish",
+  "death.attack.kaleidoscope_pufferfish.pufferfish_prick": "%1$s discovered the floor was made of pufferfish",
+  "death.attack.kaleidoscope_pufferfish.pufferfish_prick.player": "%1$s discovered the floor was made of pufferfish",
 
   "gui.kaleidoscope_pufferfish.engine.empty": "Insert a pufferfish",
   "gui.kaleidoscope_pufferfish.engine.dry": "Needs a bucket of water",

@@ -10,6 +10,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffects;
@@ -194,6 +195,10 @@ public final class PufferfishLampGameTests {
                 var poison = target.getEffect(MobEffects.POISON);
                 if (block instanceof HeavyPufferfishBlock && damage > 0) {
                     helper.assertTrue(poison != null && poison.getAmplifier() == 1 && poison.getDuration() == 60, "Incorrect impact poison");
+                    var source = target.getLastDamageSource();
+                    helper.assertTrue(source != null && source.getLocalizedDeathMessage(helper.makeMockPlayer(GameType.SURVIVAL)).getContents()
+                            instanceof TranslatableContents message && message.getKey().equals("death.attack.kaleidoscope_pufferfish.falling_pufferfish"),
+                            "Heavy fish or lamp used the anvil death message");
                 } else helper.assertTrue(poison == null, "Non-damaging fall or vanilla anvil applied poison");
                 helper.assertTrue(!immune.hasEffect(MobEffects.POISON), "Invulnerable target was poisoned");
                 target.discard();

@@ -322,8 +322,9 @@
 
   "death.attack.kaleidoscope_pufferfish.thrown_pufferfish": "%1$s 被河豚砸死了",
   "death.attack.kaleidoscope_pufferfish.thrown_pufferfish.player": "%1$s 被 %2$s 用河豚砸死了",
-  "death.attack.kaleidoscope_pufferfish.pufferfish_prick": "%1$s 被河豚扎死了",
-  "death.attack.kaleidoscope_pufferfish.pufferfish_prick.player": "%1$s 被河豚扎死了",
+  "death.attack.kaleidoscope_pufferfish.falling_pufferfish": "%1$s 被下落的河豚压扁了",
+  "death.attack.kaleidoscope_pufferfish.pufferfish_prick": "%1$s发现地板是河豚做的",
+  "death.attack.kaleidoscope_pufferfish.pufferfish_prick.player": "%1$s发现地板是河豚做的",
 
   "gui.kaleidoscope_pufferfish.engine.empty": "请放入一只河豚",
   "gui.kaleidoscope_pufferfish.engine.dry": "需要一桶水",

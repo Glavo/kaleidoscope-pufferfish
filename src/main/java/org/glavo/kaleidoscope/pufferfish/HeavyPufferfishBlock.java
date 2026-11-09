@@ -6,11 +6,13 @@ package org.glavo.kaleidoscope.pufferfish;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -67,7 +69,14 @@ public final class HeavyPufferfishBlock extends PlacedPufferfishBlock implements
     }
 
     @Override
-    public DamageSource getFallDamageSource(Entity entity) { return entity.damageSources().anvil(entity); }
+    public DamageSource getFallDamageSource(Entity entity) {
+        return new DamageSource(entity.damageSources().anvil(entity).typeHolder(), entity) {
+            @Override
+            public Component getLocalizedDeathMessage(LivingEntity victim) {
+                return Component.translatable("death.attack.kaleidoscope_pufferfish.falling_pufferfish", victim.getDisplayName());
+            }
+        };
+    }
 
     public static void poisonOnImpact(LivingDamageEvent.Post event) {
         if (event.getEntity().level().isClientSide || !event.getSource().is(DamageTypes.FALLING_ANVIL)
