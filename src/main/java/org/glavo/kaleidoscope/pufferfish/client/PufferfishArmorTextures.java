@@ -24,8 +24,7 @@ public final class PufferfishArmorTextures implements ResourceManagerReloadListe
     public static void skin(ResourceManager manager, NativeImage mask, String name, boolean worn) {
         String prefix = name.substring(0, name.indexOf("pufferfish_skin"));
         int tint = -1;
-        if (prefix.equals("golden_")) tint = 0xFFC52B;
-        else for (var color : DyeColor.values()) if (prefix.equals(color.getName() + "_")) tint = color.getTextureDiffuseColor();
+        for (var color : DyeColor.values()) if (prefix.equals(color.getName() + "_")) tint = color.getTextureDiffuseColor();
         try (var stream = manager.open(FISH); var fish = NativeImage.read(stream)) {
             for (int y = 0; y < mask.getHeight(); y++) for (int x = 0; x < mask.getWidth(); x++) {
                 int original = mask.getPixelRGBA(x, y);
@@ -36,10 +35,16 @@ public final class PufferfishArmorTextures implements ResourceManagerReloadListe
                 int sx = belly ? u % 8 : 8 + u % 8;
                 int sy = belly ? 12 + v % 4 : v % 8;
                 int pixel = fish.getPixelRGBA(sx * fish.getWidth() / 32, sy * fish.getWidth() / 32);
+                if (prefix.equals("golden_")) {
+                    int shade = Math.max(original & 255, Math.max(original >>> 8 & 255, original >>> 16 & 255));
+                    int gold = GoldenSkinMaterial.shade(pixel, shade, u, v, belly);
+                    mask.setPixelRGBA(x, y, original & 0xFF000000 | gold & 0xFFFFFF);
+                    continue;
+                }
                 int red = pixel & 255;
                 int green = pixel >>> 8 & 255;
                 int blue = pixel >>> 16 & 255;
-                int color = belly ? (prefix.equals("golden_") ? 0xFFF2A6 : -1) : tint;
+                int color = belly ? -1 : tint;
                 if (color != -1) {
                     int brightness = Math.max(red, Math.max(green, blue));
                     red = (color >>> 16 & 255) * brightness / 255;

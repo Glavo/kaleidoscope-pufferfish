@@ -20,7 +20,6 @@ public final class PufferfishBoatTextures implements ResourceManagerReloadListen
     private final Set<ResourceLocation> generated = new HashSet<>();
 
     private static int tint(String name) {
-        if (name.startsWith("golden_")) return 0xFFC52B;
         for (var color : DyeColor.values()) if (name.startsWith(color.getName() + "_")) return color.getTextureDiffuseColor();
         return -1;
     }
@@ -34,7 +33,8 @@ public final class PufferfishBoatTextures implements ResourceManagerReloadListen
     private static int skin(NativeImage fish, String name, int x, int y, boolean belly) {
         int pixel = fish.getPixelRGBA((belly ? x % 8 : 8 + x % 8) * fish.getWidth() / 32,
                 (belly ? 12 + y % 4 : y % 8) * fish.getWidth() / 32);
-        int color = belly ? (name.startsWith("golden_") ? 0xFFF2A6 : -1) : tint(name);
+        if (name.startsWith("golden_")) return GoldenSkinMaterial.shade(pixel | 0xFF000000, 255, x, y, belly);
+        int color = belly ? -1 : tint(name);
         if (color == -1) return pixel | 0xFF000000;
         int brightness = Math.max(pixel & 255, Math.max(pixel >>> 8 & 255, pixel >>> 16 & 255));
         return rgba(color, brightness);
@@ -51,6 +51,7 @@ public final class PufferfishBoatTextures implements ResourceManagerReloadListen
             for (int y = 0; y < 64; y++) for (int x = 0; x < 160; x++) {
                 int pixel;
                 if (x >= 80) pixel = rgba(x % 5 == 0 ? 0x6E492F : 0xBC915F, 255);
+                else if (x >= 48 && name.startsWith("golden_")) pixel = GoldenSkinMaterial.shade(0xFFE0E0E0, 255, x, y, true);
                 else if (x >= 48) pixel = rgba((x + y) % 7 == 0 ? 0x6B543A : 0xA38C62, 255);
                 else if (x >= 32) pixel = rgba((x + y) % 9 == 0 ? 0x46443D : 0x292E2B, 255);
                 else if (x >= 16) pixel = skin(fish, name, x, y, true);
