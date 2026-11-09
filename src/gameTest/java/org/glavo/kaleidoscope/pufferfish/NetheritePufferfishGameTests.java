@@ -5,7 +5,6 @@ package org.glavo.kaleidoscope.pufferfish;
 
 import io.netty.buffer.Unpooled;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
@@ -43,39 +42,55 @@ public final class NetheritePufferfishGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void everyColorUpgradesToTheSameItem(GameTestHelper helper) {
-        List<DyeColor> colors = new ArrayList<>();
-        colors.add(null);
-        colors.addAll(Arrays.asList(DyeColor.values()));
-        var manager = helper.getLevel().getRecipeManager();
-        for (var color : colors) {
-            var base = new ItemStack(Items.PUFFERFISH, 5);
-            if (color != null) PufferfishColors.dye(base, color);
-            var input = new SmithingRecipeInput(new ItemStack(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE), base, new ItemStack(Items.NETHERITE_INGOT));
-            var recipe = manager.getRecipeFor(RecipeType.SMITHING, input, helper.getLevel()).orElseThrow().value();
-            var result = recipe.assemble(input, helper.getLevel().registryAccess());
-            helper.assertTrue(result.getCount() == 1 && ItemStack.isSameItemSameComponents(result, netherite()), "Upgrade retained a color or changed default attributes");
-            helper.assertTrue(base.getCount() == 5 && PufferfishColors.get(base) == color, "Upgrade mutated its input");
-            base.set(DataComponents.CUSTOM_NAME, Component.literal("Keepsake"));
-            result = recipe.assemble(input, helper.getLevel().registryAccess());
-            helper.assertTrue(result.getHoverName().getString().equals("Keepsake"), "Upgrade lost the custom name");
-            var buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(), helper.getLevel().registryAccess());
-            try {
-                var codec = KaleidoscopePufferfish.NETHERITE_UPGRADE.get().streamCodec();
-                codec.encode(buffer, (NetheritePufferfishUpgradeRecipe) recipe);
-                var synced = codec.decode(buffer);
-                helper.assertTrue(synced.matches(input, helper.getLevel()) && ItemStack.isSameItemSameComponents(
-                        result, synced.assemble(input, helper.getLevel().registryAccess())), "Synced smithing recipe changed its output");
-            } finally {
-                buffer.release();
-            }
+    public static void onlyDiamondFishUpgradeAndPreserveComponents(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var manager = level.getRecipeManager();
+        var template = new ItemStack(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE);
+        var addition = new ItemStack(Items.NETHERITE_INGOT);
+        var base = new ItemStack(PufferfishItems.DIAMOND.get(), 5);
+        var input = new SmithingRecipeInput(template, base, addition);
+        var recipe = manager.getRecipeFor(RecipeType.SMITHING, input, level).orElseThrow().value();
+        var result = recipe.assemble(input, level.registryAccess());
+        helper.assertTrue(result.getCount() == 1 && ItemStack.isSameItemSameComponents(result, netherite()),
+                "Diamond upgrade changed default attributes");
+        base.set(DataComponents.CUSTOM_NAME, Component.literal("Keepsake"));
+        var enchantment = level.registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.ENCHANTMENT)
+                .getOrThrow(net.minecraft.world.item.enchantment.Enchantments.LOYALTY);
+        base.enchant(enchantment, 3);
+        var original = base.copy();
+        result = recipe.assemble(input, level.registryAccess());
+        helper.assertTrue(result.getHoverName().getString().equals("Keepsake")
+                && result.getEnchantmentLevel(enchantment) == 3, "Upgrade lost the custom name or enchantment");
+        helper.assertTrue(ItemStack.matches(base, original), "Upgrade mutated its input");
+        var buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(), level.registryAccess());
+        try {
+            var codec = KaleidoscopePufferfish.NETHERITE_UPGRADE.get().streamCodec();
+            codec.encode(buffer, (NetheritePufferfishUpgradeRecipe) recipe);
+            var synced = codec.decode(buffer);
+            helper.assertTrue(synced.matches(input, level) && ItemStack.isSameItemSameComponents(
+                    result, synced.assemble(input, level.registryAccess())), "Synced smithing recipe changed its output");
+        } finally {
+            buffer.release();
         }
-        for (var input : List.of(
-                new SmithingRecipeInput(ItemStack.EMPTY, new ItemStack(Items.PUFFERFISH), new ItemStack(Items.NETHERITE_INGOT)),
-                new SmithingRecipeInput(new ItemStack(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE), new ItemStack(Items.PUFFERFISH_BUCKET), new ItemStack(Items.NETHERITE_INGOT)),
-                new SmithingRecipeInput(new ItemStack(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE), new ItemStack(Items.PUFFERFISH), new ItemStack(Items.IRON_INGOT)),
-                new SmithingRecipeInput(new ItemStack(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE), netherite(), new ItemStack(Items.NETHERITE_INGOT)))) {
-            helper.assertTrue(manager.getRecipeFor(RecipeType.SMITHING, input, helper.getLevel()).isEmpty(), "Invalid upgrade ingredients were accepted");
+        var invalidBases = new ArrayList<ItemStack>();
+        invalidBases.add(new ItemStack(Items.PUFFERFISH));
+        for (var color : DyeColor.values()) {
+            invalidBases.add(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
+        }
+        for (var item : PufferfishItems.COPPER_VARIANTS) invalidBases.add(new ItemStack(item.get()));
+        for (var item : List.of(Items.PUFFERFISH_BUCKET, PufferfishItems.IRON.get(), PufferfishItems.GOLDEN.get(),
+                PufferfishItems.NETHERITE.get(), PufferfishItems.HEAVY.get())) invalidBases.add(new ItemStack(item));
+        for (var invalidBase : invalidBases) {
+            helper.assertTrue(!recipe.isBaseIngredient(invalidBase)
+                    && manager.getRecipeFor(RecipeType.SMITHING, new SmithingRecipeInput(template, invalidBase, addition), level).isEmpty(),
+                    "A non-diamond fish was accepted as an upgrade base");
+        }
+        for (var invalid : List.of(
+                new SmithingRecipeInput(ItemStack.EMPTY, base, addition),
+                new SmithingRecipeInput(new ItemStack(Items.PAPER), base, addition),
+                new SmithingRecipeInput(template, base, ItemStack.EMPTY),
+                new SmithingRecipeInput(template, base, new ItemStack(Items.IRON_INGOT)))) {
+            helper.assertTrue(manager.getRecipeFor(RecipeType.SMITHING, invalid, level).isEmpty(), "Invalid upgrade ingredients were accepted");
         }
         helper.succeed();
     }
@@ -84,7 +99,7 @@ public final class NetheritePufferfishGameTests {
     public static void smithingMenuConsumesOneOfEachIngredient(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         var menu = new SmithingMenu(1, player.getInventory());
-        var base = PufferfishColors.dye(new ItemStack(Items.PUFFERFISH, 2), DyeColor.BLUE);
+        var base = new ItemStack(PufferfishItems.DIAMOND.get(), 2);
         var ingredients = List.of(new ItemStack(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE, 2), base, new ItemStack(Items.NETHERITE_INGOT, 2));
         for (int i = 0; i < 3; i++) {
             helper.assertTrue(menu.getSlot(i).mayPlace(ingredients.get(i)), "Smithing input slot rejected the ingredient");
