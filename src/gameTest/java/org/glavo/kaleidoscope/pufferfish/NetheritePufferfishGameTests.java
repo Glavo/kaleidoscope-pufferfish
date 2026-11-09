@@ -141,7 +141,7 @@ public final class NetheritePufferfishGameTests {
                 && player.getAttributeValue(Attributes.ARMOR_TOUGHNESS) == 3, "Netherite headgear did not grant 3 armor and 3 toughness");
         var breathe = new LivingBreatheEvent(player, false, 1, 0);
         NeoForge.EVENT_BUS.post(breathe);
-        helper.assertTrue(breathe.canBreathe(), "Netherite headgear lost underwater breathing");
+        helper.assertTrue(!breathe.canBreathe(), "Netherite headgear granted unlimited underwater breathing");
         var fish = EntityType.PUFFERFISH.create(helper.getLevel());
         helper.assertTrue(!player.hurt(player.damageSources().mobAttack(fish), 3), "Netherite headgear lost sting immunity");
         player.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);

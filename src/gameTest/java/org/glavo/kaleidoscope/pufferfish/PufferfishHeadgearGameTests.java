@@ -77,31 +77,37 @@ public final class PufferfishHeadgearGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void underwaterBreathingStopsImmediatelyOnRemoval(GameTestHelper helper) {
+    public static void headgearRefreshesTenSecondsOnlyAboveWater(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         var pos = helper.absolutePos(new BlockPos(1, 1, 1));
-        for (int y = 0; y < 3; y++) {
-            helper.getLevel().setBlockAndUpdate(pos.above(y), Blocks.WATER.defaultBlockState());
-        }
-        player.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
-        for (var color : colors()) {
-            player.setItemSlot(EquipmentSlot.HEAD, fish(color));
-            player.setAirSupply(1);
-            for (int tick = 0; tick < 400; tick++) {
-                player.baseTick();
-            }
-            helper.assertTrue(player.getAirSupply() == player.getMaxAirSupply() && player.getHealth() == player.getMaxHealth(), "Headgear failed to prevent drowning");
-            helper.assertTrue(!player.hasEffect(MobEffects.WATER_BREATHING), "Headgear left a potion effect behind");
+        for (int y = 0; y < 3; y++) helper.getLevel().setBlockAndUpdate(pos.above(y), Blocks.WATER.defaultBlockState());
+        var variants = new ArrayList<ItemStack>();
+        for (var color : colors()) variants.add(fish(color));
+        variants.add(new ItemStack(PufferfishItems.NETHERITE.get()));
+        variants.add(new ItemStack(PufferfishItems.HEAVY.get()));
+        for (var stack : variants) {
+            player.removeAllEffects();
+            player.setItemSlot(EquipmentSlot.HEAD, stack);
+            player.setPos(pos.getX() + 0.5, pos.getY() + 5, pos.getZ() + 0.5);
+            player.setNoGravity(true);
+            player.tick();
+            helper.assertTrue(player.getEffect(MobEffects.WATER_BREATHING) != null
+                    && player.getEffect(MobEffects.WATER_BREATHING).getDuration() == 200, "Headgear did not refresh ten seconds in air");
+            player.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+            for (int tick = 0; tick < 205; tick++) player.tick();
+            helper.assertTrue(!player.hasEffect(MobEffects.WATER_BREATHING)
+                    && player.getAirSupply() < player.getMaxAirSupply(), "Headgear kept breathing indefinitely underwater");
+            player.setPos(pos.getX() + 0.5, pos.getY() + 5, pos.getZ() + 0.5);
+            player.tick();
+            helper.assertTrue(player.getEffect(MobEffects.WATER_BREATHING).getDuration() == 200, "Surfacing did not refresh breathing");
             player.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
-            player.baseTick();
-            helper.assertTrue(player.getAirSupply() < player.getMaxAirSupply(), "Breathing persisted after removal");
+            for (int tick = 0; tick < 205; tick++) player.tick();
+            helper.assertTrue(!player.hasEffect(MobEffects.WATER_BREATHING), "Unequipped fish kept refreshing breathing");
         }
         player.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 600, 0));
         player.setItemSlot(EquipmentSlot.HEAD, fish(null));
-        player.baseTick();
-        player.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
-        player.baseTick();
-        helper.assertTrue(player.hasEffect(MobEffects.WATER_BREATHING), "Removing headgear erased an existing potion effect");
+        player.tick();
+        helper.assertTrue(player.getEffect(MobEffects.WATER_BREATHING).getDuration() > 200, "Headgear shortened an existing potion effect");
         helper.succeed();
     }
 

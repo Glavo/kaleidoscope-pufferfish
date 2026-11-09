@@ -210,7 +210,7 @@ public final class HeavyPufferfishGameTests {
                 "Heavy headgear attributes are incorrect");
         var breathe = new LivingBreatheEvent(player, false, 1, 0);
         NeoForge.EVENT_BUS.post(breathe);
-        helper.assertTrue(breathe.canBreathe(), "Heavy headgear lost pufferfish underwater breathing");
+        helper.assertTrue(!breathe.canBreathe(), "Heavy headgear granted unlimited underwater breathing");
         var fish = EntityType.PUFFERFISH.create(helper.getLevel());
         helper.assertTrue(!player.hurt(player.damageSources().mobAttack(fish), 3), "Heavy headgear lost sting protection");
         player.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);

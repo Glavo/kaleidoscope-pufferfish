@@ -291,7 +291,7 @@ public final class PufferfishFlailGameTests {
         var player = player(helper, stack);
         var supported = List.of(Enchantments.DENSITY, Enchantments.BREACH, Enchantments.PUNCH, Enchantments.SMITE,
                 Enchantments.BANE_OF_ARTHROPODS, Enchantments.VANISHING_CURSE, Enchantments.THORNS, Enchantments.CHANNELING);
-        var unsupported = List.of(Enchantments.AQUA_AFFINITY, Enchantments.LOYALTY, Enchantments.WIND_BURST, Enchantments.BINDING_CURSE);
+        var unsupported = List.of(Enchantments.RESPIRATION, Enchantments.AQUA_AFFINITY, Enchantments.LOYALTY, Enchantments.WIND_BURST, Enchantments.BINDING_CURSE);
         for (var keys : List.of(supported, unsupported)) {
             for (var key : keys) {
                 var enchantment = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(key);

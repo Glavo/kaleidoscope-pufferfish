@@ -40,7 +40,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class PufferfishEnchantmentGameTests {
     private static final List<ResourceKey<Enchantment>> SUPPORTED = List.of(
-            Enchantments.AQUA_AFFINITY, Enchantments.LOYALTY, Enchantments.DENSITY, Enchantments.BREACH, Enchantments.PUNCH,
+            Enchantments.RESPIRATION, Enchantments.AQUA_AFFINITY, Enchantments.LOYALTY, Enchantments.DENSITY, Enchantments.BREACH, Enchantments.PUNCH,
             Enchantments.WIND_BURST, Enchantments.SMITE, Enchantments.BANE_OF_ARTHROPODS,
             Enchantments.VANISHING_CURSE, Enchantments.BINDING_CURSE, Enchantments.THORNS, Enchantments.CHANNELING);
 
@@ -97,10 +97,6 @@ public final class PufferfishEnchantmentGameTests {
         var player = owner(helper);
         for (var original : variants()) {
             original.set(DataComponents.CUSTOM_NAME, Component.literal("Enchanted keepsake"));
-            var rejected = new AnvilMenu(1, player.getInventory());
-            rejected.getSlot(0).set(original.copy());
-            rejected.getSlot(1).set(enchant(helper, new ItemStack(Items.ENCHANTED_BOOK), Enchantments.RESPIRATION, 3));
-            helper.assertTrue(!rejected.getSlot(2).hasItem(), "Respiration is still accepted on pufferfish");
             for (var key : SUPPORTED) {
                 int max = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(key).value().getMaxLevel();
                 for (int rank = 1; rank <= max; rank++) {
@@ -131,6 +127,24 @@ public final class PufferfishEnchantmentGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void respirationGrantsNativeOxygenBonusOnlyWhenWorn(GameTestHelper helper) {
+        for (var original : variants()) for (int rank = 1; rank <= 3; rank++) {
+            var player = owner(helper);
+            var stack = enchant(helper, original.copy(), Enchantments.RESPIRATION, rank);
+            player.setItemSlot(EquipmentSlot.HEAD, stack);
+            player.tick();
+            helper.assertTrue(player.getAttributeValue(Attributes.OXYGEN_BONUS) == rank,
+                    "Respiration did not grant the native oxygen bonus");
+            player.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
+            player.setItemSlot(EquipmentSlot.MAINHAND, stack);
+            player.tick();
+            helper.assertTrue(player.getAttributeValue(Attributes.OXYGEN_BONUS) == 0,
+                    "Held fish retained the head-only oxygen bonus");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void mixedBooksRespectDamageExclusivityAndPreserveCompatibleEnchantments(GameTestHelper helper) {
         var player = owner(helper);
         for (var first : List.of(Enchantments.DENSITY, Enchantments.BREACH)) {
@@ -153,7 +167,7 @@ public final class PufferfishEnchantmentGameTests {
                     "Mixed book replaced an existing incompatible enchantment");
             helper.assertTrue(level(helper, result, Enchantments.PUNCH) == 2 && level(helper, result, Enchantments.LOYALTY) == 3
                     && level(helper, result, Enchantments.AQUA_AFFINITY) == 1 && level(helper, result, Enchantments.SHARPNESS) == 0
-                    && level(helper, result, Enchantments.RESPIRATION) == 0 && level(helper, result, Enchantments.WIND_BURST) == 0,
+                    && level(helper, result, Enchantments.RESPIRATION) == 3 && level(helper, result, Enchantments.WIND_BURST) == 0,
                     "Mixed book lost supported enchantments or enabled Sharpness");
         }
         helper.succeed();
@@ -251,7 +265,7 @@ public final class PufferfishEnchantmentGameTests {
                     "Wearing enchanted fish did not restore underwater mining speed");
             var breathe = new LivingBreatheEvent(player, false, 1, 0);
             NeoForge.EVENT_BUS.post(breathe);
-            helper.assertTrue(breathe.canBreathe(), "Aqua Affinity headgear lost unlimited breathing");
+            helper.assertTrue(!breathe.canBreathe(), "Aqua Affinity granted unlimited breathing");
             player.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
             player.tick();
             player.setOnGround(true);

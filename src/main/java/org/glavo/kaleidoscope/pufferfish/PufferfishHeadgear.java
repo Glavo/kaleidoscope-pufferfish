@@ -16,7 +16,8 @@ import net.minecraft.world.item.enchantment.EnchantedItemInUse;
 import net.minecraft.world.item.enchantment.EnchantmentTarget;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.neoforged.neoforge.common.damagesource.DamageContainer;
-import net.neoforged.neoforge.event.entity.living.LivingBreatheEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.minecraft.tags.FluidTags;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 
@@ -28,10 +29,10 @@ public final class PufferfishHeadgear {
                 && PufferfishItems.isPufferfish(entity.getItemBySlot(EquipmentSlot.HEAD));
     }
 
-    public static void breathe(LivingBreatheEvent event) {
-        if (isWearing(event.getEntity())) {
-            event.setCanBreathe(true);
-            event.setRefillAirAmount(event.getEntity().getMaxAirSupply());
+    public static void breathe(PlayerTickEvent.Post event) {
+        var player = event.getEntity();
+        if (!player.level().isClientSide() && isWearing(player) && !player.isEyeInFluid(FluidTags.WATER)) {
+            player.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 200, 0, false, false, true));
         }
     }
 

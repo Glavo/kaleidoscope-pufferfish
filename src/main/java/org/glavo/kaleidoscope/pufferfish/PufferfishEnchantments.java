@@ -20,7 +20,7 @@ public final class PufferfishEnchantments {
     private PufferfishEnchantments() {}
 
     public static boolean supports(Holder<Enchantment> enchantment) {
-        return enchantment.is(Enchantments.AQUA_AFFINITY) || enchantment.is(Enchantments.LOYALTY)
+        return enchantment.is(Enchantments.RESPIRATION) || enchantment.is(Enchantments.AQUA_AFFINITY) || enchantment.is(Enchantments.LOYALTY)
                 || enchantment.is(Enchantments.DENSITY) || enchantment.is(Enchantments.BREACH)
                 || enchantment.is(Enchantments.PUNCH) || enchantment.is(Enchantments.WIND_BURST)
                 || enchantment.is(Enchantments.SMITE) || enchantment.is(Enchantments.BANE_OF_ARTHROPODS)
@@ -39,7 +39,7 @@ public final class PufferfishEnchantments {
         List<Holder<Enchantment>> supported = stored.keySet().stream().filter(PufferfishEnchantments::supports)
                 .filter(enchantment -> !enchantment.is(Enchantments.WIND_BURST) || PufferfishItems.isHeavy(fish))
                 .filter(enchantment -> !PufferfishItems.isFlail(fish)
-                        || !enchantment.is(Enchantments.AQUA_AFFINITY) && !enchantment.is(Enchantments.LOYALTY)
+                        || !enchantment.is(Enchantments.RESPIRATION) && !enchantment.is(Enchantments.AQUA_AFFINITY) && !enchantment.is(Enchantments.LOYALTY)
                             && !enchantment.is(Enchantments.WIND_BURST) && !enchantment.is(Enchantments.BINDING_CURSE))
                 .sorted(Comparator.comparing(holder -> holder.getRegisteredName())).toList();
         if (supported.isEmpty()) {
