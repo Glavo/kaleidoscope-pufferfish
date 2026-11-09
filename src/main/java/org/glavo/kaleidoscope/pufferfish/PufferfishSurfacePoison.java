@@ -9,7 +9,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 
-/// Poisons living entities standing on floor-mounted pufferfish skins.
+/// Poisons living entities standing on non-golden floor-mounted pufferfish skins.
 public final class PufferfishSurfacePoison {
     /// Prevents construction of this event handler.
     private PufferfishSurfacePoison() {}
@@ -22,6 +22,7 @@ public final class PufferfishSurfacePoison {
                 || !entity.isAlive() || !entity.onGround() || entity.isSpectator()) return;
         var state = entity.level().getBlockState(entity.getOnPos());
         boolean skin = state.getBlock() instanceof PufferfishSkinBlock
+                && !state.is(PufferfishBlocks.GOLDEN_SKIN.get())
                 && state.getValue(PufferfishSkinBlock.FACE) == AttachFace.FLOOR;
         if (!skin) return;
         var poison = entity.getEffect(MobEffects.POISON);

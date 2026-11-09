@@ -45,12 +45,11 @@ public final class PufferfishSurfacePoisonGameTests {
         return entity;
     }
 
-    /// Verifies all eighteen skins poison grounded entities through the event bus.
+    /// Verifies ordinary and dyed skins poison grounded entities through the event bus.
     @GameTest(template = "empty")
     public static void everyPufferfishSurfacePoisonsStandingEntities(GameTestHelper helper) {
         var states = new ArrayList<BlockState>();
         states.add(PufferfishBlocks.skin(null).defaultBlockState());
-        states.add(PufferfishBlocks.GOLDEN_SKIN.get().defaultBlockState());
         for (var color : DyeColor.values()) {
             states.add(PufferfishBlocks.skin(color).defaultBlockState());
         }
@@ -69,9 +68,16 @@ public final class PufferfishSurfacePoisonGameTests {
         helper.succeed();
     }
 
-    /// Verifies non-floor skins, ordinary surfaces, and poison-immune mobs do not acquire poison.
+    /// Verifies golden skins, non-floor skins, ordinary surfaces, and poison-immune mobs do not acquire poison.
     @GameTest(template = "empty")
     public static void unrelatedSurfacesAndImmuneEntitiesAreUnaffected(GameTestHelper helper) {
+        var goldenEntity = stand(helper, PufferfishBlocks.GOLDEN_SKIN.get().defaultBlockState());
+        NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(goldenEntity));
+        helper.assertTrue(!goldenEntity.hasEffect(MobEffects.POISON), "Golden skin poisoned an entity");
+        goldenEntity.addEffect(new MobEffectInstance(MobEffects.POISON, 20, 0));
+        NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(goldenEntity));
+        helper.assertTrue(goldenEntity.getEffect(MobEffects.POISON).getDuration() == 20, "Golden skin changed existing poison");
+        goldenEntity.discard();
         var entity = stand(helper, Blocks.STONE.defaultBlockState());
         var pos = entity.getOnPos();
         var level = helper.getLevel();
