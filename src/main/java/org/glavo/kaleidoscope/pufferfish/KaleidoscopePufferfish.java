@@ -149,7 +149,6 @@ public class KaleidoscopePufferfish {
         NeoForge.EVENT_BUS.addListener(PufferfishCombat::meleeHit);
         NeoForge.EVENT_BUS.addListener(HeavyPufferfishBlock::poisonOnImpact);
         NeoForge.EVENT_BUS.addListener(PufferfishContactDamage::tick);
-        NeoForge.EVENT_BUS.addListener(PufferfishSurfacePoison::tick);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishConduitSpawning::potentialSpawns);
         NeoForge.EVENT_BUS.addListener(PufferfishConduitSpawning::unload);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishEnchantments::applyBook);

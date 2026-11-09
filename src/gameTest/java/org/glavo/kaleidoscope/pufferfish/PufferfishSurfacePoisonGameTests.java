@@ -16,7 +16,6 @@ import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
@@ -66,6 +65,7 @@ public final class PufferfishSurfacePoisonGameTests {
                     "Standing on a pufferfish surface must apply six seconds of Poison I");
             entity.removeEffect(MobEffects.POISON);
             entity.setOnGround(false);
+            entity.setPos(entity.position().add(0, 0.1, 0));
             NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
             helper.assertTrue(!entity.hasEffect(MobEffects.POISON), "An airborne entity was poisoned");
             entity.discard();
@@ -93,7 +93,7 @@ public final class PufferfishSurfacePoisonGameTests {
         helper.succeed();
     }
 
-    /// Verifies golden skins, non-floor skins, ordinary surfaces, and poison-immune mobs do not acquire poison.
+    /// Verifies golden skins, ordinary surfaces, and poison-immune mobs do not acquire poison.
     @GameTest(template = "empty")
     public static void unrelatedSurfacesAndImmuneEntitiesAreUnaffected(GameTestHelper helper) {
         var goldenEntity = stand(helper, PufferfishBlocks.GOLDEN_SKIN.get().defaultBlockState());
@@ -108,17 +108,11 @@ public final class PufferfishSurfacePoisonGameTests {
         var level = helper.getLevel();
         NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
         helper.assertTrue(!entity.hasEffect(MobEffects.POISON), "Ordinary stone poisoned an entity");
-        for (var face : new AttachFace[] {AttachFace.WALL, AttachFace.CEILING}) {
-            level.setBlockAndUpdate(pos.above(), Blocks.STONE.defaultBlockState());
-            level.setBlockAndUpdate(pos.south(), Blocks.STONE.defaultBlockState());
-            level.setBlockAndUpdate(pos, PufferfishBlocks.skin(null).defaultBlockState().setValue(PufferfishSkinBlock.FACE, face));
-            NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
-            helper.assertTrue(!entity.hasEffect(MobEffects.POISON), "A wall or ceiling skin applied standing poison");
-        }
         entity.discard();
         level.setBlockAndUpdate(pos, PufferfishBlocks.skin(null).defaultBlockState());
         var zombie = helper.spawn(EntityType.ZOMBIE, new BlockPos(2, 3, 2));
         zombie.setNoAi(true);
+        zombie.setPos(pos.getX() + 0.5, pos.getY() + 1.0 / 16, pos.getZ() + 0.5);
         zombie.move(MoverType.SELF, new Vec3(0, -0.1, 0));
         NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(zombie));
         helper.assertTrue(!zombie.hasEffect(MobEffects.POISON), "Undead poison immunity was bypassed");

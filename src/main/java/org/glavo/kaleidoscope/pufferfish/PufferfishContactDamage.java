@@ -8,6 +8,11 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 
@@ -17,22 +22,51 @@ public final class PufferfishContactDamage {
 
     private PufferfishContactDamage() {}
 
-    /// Deals at most one point per second, including contact with walls and ceilings.
+    /// Applies contact damage and poison once per second, including walls and ceilings.
     public static void tick(EntityTickEvent.Post event) {
         var entity = event.getEntity();
         if (entity.level().isClientSide || !entity.isAlive() || entity.isSpectator() || entity.tickCount % 20 != 0) return;
         var level = entity.level();
         var bounds = entity.getBoundingBox().inflate(0.001);
+        boolean touching = false;
+        MobEffectInstance poison = null;
         for (var pos : BlockPos.betweenClosed(BlockPos.containing(bounds.minX, bounds.minY, bounds.minZ),
                 BlockPos.containing(bounds.maxX, bounds.maxY, bounds.maxZ))) {
             var state = level.getBlockState(pos);
             if (!(state.getBlock() instanceof PufferfishSkinBlock) && !(state.getBlock() instanceof PlacedPufferfishBlock)) continue;
             for (var shape : state.getCollisionShape(level, pos, CollisionContext.of(entity)).toAabbs()) {
                 if (shape.move(pos).intersects(bounds)) {
-                    entity.hurt(new DamageSource(level.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(DAMAGE_TYPE)), 1);
-                    return;
+                    touching = true;
+                    if (entity instanceof LivingEntity) {
+                        var effect = poison(level, pos, state);
+                        if (effect != null && (poison == null || effect.getAmplifier() > poison.getAmplifier()
+                                || effect.getAmplifier() == poison.getAmplifier() && effect.getDuration() > poison.getDuration())) poison = effect;
+                    }
+                    break;
                 }
             }
         }
+        if (!touching) return;
+        var source = new DamageSource(level.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(DAMAGE_TYPE));
+        entity.hurt(source, 1);
+        if (poison != null && entity instanceof LivingEntity living && living.isAlive() && !living.isInvulnerableTo(source)) {
+            var current = living.getEffect(MobEffects.POISON);
+            if (current == null || !current.isInfiniteDuration() && (current.getAmplifier() < poison.getAmplifier()
+                    || current.getAmplifier() == poison.getAmplifier() && current.getDuration() <= poison.getDuration() / 2)) {
+                living.addEffect(poison);
+            }
+        }
+    }
+
+    @javax.annotation.Nullable
+    private static MobEffectInstance poison(Level level, BlockPos pos, BlockState state) {
+        if (state.getBlock() instanceof PufferfishSkinBlock) {
+            if (state.is(PufferfishBlocks.GOLDEN_SKIN.get()) || CopperPufferfish.skinIndex(state.getBlock().asItem().getDefaultInstance()) >= 4) return null;
+            return new MobEffectInstance(MobEffects.POISON, 120, 0);
+        }
+        if (level.getBlockEntity(pos) instanceof PlacedPufferfishBlockEntity placed && !placed.fish().isEmpty()) {
+            return PufferfishCombat.poison(placed.fish());
+        }
+        return null;
     }
 }
