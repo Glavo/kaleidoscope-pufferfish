@@ -31,7 +31,7 @@ import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-public final class PlacedPufferfishBlock extends BaseEntityBlock implements SimpleWaterloggedBlock {
+public class PlacedPufferfishBlock extends BaseEntityBlock implements SimpleWaterloggedBlock {
     public static final MapCodec<PlacedPufferfishBlock> CODEC = simpleCodec(PlacedPufferfishBlock::new);
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
@@ -51,7 +51,7 @@ public final class PlacedPufferfishBlock extends BaseEntityBlock implements Simp
     }
 
     @Override
-    protected MapCodec<PlacedPufferfishBlock> codec() { return CODEC; }
+    protected MapCodec<? extends PlacedPufferfishBlock> codec() { return CODEC; }
 
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {

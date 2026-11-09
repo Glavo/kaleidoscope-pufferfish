@@ -1,0 +1,68 @@
+// Copyright (c) 2026 Glavo
+// SPDX-License-Identifier: MPL-2.0
+
+package org.glavo.kaleidoscope.pufferfish;
+
+import com.mojang.serialization.MapCodec;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.FallingBlockEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.Fallable;
+import net.minecraft.world.level.block.FallingBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.common.damagesource.DamageContainer;
+import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
+
+public final class HeavyPufferfishLampBlock extends PlacedPufferfishBlock implements Fallable {
+    public static final MapCodec<HeavyPufferfishLampBlock> CODEC = simpleCodec(HeavyPufferfishLampBlock::new);
+
+    public HeavyPufferfishLampBlock(Properties properties) { super(properties); }
+
+    @Override
+    protected MapCodec<HeavyPufferfishLampBlock> codec() { return CODEC; }
+
+    @Override
+    protected void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean isMoving) {
+        level.scheduleTick(pos, this, 2);
+    }
+
+    @Override
+    protected BlockState updateShape(BlockState state, Direction direction, BlockState neighbor, LevelAccessor level, BlockPos pos, BlockPos neighborPos) {
+        level.scheduleTick(pos, this, 2);
+        return super.updateShape(state, direction, neighbor, level, pos, neighborPos);
+    }
+
+    @Override
+    protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+        if (!FallingBlock.isFree(level.getBlockState(pos.below())) || pos.getY() < level.getMinBuildHeight()) return;
+        var blockEntity = level.getBlockEntity(pos);
+        var data = blockEntity == null ? null : blockEntity.saveWithoutMetadata(level.registryAccess());
+        var falling = FallingBlockEntity.fall(level, pos, state);
+        falling.blockData = data;
+        falling.setHurtsEntities(2.0F, 40);
+    }
+
+    @Override
+    public void onLand(Level level, BlockPos pos, BlockState state, BlockState replaced, FallingBlockEntity falling) {
+        if (!falling.isSilent()) level.levelEvent(1031, pos, 0);
+    }
+
+    @Override
+    public DamageSource getFallDamageSource(Entity entity) { return entity.damageSources().anvil(entity); }
+
+    public static void poisonOnImpact(LivingDamageEvent.Post event) {
+        if (event.getEntity().level().isClientSide || !event.getSource().is(DamageTypes.FALLING_ANVIL)
+                || !(event.getSource().getDirectEntity() instanceof FallingBlockEntity falling)
+                || !(falling.getBlockState().getBlock() instanceof HeavyPufferfishLampBlock)
+                || event.getNewDamage() + event.getReduction(DamageContainer.Reduction.ABSORPTION) <= 0) return;
+        PufferfishCombat.applyPoison(new ItemStack(PufferfishItems.HEAVY.get()), event.getEntity(), falling);
+    }
+}

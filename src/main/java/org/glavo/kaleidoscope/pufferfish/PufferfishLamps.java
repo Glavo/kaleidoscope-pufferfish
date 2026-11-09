@@ -42,8 +42,15 @@ public final class PufferfishLamps {
 
     private static void add(Map<String, Variant> variants, String fishName, Supplier<ItemStack> fish) {
         String name = fishName + "_lamp";
-        var block = BLOCKS.registerBlock(name, PlacedPufferfishBlock::new,
-                BlockBehaviour.Properties.of().strength(0.3F).noOcclusion().lightLevel(state -> 15).sound(SoundType.LANTERN));
+        int light = switch (fishName) {
+            case "exposed_copper_pufferfish", "waxed_exposed_copper_pufferfish" -> 12;
+            case "weathered_copper_pufferfish", "waxed_weathered_copper_pufferfish" -> 8;
+            case "oxidized_copper_pufferfish", "waxed_oxidized_copper_pufferfish" -> 4;
+            default -> 15;
+        };
+        var block = BLOCKS.<PlacedPufferfishBlock>registerBlock(name,
+                fishName.equals("heavy_pufferfish") ? HeavyPufferfishLampBlock::new : PlacedPufferfishBlock::new,
+                BlockBehaviour.Properties.of().strength(0.3F).noOcclusion().lightLevel(state -> light).sound(SoundType.LANTERN));
         var properties = new Item.Properties();
         if (fishName.equals("netherite_pufferfish") || fishName.equals("heavy_pufferfish")) properties.fireResistant();
         ITEMS.registerSimpleBlockItem(block, properties);

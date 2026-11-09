@@ -12,6 +12,7 @@
     "PufferfishSmashMixin"
   ],
   "client": [
+    "FallingPufferfishLampRendererMixin",
     "PufferfishBoatSpeedMixin",
     "PufferfishRendererMixin",
     "PufferfishHeadLayerMixin",
