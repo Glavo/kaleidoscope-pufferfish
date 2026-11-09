@@ -46,7 +46,7 @@ public final class PufferfishThrowing {
                 player.getCooldowns().addCooldown(Items.PUFFERFISH, cooldown);
                 player.getCooldowns().addCooldown(PufferfishItems.NETHERITE.get(), cooldown);
                 player.getCooldowns().addCooldown(PufferfishItems.HEAVY.get(), cooldown);
-                player.getCooldowns().addCooldown(PufferfishItems.COPPER.get(), cooldown);
+                PufferfishItems.COPPER_VARIANTS.forEach(item -> player.getCooldowns().addCooldown(item.get(), cooldown));
                 player.getCooldowns().addCooldown(PufferfishItems.IRON.get(), cooldown);
                 player.getCooldowns().addCooldown(PufferfishItems.DIAMOND.get(), cooldown);
             }

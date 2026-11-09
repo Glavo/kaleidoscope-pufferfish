@@ -59,6 +59,8 @@ public class KaleidoscopePufferfish {
             RECIPES.register("pufferfish_flail", PufferfishFlailRecipe.Serializer::new);
     public static final DeferredHolder<RecipeSerializer<?>, SimpleCraftingRecipeSerializer<PufferfishDyeRecipe>> DYE_RECIPE =
             RECIPES.register("dye_pufferfish", () -> new SimpleCraftingRecipeSerializer<>(PufferfishDyeRecipe::new));
+    public static final DeferredHolder<RecipeSerializer<?>, SimpleCraftingRecipeSerializer<CopperPufferfishWaxRecipe>> WAX_RECIPE =
+            RECIPES.register("wax_copper_pufferfish", () -> new SimpleCraftingRecipeSerializer<>(CopperPufferfishWaxRecipe::new));
     public static final DeferredHolder<IngredientType<?>, IngredientType<PufferfishIngredient>> PUFFERFISH_INGREDIENT =
             INGREDIENTS.register("pufferfish", () -> new IngredientType<>(PufferfishIngredient.CODEC));
     public static final DeferredHolder<RecipeSerializer<?>, NetheritePufferfishUpgradeRecipe.Serializer> NETHERITE_UPGRADE =
@@ -78,7 +80,7 @@ public class KaleidoscopePufferfish {
                         output.accept(CreateIntegration.ENGINE_ITEM.get());
                     }
                     output.accept(PufferfishItems.NETHERITE);
-                    output.accept(PufferfishItems.COPPER);
+                    PufferfishItems.COPPER_VARIANTS.forEach(output::accept);
                     output.accept(PufferfishItems.IRON);
                     output.accept(PufferfishItems.DIAMOND);
                     output.accept(PufferfishItems.HEAVY);
@@ -134,6 +136,7 @@ public class KaleidoscopePufferfish {
         INGREDIENTS.register(bus);
         TABS.register(bus);
         bus.addListener(FlailAttackPayload::register);
+        NeoForge.EVENT_BUS.addListener(CopperPufferfish::interact);
         NeoForge.EVENT_BUS.addListener(PufferfishColors::interact);
         NeoForge.EVENT_BUS.addListener(PufferfishColors::colorDrops);
         NeoForge.EVENT_BUS.addListener(PufferfishColors::legacyTooltip);

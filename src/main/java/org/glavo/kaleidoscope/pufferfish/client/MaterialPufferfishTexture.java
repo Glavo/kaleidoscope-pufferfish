@@ -17,6 +17,9 @@ public final class MaterialPufferfishTexture {
     public static void recolor(NativeImage image, String material, boolean entity) {
         int[] palette = switch (material) {
             case "copper" -> COPPER;
+            case "exposed_copper" -> new int[] {0x4B4931, 0x77704C, 0xA08056, 0xB9996C, 0xD5BA8B, 0xE5D7AC};
+            case "weathered_copper" -> new int[] {0x294E3D, 0x3C7257, 0x589779, 0x7DB393, 0xADD6B8, 0xD1E8CF};
+            case "oxidized_copper" -> new int[] {0x174E43, 0x267566, 0x399B85, 0x58B69C, 0x8BD6BC, 0xBEEBDC};
             case "iron" -> IRON;
             case "diamond" -> DIAMOND;
             case "golden" -> GOLDEN;

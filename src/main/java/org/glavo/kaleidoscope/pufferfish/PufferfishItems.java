@@ -22,6 +22,11 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public final class PufferfishItems {
     private static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(KaleidoscopePufferfish.MODID);
     public static final DeferredItem<Item> COPPER = registerMaterialFish("copper");
+    public static final java.util.List<DeferredItem<Item>> COPPER_VARIANTS = java.util.List.of(
+            COPPER, registerMaterialFish("exposed_copper"), registerMaterialFish("weathered_copper"),
+            registerMaterialFish("oxidized_copper"), registerMaterialFish("waxed_copper"),
+            registerMaterialFish("waxed_exposed_copper"), registerMaterialFish("waxed_weathered_copper"),
+            registerMaterialFish("waxed_oxidized_copper"));
     public static final DeferredItem<Item> IRON = registerMaterialFish("iron");
     public static final DeferredItem<Item> DIAMOND = registerMaterialFish("diamond");
     /// An always-edible food with golden apple nutrition and effects, eight minutes of
@@ -109,7 +114,7 @@ public final class PufferfishItems {
 
     @javax.annotation.Nullable
     public static String materialName(ItemStack stack) {
-        if (stack.is(COPPER.get())) return "copper";
+        if (CopperPufferfish.index(stack) >= 0) return CopperPufferfish.material(stack);
         if (stack.is(IRON.get())) return "iron";
         if (stack.is(DIAMOND.get())) return "diamond";
         if (stack.is(GOLDEN.get())) return "golden";

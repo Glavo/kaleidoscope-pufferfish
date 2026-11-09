@@ -70,7 +70,7 @@ public final class PufferfishBlocks {
     /// Returns the skin produced by processing a whole fish, or null for unsupported items.
     @Nullable
     public static PufferfishSkinBlock skinForFish(ItemStack stack) {
-        if (stack.is(PufferfishItems.COPPER.get())) return COPPER_SKIN.get();
+        if (CopperPufferfish.index(stack) >= 0) return COPPER_SKIN.get();
         if (stack.is(PufferfishItems.IRON.get())) return IRON_SKIN.get();
         if (stack.is(PufferfishItems.DIAMOND.get())) return DIAMOND_SKIN.get();
         if (stack.is(PufferfishItems.GOLDEN.get())) return GOLDEN_SKIN.get();

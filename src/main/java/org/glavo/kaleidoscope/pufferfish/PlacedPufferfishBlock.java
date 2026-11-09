@@ -43,6 +43,14 @@ public final class PlacedPufferfishBlock extends BaseEntityBlock implements Simp
     }
 
     @Override
+    public boolean isRandomlyTicking(BlockState state) { return true; }
+
+    @Override
+    protected void randomTick(BlockState state, net.minecraft.server.level.ServerLevel level, BlockPos pos, net.minecraft.util.RandomSource random) {
+        CopperPufferfish.randomTick(level, pos, random);
+    }
+
+    @Override
     protected MapCodec<PlacedPufferfishBlock> codec() { return CODEC; }
 
     @Override
