@@ -92,6 +92,7 @@ public class KaleidoscopePufferfish {
                     output.accept(PufferfishBlocks.GOLDEN_SKIN);
                     PufferfishShields.VARIANTS.values().forEach(output::accept);
                     PufferfishArmor.VARIANTS.values().forEach(output::accept);
+                    PufferfishBoats.VARIANTS.values().forEach(variant -> output.accept(variant.item()));
                     for (DyeColor color : DyeColor.values()) {
                         output.accept(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
                         output.accept(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH_BUCKET), color));
@@ -109,6 +110,7 @@ public class KaleidoscopePufferfish {
         PufferfishItems.register(bus);
         PufferfishShields.register(bus);
         PufferfishArmor.register(bus);
+        PufferfishBoats.register(bus);
         PufferfishBlocks.register(bus);
         COMPONENTS.register(bus);
         ATTACHMENTS.register(bus);

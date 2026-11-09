@@ -77,6 +77,8 @@ public class KaleidoscopePufferfishClient {
     }
 
     private void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        PufferfishBoats.VARIANTS.values().forEach(variant -> event.registerEntityRenderer(variant.entity().get(),
+                org.glavo.kaleidoscope.pufferfish.client.PufferfishBoatRenderer::new));
         event.registerEntityRenderer(KaleidoscopePufferfish.THROWN_PUFFERFISH.get(), ThrownItemRenderer::new);
         event.registerEntityRenderer(KaleidoscopePufferfish.FLAIL_HEAD.get(), PufferfishFlailHeadRenderer::new);
         event.registerBlockEntityRenderer(PufferfishBlocks.CONDUIT_ENTITY.get(), PufferfishConduitRenderer::new);
@@ -101,6 +103,7 @@ public class KaleidoscopePufferfishClient {
 
     private void registerReloadListeners(RegisterClientReloadListenersEvent event) {
         event.registerReloadListener(new PufferfishTextures());
+        event.registerReloadListener(new org.glavo.kaleidoscope.pufferfish.client.PufferfishBoatTextures());
         event.registerReloadListener(new org.glavo.kaleidoscope.pufferfish.client.PufferfishArmorTextures());
         event.registerReloadListener(flailRenderer());
         event.registerReloadListener(shieldRenderer());
