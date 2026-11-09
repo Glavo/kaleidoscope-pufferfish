@@ -73,8 +73,6 @@ public final class PufferfishCuttingGameTests {
         var safeFish = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("c", "foods/safe_raw_fish"));
         var sashimi = new ItemStack(PufferfishItems.SASHIMI.get());
         helper.assertTrue(sashimi.is(pufferfish) && sashimi.is(rawFish) && sashimi.is(safeFish), "Safe sashimi cooking tags are incorrect");
-        var golden = new ItemStack(PufferfishItems.GOLDEN_SASHIMI.get());
-        helper.assertTrue(golden.is(pufferfish) && golden.is(rawFish) && golden.is(safeFish), "Golden sashimi is missing cooking tags");
         for (int index = -1; index < 16; index++) {
             var fish = fish(index < 0 ? null : DyeColor.byId(index));
             helper.assertTrue(fish.is(pufferfish) && fish.is(rawFish) && !fish.is(safeFish), "Whole fish cooking tags are incorrect");
@@ -105,17 +103,12 @@ public final class PufferfishCuttingGameTests {
     }
 
     /// Checks for exactly one sashimi and one matching skin, then removes the dropped entities.
-    public static void verifyDrops(GameTestHelper helper, BlockPos pos, DyeColor color) {
-        verifyDrops(helper, pos, color, PufferfishItems.SASHIMI.get());
-    }
-
-    /// Checks for exactly one specified sashimi and one matching skin, then removes the dropped entities.
-    public static void verifyDrops(GameTestHelper helper, BlockPos pos, DyeColor color, net.minecraft.world.item.Item sashimi) {
+    public static void verifyDrops(GameTestHelper helper, BlockPos pos, PufferfishSkinBlock skin) {
         var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(2));
         helper.assertTrue(drops.size() == 2
                 && drops.stream().allMatch(entity -> entity.getItem().getCount() == 1)
-                && drops.stream().anyMatch(entity -> entity.getItem().is(sashimi))
-                && drops.stream().anyMatch(entity -> entity.getItem().is((sashimi == PufferfishItems.GOLDEN_SASHIMI.get() ? PufferfishBlocks.GOLDEN_SKIN.get() : PufferfishBlocks.skin(color)).asItem())),
+                && drops.stream().anyMatch(entity -> entity.getItem().is(PufferfishItems.SASHIMI.get()))
+                && drops.stream().anyMatch(entity -> entity.getItem().is(skin.asItem())),
                 "Cutting must drop exactly one sashimi and one matching skin");
         drops.forEach(ItemEntity::discard);
     }

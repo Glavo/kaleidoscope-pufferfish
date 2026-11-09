@@ -205,26 +205,24 @@ public final class PufferfishClientSmokeTest {
 
     /// Verifies cutting models across resource reloads and saves an enlarged sashimi sprite for visual inspection.
     private static void verifyCuttingModels(Minecraft minecraft) {
-        for (boolean golden : new boolean[] {false, true}) {
-            var stack = new ItemStack(golden ? PufferfishItems.GOLDEN_SASHIMI.get() : PufferfishItems.SASHIMI.get());
-            var model = minecraft.getItemRenderer().getModel(stack, null, null, 0);
-            if (model == minecraft.getModelManager().getMissingModel()
-                    || model.getQuads(null, null, RandomSource.create()).isEmpty()
-                    || !model.getParticleIcon().contents().name().equals(KaleidoscopePufferfish.id(golden ? "item/golden_pufferfish_sashimi" : "item/pufferfish_sashimi"))
-                    || stack.getHoverName().getString().startsWith("item.")) {
-                throw new IllegalStateException("Missing pufferfish sashimi model, sprite, or translation");
-            }
-            var sprite = model.getParticleIcon().contents().getOriginalImage();
-            try (var preview = new com.mojang.blaze3d.platform.NativeImage(sprite.getWidth() * 16, sprite.getHeight() * 16, true)) {
-                for (int y = 0; y < preview.getHeight(); y++) {
-                    for (int x = 0; x < preview.getWidth(); x++) {
-                        preview.setPixelRGBA(x, y, sprite.getPixelRGBA(x / 16, y / 16));
-                    }
+        var stack = new ItemStack(PufferfishItems.SASHIMI.get());
+        var model = minecraft.getItemRenderer().getModel(stack, null, null, 0);
+        if (model == minecraft.getModelManager().getMissingModel()
+                || model.getQuads(null, null, RandomSource.create()).isEmpty()
+                || !model.getParticleIcon().contents().name().equals(KaleidoscopePufferfish.id("item/pufferfish_sashimi"))
+                || stack.getHoverName().getString().startsWith("item.")) {
+            throw new IllegalStateException("Missing pufferfish sashimi model, sprite, or translation");
+        }
+        var sprite = model.getParticleIcon().contents().getOriginalImage();
+        try (var preview = new com.mojang.blaze3d.platform.NativeImage(sprite.getWidth() * 16, sprite.getHeight() * 16, true)) {
+            for (int y = 0; y < preview.getHeight(); y++) {
+                for (int x = 0; x < preview.getWidth(); x++) {
+                    preview.setPixelRGBA(x, y, sprite.getPixelRGBA(x / 16, y / 16));
                 }
-                preview.writeToFile(java.nio.file.Path.of(golden ? "golden-pufferfish-sashimi-preview.png" : "pufferfish-sashimi-preview.png"));
-            } catch (java.io.IOException exception) {
-                throw new IllegalStateException("Could not save sashimi sprite preview", exception);
             }
+            preview.writeToFile(java.nio.file.Path.of("pufferfish-sashimi-preview.png"));
+        } catch (java.io.IOException exception) {
+            throw new IllegalStateException("Could not save sashimi sprite preview", exception);
         }
         if (net.neoforged.fml.ModList.get().isLoaded("kaleidoscope_cookery")) {
             for (int color = -1; color < 17; color++) {
@@ -235,6 +233,15 @@ public final class PufferfishClientSmokeTest {
                     if (cuttingModel == minecraft.getModelManager().getMissingModel()
                             || cuttingModel.getQuads(null, null, RandomSource.create()).isEmpty()) {
                         throw new IllegalStateException("Missing chopping board model: " + id);
+                    }
+                    if (stage == 3) {
+                        var textures = cuttingModel.getQuads(null, null, RandomSource.create()).stream()
+                                .map(quad -> quad.getSprite().contents().name()).toList();
+                        var skin = color == 16 ? "golden_pufferfish_skin" : name;
+                        if (!textures.contains(KaleidoscopePufferfish.id("item/pufferfish_sashimi"))
+                                || !textures.contains(KaleidoscopePufferfish.id("block/" + skin))) {
+                            throw new IllegalStateException("Chopping board outputs use incorrect textures: " + id);
+                        }
                     }
                 }
             }

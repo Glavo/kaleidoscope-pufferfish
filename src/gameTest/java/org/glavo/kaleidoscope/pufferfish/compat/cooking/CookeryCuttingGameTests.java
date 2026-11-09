@@ -87,7 +87,7 @@ public final class CookeryCuttingGameTests {
             for (int cut = 1; cut < 3; cut++) helper.assertTrue(board.onCutItem(level, player, knife), "Knife cut failed");
             helper.assertTrue(level.getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(2)).isEmpty(), "Products dropped before collection");
             helper.assertTrue(board.onCutItem(level, player, knife), "Output collection failed");
-            PufferfishCuttingGameTests.verifyDrops(helper, pos, color);
+            PufferfishCuttingGameTests.verifyDrops(helper, pos, PufferfishBlocks.skin(color));
             helper.assertTrue(!board.onCutItem(level, player, knife), "Empty board produced repeated output");
         }
         var golden = new ItemStack(PufferfishItems.GOLDEN.get(), 2);
@@ -103,9 +103,9 @@ public final class CookeryCuttingGameTests {
         for (int cut = 1; cut < 3; cut++) helper.assertTrue(board.onCutItem(level, player, knife), "Golden fish cutting failed");
         helper.assertTrue(level.getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(2)).isEmpty(), "Golden products dropped before collection");
         helper.assertTrue(board.onCutItem(level, player, knife), "Golden output collection failed");
-        PufferfishCuttingGameTests.verifyDrops(helper, pos, null, PufferfishItems.GOLDEN_SASHIMI.get());
+        PufferfishCuttingGameTests.verifyDrops(helper, pos, PufferfishBlocks.GOLDEN_SKIN.get());
         helper.assertTrue(!board.onCutItem(level, player, knife), "Golden fish produced repeated output");
-        for (var item : new net.minecraft.world.item.Item[] {PufferfishItems.GOLDEN_SASHIMI.get(), PufferfishItems.NETHERITE.get(), PufferfishItems.HEAVY.get()}) {
+        for (var item : new net.minecraft.world.item.Item[] {PufferfishItems.SASHIMI.get(), PufferfishItems.NETHERITE.get(), PufferfishItems.HEAVY.get()}) {
             helper.assertTrue(!board.onPutItem(level, player, new ItemStack(item)), "Special fish was accepted for cutting");
         }
         var fish = PufferfishCuttingGameTests.fish(DyeColor.RED);

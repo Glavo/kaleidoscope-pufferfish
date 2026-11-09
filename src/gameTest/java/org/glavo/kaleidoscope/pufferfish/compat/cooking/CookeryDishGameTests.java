@@ -38,31 +38,30 @@ public final class CookeryDishGameTests {
     /// Prevents construction of the test holder.
     private CookeryDishGameTests() {}
 
-    /// Verifies golden slices work in strict dishes and in flexible soups mixing all three raw fish items.
+    /// Verifies sashimi works in strict dishes and in flexible soups mixed with whole fish.
     @GameTest(template = "empty", templateNamespace = "kaleidoscope_pufferfish")
-    public static void goldenSashimiWorksInMixedDishes(GameTestHelper helper) {
+    public static void sashimiWorksInMixedDishes(GameTestHelper helper) {
         var level = helper.getLevel();
         var manager = level.getRecipeManager();
         var stacks = NonNullList.withSize(9, ItemStack.EMPTY);
-        for (int i = 0; i < 4; i++) stacks.set(i, new ItemStack(PufferfishItems.GOLDEN_SASHIMI.get()));
+        for (int i = 0; i < 4; i++) stacks.set(i, new ItemStack(PufferfishItems.SASHIMI.get()));
         var pot = new SimpleInput(stacks);
         helper.assertTrue(manager.getRecipeFor(ModRecipes.POT_RECIPE, pot, level).orElseThrow().value()
-                .assemble(pot, level.registryAccess()).is(PufferfishItems.BRAISED.get()), "Golden sashimi did not work in stir-frying");
-        stacks.set(1, new ItemStack(PufferfishItems.SASHIMI.get()));
+                .assemble(pot, level.registryAccess()).is(PufferfishItems.BRAISED.get()), "Sashimi did not work in stir-frying");
         for (int i = 2; i < 5; i++) stacks.set(i, new ItemStack(ModItems.LETTUCE.get()));
         var input = new StockpotInput(stacks, ResourceLocation.withDefaultNamespace("water"));
         helper.assertTrue(manager.getRecipeFor(ModRecipes.STOCKPOT_RECIPE, input, level).orElseThrow().value()
-                .assemble(input, level.registryAccess()).is(ModItems.PUFFERFISH_SOUP.get()), "Golden sashimi did not work in strict soup");
+                .assemble(input, level.registryAccess()).is(ModItems.PUFFERFISH_SOUP.get()), "Sashimi did not work in strict soup");
         var rice = BuiltInRegistries.ITEM.get(ResourceLocation.parse("kaleidoscope_cookery:rice"));
         stacks.set(5, new ItemStack(rice));
         helper.assertTrue(manager.getRecipeFor(ModRecipes.STOCKPOT_RECIPE, input, level).orElseThrow().value()
-                .assemble(input, level.registryAccess()).is(PufferfishItems.ZOSUI.get()), "Golden sashimi did not work in strict zosui");
+                .assemble(input, level.registryAccess()).is(PufferfishItems.ZOSUI.get()), "Sashimi did not work in strict zosui");
         stacks.set(5, new ItemStack(Items.PUFFERFISH));
         helper.assertTrue(manager.getRecipeFor(ModRecipes.FLEX_STOCKPOT_RECIPE, input, level).orElseThrow().value()
-                .assemble(input, level.registryAccess()).is(ModItems.PUFFERFISH_SOUP.get()), "Three fish types did not work in flexible soup");
+                .assemble(input, level.registryAccess()).is(ModItems.PUFFERFISH_SOUP.get()), "Whole fish and sashimi did not work in flexible soup");
         stacks.set(6, new ItemStack(rice));
         helper.assertTrue(manager.getRecipeFor(ModRecipes.FLEX_STOCKPOT_RECIPE, input, level).orElseThrow().value()
-                .assemble(input, level.registryAccess()).is(PufferfishItems.ZOSUI.get()), "Three fish types did not work in flexible zosui");
+                .assemble(input, level.registryAccess()).is(PufferfishItems.ZOSUI.get()), "Whole fish and sashimi did not work in flexible zosui");
         helper.succeed();
     }
 

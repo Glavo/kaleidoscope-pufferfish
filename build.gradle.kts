@@ -161,7 +161,7 @@ val generateItemModels = tasks.register<Sync>("generateItemModels") {
     val modelNames = dyeColors.flatMap { color ->
         listOf("${color}_pufferfish", "${color}_pufferfish_bucket")
     } + listOf("netherite_pufferfish", "golden_pufferfish", "pufferfish_sashimi", "heavy_pufferfish",
-        "braised_pufferfish", "braised_pufferfish_rice_bowl", "pufferfish_zosui", "golden_pufferfish_sashimi")
+        "braised_pufferfish", "braised_pufferfish_rice_bowl", "pufferfish_zosui")
     inputs.property("modId", modId)
     inputs.property("modelNames", modelNames)
     filteringCharset = "UTF-8"
@@ -231,11 +231,15 @@ val generateSkinResources = tasks.register<Sync>("generateSkinResources") {
             rename { target.substringAfterLast('/') }
         }
     }
+    val goldenChoppingProperties = mapOf(
+        "modId" to modId, "blockName" to "golden_pufferfish_skin",
+        "fishTexture" to "$modId:item/golden_pufferfish",
+        "sashimiTexture" to "$modId:item/pufferfish_sashimi"
+    )
+    inputs.property("goldenChopping", goldenChoppingProperties)
     for (stage in 0..3) {
         from("src/main/skinTemplates/chopping_stage_$stage.json") {
-            expand("modId" to modId, "blockName" to "pufferfish_skin",
-                "fishTexture" to "$modId:item/golden_pufferfish",
-                "sashimiTexture" to "$modId:item/golden_pufferfish_sashimi")
+            expand(goldenChoppingProperties)
             into("assets/$modId/models/chopping_board/golden_pufferfish")
             rename { "$stage.json" }
         }

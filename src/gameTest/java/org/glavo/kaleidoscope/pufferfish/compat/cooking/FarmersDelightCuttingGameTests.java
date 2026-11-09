@@ -15,6 +15,7 @@ import net.minecraft.world.level.GameType;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.glavo.kaleidoscope.pufferfish.PufferfishCuttingGameTests;
+import org.glavo.kaleidoscope.pufferfish.PufferfishBlocks;
 import org.glavo.kaleidoscope.pufferfish.PufferfishItems;
 import vectorwing.farmersdelight.common.block.entity.CuttingBoardBlockEntity;
 import vectorwing.farmersdelight.common.registry.ModBlocks;
@@ -42,7 +43,7 @@ public final class FarmersDelightCuttingGameTests {
             for (int remaining = 1; remaining >= 0; remaining--) {
                 helper.assertTrue(board.processStoredItemUsingTool(knife, player)
                         && board.getStoredItem().getCount() == remaining, "Each cut must consume exactly one fish");
-                PufferfishCuttingGameTests.verifyDrops(helper, pos, color);
+                PufferfishCuttingGameTests.verifyDrops(helper, pos, PufferfishBlocks.skin(color));
             }
             helper.assertTrue(!board.processStoredItemUsingTool(knife, player), "Empty board produced repeated output");
         }
@@ -50,7 +51,7 @@ public final class FarmersDelightCuttingGameTests {
             board.addItem(new ItemStack(Items.PUFFERFISH));
             var kitchenKnife = new ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.parse("kaleidoscope_cookery:iron_kitchen_knife")));
             helper.assertTrue(board.processStoredItemUsingTool(kitchenKnife, player), "Cookery knife could not cut on Farmer's Delight board");
-            PufferfishCuttingGameTests.verifyDrops(helper, pos, null);
+            PufferfishCuttingGameTests.verifyDrops(helper, pos, PufferfishBlocks.skin(null));
         }
         var golden = new ItemStack(PufferfishItems.GOLDEN.get(), 2);
         helper.assertTrue(board.addItem(golden).isEmpty(), "Board rejected golden fish");
@@ -58,10 +59,10 @@ public final class FarmersDelightCuttingGameTests {
         for (int remaining = 1; remaining >= 0; remaining--) {
             helper.assertTrue(board.processStoredItemUsingTool(knife, player) && board.getStoredItem().getCount() == remaining,
                     "Golden cutting did not consume exactly one fish");
-            PufferfishCuttingGameTests.verifyDrops(helper, pos, null, PufferfishItems.GOLDEN_SASHIMI.get());
+            PufferfishCuttingGameTests.verifyDrops(helper, pos, PufferfishBlocks.GOLDEN_SKIN.get());
         }
         helper.assertTrue(!board.processStoredItemUsingTool(knife, player), "Golden fish produced repeated output");
-        for (var item : new net.minecraft.world.item.Item[] {PufferfishItems.GOLDEN_SASHIMI.get(), PufferfishItems.NETHERITE.get(), PufferfishItems.HEAVY.get()}) {
+        for (var item : new net.minecraft.world.item.Item[] {PufferfishItems.SASHIMI.get(), PufferfishItems.NETHERITE.get(), PufferfishItems.HEAVY.get()}) {
             board.addItem(new ItemStack(item));
             helper.assertTrue(!board.processStoredItemUsingTool(knife, player), "Special fish was accepted for cutting");
             board.removeItem();
