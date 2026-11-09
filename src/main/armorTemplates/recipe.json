@@ -1,8 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
-  "group": "${modId}:pufferfish_skin_chestplates",
-  "pattern": ["S S", "SSS", "SSS"],
+  "group": "${modId}:pufferfish_skin_${armorType}",
+  "pattern": ${pattern},
   "key": {"S": {"item": "${modId}:${skinName}"}},
   "result": {"id": "${modId}:${armorName}", "count": 1}
 }

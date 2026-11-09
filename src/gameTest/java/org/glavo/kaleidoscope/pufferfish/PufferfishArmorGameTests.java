@@ -4,10 +4,11 @@
 package org.glavo.kaleidoscope.pufferfish;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.tags.ItemTags;
@@ -17,9 +18,11 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.GameType;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -32,26 +35,61 @@ public final class PufferfishArmorGameTests {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         var enchantments = helper.getLevel().registryAccess().registryOrThrow(Registries.ENCHANTMENT);
         for (var entry : PufferfishArmor.VARIANTS.entrySet()) {
-            var skin = new ItemStack(BuiltInRegistries.ITEM.get(KaleidoscopePufferfish.id(entry.getKey().replace("_chestplate", ""))));
-            var grid = new ArrayList<>(Collections.nCopies(9, skin));
-            grid.set(1, ItemStack.EMPTY);
-            var input = CraftingInput.of(3, 3, grid);
+            var type = entry.getValue().get().getType();
+            var slot = type.getSlot();
+            var skin = new ItemStack(BuiltInRegistries.ITEM.get(KaleidoscopePufferfish.id(entry.getKey().replace("_" + type.getName(), ""))));
+            var pattern = switch (type) {
+                case HELMET -> List.of("SSS", "S S");
+                case CHESTPLATE -> List.of("S S", "SSS", "SSS");
+                case LEGGINGS -> List.of("SSS", "S S", "S S");
+                case BOOTS -> List.of("S S", "S S");
+                default -> throw new AssertionError("Unexpected armor type");
+            };
+            var grid = new ArrayList<ItemStack>();
+            for (var row : pattern) for (char ingredient : row.toCharArray()) grid.add(ingredient == 'S' ? skin : ItemStack.EMPTY);
+            var input = CraftingInput.of(3, pattern.size(), grid);
             var recipe = helper.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel()).orElseThrow().value();
             var armor = recipe.assemble(input, helper.getLevel().registryAccess());
-            helper.assertTrue(armor.is(entry.getValue().get()) && armor.getCount() == 1 && armor.getMaxDamage() == 80,
+            int durability = switch (type) {
+                case HELMET -> 55;
+                case CHESTPLATE -> 80;
+                case LEGGINGS -> 75;
+                case BOOTS -> 65;
+                default -> throw new AssertionError("Unexpected armor type");
+            };
+            var tag = switch (type) {
+                case HELMET -> ItemTags.HEAD_ARMOR;
+                case CHESTPLATE -> ItemTags.CHEST_ARMOR;
+                case LEGGINGS -> ItemTags.LEG_ARMOR;
+                case BOOTS -> ItemTags.FOOT_ARMOR;
+                default -> throw new AssertionError("Unexpected armor type");
+            };
+            helper.assertTrue(armor.is(entry.getValue().get()) && armor.getCount() == 1 && armor.getMaxDamage() == durability,
                     "Armor recipe or durability was incorrect");
-            helper.assertTrue(armor.is(ItemTags.CHEST_ARMOR) && armor.getItem().isValidRepairItem(armor, skin)
+            helper.assertTrue(armor.is(tag) && armor.getItem().isValidRepairItem(armor, skin)
                     && !armor.getItem().isValidRepairItem(armor, new ItemStack(Items.LEATHER)), "Armor tags or repair ingredient were incorrect");
             for (var enchantment : java.util.List.of(Enchantments.PROTECTION, Enchantments.THORNS, Enchantments.UNBREAKING,
                     Enchantments.MENDING, Enchantments.BINDING_CURSE, Enchantments.VANISHING_CURSE)) {
                 helper.assertTrue(enchantments.getHolderOrThrow(enchantment).value().canEnchant(armor), "Armor rejected an armor enchantment");
             }
-            player.setItemSlot(EquipmentSlot.CHEST, armor);
+            List<ResourceKey<Enchantment>> specialized = switch (type) {
+                case HELMET -> List.of(Enchantments.RESPIRATION, Enchantments.AQUA_AFFINITY);
+                case LEGGINGS -> List.of(Enchantments.SWIFT_SNEAK);
+                case BOOTS -> List.of(Enchantments.FEATHER_FALLING, Enchantments.DEPTH_STRIDER,
+                        Enchantments.FROST_WALKER, Enchantments.SOUL_SPEED);
+                default -> List.of();
+            };
+            for (var enchantment : specialized) helper.assertTrue(enchantments.getHolderOrThrow(enchantment).value().canEnchant(armor),
+                    "Armor rejected a slot-specific enchantment");
+            player.setItemSlot(slot, armor);
             player.tick();
-            helper.assertTrue(player.getArmorValue() == 3 && player.getAttributeValue(Attributes.ARMOR_TOUGHNESS) == 0,
-                    "Armor did not match leather chestplate protection");
+            int defense = type == ArmorItem.Type.CHESTPLATE ? 3 : type == ArmorItem.Type.LEGGINGS ? 2 : 1;
+            helper.assertTrue(player.getArmorValue() == defense && player.getAttributeValue(Attributes.ARMOR_TOUGHNESS) == 0,
+                    "Armor did not match leather armor protection");
+            player.setItemSlot(slot, ItemStack.EMPTY);
+            player.tick();
             grid.set(0, new ItemStack(Items.LEATHER));
-            helper.assertTrue(!recipe.matches(CraftingInput.of(3, 3, grid), helper.getLevel()), "Armor accepted an incorrect ingredient");
+            helper.assertTrue(!recipe.matches(CraftingInput.of(3, pattern.size(), grid), helper.getLevel()), "Armor accepted an incorrect ingredient");
         }
         helper.succeed();
     }
@@ -66,7 +104,8 @@ public final class PufferfishArmorGameTests {
             attacker.setNoAi(true);
             player.getRandom().setSeed(4321);
             var armor = new ItemStack(item.get());
-            player.setItemSlot(EquipmentSlot.CHEST, armor);
+            var slot = item.get().getEquipmentSlot();
+            player.setItemSlot(slot, armor);
             player.tick();
             for (int attempt = 0; attempt < 48; attempt++) {
                 player.setHealth(20);
@@ -84,7 +123,7 @@ public final class PufferfishArmorGameTests {
                 if (damage > 0) reflected++;
                 attempts++;
             }
-            player.setItemSlot(EquipmentSlot.CHEST, ItemStack.EMPTY);
+            player.setItemSlot(slot, ItemStack.EMPTY);
             player.setItemSlot(EquipmentSlot.MAINHAND, armor);
             player.invulnerableTime = 0;
             attacker.removeAllEffects();
@@ -94,6 +133,41 @@ public final class PufferfishArmorGameTests {
             attacker.discard();
         }
         helper.assertTrue(reflected > 0 && reflected < attempts, "Armor thorns did not use a chance roll");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void fullSetRetaliatesOnlyOncePerHit(GameTestHelper helper) {
+        var single = helper.makeMockPlayer(GameType.SURVIVAL);
+        var full = helper.makeMockPlayer(GameType.SURVIVAL);
+        single.setItemSlot(EquipmentSlot.CHEST, new ItemStack(PufferfishArmor.VARIANTS.get("pufferfish_skin_chestplate").get()));
+        for (var type : PufferfishArmor.TYPES) {
+            full.setItemSlot(type.getSlot(), new ItemStack(PufferfishArmor.VARIANTS.get("pufferfish_skin_" + type.getName()).get()));
+        }
+        single.tick();
+        full.tick();
+        helper.assertTrue(full.getArmorValue() == 7, "Full skin armor set has incorrect protection");
+        var attacker = helper.spawn(EntityType.VILLAGER, new BlockPos(2, 2, 2));
+        attacker.setNoAi(true);
+        for (int attempt = 0; attempt < 64; attempt++) {
+            float damage = -1;
+            for (var player : List.of(single, full)) {
+                long seed = 9123L + attempt * 7919L;
+                helper.getLevel().getRandom().setSeed(seed);
+                player.getRandom().setSeed(seed);
+                attacker.getRandom().setSeed(seed);
+                player.setHealth(20);
+                player.invulnerableTime = 0;
+                for (var stack : player.getArmorSlots()) stack.setDamageValue(0);
+                attacker.setHealth(20);
+                attacker.invulnerableTime = 0;
+                attacker.removeAllEffects();
+                player.hurt(player.damageSources().mobAttack(attacker), 2);
+                if (damage == -1) damage = 20 - attacker.getHealth();
+                else helper.assertTrue(damage == 20 - attacker.getHealth(), "Full set multiplied intrinsic retaliation");
+            }
+        }
+        attacker.discard();
         helper.succeed();
     }
 }

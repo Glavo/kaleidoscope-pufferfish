@@ -13,7 +13,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.world.item.DyeColor;
-import org.glavo.kaleidoscope.pufferfish.KaleidoscopePufferfish;
+import net.minecraft.world.item.ArmorItem;
 import org.glavo.kaleidoscope.pufferfish.PufferfishArmor;
 
 /// Applies pufferfish skin to vanilla armor silhouettes and UV layouts.
@@ -25,8 +25,13 @@ public final class PufferfishArmorTextures implements ResourceManagerReloadListe
         String prefix = name.substring(0, name.indexOf("pufferfish_skin"));
         int tint = -1;
         for (var color : DyeColor.values()) if (prefix.equals(color.getName() + "_")) tint = color.getTextureDiffuseColor();
-        try (var stream = manager.open(FISH); var fish = NativeImage.read(stream)) {
+        String overlayPath = worn ? "textures/models/armor/leather_layer_" + (name.endsWith("_leggings") ? 2 : 1) + "_overlay.png"
+                : "textures/item/leather_" + name.substring(name.lastIndexOf('_') + 1) + "_overlay.png";
+        try (var overlayStream = manager.open(ResourceLocation.withDefaultNamespace(overlayPath));
+                var overlay = NativeImage.read(overlayStream);
+                var stream = manager.open(FISH); var fish = NativeImage.read(stream)) {
             for (int y = 0; y < mask.getHeight(); y++) for (int x = 0; x < mask.getWidth(); x++) {
+                mask.blendPixel(x, y, overlay.getPixelRGBA(x * overlay.getWidth() / mask.getWidth(), y * overlay.getHeight() / mask.getHeight()));
                 int original = mask.getPixelRGBA(x, y);
                 if ((original >>> 24) == 0) continue;
                 int u = x * (worn ? 64 : 16) / mask.getWidth();
@@ -64,13 +69,14 @@ public final class PufferfishArmorTextures implements ResourceManagerReloadListe
         var textures = Minecraft.getInstance().getTextureManager();
         generated.forEach(textures::release);
         generated.clear();
-        for (var name : PufferfishArmor.VARIANTS.keySet()) {
-            var id = KaleidoscopePufferfish.id("textures/models/armor/" + name.replace("_chestplate", "") + "_layer_1.png");
-            if (manager.getResource(id).isPresent()) continue;
-            try (var stream = manager.open(ResourceLocation.withDefaultNamespace("textures/models/armor/leather_layer_1.png"))) {
+        for (var entry : PufferfishArmor.VARIANTS.entrySet()) {
+            boolean inner = entry.getValue().get().getType() == ArmorItem.Type.LEGGINGS;
+            var id = entry.getValue().get().getMaterial().value().layers().getFirst().texture(inner);
+            if (generated.contains(id) || manager.getResource(id).isPresent()) continue;
+            try (var stream = manager.open(ResourceLocation.withDefaultNamespace("textures/models/armor/leather_layer_" + (inner ? 2 : 1) + ".png"))) {
                 var image = NativeImage.read(stream);
                 try {
-                    skin(manager, image, name, true);
+                    skin(manager, image, entry.getKey(), true);
                 } catch (RuntimeException exception) {
                     image.close();
                     throw exception;

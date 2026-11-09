@@ -267,24 +267,44 @@ val generateShieldResources = tasks.register<Sync>("generateShieldResources") {
 }
 
 val generateArmorResources = tasks.register<Sync>("generateArmorResources") {
+    val patterns = mapOf(
+        "helmet" to listOf("SSS", "S S"),
+        "chestplate" to listOf("S S", "SSS", "SSS"),
+        "leggings" to listOf("SSS", "S S", "S S"),
+        "boots" to listOf("S S", "S S")
+    )
     inputs.property("modId", modId)
     inputs.property("colors", dyeColors)
+    inputs.property("patterns", patterns)
     filteringCharset = "UTF-8"
     into(layout.buildDirectory.dir("generated/resources/pufferfishArmor"))
     for (color in listOf("") + dyeColors + "golden") {
         val prefix = if (color.isEmpty()) "" else "${color}_"
         val skinName = "${prefix}pufferfish_skin"
-        val armorName = "${skinName}_chestplate"
-        for ((template, target) in mapOf(
-            "recipe" to "data/$modId/recipe/$armorName.json",
-            "model" to "assets/$modId/models/item/$armorName.json",
-            "advancement" to "data/$modId/advancement/recipes/combat/$armorName.json"
-        )) {
-            from("src/main/armorTemplates/$template.json") {
-                expand("modId" to modId, "skinName" to skinName, "armorName" to armorName)
-                into(target.substringBeforeLast('/'))
-                rename { target.substringAfterLast('/') }
+        for ((armorType, pattern) in patterns) {
+            val armorName = "${skinName}_$armorType"
+            for ((template, target) in mapOf(
+                "recipe" to "data/$modId/recipe/$armorName.json",
+                "model" to "assets/$modId/models/item/$armorName.json",
+                "advancement" to "data/$modId/advancement/recipes/combat/$armorName.json"
+            )) {
+                from("src/main/armorTemplates/$template.json") {
+                    expand("modId" to modId, "skinName" to skinName, "armorName" to armorName,
+                        "armorType" to armorType, "pattern" to JsonOutput.toJson(pattern))
+                    into(target.substringBeforeLast('/'))
+                    rename { target.substringAfterLast('/') }
+                }
             }
+        }
+    }
+    for ((armorType, slot) in mapOf("helmet" to "head", "chestplate" to "chest", "leggings" to "leg", "boots" to "foot")) {
+        from("src/main/armorTemplates/tag.json") {
+            expand("values" to JsonOutput.toJson((listOf("") + dyeColors + "golden").map { color ->
+                val prefix = if (color.isEmpty()) "" else "${color}_"
+                "$modId:${prefix}pufferfish_skin_$armorType"
+            }))
+            into("data/minecraft/tags/item")
+            rename { "${slot}_armor.json" }
         }
     }
 }

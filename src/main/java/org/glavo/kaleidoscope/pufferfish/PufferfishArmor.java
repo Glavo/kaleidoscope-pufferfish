@@ -33,6 +33,8 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public final class PufferfishArmor {
     private static final DeferredRegister<ArmorMaterial> MATERIALS = DeferredRegister.create(Registries.ARMOR_MATERIAL, KaleidoscopePufferfish.MODID);
     private static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(KaleidoscopePufferfish.MODID);
+    public static final List<ArmorItem.Type> TYPES = List.of(ArmorItem.Type.HELMET, ArmorItem.Type.CHESTPLATE,
+            ArmorItem.Type.LEGGINGS, ArmorItem.Type.BOOTS);
     public static final Map<String, DeferredItem<ArmorItem>> VARIANTS;
 
     static {
@@ -47,12 +49,15 @@ public final class PufferfishArmor {
 
     private static void add(Map<String, DeferredItem<ArmorItem>> variants, String prefix, Supplier<Item> skin) {
         String name = prefix + "pufferfish_skin";
-        var material = MATERIALS.register(name, () -> new ArmorMaterial(Map.of(ArmorItem.Type.CHESTPLATE, 3), 15,
+        var material = MATERIALS.register(name, () -> new ArmorMaterial(Map.of(ArmorItem.Type.HELMET, 1,
+                ArmorItem.Type.CHESTPLATE, 3, ArmorItem.Type.LEGGINGS, 2, ArmorItem.Type.BOOTS, 1), 15,
                 SoundEvents.ARMOR_EQUIP_LEATHER, () -> Ingredient.of(skin.get()),
                 List.of(new ArmorMaterial.Layer(KaleidoscopePufferfish.id(name))), 0, 0));
-        String itemName = name + "_chestplate";
-        variants.put(itemName, ITEMS.register(itemName, () -> new ArmorItem(material, ArmorItem.Type.CHESTPLATE,
-                new Item.Properties().durability(ArmorItem.Type.CHESTPLATE.getDurability(5)))));
+        for (var type : TYPES) {
+            String itemName = name + "_" + type.getName();
+            variants.put(itemName, ITEMS.register(itemName, () -> new ArmorItem(material, type,
+                    new Item.Properties().durability(type.getDurability(5)))));
+        }
     }
 
     public static void register(IEventBus bus) {
@@ -60,17 +65,22 @@ public final class PufferfishArmor {
         ITEMS.register(bus);
     }
 
+    /// Worn skin armor retaliates once per hit, regardless of the number of equipped pieces.
     public static void retaliate(LivingDamageEvent.Post event) {
         var wearer = event.getEntity();
         var source = event.getSource();
-        var chest = wearer.getItemBySlot(EquipmentSlot.CHEST);
         if (!(wearer.level() instanceof ServerLevel level) || wearer.isSpectator()
                 || source.is(DamageTypes.THORNS) || !(source.getEntity() instanceof LivingEntity attacker)
-                || attacker == wearer || event.getNewDamage() + event.getReduction(DamageContainer.Reduction.ABSORPTION) <= 0
-                || VARIANTS.values().stream().noneMatch(item -> chest.is(item.get()))) return;
-        attacker.addEffect(new MobEffectInstance(MobEffects.POISON, PufferfishCombat.POISON_DURATION_TICKS, 0), wearer);
-        var thorns = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.THORNS);
-        thorns.value().doPostAttack(level, 1, new EnchantedItemInUse(chest, EquipmentSlot.CHEST, wearer),
-                EnchantmentTarget.VICTIM, wearer, source);
+                || attacker == wearer || event.getNewDamage() + event.getReduction(DamageContainer.Reduction.ABSORPTION) <= 0) return;
+        for (var slot : List.of(EquipmentSlot.CHEST, EquipmentSlot.HEAD, EquipmentSlot.LEGS, EquipmentSlot.FEET)) {
+            var stack = wearer.getItemBySlot(slot);
+            if (!(stack.getItem() instanceof ArmorItem armor) || armor.getEquipmentSlot() != slot
+                    || VARIANTS.values().stream().noneMatch(item -> stack.is(item.get()))) continue;
+            attacker.addEffect(new MobEffectInstance(MobEffects.POISON, PufferfishCombat.POISON_DURATION_TICKS, 0), wearer);
+            var thorns = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.THORNS);
+            thorns.value().doPostAttack(level, 1, new EnchantedItemInUse(stack, slot, wearer),
+                    EnchantmentTarget.VICTIM, wearer, source);
+            return;
+        }
     }
 }
