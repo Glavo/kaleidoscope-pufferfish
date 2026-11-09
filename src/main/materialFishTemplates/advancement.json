@@ -1,0 +1,15 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_pufferfish": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {"items": [{"items": "minecraft:pufferfish"}]}
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {"recipe": "${modId}:${name}_pufferfish"}
+    }
+  },
+  "requirements": [["has_pufferfish", "has_the_recipe"]],
+  "rewards": {"recipes": ["${modId}:${name}_pufferfish"]}
+}

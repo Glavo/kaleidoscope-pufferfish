@@ -83,6 +83,7 @@ public final class PufferfishEngineGameTests {
         }
         result.add(new ItemStack(PufferfishItems.NETHERITE.get()));
         result.add(new ItemStack(PufferfishItems.HEAVY.get()));
+        result.addAll(List.of(new ItemStack(PufferfishItems.COPPER.get()), new ItemStack(PufferfishItems.IRON.get()), new ItemStack(PufferfishItems.DIAMOND.get())));
         return result;
     }
 
@@ -105,6 +106,11 @@ public final class PufferfishEngineGameTests {
                 helper.assertTrue(player.getMainHandItem().is(Items.BUCKET), "Water bucket was not returned");
             }
             int capacity = PufferfishItems.isHeavy(variant) ? 4096 : PufferfishItems.isNetherite(variant) ? 1024 : 256;
+            if (!variant.is(Items.PUFFERFISH)) {
+                use(engine, player, new ItemStack(Items.BUCKET));
+                helper.assertTrue(engine.hasWater() && ItemStack.isSameItemSameComponents(variant, engine.getFish())
+                        && player.getMainHandItem().is(Items.BUCKET), "Bucket extraction converted a material fish into an ordinary fish");
+            }
             helper.assertTrue(engine.getGeneratedSpeed() == 16 && engine.calculateAddedStressCapacity() * 16 == capacity,
                     "Wrong engine speed or total capacity");
             var extra = new ItemStack(Items.PUFFERFISH, 2);

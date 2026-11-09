@@ -106,6 +106,7 @@ public final class PufferfishHeadgearClientTest {
             }
             headgear.add(new ItemStack(PufferfishItems.NETHERITE.get()));
             headgear.add(new ItemStack(PufferfishItems.HEAVY.get()));
+            headgear.addAll(List.of(new ItemStack(PufferfishItems.COPPER.get()), new ItemStack(PufferfishItems.IRON.get()), new ItemStack(PufferfishItems.DIAMOND.get())));
             for (var stack : headgear) {
                 player.setItemSlot(EquipmentSlot.HEAD, stack);
                 model.head.visible = true;
@@ -120,6 +121,7 @@ public final class PufferfishHeadgearClientTest {
                 var color = PufferfishColors.get(stack);
                 var texture = PufferfishItems.isHeavy(stack) ? PufferfishTextures.heavyEntity()
                         : PufferfishItems.isNetherite(stack) ? PufferfishTextures.netheriteEntity()
+                        : PufferfishItems.materialName(stack) != null ? PufferfishTextures.materialEntity(PufferfishItems.materialName(stack))
                         : color == null ? ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png") : PufferfishTextures.entity(color);
                 if (capture.type != RenderType.entityCutoutNoCull(texture) || capture.vertices < 100
                         || capture.minY < -0.65F || capture.maxY > 0.15F) {

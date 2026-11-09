@@ -58,6 +58,7 @@ public final class PufferfishEngineClientTest {
             variants.add(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
         }
         variants.add(new ItemStack(PufferfishItems.NETHERITE.get()));
+        variants.addAll(List.of(new ItemStack(PufferfishItems.COPPER.get()), new ItemStack(PufferfishItems.IRON.get()), new ItemStack(PufferfishItems.DIAMOND.get())));
         HolderLookup.Provider registries = RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY);
         for (var direction : Direction.Plane.HORIZONTAL) {
             var state = CreateIntegration.ENGINE.get().defaultBlockState().setValue(PufferfishEngineBlock.HORIZONTAL_FACING, direction);
@@ -80,6 +81,7 @@ public final class PufferfishEngineClientTest {
                 renderer.render(engine, 0, new PoseStack(), capture, 15728880, 0);
                 var color = PufferfishColors.get(fish);
                 var texture = PufferfishItems.isNetherite(fish) ? PufferfishTextures.netheriteEntity()
+                        : PufferfishItems.materialName(fish) != null ? PufferfishTextures.materialEntity(PufferfishItems.materialName(fish))
                         : color == null ? ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png") : PufferfishTextures.entity(color);
                 var fishVertices = capture.parts.get(RenderType.entityCutoutNoCull(texture));
                 if (fishVertices == null || fishVertices.count < 100 || fishVertices.minY < 0.2 || fishVertices.maxY > 0.85

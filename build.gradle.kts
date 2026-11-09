@@ -163,7 +163,8 @@ val generateItemModels = tasks.register<Sync>("generateItemModels") {
         listOf("${color}_pufferfish", "${color}_pufferfish_bucket")
     } + listOf("netherite_pufferfish", "golden_pufferfish", "pufferfish_sashimi", "heavy_pufferfish",
         "braised_pufferfish", "braised_pufferfish_rice_bowl", "pufferfish_zosui",
-        "raw_pufferfish_baozi", "pufferfish_baozi")
+        "raw_pufferfish_baozi", "pufferfish_baozi",
+        "copper_pufferfish", "iron_pufferfish", "diamond_pufferfish")
     inputs.property("modId", modId)
     inputs.property("modelNames", modelNames)
     filteringCharset = "UTF-8"
@@ -385,7 +386,28 @@ val generatePieModels = tasks.register<Sync>("generatePieModels") {
     }
 }
 
+val generateMaterialFishRecipes = tasks.register<Sync>("generateMaterialFishRecipes") {
+    val materials = mapOf("copper" to "copper_ingot", "iron" to "iron_ingot", "diamond" to "diamond")
+    inputs.property("modId", modId)
+    inputs.property("materials", materials)
+    filteringCharset = "UTF-8"
+    into(layout.buildDirectory.dir("generated/resources/materialFish"))
+    for ((name, ingredient) in materials) {
+        from("src/main/materialFishTemplates/recipe.json") {
+            expand("modId" to modId, "name" to name, "ingredient" to ingredient)
+            into("data/$modId/recipe")
+            rename { "${name}_pufferfish.json" }
+        }
+        from("src/main/materialFishTemplates/advancement.json") {
+            expand("modId" to modId, "name" to name)
+            into("data/$modId/advancement/recipes/combat")
+            rename { "${name}_pufferfish.json" }
+        }
+    }
+}
+
 sourceSets.main {
+    resources.srcDir(generateMaterialFishRecipes)
     resources.srcDir(generatePieModels)
     resources.srcDir(generateBoatResources)
     resources.srcDir(generateArmorResources)

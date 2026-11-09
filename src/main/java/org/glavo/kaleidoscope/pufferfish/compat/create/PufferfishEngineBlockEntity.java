@@ -140,7 +140,7 @@ public final class PufferfishEngineBlockEntity extends GeneratingKineticBlockEnt
             }
             return ItemInteractionResult.sidedSuccess(level.isClientSide());
         }
-        if (water && held.is(Items.BUCKET) && !PufferfishItems.hasNetheriteCombat(fish)) {
+        if (water && held.is(Items.BUCKET) && (fish.isEmpty() || fish.is(Items.PUFFERFISH))) {
             if (!level.isClientSide()) {
                 ItemStack result = fish.isEmpty() ? new ItemStack(Items.WATER_BUCKET) : convertFish(fish, true);
                 fish = ItemStack.EMPTY;

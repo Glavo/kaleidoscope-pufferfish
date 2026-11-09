@@ -69,6 +69,7 @@ public final class PufferfishEngineRenderer implements BlockEntityRenderer<Puffe
             var color = PufferfishColors.get(fish);
             var texture = PufferfishItems.isHeavy(fish) ? PufferfishTextures.heavyEntity()
                     : PufferfishItems.isNetherite(fish) ? PufferfishTextures.netheriteEntity()
+                    : PufferfishItems.materialName(fish) != null ? PufferfishTextures.materialEntity(PufferfishItems.materialName(fish))
                     : color == null ? ORIGINAL : PufferfishTextures.entity(color);
             float scale = 0.65F + pulse * 0.4F;
             pose.pushPose();

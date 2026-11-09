@@ -46,6 +46,9 @@ public final class PufferfishThrowing {
                 player.getCooldowns().addCooldown(Items.PUFFERFISH, cooldown);
                 player.getCooldowns().addCooldown(PufferfishItems.NETHERITE.get(), cooldown);
                 player.getCooldowns().addCooldown(PufferfishItems.HEAVY.get(), cooldown);
+                player.getCooldowns().addCooldown(PufferfishItems.COPPER.get(), cooldown);
+                player.getCooldowns().addCooldown(PufferfishItems.IRON.get(), cooldown);
+                player.getCooldowns().addCooldown(PufferfishItems.DIAMOND.get(), cooldown);
             }
             level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.SNOWBALL_THROW,
                     SoundSource.PLAYERS, 0.5F, 0.4F / (level.getRandom().nextFloat() * 0.4F + 0.8F));

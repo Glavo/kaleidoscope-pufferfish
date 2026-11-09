@@ -56,6 +56,7 @@ public final class PufferfishGloveClientTest {
         for (var color : DyeColor.values()) stacks.add(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
         stacks.add(new ItemStack(PufferfishItems.NETHERITE.get()));
         stacks.add(new ItemStack(PufferfishItems.HEAVY.get()));
+        stacks.addAll(java.util.List.of(new ItemStack(PufferfishItems.COPPER.get()), new ItemStack(PufferfishItems.IRON.get()), new ItemStack(PufferfishItems.DIAMOND.get())));
         var glove = new PufferfishGloveRenderer();
         for (boolean slim : new boolean[] {false, true}) {
             var renderer = new PlayerRenderer(context, slim);
@@ -118,6 +119,7 @@ public final class PufferfishGloveClientTest {
         var color = PufferfishColors.get(stack);
         return RenderType.entityCutoutNoCull(PufferfishItems.isHeavy(stack) ? PufferfishTextures.heavyEntity()
                 : PufferfishItems.isNetherite(stack) ? PufferfishTextures.netheriteEntity()
+                : PufferfishItems.materialName(stack) != null ? PufferfishTextures.materialEntity(PufferfishItems.materialName(stack))
                 : color == null ? ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png") : PufferfishTextures.entity(color));
     }
 

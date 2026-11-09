@@ -22,6 +22,7 @@ public final class PufferfishTextures implements ResourceManagerReloadListener {
     public static final int HEAVY_EYE_COLOR = 0xE5F0FA;
     private static final ResourceLocation ORIGINAL = ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png");
     private static final Map<DyeColor, ResourceLocation> ENTITY_TEXTURES = new EnumMap<>(DyeColor.class);
+    private static final Map<String, ResourceLocation> MATERIAL_TEXTURES = new java.util.HashMap<>();
     private static ResourceLocation netheriteTexture;
     /// The loaded heavy fish texture, released on resource reload.
     private static ResourceLocation heavyTexture;
@@ -43,6 +44,23 @@ public final class PufferfishTextures implements ResourceManagerReloadListener {
             netheriteTexture = loadEntityTexture("netherite", NETHERITE_COLOR);
         }
         return netheriteTexture;
+    }
+
+    public static ResourceLocation materialEntity(String material) {
+        return MATERIAL_TEXTURES.computeIfAbsent(material, name -> {
+            var minecraft = Minecraft.getInstance();
+            var id = KaleidoscopePufferfish.id("textures/entity/" + name + "_pufferfish.png");
+            if (minecraft.getResourceManager().getResource(id).isPresent()) return id;
+            try (var stream = minecraft.getResourceManager().open(ORIGINAL)) {
+                var image = NativeImage.read(stream);
+                MaterialPufferfishTexture.recolor(image, name, true);
+                minecraft.getTextureManager().register(id, new DynamicTexture(image));
+                return id;
+            } catch (IOException exception) {
+                LogUtils.getLogger().error("Failed to load material pufferfish texture: {}", name, exception);
+                return ORIGINAL;
+            }
+        });
     }
 
     /// Returns the heavy fish entity texture, loading a resource-pack replacement or generated steel-and-wind texture.
@@ -133,6 +151,8 @@ public final class PufferfishTextures implements ResourceManagerReloadListener {
         var textures = Minecraft.getInstance().getTextureManager();
         ENTITY_TEXTURES.values().stream().filter(id -> !id.equals(ORIGINAL)).forEach(textures::release);
         ENTITY_TEXTURES.clear();
+        MATERIAL_TEXTURES.values().stream().filter(id -> !id.equals(ORIGINAL)).forEach(textures::release);
+        MATERIAL_TEXTURES.clear();
         if (netheriteTexture != null && !netheriteTexture.equals(ORIGINAL)) {
             textures.release(netheriteTexture);
         }

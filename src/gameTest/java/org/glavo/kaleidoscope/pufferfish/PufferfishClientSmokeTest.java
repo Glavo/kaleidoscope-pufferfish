@@ -72,6 +72,7 @@ public final class PufferfishClientSmokeTest {
             }
         }
         verifySkin(minecraft, null);
+        MaterialPufferfishClientTest.verify(minecraft);
         verifySkin(minecraft, PufferfishBlocks.GOLDEN_SKIN.get(), "golden_pufferfish_skin");
         verifySkin(minecraft, PufferfishBlocks.NETHERITE_SKIN.get(), "netherite_pufferfish_skin");
         verifySkin(minecraft, PufferfishBlocks.HEAVY_SKIN.get(), "heavy_pufferfish_skin");

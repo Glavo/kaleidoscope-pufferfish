@@ -52,6 +52,7 @@ public final class PufferfishHeadRenderer {
         var color = PufferfishColors.get(stack);
         var texture = PufferfishItems.isHeavy(stack) ? PufferfishTextures.heavyEntity()
                 : PufferfishItems.isNetherite(stack) ? PufferfishTextures.netheriteEntity()
+                : PufferfishItems.materialName(stack) != null ? PufferfishTextures.materialEntity(PufferfishItems.materialName(stack))
                 : color == null ? ORIGINAL : PufferfishTextures.entity(color);
         pose.pushPose();
         head.translateAndRotate(pose);
