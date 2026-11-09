@@ -22,7 +22,6 @@ import org.glavo.kaleidoscope.pufferfish.entity.PufferfishBoat;
 public final class PufferfishBoats {
     private static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(Registries.ENTITY_TYPE, KaleidoscopePufferfish.MODID);
     private static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(KaleidoscopePufferfish.MODID);
-    public record Variant(DeferredHolder<EntityType<?>, EntityType<PufferfishBoat>> entity, DeferredItem<PufferfishBoatItem> item) {}
     public static final Map<String, Variant> VARIANTS;
 
     static {
@@ -61,4 +60,6 @@ public final class PufferfishBoats {
         event.enqueueWork(() -> VARIANTS.values().forEach(variant ->
                 DispenserBlock.registerBehavior(variant.item().get(), new PufferfishBoatItem.Dispenser(variant.entity()))));
     }
+
+    public record Variant(DeferredHolder<EntityType<?>, EntityType<PufferfishBoat>> entity, DeferredItem<PufferfishBoatItem> item) {}
 }

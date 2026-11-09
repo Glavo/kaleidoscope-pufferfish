@@ -11,18 +11,6 @@
       "item": "kaleidoscope_pufferfish:golden_pufferfish"
     }
   ],
-  "tool": [
-    {
-      "type": "farmersdelight:item_ability",
-      "action": "knife_dig"
-    },
-    {
-      "tag": "c:tools/knife"
-    },
-    {
-      "tag": "kaleidoscope_cookery:kitchen_knife"
-    }
-  ],
   "result": [
     {
       "item": {
@@ -35,6 +23,18 @@
         "id": "kaleidoscope_pufferfish:golden_pufferfish_skin",
         "count": 1
       }
+    }
+  ],
+  "tool": [
+    {
+      "type": "farmersdelight:item_ability",
+      "action": "knife_dig"
+    },
+    {
+      "tag": "c:tools/knife"
+    },
+    {
+      "tag": "kaleidoscope_cookery:kitchen_knife"
     }
   ]
 }

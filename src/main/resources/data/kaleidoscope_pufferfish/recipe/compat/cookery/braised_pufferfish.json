@@ -6,9 +6,6 @@
     }
   ],
   "type": "kaleidoscope_cookery:pot",
-  "carrier": {
-    "item": "minecraft:bowl"
-  },
   "ingredients": [
     {
       "tag": "c:foods/raw_pufferfish"
@@ -23,6 +20,9 @@
       "tag": "c:foods/raw_pufferfish"
     }
   ],
+  "carrier": {
+    "item": "minecraft:bowl"
+  },
   "result": {
     "id": "kaleidoscope_pufferfish:braised_pufferfish",
     "count": 1

@@ -1,6 +1,5 @@
 {
   "parent": "minecraft:builtin/entity",
-  "gui_light": "front",
   "textures": {
     "particle": "minecraft:item/pufferfish"
   },
@@ -114,5 +113,6 @@
         0.8
       ]
     }
-  }
+  },
+  "gui_light": "front"
 }

@@ -6,9 +6,6 @@
     }
   ],
   "type": "kaleidoscope_cookery:pot",
-  "carrier": {
-    "item": "minecraft:bowl"
-  },
   "ingredients": [
     {
       "item": "minecraft:pumpkin_pie"
@@ -29,6 +26,9 @@
       "item": "minecraft:pufferfish"
     }
   ],
+  "carrier": {
+    "item": "minecraft:bowl"
+  },
   "result": {
     "id": "kaleidoscope_pufferfish:pufferfish_stargazy_pie",
     "count": 1

@@ -32,34 +32,14 @@ public final class PufferfishCombat {
     /// Prevents construction of this combat utility.
     private PufferfishCombat() {}
 
-    /// Returns the stored level of the specified enchantment, or zero when absent.
-    private static int enchantmentLevel(ItemStack stack, ResourceKey<Enchantment> key) {
-        return stack.getEnchantments().entrySet().stream().filter(entry -> entry.getKey().is(key))
-                .mapToInt(entry -> entry.getIntValue()).findFirst().orElse(0);
-    }
-
     /// Returns fish throwing or short flail cast damage with the flat Density bonus.
     public static float damage(ItemStack stack) {
         return throwingBaseDamage(stack) + densityBonus(stack);
     }
 
-    private static float throwingBaseDamage(ItemStack stack) {
-        if (stack.is(PufferfishItems.COPPER.get())) return PufferfishCombatConfig.value(PufferfishCombatConfig.COPPER_DAMAGE).floatValue();
-        if (stack.is(PufferfishItems.IRON.get())) return PufferfishCombatConfig.value(PufferfishCombatConfig.IRON_DAMAGE).floatValue();
-        if (stack.is(PufferfishItems.DIAMOND.get())) return PufferfishCombatConfig.value(PufferfishCombatConfig.DIAMOND_DAMAGE).floatValue();
-        if (stack.is(PufferfishItems.GOLDEN.get())) return PufferfishCombatConfig.value(PufferfishCombatConfig.GOLDEN_DAMAGE).floatValue();
-        return PufferfishItems.hasHeavyCombat(stack) ? 10 : PufferfishCombatConfig.value(PufferfishItems.hasNetheriteCombat(stack)
-                ? PufferfishCombatConfig.NETHERITE_DAMAGE : PufferfishCombatConfig.NORMAL_DAMAGE).floatValue();
-    }
-
-    private static float densityBonus(ItemStack stack) {
-        int density = enchantmentLevel(stack, Enchantments.DENSITY);
-        return density > 0 ? 0.5F + 0.5F * density : 0;
-    }
-
     /// Returns corresponding fish throwing damage with enchantments, before any flail charge multiplier.
     public static float projectileDamage(ServerLevel level, ItemStack stack, Entity target, DamageSource source) {
-        float base = throwingBaseDamage(stack) + densityBonus(stack);
+        float base = damage(stack);
         return EnchantmentHelper.modifyDamage(level, stack, target, source, base);
     }
 
@@ -67,7 +47,7 @@ public final class PufferfishCombat {
     public static void attributes(ItemAttributeModifierEvent event) {
         if (!PufferfishItems.isWeapon(event.getItemStack())) return;
         var stack = event.getItemStack();
-        float meleeDamage = PufferfishItems.isHeavy(stack) ? (float) (6 * meleeMultiplier()) : damage(stack);
+        float meleeDamage = PufferfishItems.isHeavy(stack) ? (float) (6 * PufferfishCombatConfig.value(PufferfishCombatConfig.HEAVY_DAMAGE_MULTIPLIER)) : damage(stack);
         event.addModifier(Attributes.ATTACK_DAMAGE, new AttributeModifier(Item.BASE_ATTACK_DAMAGE_ID,
                 meleeDamage - 1, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
         double speed = PufferfishItems.isFlail(stack) ? 20.0 / Math.max(1, PufferfishCombatConfig.value(PufferfishCombatConfig.THROW_COOLDOWN_TICKS))
@@ -84,11 +64,6 @@ public final class PufferfishCombat {
                 && MaceItem.canSmashAttack(attacker);
     }
 
-    /// Returns the heavy fish multiplier for unenchanted melee and falling damage.
-    private static double meleeMultiplier() {
-        return PufferfishCombatConfig.value(PufferfishCombatConfig.HEAVY_DAMAGE_MULTIPLIER);
-    }
-
     /// Returns the capped heavy-fish falling bonus, including Density, before critical hits and armor.
     /// The caller must supply a nonnegative fall distance and a fish performing a smash attack.
     public static float smashBonus(ItemStack stack, float distance) {
@@ -96,7 +71,7 @@ public final class PufferfishCombat {
                 + Math.min(Math.max(distance - 3, 0), 5) * PufferfishCombatConfig.value(PufferfishCombatConfig.NEXT_FIVE_BLOCKS_DAMAGE)
                 + Math.max(distance - 8, 0) * PufferfishCombatConfig.value(PufferfishCombatConfig.REMAINING_BLOCKS_DAMAGE);
         double density = PufferfishCombatConfig.value(PufferfishCombatConfig.HEAVY_DENSITY_DAMAGE);
-        double bonus = curve * meleeMultiplier() + distance * enchantmentLevel(stack, Enchantments.DENSITY) * density;
+        double bonus = curve * PufferfishCombatConfig.value(PufferfishCombatConfig.HEAVY_DAMAGE_MULTIPLIER) + distance * enchantmentLevel(stack, Enchantments.DENSITY) * density;
         double cap = PufferfishCombatConfig.value(PufferfishCombatConfig.MAX_SMASH_BONUS);
         return (float) (cap > 0 ? Math.min(bonus, cap) : bonus);
     }
@@ -122,4 +97,24 @@ public final class PufferfishCombat {
             if (push.lengthSqr() > 0) target.push(push.x, 0.1, push.z);
         }
     }
+    /// Returns the stored level of the specified enchantment, or zero when absent.
+    private static int enchantmentLevel(ItemStack stack, ResourceKey<Enchantment> key) {
+        return stack.getEnchantments().entrySet().stream().filter(entry -> entry.getKey().is(key))
+                .mapToInt(entry -> entry.getIntValue()).findFirst().orElse(0);
+    }
+
+    private static float throwingBaseDamage(ItemStack stack) {
+        if (stack.is(PufferfishItems.COPPER.get())) return PufferfishCombatConfig.value(PufferfishCombatConfig.COPPER_DAMAGE).floatValue();
+        if (stack.is(PufferfishItems.IRON.get())) return PufferfishCombatConfig.value(PufferfishCombatConfig.IRON_DAMAGE).floatValue();
+        if (stack.is(PufferfishItems.DIAMOND.get())) return PufferfishCombatConfig.value(PufferfishCombatConfig.DIAMOND_DAMAGE).floatValue();
+        if (stack.is(PufferfishItems.GOLDEN.get())) return PufferfishCombatConfig.value(PufferfishCombatConfig.GOLDEN_DAMAGE).floatValue();
+        return PufferfishItems.hasHeavyCombat(stack) ? 10 : PufferfishCombatConfig.value(PufferfishItems.hasNetheriteCombat(stack)
+                ? PufferfishCombatConfig.NETHERITE_DAMAGE : PufferfishCombatConfig.NORMAL_DAMAGE).floatValue();
+    }
+
+    private static float densityBonus(ItemStack stack) {
+        int density = enchantmentLevel(stack, Enchantments.DENSITY);
+        return density > 0 ? 0.5F + 0.5F * density : 0;
+    }
+
 }

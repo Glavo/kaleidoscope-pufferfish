@@ -38,28 +38,6 @@ public class KaleidoscopePufferfishClient {
     private org.glavo.kaleidoscope.pufferfish.client.PufferfishShieldRenderer shieldRenderer;
     private org.glavo.kaleidoscope.pufferfish.client.PufferfishBoatItemRenderer boatRenderer;
 
-    private org.glavo.kaleidoscope.pufferfish.client.PufferfishBoatItemRenderer boatRenderer() {
-        if (boatRenderer == null) boatRenderer = new org.glavo.kaleidoscope.pufferfish.client.PufferfishBoatItemRenderer();
-        return boatRenderer;
-    }
-
-    private org.glavo.kaleidoscope.pufferfish.client.PufferfishShieldRenderer shieldRenderer() {
-        if (shieldRenderer == null) shieldRenderer = new org.glavo.kaleidoscope.pufferfish.client.PufferfishShieldRenderer();
-        return shieldRenderer;
-    }
-
-    private void clientSetup(net.neoforged.fml.event.lifecycle.FMLClientSetupEvent event) {
-        event.enqueueWork(() -> PufferfishShields.VARIANTS.values().forEach(item ->
-                net.minecraft.client.renderer.item.ItemProperties.register(item.get(), ResourceLocation.withDefaultNamespace("blocking"),
-                        (stack, level, entity, seed) -> entity != null && entity.isUsingItem() && entity.getUseItem() == stack ? 1 : 0)));
-    }
-
-    /// Creates the flail renderer on demand after the client dispatchers are initialized.
-    private PufferfishFlailItemRenderer flailRenderer() {
-        if (flailRenderer == null) flailRenderer = new PufferfishFlailItemRenderer();
-        return flailRenderer;
-    }
-
     public KaleidoscopePufferfishClient(IEventBus bus) {
         if (ModList.get().isLoaded("create")) {
             CreateClientIntegration.register(bus);
@@ -81,6 +59,28 @@ public class KaleidoscopePufferfishClient {
         NeoForge.EVENT_BUS.addListener(org.glavo.kaleidoscope.pufferfish.client.PufferfishFlailTether::captureWorld);
         NeoForge.EVENT_BUS.addListener(org.glavo.kaleidoscope.pufferfish.client.HeavyPufferfishVisuals::tick);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishTooltips::hideCreativeCategory);
+    }
+
+    private org.glavo.kaleidoscope.pufferfish.client.PufferfishBoatItemRenderer boatRenderer() {
+        if (boatRenderer == null) boatRenderer = new org.glavo.kaleidoscope.pufferfish.client.PufferfishBoatItemRenderer();
+        return boatRenderer;
+    }
+
+    private org.glavo.kaleidoscope.pufferfish.client.PufferfishShieldRenderer shieldRenderer() {
+        if (shieldRenderer == null) shieldRenderer = new org.glavo.kaleidoscope.pufferfish.client.PufferfishShieldRenderer();
+        return shieldRenderer;
+    }
+
+    private void clientSetup(net.neoforged.fml.event.lifecycle.FMLClientSetupEvent event) {
+        event.enqueueWork(() -> PufferfishShields.VARIANTS.values().forEach(item ->
+                net.minecraft.client.renderer.item.ItemProperties.register(item.get(), ResourceLocation.withDefaultNamespace("blocking"),
+                        (stack, level, entity, seed) -> entity != null && entity.isUsingItem() && entity.getUseItem() == stack ? 1 : 0)));
+    }
+
+    /// Creates the flail renderer on demand after the client dispatchers are initialized.
+    private PufferfishFlailItemRenderer flailRenderer() {
+        if (flailRenderer == null) flailRenderer = new PufferfishFlailItemRenderer();
+        return flailRenderer;
     }
 
     private void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {

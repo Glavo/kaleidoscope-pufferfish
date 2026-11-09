@@ -9,10 +9,10 @@
   "ingredient": {
     "item": "kaleidoscope_pufferfish:golden_pufferfish"
   },
-  "cut_count": 3,
-  "model_id": "kaleidoscope_pufferfish:golden_pufferfish",
   "result": {
     "id": "kaleidoscope_pufferfish:pufferfish_sashimi",
     "count": 1
-  }
+  },
+  "cut_count": 3,
+  "model_id": "kaleidoscope_pufferfish:golden_pufferfish"
 }

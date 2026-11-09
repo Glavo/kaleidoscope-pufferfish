@@ -64,6 +64,25 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
     private int phaseTick;
     private int flightStartTick;
 
+    /// Creates a head for entity loading or network spawning.
+    public PufferfishFlailHead(EntityType<? extends PufferfishFlailHead> type, Level level) {
+        super(type, level);
+        setNoGravity(true);
+    }
+
+    /// Creates a head holding a copy of the weapon in the owner's specified hand.
+    public PufferfishFlailHead(Level level, Player owner, InteractionHand hand) {
+        this(level, owner, hand, 1);
+    }
+
+    public PufferfishFlailHead(Level level, Player owner, InteractionHand hand, float charge) {
+        super(KaleidoscopePufferfish.FLAIL_HEAD.get(), owner, level);
+        this.charge = Float.isFinite(charge) ? Mth.clamp(charge, 0, 1) : 0;
+        entityData.set(OFF_HAND, hand == InteractionHand.OFF_HAND);
+        setItem(owner.getItemInHand(hand));
+        setNoGravity(true);
+    }
+
     public boolean isCharging() { return entityData.get(PHASE) == 1; }
     public boolean isQueued() { return entityData.get(PHASE) == 2; }
     public boolean isSpinning() { return isCharging() || isQueued(); }
@@ -170,25 +189,6 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
                 candidate -> candidate.isAlive() && candidate.isPickable() && !candidate.isSpectator()
                         && !candidate.isPassengerOfSameVehicle(player), eye.distanceToSqr(end));
         return entity != null ? entity.getLocation() : end;
-    }
-
-    /// Creates a head for entity loading or network spawning.
-    public PufferfishFlailHead(EntityType<? extends PufferfishFlailHead> type, Level level) {
-        super(type, level);
-        setNoGravity(true);
-    }
-
-    /// Creates a head holding a copy of the weapon in the owner's specified hand.
-    public PufferfishFlailHead(Level level, Player owner, InteractionHand hand) {
-        this(level, owner, hand, 1);
-    }
-
-    public PufferfishFlailHead(Level level, Player owner, InteractionHand hand, float charge) {
-        super(KaleidoscopePufferfish.FLAIL_HEAD.get(), owner, level);
-        this.charge = Float.isFinite(charge) ? Mth.clamp(charge, 0, 1) : 0;
-        entityData.set(OFF_HAND, hand == InteractionHand.OFF_HAND);
-        setItem(owner.getItemInHand(hand));
-        setNoGravity(true);
     }
 
     @Override
