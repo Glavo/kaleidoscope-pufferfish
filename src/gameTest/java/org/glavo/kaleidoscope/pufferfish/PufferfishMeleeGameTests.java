@@ -78,7 +78,7 @@ public final class PufferfishMeleeGameTests {
             player.attack(target);
             helper.assertTrue(target.getHealth() == 20 - (netherite ? 6 : 1), "Charged melee damage does not match the configured base damage");
             var poison = target.getEffect(MobEffects.POISON);
-            helper.assertTrue(poison != null && poison.getDuration() == 120 && poison.getAmplifier() == (netherite ? 1 : 0),
+            helper.assertTrue(poison != null && poison.getDuration() == 60 && poison.getAmplifier() == (netherite ? 1 : 0),
                     "Melee poison differs from throwing");
             helper.assertTrue(player.getMainHandItem().getCount() == 4 && ItemStack.isSameItemSameComponents(stack, player.getMainHandItem()),
                     "Melee consumed or changed pufferfish");

@@ -354,15 +354,15 @@ public class PufferfishProjectileGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void collisionDealsTwoDamageAndSixSecondsOfPoison(GameTestHelper helper) {
+    public static void collisionDealsOneDamageAndThreeSecondsOfPoison(GameTestHelper helper) {
         var target = helper.spawn(EntityType.PIG, new BlockPos(2, 1, 3));
         target.setNoAi(true);
         float health = target.getHealth();
         var projectile = hit(helper, target);
         helper.assertTrue(target.getHealth() == health - 1.0F, "Impact did not deal exactly one base damage");
         var effect = target.getEffect(MobEffects.POISON);
-        helper.assertTrue(effect != null && effect.getDuration() == 120 && effect.getAmplifier() == 0,
-                "Impact did not apply Poison I for 120 ticks");
+        helper.assertTrue(effect != null && effect.getDuration() == 60 && effect.getAmplifier() == 0,
+                "Impact did not apply Poison I for 60 ticks");
         helper.assertTrue(projectile.isRemoved(), "Projectile survived its impact");
         helper.assertTrue(target.getLastHurtByMob() == projectile.getOwner(), "Damage was not attributed to the thrower");
         target.discard();

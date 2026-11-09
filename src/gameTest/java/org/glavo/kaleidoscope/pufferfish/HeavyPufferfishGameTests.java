@@ -113,7 +113,7 @@ public final class HeavyPufferfishGameTests {
             helper.assertTrue(Math.abs(player.getCurrentItemAttackStrengthDelay() - 20 / 0.6) < 0.001,
                     "Heavy fish did not have the expected attack recharge time");
             var poison = target.getEffect(MobEffects.POISON);
-            helper.assertTrue(poison != null && poison.getAmplifier() == 1 && poison.getDuration() == 120,
+            helper.assertTrue(poison != null && poison.getAmplifier() == 1 && poison.getDuration() == 60,
                     "Heavy fish lost pufferfish poison effects");
             helper.assertTrue(stack.getCount() == 1 && !stack.isDamaged(), "Heavy fish attack consumed or damaged the item");
             helper.assertTrue(player.fallDistance == (distance > 1.5F && PufferfishCombatConfig.SMASH_ENABLED.get() ? 0 : distance),

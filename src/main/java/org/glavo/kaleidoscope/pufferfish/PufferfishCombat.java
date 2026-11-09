@@ -28,6 +28,7 @@ import net.neoforged.neoforge.common.damagesource.DamageContainer;
 
 /// Calculates pufferfish weapon damage and applies shared melee and projectile effects.
 public final class PufferfishCombat {
+    public static final int POISON_DURATION_TICKS = 60;
     /// Prevents construction of this combat utility.
     private PufferfishCombat() {}
 
@@ -107,9 +108,9 @@ public final class PufferfishCombat {
         }
     }
 
-    /// Attempts to apply six seconds of poison and adds Punch knockback, respecting effect immunity and knockback resistance.
+    /// Attempts to apply three seconds of poison and adds Punch knockback, respecting effect immunity and knockback resistance.
     public static void hitEffects(ItemStack stack, LivingEntity target, Entity source, Vec3 direction) {
-        target.addEffect(new MobEffectInstance(MobEffects.POISON, 120, PufferfishItems.hasNetheriteCombat(stack) ? 1 : 0), source);
+        target.addEffect(new MobEffectInstance(MobEffects.POISON, POISON_DURATION_TICKS, PufferfishItems.hasNetheriteCombat(stack) ? 1 : 0), source);
         int punch = enchantmentLevel(stack, Enchantments.PUNCH);
         if (punch > 0) {
             double resistance = Math.max(0, 1 - target.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE));

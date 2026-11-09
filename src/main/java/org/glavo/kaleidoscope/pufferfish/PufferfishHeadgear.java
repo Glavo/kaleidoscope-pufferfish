@@ -51,7 +51,7 @@ public final class PufferfishHeadgear {
             return;
         }
         boolean netherite = PufferfishItems.hasNetheriteCombat(wearer.getItemBySlot(EquipmentSlot.HEAD));
-        attacker.addEffect(new MobEffectInstance(MobEffects.POISON, netherite ? 120 : 60, netherite ? 1 : 0), wearer);
+        attacker.addEffect(new MobEffectInstance(MobEffects.POISON, PufferfishCombat.POISON_DURATION_TICKS, netherite ? 1 : 0), wearer);
         var thorns = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.THORNS);
         thorns.value().doPostAttack(level, netherite ? 3 : 1,
                 new EnchantedItemInUse(wearer.getItemBySlot(EquipmentSlot.HEAD), EquipmentSlot.HEAD, wearer),

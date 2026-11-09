@@ -57,7 +57,7 @@ public final class PufferfishShields {
                 || !event.getBlocked() || event.getBlockedDamage() <= 0 || source.is(DamageTypes.THORNS)
                 || !(source.getEntity() instanceof LivingEntity attacker) || attacker == defender
                 || VARIANTS.values().stream().noneMatch(item -> shield.is(item.get()))) return;
-        attacker.addEffect(new MobEffectInstance(MobEffects.POISON, 60, 0), defender);
+        attacker.addEffect(new MobEffectInstance(MobEffects.POISON, PufferfishCombat.POISON_DURATION_TICKS, 0), defender);
         var thorns = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.THORNS);
         thorns.value().doPostAttack(level, 1,
                 new EnchantedItemInUse(shield, LivingEntity.getSlotForHand(defender.getUsedItemHand()), defender),

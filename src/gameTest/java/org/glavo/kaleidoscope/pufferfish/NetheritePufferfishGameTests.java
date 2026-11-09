@@ -146,7 +146,7 @@ public final class NetheritePufferfishGameTests {
                 attacker.removeEffect(MobEffects.POISON);
                 wearer.hurt(wearer.damageSources().mobAttack(attacker), 1);
                 var poison = attacker.getEffect(MobEffects.POISON);
-                helper.assertTrue(poison != null && poison.getDuration() == (tier == 0 ? 60 : 120)
+                helper.assertTrue(poison != null && poison.getDuration() == 60
                         && poison.getAmplifier() == tier, "Retaliation used the wrong poison tier");
                 if (attacker.getHealth() < attacker.getMaxHealth()) reflected[tier]++;
             }
@@ -183,7 +183,7 @@ public final class NetheritePufferfishGameTests {
         projectile.tick();
         helper.assertTrue(target.getHealth() == health - 6, "Netherite projectile did not deal exactly 6 base damage");
         var poison = target.getEffect(MobEffects.POISON);
-        helper.assertTrue(poison != null && poison.getDuration() == 120 && poison.getAmplifier() == 1, "Netherite projectile did not apply six seconds of Poison II");
+        helper.assertTrue(poison != null && poison.getDuration() == 60 && poison.getAmplifier() == 1, "Netherite projectile did not apply three seconds of Poison II");
         var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, target.getBoundingBox().inflate(3));
         helper.assertTrue(projectile.isRemoved() && drops.size() == 1 && drops.getFirst().getItem().getCount() == 1
                 && ItemStack.isSameItemSameComponents(drops.getFirst().getItem(), stack), "Recovered projectile lost its netherite identity or name");

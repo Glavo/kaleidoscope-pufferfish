@@ -133,7 +133,7 @@ public final class PufferfishFlailGameTests {
             for (int tick = 0; tick < 8 && !head.isReturning(); tick++) { head.tickCount++; head.tick(); }
             var poison = target.getEffect(MobEffects.POISON);
             helper.assertTrue(target.getHealth() == 20 - damage && poison != null
-                    && poison.getDuration() == 120 && poison.getAmplifier() == (netherite ? 1 : 0), "Short cast damage or poison failed");
+                    && poison.getDuration() == 60 && poison.getAmplifier() == (netherite ? 1 : 0), "Short cast damage or poison failed");
             for (int tick = 0; tick < 30 && !head.isRemoved(); tick++) { head.tickCount++; head.tick(); }
             helper.assertTrue(head.isRemoved() && target.getHealth() == 20 - damage && ItemStack.matches(stack, player.getMainHandItem()),
                     "Return flight duplicated damage or lost the weapon");
@@ -378,7 +378,7 @@ public final class PufferfishFlailGameTests {
             head.tick();
             boolean netherite = PufferfishItems.hasNetheriteCombat(new ItemStack(item));
             helper.assertTrue(head.isReturning() && target.getHealth() == (PufferfishItems.hasHeavyCombat(head.getItem()) ? 4 : netherite ? 8 : 18)
-                    && target.hasEffect(MobEffects.POISON), "Flying head did not hit and start returning");
+                    && target.hasEffect(MobEffects.POISON) && target.getEffect(MobEffects.POISON).getDuration() == 60, "Flying head did not hit and start returning");
             float health = target.getHealth();
             target.invulnerableTime = 0;
             head.setPos(target.position().add(0, 0.8, 0));
