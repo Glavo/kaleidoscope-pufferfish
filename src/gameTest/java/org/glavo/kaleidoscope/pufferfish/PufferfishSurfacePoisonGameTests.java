@@ -52,6 +52,9 @@ public final class PufferfishSurfacePoisonGameTests {
         states.add(PufferfishBlocks.skin(null).defaultBlockState());
         states.add(PufferfishBlocks.NETHERITE_SKIN.get().defaultBlockState());
         states.add(PufferfishBlocks.HEAVY_SKIN.get().defaultBlockState());
+        for (int stage = 0; stage < 4; stage++) {
+            states.add(PufferfishBlocks.COPPER_SKINS.get(stage).get().defaultBlockState());
+        }
         for (var color : DyeColor.values()) {
             states.add(PufferfishBlocks.skin(color).defaultBlockState());
         }
@@ -65,6 +68,26 @@ public final class PufferfishSurfacePoisonGameTests {
             entity.setOnGround(false);
             NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
             helper.assertTrue(!entity.hasEffect(MobEffects.POISON), "An airborne entity was poisoned");
+            entity.discard();
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void waxedCopperSkinsNeitherApplyNorRefreshPoison(GameTestHelper helper) {
+        for (int stage = 0; stage < 4; stage++) {
+            var entity = stand(helper, PufferfishBlocks.COPPER_SKINS.get(stage + 4).get().defaultBlockState());
+            NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
+            helper.assertTrue(!entity.hasEffect(MobEffects.POISON), "Waxed skin applied poison");
+            entity.addEffect(new MobEffectInstance(MobEffects.POISON, 20, 0));
+            NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
+            var poison = entity.getEffect(MobEffects.POISON);
+            helper.assertTrue(poison != null && poison.getDuration() == 20 && poison.getAmplifier() == 0,
+                    "Waxed skin changed existing poison");
+            entity.removeEffect(MobEffects.POISON);
+            helper.getLevel().setBlockAndUpdate(entity.getOnPos(), PufferfishBlocks.COPPER_SKINS.get(stage).get().defaultBlockState());
+            NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
+            helper.assertTrue(entity.hasEffect(MobEffects.POISON), "Unwaxed skin no longer applied poison");
             entity.discard();
         }
         helper.succeed();
