@@ -15,6 +15,11 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.util.random.WeightedRandomList;
+import net.minecraft.world.level.biome.MobSpawnSettings;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.level.LevelEvent;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.DyeColor;
@@ -152,6 +157,9 @@ public final class PufferfishConduitGameTests {
         level.addFreshEntity(dry);
         helper.runAfterDelay(45, () -> {
             helper.assertTrue(entity.tickCount > 0 && entity.isActive() && !entity.isHunting(), "16-block frame did not activate its ticker");
+            checkSpawns(helper, pos, true);
+            checkSpawns(helper, pos.north(31), true);
+            checkSpawns(helper, pos.north(32), false);
             var power = wet.getEffect(MobEffects.CONDUIT_POWER);
             helper.assertTrue(power != null && power.getAmplifier() == 0 && power.getDuration() > 200, "Wet player did not receive vanilla conduit power");
             helper.assertTrue(!dry.hasEffect(MobEffects.CONDUIT_POWER), "Dry player received conduit power");
@@ -160,6 +168,7 @@ public final class PufferfishConduitGameTests {
             helper.setBlock(CENTER.offset(2, 0, 0), Blocks.AIR);
             helper.runAfterDelay(45, () -> {
                 helper.assertTrue(!entity.isActive(), "15-block frame remained active");
+                checkSpawns(helper, pos, false);
                 frame(helper, true);
                 var enemy = helper.spawn(EntityType.DROWNED, CENTER.east());
                 enemy.setNoAi(true);
@@ -167,14 +176,54 @@ public final class PufferfishConduitGameTests {
                 helper.runAfterDelay(45, () -> {
                     helper.assertTrue(entity.isActive() && entity.isHunting(), "42-block frame did not enable hunting");
                     helper.assertTrue(enemy.getHealth() <= enemy.getMaxHealth() - 4, "Conduit did not attack a submerged hostile mob");
+                    checkSpawns(helper, pos.north(95), true);
+                    checkSpawns(helper, pos.north(96), false);
+                    entity.onChunkUnloaded();
+                    checkSpawns(helper, pos, false);
                     enemy.discard();
                     helper.setBlock(CENTER.above(), Blocks.STONE);
                     helper.runAfterDelay(45, () -> {
                         helper.assertTrue(!entity.isActive() && !entity.isHunting(), "Conduit stayed active with blocked surrounding water");
+                        checkSpawns(helper, pos, false);
                         helper.succeed();
                     });
                 });
             });
         });
+    }
+    private static void checkSpawns(GameTestHelper helper, BlockPos pos, boolean active) {
+        var cod = new MobSpawnSettings.SpawnerData(EntityType.COD, 10, 3, 6);
+        var salmon = new MobSpawnSettings.SpawnerData(EntityType.SALMON, 8, 1, 5);
+        var tropical = new MobSpawnSettings.SpawnerData(EntityType.TROPICAL_FISH, 4, 3, 6);
+        var original = WeightedRandomList.create(cod, salmon, tropical);
+        var fish = spawnList(helper, pos, MobCategory.WATER_AMBIENT, original);
+        if (active) {
+            helper.assertTrue(fish.size() == 1 && fish.getFirst().type == EntityType.PUFFERFISH,
+                    "Fish candidates were not replaced with pufferfish");
+            helper.assertTrue(spawnList(helper, pos, MobCategory.WATER_AMBIENT, original).contains(fish.getFirst()),
+                    "Replacement failed the natural spawner identity check");
+        } else {
+            helper.assertTrue(fish.equals(original.unwrap()), "Inactive or distant conduit changed spawns");
+        }
+        helper.assertTrue(original.unwrap().size() == 3, "Biome spawn list was mutated");
+        for (var type : List.of(EntityType.SQUID, EntityType.GLOW_SQUID, EntityType.DOLPHIN, EntityType.AXOLOTL, EntityType.TURTLE)) {
+            var entry = new MobSpawnSettings.SpawnerData(type, 1, 1, 1);
+            var result = spawnList(helper, pos, type.getCategory(), WeightedRandomList.create(entry));
+            helper.assertTrue(active ? result.isEmpty() : result.equals(List.of(entry)), "Incorrect aquatic spawn suppression");
+        }
+        for (var type : List.of(EntityType.PUFFERFISH, EntityType.DROWNED, EntityType.GUARDIAN, EntityType.COW)) {
+            var entry = new MobSpawnSettings.SpawnerData(type, 1, 1, 1);
+            helper.assertTrue(spawnList(helper, pos, type.getCategory(), WeightedRandomList.create(entry)).equals(List.of(entry)),
+                    "Unrelated spawn candidate changed");
+        }
+        helper.assertTrue(spawnList(helper, pos, MobCategory.WATER_AMBIENT, WeightedRandomList.create()).isEmpty(),
+                "Conduit populated an empty spawn list");
+    }
+
+    private static List<MobSpawnSettings.SpawnerData> spawnList(GameTestHelper helper, BlockPos pos, MobCategory category,
+            WeightedRandomList<MobSpawnSettings.SpawnerData> candidates) {
+        var event = new LevelEvent.PotentialSpawns(helper.getLevel(), category, pos, candidates);
+        NeoForge.EVENT_BUS.post(event);
+        return event.getSpawnerDataList();
     }
 }

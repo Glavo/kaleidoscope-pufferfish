@@ -29,6 +29,6 @@ public final class PufferfishConduitBlock extends ConduitBlock {
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
         return createTickerHelper(type, PufferfishBlocks.CONDUIT_ENTITY.get(),
-                level.isClientSide ? ConduitBlockEntity::clientTick : ConduitBlockEntity::serverTick);
+                level.isClientSide ? ConduitBlockEntity::clientTick : PufferfishConduitBlockEntity::serverTick);
     }
 }
