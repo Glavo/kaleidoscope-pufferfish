@@ -13,8 +13,9 @@ val dyeColors = listOf(
     "white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray",
     "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"
 )
-val boatSkinVariants = listOf("") + dyeColors + listOf("golden", "netherite", "heavy")
 val skinVariants = listOf("") + dyeColors + listOf("golden", "copper", "iron", "diamond", "netherite", "heavy")
+val allSkinVariants = skinVariants + listOf("exposed_copper", "weathered_copper", "oxidized_copper",
+    "waxed_copper", "waxed_exposed_copper", "waxed_weathered_copper", "waxed_oxidized_copper")
 
 group = providers.gradleProperty("mod_group_id").get()
 version = providers.gradleProperty("mod_version").get()
@@ -181,12 +182,10 @@ val generateItemModels = tasks.register<Sync>("generateItemModels") {
 
 val generateSkinResources = tasks.register<Sync>("generateSkinResources") {
     inputs.property("modId", modId)
-    val variants = skinVariants + listOf("exposed_copper", "weathered_copper", "oxidized_copper",
-        "waxed_copper", "waxed_exposed_copper", "waxed_weathered_copper", "waxed_oxidized_copper")
-    inputs.property("variants", variants)
+    inputs.property("variants", allSkinVariants)
     filteringCharset = "UTF-8"
     into(layout.buildDirectory.dir("generated/resources/pufferfishSkins"))
-    for (color in variants.filter { it != "golden" }) {
+    for (color in allSkinVariants.filter { it != "golden" }) {
         val prefix = if (color.isEmpty()) "" else "${color}_"
         val skinName = "${prefix}pufferfish_skin"
         val properties = mapOf(
@@ -325,10 +324,10 @@ val generateArmorResources = tasks.register<Sync>("generateArmorResources") {
 
 val generateBoatResources = tasks.register<Sync>("generateBoatResources") {
     inputs.property("modId", modId)
-    inputs.property("variants", boatSkinVariants)
+    inputs.property("variants", allSkinVariants)
     filteringCharset = "UTF-8"
     into(layout.buildDirectory.dir("generated/resources/pufferfishBoats"))
-    for (color in boatSkinVariants) {
+    for (color in allSkinVariants) {
         val prefix = if (color.isEmpty()) "" else "${color}_"
         val skinName = "${prefix}pufferfish_skin"
         val boatName = "${skinName}_boat"

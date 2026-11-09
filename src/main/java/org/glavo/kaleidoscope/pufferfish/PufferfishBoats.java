@@ -29,6 +29,10 @@ public final class PufferfishBoats {
         add(variants, "");
         for (var color : DyeColor.values()) add(variants, color.getName() + "_");
         add(variants, "golden_");
+        for (var material : new String[] {"copper", "waxed_copper", "exposed_copper", "waxed_exposed_copper",
+                "weathered_copper", "waxed_weathered_copper", "oxidized_copper", "waxed_oxidized_copper", "iron", "diamond"}) {
+            add(variants, material + "_");
+        }
         add(variants, "netherite_");
         add(variants, "heavy_");
         VARIANTS = Collections.unmodifiableMap(variants);

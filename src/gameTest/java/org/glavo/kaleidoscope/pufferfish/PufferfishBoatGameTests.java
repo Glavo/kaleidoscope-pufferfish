@@ -33,6 +33,23 @@ import org.glavo.kaleidoscope.pufferfish.entity.PufferfishBoat;
 @GameTestHolder(KaleidoscopePufferfish.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishBoatGameTests {
+    @GameTest(template = "empty")
+    public static void everySkinHasAMatchingBoat(GameTestHelper helper) {
+        int skins = 0;
+        for (var block : BuiltInRegistries.BLOCK) {
+            if (!(block instanceof PufferfishSkinBlock)) continue;
+            var id = BuiltInRegistries.BLOCK.getKey(block);
+            if (!id.getNamespace().equals(KaleidoscopePufferfish.MODID)) continue;
+            var boat = PufferfishBoats.VARIANTS.get(id.getPath() + "_boat");
+            helper.assertTrue(boat != null, "Missing boat for skin: " + id);
+            helper.assertTrue(boat.entity().get().create(helper.getLevel()).getDropItem() == boat.item().get(),
+                    "Boat drops a different skin variant: " + id);
+            skins++;
+        }
+        helper.assertTrue(skins == PufferfishBoats.VARIANTS.size(), "Skin and boat variants are not one-to-one");
+        helper.succeed();
+    }
+
     @GameTest(template = "empty", timeoutTicks = 160)
     public static void heavyKayakSinksToTheFloorAndRetainsPassengers(GameTestHelper helper) {
         for (var pos : BlockPos.betweenClosed(0, 0, 0, 6, 5, 6)) {
