@@ -83,13 +83,29 @@ public final class PufferfishArmorGameTests {
                     "Armor rejected a slot-specific enchantment");
             player.setItemSlot(slot, armor);
             player.tick();
-            int defense = type == ArmorItem.Type.CHESTPLATE ? 3 : type == ArmorItem.Type.LEGGINGS ? 2 : 1;
+            boolean golden = entry.getKey().startsWith("golden_");
+            boolean netherite = entry.getKey().startsWith("netherite_") || entry.getKey().startsWith("heavy_");
+            int defense = switch (type) {
+                case HELMET -> netherite ? 3 : golden ? 2 : 1;
+                case CHESTPLATE -> netherite ? 8 : golden ? 5 : 3;
+                case LEGGINGS -> netherite ? 6 : golden ? 3 : 2;
+                case BOOTS -> netherite ? 3 : 1;
+                default -> throw new AssertionError("Unexpected armor type");
+            };
             helper.assertTrue(player.getArmorValue() == defense && player.getAttributeValue(Attributes.ARMOR_TOUGHNESS) == 0,
-                    "Armor did not match leather armor protection");
+                    "Armor did not match its expected protection");
             player.setItemSlot(slot, ItemStack.EMPTY);
             player.tick();
             grid.set(0, new ItemStack(Items.LEATHER));
             helper.assertTrue(!recipe.matches(CraftingInput.of(3, pattern.size(), grid), helper.getLevel()), "Armor accepted an incorrect ingredient");
+        }
+        for (String prefix : List.of("golden_", "netherite_", "heavy_")) {
+            for (var type : PufferfishArmor.TYPES) {
+                player.setItemSlot(type.getSlot(), new ItemStack(PufferfishArmor.VARIANTS.get(prefix + "pufferfish_skin_" + type.getName()).get()));
+            }
+            player.tick();
+            helper.assertTrue(player.getArmorValue() == (prefix.equals("golden_") ? 11 : 20),
+                    "Metal skin armor set had incorrect total protection");
         }
         helper.succeed();
     }

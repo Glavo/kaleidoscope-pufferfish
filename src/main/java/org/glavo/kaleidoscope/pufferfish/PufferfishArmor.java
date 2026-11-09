@@ -18,6 +18,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
+import net.minecraft.world.item.ArmorMaterials;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.Ingredient;
@@ -51,10 +52,16 @@ public final class PufferfishArmor {
 
     private static void add(Map<String, DeferredItem<ArmorItem>> variants, String prefix, Supplier<Item> skin) {
         String name = prefix + "pufferfish_skin";
-        var material = MATERIALS.register(name, () -> new ArmorMaterial(Map.of(ArmorItem.Type.HELMET, 1,
-                ArmorItem.Type.CHESTPLATE, 3, ArmorItem.Type.LEGGINGS, 2, ArmorItem.Type.BOOTS, 1), 15,
-                SoundEvents.ARMOR_EQUIP_LEATHER, () -> Ingredient.of(skin.get()),
-                List.of(new ArmorMaterial.Layer(KaleidoscopePufferfish.id(name))), 0, 0));
+        var material = MATERIALS.register(name, () -> {
+            var protection = switch (prefix) {
+                case "golden_" -> ArmorMaterials.GOLD;
+                case "netherite_", "heavy_" -> ArmorMaterials.NETHERITE;
+                default -> ArmorMaterials.LEATHER;
+            };
+            return new ArmorMaterial(protection.value().defense(), 15,
+                    SoundEvents.ARMOR_EQUIP_LEATHER, () -> Ingredient.of(skin.get()),
+                    List.of(new ArmorMaterial.Layer(KaleidoscopePufferfish.id(name))), 0, 0);
+        });
         for (var type : TYPES) {
             String itemName = name + "_" + type.getName();
             variants.put(itemName, ITEMS.register(itemName, () -> {
