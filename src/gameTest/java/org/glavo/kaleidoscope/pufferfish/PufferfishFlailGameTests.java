@@ -52,6 +52,16 @@ public final class PufferfishFlailGameTests {
         return player;
     }
 
+    private static void launch(GameTestHelper helper, PufferfishFlailHead head) {
+        helper.assertTrue(head.isQueued(), "Release skipped the queued swing");
+        for (int i = 0; i < 100 && head.isSpinning() && !head.isRemoved(); i++) {
+            head.setOldPosAndRot();
+            head.tickCount++;
+            head.tick();
+        }
+        helper.assertTrue(!head.isSpinning() && !head.isRemoved() && !head.isReturning(), "Queued swing did not launch");
+    }
+
     /// Constructs the requested diagonal recipe or its horizontal mirror.
     private static CraftingInput input(ItemStack fish, boolean mirrored) {
         var items = new ArrayList<>(Collections.nCopies(9, ItemStack.EMPTY));
@@ -140,13 +150,15 @@ public final class PufferfishFlailGameTests {
             var original = stack.copy();
             var result = stack.use(helper.getLevel(), player, hand);
             helper.assertTrue(result.getResult().consumesAction() && player.isUsingItem()
-                    && helper.getLevel().getEntitiesOfClass(PufferfishFlailHead.class, player.getBoundingBox().inflate(3)).isEmpty()
+                    && PufferfishFlailItem.activeHead(player) != null && PufferfishFlailItem.activeHead(player).isCharging()
                     && !player.getCooldowns().isOnCooldown(stack.getItem()), "Starting charge launched or cooled down the weapon");
             for (int i = 0; i < PufferfishFlailItem.chargeTicks(stack); i++) player.tick();
             player.releaseUsingItem();
             var heads = helper.getLevel().getEntitiesOfClass(PufferfishFlailHead.class, player.getBoundingBox().inflate(3));
             helper.assertTrue(result.getResult().consumesAction() && heads.size() == 1, "Flail did not launch exactly one head");
             var head = heads.getFirst();
+            helper.assertTrue(!player.getCooldowns().isOnCooldown(item), "Queued swing started cooldown before release");
+            launch(helper, head);
             helper.assertTrue(head.getOwner() == player && head.getHand() == hand && ItemStack.matches(head.getItem(), original)
                     && ItemStack.matches(stack, original), "Launch lost ownership or changed the held item");
             helper.assertTrue(player.getCooldowns().isOnCooldown(PufferfishItems.FLAIL.get())
@@ -194,7 +206,7 @@ public final class PufferfishFlailGameTests {
             var result = stack.use(helper.getLevel(), player, InteractionHand.MAIN_HAND);
             for (int i = 0; i < PufferfishFlailItem.chargeTicks(stack); i++) player.tick();
             player.releaseUsingItem();
-            helper.assertTrue(result.getResult().consumesAction() && stack.getCount() == 1
+            helper.assertTrue(result.getResult() == InteractionResult.FAIL && !player.isUsingItem() && stack.getCount() == 1
                     && helper.getLevel().getEntitiesOfClass(PufferfishFlailHead.class, player.getBoundingBox().inflate(3)).isEmpty()
                     && !player.getCooldowns().isOnCooldown(stack.getItem()), "Canceled launch consumed or cooled down the weapon");
         } finally {
@@ -224,7 +236,7 @@ public final class PufferfishFlailGameTests {
         }
         helper.assertTrue(returned && head.isRemoved() && player.getMainHandItem().getCount() == 1, "Head did not return to its retained weapon");
         helper.assertTrue(returnTicks >= 10, "Distant head returned too quickly to show the retraction");
-        helper.assertTrue(head.position().distanceTo(player.getEyePosition().add(0, -0.3, 0)) <= 0.21
+        helper.assertTrue(head.position().distanceTo(PufferfishFlailMotion.grip(player, InteractionHand.MAIN_HAND, player.getYRot(), 1)) <= 0.21
                 && head.tickCount < PufferfishFlailItem.COOLDOWN, "Head expired before reaching the owner or outlasted the cooldown");
         helper.assertTrue(helper.getLevel().getEntitiesOfClass(ItemEntity.class, player.getBoundingBox().inflate(8),
                 entity -> PufferfishItems.isFlail(entity.getItem())).isEmpty(), "Return duplicated the weapon");
@@ -281,6 +293,7 @@ public final class PufferfishFlailGameTests {
                     var heads = helper.getLevel().getEntitiesOfClass(PufferfishFlailHead.class, player.getBoundingBox().inflate(3));
                     helper.assertTrue(heads.size() == 1, "Charged release did not spawn one head");
                     var head = heads.getFirst();
+                    launch(helper, head);
                     var tag = new net.minecraft.nbt.CompoundTag();
                     head.addAdditionalSaveData(tag);
                     var restored = new PufferfishFlailHead(helper.getLevel(), player, InteractionHand.MAIN_HAND, 0);
@@ -342,6 +355,7 @@ public final class PufferfishFlailGameTests {
                         && ItemStack.isSameItemSameComponents(player.getMainHandItem(), head.getItem()),
                         "Range fixture has an invalid owner or weapon: owner=" + (head.getOwner() == player)
                                 + ", health=" + player.getHealth() + ", velocity=" + head.getDeltaMovement());
+                launch(helper, head);
                 var initialVelocity = head.getDeltaMovement();
                 double range = 0;
                 for (int tick = 0; tick < PufferfishFlailItem.COOLDOWN && !head.isRemoved(); tick++) {
@@ -370,10 +384,84 @@ public final class PufferfishFlailGameTests {
             if (scenario == 1) player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
             if (scenario == 2) player.stopUsingItem();
             else player.releaseUsingItem();
+            var active = PufferfishFlailItem.activeHead(player);
+            if (active != null) active.tick();
             helper.assertTrue(helper.getLevel().getEntitiesOfClass(PufferfishFlailHead.class, player.getBoundingBox().inflate(3)).isEmpty()
                     && !player.getCooldowns().isOnCooldown(stack.getItem()) && stack.getCount() == 1,
                     "Short or interrupted charge launched, consumed, or cooled down the weapon");
         }
         helper.succeed();
     }
+    @GameTest(template = "empty")
+    public static void releaseFollowsTheOrbitAndLocksDamage(GameTestHelper helper) {
+        for (var item : List.of(PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get())) {
+            for (var hand : InteractionHand.values()) for (float pitch : new float[] {-90, -35, 0, 60, 90}) {
+                var stack = new ItemStack(item);
+                for (int age : new int[] {3, 10, 20, 45, 80}) {
+                    var player = player(helper, ItemStack.EMPTY);
+                    player.setItemInHand(hand, stack);
+                    player.setYRot(47);
+                    player.setXRot(pitch);
+                    player.setPos(player.position().add(0, 12, 0));
+                    stack.use(helper.getLevel(), player, hand);
+                    var head = PufferfishFlailItem.activeHead(player);
+                    for (int tick = 0; tick < age; tick++) {
+                        player.tick();
+                        head.tickCount++;
+                        head.tick();
+                    }
+                    helper.assertTrue(head.isCharging() && !head.isRemoved(), "Long charge expired or launched early");
+                    player.releaseUsingItem();
+                    helper.assertTrue(PufferfishFlailItem.activeHead(player) == head && head.isQueued(), "Release replaced the spinning head");
+                    var saved = new net.minecraft.nbt.CompoundTag();
+                    head.addAdditionalSaveData(saved);
+                    helper.assertTrue(Math.abs(saved.getFloat("Charge") - PufferfishFlailItem.charge(stack, age)) < 0.0001,
+                            "Release did not freeze damage at input time");
+                    float gate = PufferfishFlailMotion.releaseAge(stack, age, pitch);
+                    helper.assertTrue(gate >= age && gate - age < 100, "Invalid release window");
+                    var tangent = PufferfishFlailMotion.tangent(stack, gate, 47);
+                    helper.assertTrue(tangent.dot(player.getLookAngle().normalize()) > 0.99999, "Release is not tangent to the aimed trajectory: pitch=" + pitch + ", age=" + age + ", gate=" + gate + ", yaw=" + player.getYRot() + ", actualPitch=" + player.getXRot() + ", dot=" + tangent.dot(player.getLookAngle()));
+                    player.setYRot(-90);
+                    player.setXRot(0);
+                    launch(helper, head);
+                    var expected = PufferfishFlailMotion.orbit(player, hand, stack, gate, 47, 1);
+                    helper.assertTrue(head.position().distanceTo(expected) < 0.0001
+                            && head.getDeltaMovement().distanceTo(tangent.scale(1.2)) < 0.0001, "Launch jumped away from the release point");
+                    head.addAdditionalSaveData(saved);
+                    helper.assertTrue(Math.abs(saved.getFloat("Charge") - PufferfishFlailItem.charge(stack, age)) < 0.0001,
+                            "Waiting for release increased damage");
+                    head.discard();
+                }
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void queuedReleaseCancelsOnUnequipAndSurvivesSaving(GameTestHelper helper) {
+        var stack = new ItemStack(PufferfishItems.HEAVY_FLAIL.get());
+        var player = player(helper, ItemStack.EMPTY);
+        player.setItemInHand(InteractionHand.OFF_HAND, stack);
+        stack.use(helper.getLevel(), player, InteractionHand.OFF_HAND);
+        for (int tick = 0; tick < 10; tick++) player.tick();
+        var head = PufferfishFlailItem.activeHead(player);
+        player.releaseUsingItem();
+        helper.assertTrue(stack.use(helper.getLevel(), player, InteractionHand.OFF_HAND).getResult() == InteractionResult.FAIL,
+                "Queued release allowed a second swing");
+        var tag = new net.minecraft.nbt.CompoundTag();
+        head.addAdditionalSaveData(tag);
+        var restored = new PufferfishFlailHead(helper.getLevel(), player, InteractionHand.MAIN_HAND);
+        restored.readAdditionalSaveData(tag);
+        restored.setOwner(player);
+        helper.assertTrue(restored.isQueued() && restored.getHand() == InteractionHand.OFF_HAND,
+                "Saved queued release lost state or hand");
+        head.discard();
+        helper.getLevel().addFreshEntity(restored);
+        player.setItemInHand(InteractionHand.OFF_HAND, ItemStack.EMPTY);
+        restored.tick();
+        helper.assertTrue(restored.isRemoved() && !player.getCooldowns().isOnCooldown(stack.getItem()),
+                "Unequipping a queued flail did not cancel safely");
+        helper.succeed();
+    }
+
 }

@@ -156,9 +156,17 @@ public final class PufferfishFlailFirstPersonClientTest {
                                     nativeRender.invoke(context.getItemInHandRenderer(), player, 0F, pitch, hand, swing, stack,
                                             swing * 0.5F, pose, stale, LIGHT);
                                     if (stale.groups.size() != 2) throw new IllegalStateException("Flail reused a previous frame's camera transform");
+                                    if (fov == 70 && pitch == 0 && hand == InteractionHand.MAIN_HAND && swing == 0) {
+                                        head.discard();
+                                        NeoForge.EVENT_BUS.post(new RenderLevelStageEvent(RenderLevelStageEvent.Stage.AFTER_LEVEL,
+                                                minecraft.levelRenderer, null, rotation, worldProjection, 0, DeltaTracker.ZERO, camera, null));
+                                        verifyRelease(minecraft, player, nativeRender, pose, target, renderer, camera, worldProjection, handProjection);
+                                    }
                                     if (fov == 70 && pitch == -35 && hand == InteractionHand.MAIN_HAND && swing == 0) {
                                         head.discard();
-                                        verifyCharging(minecraft, player, nativeRender, pose, target, arm);
+                                        NeoForge.EVENT_BUS.post(new RenderLevelStageEvent(RenderLevelStageEvent.Stage.AFTER_LEVEL,
+                                                minecraft.levelRenderer, null, rotation, worldProjection, 0, DeltaTracker.ZERO, camera, null));
+                                        verifyCharging(minecraft, player, nativeRender, pose, target, arm, renderer, camera, worldProjection, handProjection);
                                     }
                                 } finally {
                                     head.discard();
@@ -186,14 +194,95 @@ public final class PufferfishFlailFirstPersonClientTest {
         }
     }
 
+    private static void verifyRelease(Minecraft minecraft, LocalPlayer player, java.lang.reflect.Method nativeRender,
+            PoseStack pose, TextureTarget target, PufferfishFlailHeadRenderer renderer, Camera camera,
+            Matrix4f worldProjection, Matrix4f handProjection) throws ReflectiveOperationException, java.io.IOException {
+        var stack = new ItemStack(PufferfishItems.FLAIL.get());
+        player.setItemInHand(InteractionHand.MAIN_HAND, stack);
+        stack.use(player.level(), player, InteractionHand.MAIN_HAND);
+        var remaining = net.minecraft.world.entity.LivingEntity.class.getDeclaredField("useItemRemaining");
+        remaining.setAccessible(true);
+        remaining.setInt(player, stack.getUseDuration(player) - 17);
+        var head = new org.glavo.kaleidoscope.pufferfish.entity.PufferfishFlailHead(player.level(), player, InteractionHand.MAIN_HAND);
+        head.beginCharging();
+        head.setPos(head.renderPosition(0));
+        head.setOldPosAndRot();
+        minecraft.level.addEntity(head);
+        var beforeRelease = head.renderPosition(0);
+        player.releaseUsingItem();
+        if (!head.isQueued() || head.renderPosition(0).distanceTo(beforeRelease) > 0.001) {
+            throw new IllegalStateException("Releasing input replaced or teleported the spinning head");
+        }
+        try {
+            boolean launched = false;
+            for (int frame = 0; frame <= 12; frame++) {
+                if (frame > 0) {
+                    boolean queued = head.isQueued();
+                    var previous = head.renderPosition(0.999F);
+                    head.setOldPosAndRot();
+                    head.tickCount++;
+                    minecraft.level.setGameTime(minecraft.level.getGameTime() + 1);
+                    head.tick();
+                    if (queued && !head.isSpinning()) {
+                        launched = true;
+                        if (previous.distanceTo(head.renderPosition(0)) > 0.01) {
+                            throw new IllegalStateException("Head jumped when the queued swing became flight");
+                        }
+                        var delayed = new org.glavo.kaleidoscope.pufferfish.entity.PufferfishFlailHead(player.level(), player, InteractionHand.MAIN_HAND);
+                        delayed.beginCharging();
+                        delayed.tickCount = 500;
+                        delayed.getEntityData().assignValues(head.getEntityData().packDirty());
+                        delayed.setPos(head.position());
+                        delayed.setDeltaMovement(head.getDeltaMovement());
+                        delayed.tick();
+                        if (delayed.isReturning()) throw new IllegalStateException("Late launch metadata counted charging ticks as flight time");
+                        delayed.discard();
+                    }
+                }
+                var capture = new Capture();
+                nativeRender.invoke(minecraft.getEntityRenderDispatcher().getItemInHandRenderer(), player, 0F, 0F,
+                        InteractionHand.MAIN_HAND, 0F, stack, 0F, pose, capture, LIGHT);
+                if (capture.groups.size() != 3) throw new IllegalStateException("Release lost its grip or tether");
+                capture.verifyGrip();
+                if (player.getMainArm() == HumanoidArm.RIGHT) {
+                    target.clear(Minecraft.ON_OSX);
+                    target.bindWrite(true);
+                    var buffers = minecraft.renderBuffers().bufferSource();
+                    var headPose = new PoseStack();
+                    var relative = head.getPosition(0).subtract(camera.getPosition());
+                    headPose.translate(relative.x, relative.y, relative.z);
+                    RenderSystem.setProjectionMatrix(worldProjection, VertexSorting.DISTANCE_TO_ORIGIN);
+                    renderer.render(head, 0, 0, headPose, buffers, LIGHT);
+                    buffers.endBatch();
+                    RenderSystem.clear(256, Minecraft.ON_OSX);
+                    RenderSystem.setProjectionMatrix(handProjection, VertexSorting.DISTANCE_TO_ORIGIN);
+                    nativeRender.invoke(minecraft.getEntityRenderDispatcher().getItemInHandRenderer(), player, 0F, 0F,
+                            InteractionHand.MAIN_HAND, 0F, stack, 0F, pose, buffers, LIGHT);
+                    buffers.endBatch();
+                    try (var image = Screenshot.takeScreenshot(target)) {
+                        image.writeToFile(Path.of("pufferfish-flail-release-" + frame + ".png"));
+                    }
+                }
+            }
+            if (!launched) throw new IllegalStateException("Queued client swing never released");
+        } finally {
+            head.discard();
+            player.stopUsingItem();
+        }
+    }
+
     private static void verifyCharging(Minecraft minecraft, LocalPlayer player, java.lang.reflect.Method nativeRender,
-            PoseStack pose, TextureTarget target, HumanoidArm arm) throws ReflectiveOperationException, java.io.IOException {
+            PoseStack pose, TextureTarget target, HumanoidArm arm, PufferfishFlailHeadRenderer renderer, Camera camera,
+            Matrix4f worldProjection, Matrix4f handProjection) throws ReflectiveOperationException, java.io.IOException {
         var remaining = net.minecraft.world.entity.LivingEntity.class.getDeclaredField("useItemRemaining");
         remaining.setAccessible(true);
         for (var item : new PufferfishFlailItem[] {PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get()}) {
             var stack = new ItemStack(item);
             player.setItemInHand(InteractionHand.MAIN_HAND, stack);
             stack.use(player.level(), player, InteractionHand.MAIN_HAND);
+            var head = new org.glavo.kaleidoscope.pufferfish.entity.PufferfishFlailHead(player.level(), player, InteractionHand.MAIN_HAND);
+            head.beginCharging();
+            minecraft.level.addEntity(head);
             int duration = PufferfishFlailItem.chargeTicks(stack);
             double slow = PufferfishFlailItem.spinAngle(stack, 1) - PufferfishFlailItem.spinAngle(stack, 0);
             double medium = PufferfishFlailItem.spinAngle(stack, duration / 2F + 1) - PufferfishFlailItem.spinAngle(stack, duration / 2F);
@@ -211,11 +300,16 @@ public final class PufferfishFlailFirstPersonClientTest {
                     var capture = new Capture();
                     nativeRender.invoke(minecraft.getEntityRenderDispatcher().getItemInHandRenderer(), player, 0F, -35F,
                             InteractionHand.MAIN_HAND, 0F, stack, 0F, pose, capture, LIGHT);
-                    if (capture.groups.size() != 4 || capture.groups.get(3).equals(previous)) {
+                    var headPose = new PoseStack();
+                    var relative = head.getPosition(0).subtract(camera.getPosition());
+                    headPose.translate(relative.x, relative.y, relative.z);
+                    var world = new Capture();
+                    renderer.render(head, 0, 0, headPose, world, LIGHT);
+                    if (capture.groups.size() != 3 || world.groups.size() != 1 || world.groups.getFirst().equals(previous)) {
                         throw new IllegalStateException("Charging flail did not render a moving head");
                     }
                     capture.verifyGrip();
-                    previous = capture.groups.get(3);
+                    previous = world.groups.getFirst();
                     if (ticks >= 4) {
                         var center = new Vector3f();
                         for (var vertex : previous) {
@@ -234,6 +328,11 @@ public final class PufferfishFlailFirstPersonClientTest {
                         target.clear(Minecraft.ON_OSX);
                         target.bindWrite(true);
                         var buffers = minecraft.renderBuffers().bufferSource();
+                        RenderSystem.setProjectionMatrix(worldProjection, VertexSorting.DISTANCE_TO_ORIGIN);
+                        renderer.render(head, 0, 0, headPose, buffers, LIGHT);
+                        buffers.endBatch();
+                        RenderSystem.clear(256, Minecraft.ON_OSX);
+                        RenderSystem.setProjectionMatrix(handProjection, VertexSorting.DISTANCE_TO_ORIGIN);
                         nativeRender.invoke(minecraft.getEntityRenderDispatcher().getItemInHandRenderer(), player, 0F, -35F,
                                 InteractionHand.MAIN_HAND, 0F, stack, 0F, pose, buffers, LIGHT);
                         buffers.endBatch();
@@ -247,6 +346,7 @@ public final class PufferfishFlailFirstPersonClientTest {
                     throw new IllegalStateException("First-person flail did not rotate in a vertical plane beside the body");
                 }
             } finally {
+                head.discard();
                 player.stopUsingItem();
             }
         }
@@ -308,6 +408,15 @@ public final class PufferfishFlailFirstPersonClientTest {
                 }
             }
             if (gap > 0.015F) throw new IllegalStateException("First-person chain detached from the grip: " + gap);
+            var bottom = new Vector3f();
+            var top = new Vector3f();
+            var first = new Vector3f();
+            var last = new Vector3f();
+            for (int i = 0; i < 24; i++) { bottom.add(bands.get(i)); top.add(bands.get(i + 24)); }
+            for (int i = 0; i < 96; i++) { first.add(chain.get(i)); last.add(chain.get(chain.size() - 96 + i)); }
+            if (chain.size() > 96 && top.sub(bottom).normalize().dot(last.sub(first).normalize()) < 0.995F) {
+                throw new IllegalStateException("Grip remained upright instead of following chain tension");
+            }
         }
     }
 }

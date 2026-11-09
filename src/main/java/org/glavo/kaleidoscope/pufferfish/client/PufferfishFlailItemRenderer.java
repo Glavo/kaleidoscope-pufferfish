@@ -4,7 +4,6 @@
 package org.glavo.kaleidoscope.pufferfish.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -21,22 +20,14 @@ import net.minecraft.util.Mth;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import org.glavo.kaleidoscope.pufferfish.entity.PufferfishFlailHead;
 import org.glavo.kaleidoscope.pufferfish.PufferfishFlailItem;
-import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.joml.Quaternionf;
+import org.glavo.kaleidoscope.pufferfish.PufferfishFlailMotion;
 
 /// Renders a held or displayed flail, leaving only its grip while the head is in flight.
 public final class PufferfishFlailItemRenderer extends BlockEntityWithoutLevelRenderer implements IClientItemExtensions {
     /// Lazily created geometry, invalidated when resources reload.
     private PufferfishFlailModel model;
-    private static Matrix4f bodyPose;
-
-    /// Scopes the player's body transform around the native third-person hand renderer.
-    public static Matrix4f setBodyPose(Matrix4f value) {
-        var previous = bodyPose;
-        bodyPose = value;
-        return previous;
-    }
-
     /// Creates a renderer using the current client dispatchers.
     public PufferfishFlailItemRenderer() {
         super(Minecraft.getInstance().getBlockEntityRenderDispatcher(), Minecraft.getInstance().getEntityModels());
@@ -48,8 +39,9 @@ public final class PufferfishFlailItemRenderer extends BlockEntityWithoutLevelRe
     @Override
     public boolean applyForgeHandTransform(PoseStack pose, LocalPlayer player, HumanoidArm arm, ItemStack stack,
             float partialTick, float equip, float swing) {
-        if (player.isUsingItem() && player.getUseItem() == stack) {
-            float lift = Mth.clamp((player.getTicksUsingItem() + partialTick) / 4, 0, 1);
+        var head = PufferfishFlailItem.activeHead(player);
+        if ((player.isUsingItem() && player.getUseItem() == stack) || head != null) {
+            float lift = head != null ? 1 : Mth.clamp((player.getTicksUsingItem() + partialTick) / 4, 0, 1);
             pose.translate((arm == HumanoidArm.RIGHT ? 0.12 : -0.12) * lift, 0.08 * lift, -0.05 * lift);
         }
         return false;
@@ -71,57 +63,43 @@ public final class PufferfishFlailItemRenderer extends BlockEntityWithoutLevelRe
                 || context == ItemDisplayContext.THIRD_PERSON_RIGHT_HAND;
         pose.translate(held ? 0.5 : 0.28, held ? 0.5 : 0.70, 0.5);
         var flying = flyingHead(stack, context);
-        model.renderGrip(stack, pose, buffers, light, overlay);
-        if (flying != null && context.firstPerson()) {
-            PufferfishFlailTether.render(model, flying, pose, buffers, light);
+        float partialTick = PufferfishFlailTether.partialTick(Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(false));
+        var player = flying != null && flying.getOwner() instanceof Player owner ? owner : held ? chargingPlayer(stack) : null;
+        Vec3 target = null;
+        if (player != null) {
+            var world = flying != null ? flying.renderPosition(partialTick)
+                    : PufferfishFlailMotion.orbit(player, player.getUsedItemHand(), stack,
+                    player.getTicksUsingItem() + partialTick, player.getViewYRot(partialTick), partialTick);
+            target = PufferfishFlailTether.localPosition(world, pose);
         }
-        float age = held && Minecraft.getInstance().level != null
-                ? Minecraft.getInstance().level.getGameTime() + Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(false) : 0;
-        double sway = held ? Mth.sin(age * 0.09F) * 0.035 : 0;
-        var head = new Vec3(0.47 + sway, -0.24, 0.02);
-        if (flying == null) {
-            var chargingPlayer = held ? chargingPlayer(stack) : null;
-            float partialTick = Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(false);
-            float charging = chargingPlayer == null ? -1 : chargingPlayer.getTicksUsingItem() + partialTick;
-            var anchor = new Vec3(0, 0.20, 0);
-            if (charging >= 0) {
-                double angle = PufferfishFlailItem.spinAngle(stack, charging);
-                var orbit = chargingOrbit(context, chargingPlayer, partialTick, angle, anchor, pose);
-                head = head.lerp(orbit, Mth.clamp(charging / 4, 0, 1));
-            }
-            var offset = head.subtract(anchor);
-            var end = charging >= 0 ? offset.subtract(offset.normalize().scale(0.20)) : offset.add(0, 0.19, 0);
+        if (target != null) {
+            var direction = target.normalize();
+            pose.pushPose();
+            pose.mulPose(new Quaternionf().rotationTo(new Vector3f(0, 1, 0), direction.toVector3f()));
+            model.renderGrip(stack, pose, buffers, light, overlay);
+            pose.popPose();
+            var anchor = direction.scale(0.20);
+            var end = target.subtract(anchor);
             pose.translate(anchor.x, anchor.y, anchor.z);
-            model.renderChain(stack, end, charging >= 0 ? 0 : 0.12, pose, buffers, light);
-            pose.translate(offset.x, offset.y, offset.z);
-            pose.mulPose(Axis.ZP.rotationDegrees(held ? (float) (-8 + sway * 100) : -8));
-            model.renderHead(stack, pose, buffers, light, overlay, age);
+            model.renderChain(stack, end.subtract(direction.scale(Math.min(0.20, end.length()))), 0, pose, buffers, light);
+            if (flying == null) {
+                pose.translate(end.x, end.y, end.z);
+                model.renderHead(stack, pose, buffers, light, overlay, player.tickCount + partialTick);
+            }
+        } else {
+            model.renderGrip(stack, pose, buffers, light, overlay);
+            if (flying == null) {
+                float age = held && Minecraft.getInstance().level != null ? Minecraft.getInstance().level.getGameTime() + partialTick : 0;
+                double sway = held ? Mth.sin(age * 0.09F) * 0.035 : 0;
+                var offset = new Vec3(0.47 + sway, -0.44, 0.02);
+                pose.translate(0, 0.20, 0);
+                model.renderChain(stack, offset.add(0, 0.19, 0), 0.12, pose, buffers, light);
+                pose.translate(offset.x, offset.y, offset.z);
+                pose.mulPose(Axis.ZP.rotationDegrees((float) (-8 + sway * 100)));
+                model.renderHead(stack, pose, buffers, light, overlay, age);
+            }
         }
         pose.popPose();
-    }
-
-    private static Vec3 chargingOrbit(ItemDisplayContext context, Player player, float partialTick, double angle,
-            Vec3 anchor, PoseStack pose) {
-        boolean right = context == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND || context == ItemDisplayContext.THIRD_PERSON_RIGHT_HAND;
-        if (!context.firstPerson() && bodyPose != null) {
-            var itemToBody = new Matrix4f(bodyPose).invert().mul(pose.last().pose());
-            var grip = itemToBody.transformPosition(anchor.toVector3f());
-            // Player model coordinates have downward Y and negative X on the right side.
-            var center = new Vector3f((right ? -1 : 1) * Math.max(0.90F, Math.abs(grip.x) + 0.40F),
-                    grip.y + (float) (0.65 * Math.cos(angle)), grip.z + (float) (0.65 * Math.sin(angle)));
-            itemToBody.invert().transformPosition(center);
-            return new Vec3(center);
-        }
-        float yaw = (context.firstPerson() ? player.getViewYRot(partialTick)
-                : Mth.rotLerp(partialTick, player.yBodyRotO, player.yBodyRot)) * Mth.DEG_TO_RAD;
-        double outward = right ? -0.40 : 0.40;
-        double forward = 0.65 * Math.sin(angle);
-        var worldOffset = new Vector3f((float) (outward * Mth.cos(yaw) - forward * Mth.sin(yaw)),
-                (float) (-0.65 * Math.cos(angle)), (float) (outward * Mth.sin(yaw) + forward * Mth.cos(yaw)));
-        var viewOffset = RenderSystem.getModelViewMatrix().transformDirection(worldOffset);
-        var localOffset = new Matrix4f(RenderSystem.getModelViewMatrix()).mul(pose.last().pose()).invert()
-                .transformDirection(viewOffset);
-        return anchor.add(localOffset.x, localOffset.y, localOffset.z);
     }
 
     private static Player chargingPlayer(ItemStack stack) {

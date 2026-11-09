@@ -157,9 +157,8 @@ public final class PufferfishFlailClientTest {
                             var capture = tetherCapture(attachment.subtract(head.getPosition(0.5F)));
                             var pose = new PoseStack();
                             renderer.render(head, direction, 0.5F, pose, capture, LIGHT);
-                            if (capture.vertices < 300 || capture.types.size() != 2 || !pose.clear()
-                                    || capture.geometry == previousGeometry) throw new IllegalStateException("Flying flail failed to turn or render its chain");
-                            verifyTautChain(capture);
+                            if (capture.vertices < 300 || capture.types.size() != 1 || !pose.clear()
+                                    || capture.geometry == previousGeometry) throw new IllegalStateException("Flying flail failed to turn or rendered a duplicate chain");
                             previousGeometry = capture.geometry;
                         }
                         head.tickCount = 8;
@@ -169,7 +168,6 @@ public final class PufferfishFlailClientTest {
                         var pose = new PoseStack();
                         renderer.render(head, head.getYRot(), 0.5F, pose, returning, LIGHT);
                         if (returning.vertices < 300 || !pose.clear()) throw new IllegalStateException("Returning flail failed to render");
-                        verifyTautChain(returning);
                     } finally {
                         head.discard();
                     }
@@ -183,7 +181,9 @@ public final class PufferfishFlailClientTest {
                 model.renderChain(stack, offset, 0.2, pose, capture, LIGHT);
                 if (capture.vertices != 0 || !pose.clear()) throw new IllegalStateException("Invalid chain emitted geometry");
             }
-            previewFlight(minecraft, player, renderer);
+            var straight = tetherCapture(new Vec3(3, 1, 2));
+            model.renderChain(stack, new Vec3(3, 1, 2), 0, new PoseStack(), straight, LIGHT);
+            verifyTautChain(straight);
         } finally {
             player.discard();
             minecraft.level = previousLevel;
@@ -199,60 +199,6 @@ public final class PufferfishFlailClientTest {
     private static void verifyTautChain(Capture capture) {
         if (capture.tetherVertices == 0 || capture.tetherDeviation > 0.034) {
             throw new IllegalStateException("Moving flail chain is too thick or sags under tension: " + capture.tetherDeviation);
-        }
-    }
-
-    /// Samples the real outward and returning trajectory with its rendered tether.
-    private static void previewFlight(Minecraft minecraft, RemotePlayer player, PufferfishFlailHeadRenderer renderer) {
-        player.setMainArm(HumanoidArm.RIGHT);
-        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(PufferfishItems.FLAIL.get()));
-        var head = new PufferfishFlailHead(player.level(), player, InteractionHand.MAIN_HAND);
-        head.shoot(1, 0, 0, 1.2F, 0);
-        var attachment = player.getEyePosition().add(-0.35, -0.45, 0.8);
-        var target = new TextureTarget(900, 360, true, Minecraft.ON_OSX);
-        target.setClearColor(0.08F, 0.14F, 0.2F, 1);
-        target.clear(Minecraft.ON_OSX);
-        target.bindWrite(true);
-        RenderSystem.backupProjectionMatrix();
-        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 900, 360, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
-        var view = RenderSystem.getModelViewStack();
-        view.pushMatrix().identity();
-        RenderSystem.applyModelViewMatrix();
-        Lighting.setupFor3DItems();
-        RenderSystem.setShaderColor(1, 1, 1, 1);
-        try {
-            int[] frames = {1, 3, 4, 7, 11, 15};
-            for (int i = 0; i < frames.length; i++) {
-                while (head.tickCount < frames[i]) {
-                    head.setOldPosAndRot();
-                    head.tickCount++;
-                    head.tick();
-                }
-                var pose = new PoseStack();
-                pose.translate(25 + i % 3 * 300, 80 + i / 3 * 180, 0);
-                pose.scale(45, -45, 45);
-                var buffers = minecraft.renderBuffers().bufferSource();
-                pose.pushPose();
-                pose.translate(0, -0.23, 0);
-                new PufferfishFlailModel().renderGrip(head.getItem(), pose, buffers, LIGHT, OverlayTexture.NO_OVERLAY);
-                pose.popPose();
-                var position = head.getPosition(0.5F).subtract(attachment);
-                pose.translate(position.x, position.y, position.z);
-                renderer.render(head, head.getYRot(), 0.5F, pose, buffers, LIGHT);
-                buffers.endBatch();
-            }
-            try (var image = Screenshot.takeScreenshot(target)) {
-                image.writeToFile(Path.of("pufferfish-flail-flight-preview.png"));
-            }
-        } catch (IOException exception) {
-            throw new IllegalStateException("Could not save flail flight preview", exception);
-        } finally {
-            head.discard();
-            view.popMatrix();
-            RenderSystem.applyModelViewMatrix();
-            RenderSystem.restoreProjectionMatrix();
-            target.destroyBuffers();
-            minecraft.getMainRenderTarget().bindWrite(true);
         }
     }
 

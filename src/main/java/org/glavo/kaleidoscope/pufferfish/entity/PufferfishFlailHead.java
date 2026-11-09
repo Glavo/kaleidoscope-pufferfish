@@ -6,6 +6,11 @@ package org.glavo.kaleidoscope.pufferfish.entity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.stats.Stats;
+import org.glavo.kaleidoscope.pufferfish.PufferfishFlailItem;
+import org.glavo.kaleidoscope.pufferfish.PufferfishFlailMotion;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -38,13 +43,80 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
     private static final double RETURN_SPEED = 0.4;
     /// The distance from the return target at which the head is removed, in blocks.
     private static final double RETURN_DISTANCE = 0.2;
-    /// The maximum lifetime in ticks, shorter than the weapon's launch cooldown.
+    /// The maximum flight lifetime in ticks, excluding charging and queued release.
     private static final int LIFETIME = 29;
     /// Whether the head has finished its damaging outward flight.
     private static final EntityDataAccessor<Boolean> RETURNING = SynchedEntityData.defineId(PufferfishFlailHead.class, EntityDataSerializers.BOOLEAN);
     /// Whether the weapon was launched from the off hand.
     private static final EntityDataAccessor<Boolean> OFF_HAND = SynchedEntityData.defineId(PufferfishFlailHead.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Integer> PHASE = SynchedEntityData.defineId(PufferfishFlailHead.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Float> QUEUED_AGE = SynchedEntityData.defineId(PufferfishFlailHead.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Long> PHASE_TIME = SynchedEntityData.defineId(PufferfishFlailHead.class, EntityDataSerializers.LONG);
+    private static final EntityDataAccessor<Float> RELEASE_AGE = SynchedEntityData.defineId(PufferfishFlailHead.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> AIM_YAW = SynchedEntityData.defineId(PufferfishFlailHead.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Long> FLIGHT_TIME = SynchedEntityData.defineId(PufferfishFlailHead.class, EntityDataSerializers.LONG);
     private float charge = 1;
+    private int phaseTick;
+    private int flightStartTick;
+
+    public boolean isCharging() { return entityData.get(PHASE) == 1; }
+    public boolean isQueued() { return entityData.get(PHASE) == 2; }
+    public boolean isSpinning() { return isCharging() || isQueued(); }
+
+    public void beginCharging() {
+        entityData.set(PHASE, 1);
+        entityData.set(PHASE_TIME, level().getGameTime());
+        if (getOwner() instanceof Player player) {
+            setPos(PufferfishFlailMotion.orbit(player, getHand(), getItem(), 0, player.getYRot(), 1));
+            setOldPosAndRot();
+        }
+    }
+
+    public void queueRelease(float age, float yaw, float pitch) {
+        if (!isCharging()) return;
+        charge = PufferfishFlailItem.charge(getItem(), age);
+        entityData.set(QUEUED_AGE, age);
+        entityData.set(RELEASE_AGE, PufferfishFlailMotion.releaseAge(getItem(), age, pitch));
+        entityData.set(AIM_YAW, yaw);
+        entityData.set(PHASE_TIME, level().getGameTime());
+        phaseTick = tickCount;
+        entityData.set(PHASE, 2);
+    }
+
+    public float orbitAge(float partialTick) {
+        if (isCharging()) {
+            if (getOwner() instanceof Player player && player.isUsingItem()) return player.getTicksUsingItem() + partialTick;
+            return Math.max(0, level().getGameTime() - entityData.get(PHASE_TIME)) + partialTick;
+        }
+        float elapsed = level().isClientSide()
+                ? Math.max(0, level().getGameTime() - entityData.get(PHASE_TIME)) : tickCount - phaseTick;
+        return Math.min(entityData.get(RELEASE_AGE), entityData.get(QUEUED_AGE) + elapsed + partialTick);
+    }
+
+    public Vec3 renderPosition(float partialTick) {
+        if (isSpinning() && getOwner() instanceof Player player) {
+            return PufferfishFlailMotion.orbit(player, getHand(), getItem(), orbitAge(partialTick),
+                    isQueued() ? entityData.get(AIM_YAW) : player.getViewYRot(partialTick), partialTick);
+        }
+        return getPosition(partialTick);
+    }
+
+    private void launch(Player player) {
+        float age = entityData.get(RELEASE_AGE);
+        float yaw = entityData.get(AIM_YAW);
+        setPos(PufferfishFlailMotion.orbit(player, getHand(), getItem(), age, yaw, 1));
+        setDeltaMovement(PufferfishFlailMotion.tangent(getItem(), age, yaw).scale(1.2));
+        entityData.set(FLIGHT_TIME, level().getGameTime());
+        entityData.set(PHASE, 0);
+        flightStartTick = tickCount;
+        if (!level().isClientSide()) {
+            player.getCooldowns().addCooldown(PufferfishItems.FLAIL.get(), PufferfishFlailItem.COOLDOWN);
+            player.getCooldowns().addCooldown(PufferfishItems.NETHERITE_FLAIL.get(), PufferfishFlailItem.COOLDOWN);
+            player.getCooldowns().addCooldown(PufferfishItems.HEAVY_FLAIL.get(), PufferfishFlailItem.COOLDOWN);
+            player.awardStat(Stats.ITEM_USED.get(getItem().getItem()));
+            level().playSound(null, position().x, position().y, position().z, SoundEvents.CHAIN_HIT, SoundSource.PLAYERS, 0.8F, 1);
+        }
+    }
 
     /// Creates a head for entity loading or network spawning.
     public PufferfishFlailHead(EntityType<? extends PufferfishFlailHead> type, Level level) {
@@ -69,6 +141,13 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         tag.putFloat("Charge", charge);
+        tag.putBoolean("OffHand", getHand() == InteractionHand.OFF_HAND);
+        tag.putBoolean("Returning", isReturning());
+        tag.putInt("Phase", entityData.get(PHASE));
+        tag.putFloat("OrbitAge", orbitAge(0));
+        tag.putFloat("ReleaseAge", entityData.get(RELEASE_AGE));
+        tag.putFloat("AimYaw", entityData.get(AIM_YAW));
+        tag.putInt("FlightAge", tickCount - flightStartTick);
     }
 
     @Override
@@ -76,6 +155,17 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
         super.readAdditionalSaveData(tag);
         float saved = tag.contains("Charge") ? tag.getFloat("Charge") : 1;
         charge = Float.isFinite(saved) ? Mth.clamp(saved, 0, 1) : 0;
+        entityData.set(OFF_HAND, tag.getBoolean("OffHand"));
+        entityData.set(RETURNING, tag.getBoolean("Returning"));
+        entityData.set(PHASE, Mth.clamp(tag.getInt("Phase"), 0, 2));
+        entityData.set(QUEUED_AGE, tag.getFloat("OrbitAge"));
+        entityData.set(RELEASE_AGE, tag.getFloat("ReleaseAge"));
+        entityData.set(AIM_YAW, tag.getFloat("AimYaw"));
+        entityData.set(PHASE_TIME, level().getGameTime());
+        phaseTick = tickCount;
+        flightStartTick = tickCount - tag.getInt("FlightAge");
+        entityData.set(FLIGHT_TIME, level().getGameTime() - tag.getInt("FlightAge"));
+        noPhysics = isReturning();
     }
 
     @Override
@@ -83,6 +173,12 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
         super.defineSynchedData(builder);
         builder.define(RETURNING, false);
         builder.define(OFF_HAND, false);
+        builder.define(PHASE, 0);
+        builder.define(QUEUED_AGE, 0F);
+        builder.define(PHASE_TIME, 0L);
+        builder.define(RELEASE_AGE, 0F);
+        builder.define(AIM_YAW, 0F);
+        builder.define(FLIGHT_TIME, -1L);
     }
 
     /// Returns the hand holding this head's weapon.
@@ -113,7 +209,7 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
         if (!level().isClientSide() && (!(owner instanceof Player player) || !player.isAlive()
                 || player.isSpectator() || player.level() != level()
                 || !ItemStack.isSameItemSameComponents(player.getItemInHand(getHand()), getItem())
-                || tickCount >= LIFETIME)) {
+                || (!isSpinning() && tickCount - flightStartTick >= LIFETIME))) {
             discard();
             return;
         }
@@ -121,8 +217,22 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
             super.tick();
             return;
         }
-        Vec3 target = owner.getEyePosition().add(0, -0.3, 0);
-        if (!isReturning() && (tickCount >= 8 || position().add(getDeltaMovement()).distanceTo(owner.getEyePosition()) >= REACH)) {
+        if (isSpinning() && owner instanceof Player player) {
+            baseTick();
+            if (isCharging() && !level().isClientSide() && (!player.isUsingItem()
+                    || player.getUsedItemHand() != getHand())) {
+                discard();
+                return;
+            }
+            if (isQueued() && orbitAge(0) >= entityData.get(RELEASE_AGE)) launch(player);
+            else setPos(renderPosition(1));
+            return;
+        }
+        Vec3 target = owner instanceof Player player
+                ? PufferfishFlailMotion.grip(player, getHand(), player.getYRot(), 1) : owner.getEyePosition();
+        long flightAge = level().isClientSide() && entityData.get(FLIGHT_TIME) >= 0
+                ? Math.max(0, level().getGameTime() - entityData.get(FLIGHT_TIME)) : tickCount - flightStartTick;
+        if (!isReturning() && (flightAge >= 8 || position().add(getDeltaMovement()).distanceTo(owner.getEyePosition()) >= REACH)) {
             beginReturn();
         }
         if (isReturning()) {
@@ -149,13 +259,13 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
 
     @Override
     protected boolean canHitEntity(Entity target) {
-        return !isReturning() && target != getOwner() && super.canHitEntity(target);
+        return !isSpinning() && !isReturning() && target != getOwner() && super.canHitEntity(target);
     }
 
     /// Applies the weapon's damage and poison once, on a successful outward impact.
     @Override
     protected void onHitEntity(EntityHitResult result) {
-        if (!(level() instanceof ServerLevel server) || isReturning()) return;
+        if (!(level() instanceof ServerLevel server) || isReturning() || isSpinning()) return;
         var target = result.getEntity();
         var source = new DamageSource(registryAccess().registryOrThrow(Registries.DAMAGE_TYPE)
                 .getHolderOrThrow(ThrownPufferfish.DAMAGE_TYPE), this, getOwner());
@@ -176,7 +286,7 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
     /// Starts returning after the first impact, including an impact that deals no damage.
     @Override
     protected void onHit(HitResult result) {
-        if (isReturning() || isRemoved()) return;
+        if (isSpinning() || isReturning() || isRemoved()) return;
         super.onHit(result);
         beginReturn();
     }

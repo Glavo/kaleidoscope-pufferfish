@@ -16,6 +16,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.Camera;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.client.event.RenderFrameEvent;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+import net.neoforged.neoforge.common.NeoForge;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.PlayerModel;
@@ -33,6 +40,8 @@ import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishTextures;
+import org.glavo.kaleidoscope.pufferfish.client.PufferfishFlailHeadRenderer;
+import org.glavo.kaleidoscope.pufferfish.entity.PufferfishFlailHead;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -51,11 +60,20 @@ public final class PufferfishFlailOrbitClientTest {
             @Override
             public boolean isUsingItem() { return !getUseItem().isEmpty(); }
         };
+        player.setPos(0, 0, 0);
+        player.setOldPosAndRot();
         minecraft.level = level;
         level.addEntity(player);
         var context = new EntityRendererProvider.Context(minecraft.getEntityRenderDispatcher(), minecraft.getItemRenderer(),
                 minecraft.getBlockRenderer(), minecraft.getEntityRenderDispatcher().getItemInHandRenderer(),
                 minecraft.getResourceManager(), minecraft.getEntityModels(), minecraft.font);
+        var headRenderer = new PufferfishFlailHeadRenderer(context);
+        RenderSystem.backupProjectionMatrix();
+        RenderSystem.setProjectionMatrix(new Matrix4f(), VertexSorting.ORTHOGRAPHIC_Z);
+        var view = RenderSystem.getModelViewStack();
+        view.pushMatrix().identity();
+        RenderSystem.applyModelViewMatrix();
+        captureWorld(minecraft, new Matrix4f());
         try {
             var remaining = LivingEntity.class.getDeclaredField("useItemRemaining");
             remaining.setAccessible(true);
@@ -72,9 +90,13 @@ public final class PufferfishFlailOrbitClientTest {
                         var stack = new ItemStack(PufferfishItems.NETHERITE_FLAIL.get());
                         player.setItemInHand(hand, stack);
                         player.startUsingItem(hand);
+                        var head = new PufferfishFlailHead(level, player, hand);
+                        head.beginCharging();
+                        level.addEntity(head);
                         model.rightArmPose = usedArm == HumanoidArm.RIGHT ? HumanoidModel.ArmPose.ITEM : HumanoidModel.ArmPose.EMPTY;
                         model.leftArmPose = usedArm == HumanoidArm.LEFT ? HumanoidModel.ArmPose.ITEM : HumanoidModel.ArmPose.EMPTY;
                         for (boolean crouching : new boolean[] {false, true}) {
+                            player.setPose(crouching ? Pose.CROUCHING : Pose.STANDING);
                             model.crouching = crouching;
                             var min = new Vector3f(Float.POSITIVE_INFINITY);
                             var max = new Vector3f(Float.NEGATIVE_INFINITY);
@@ -83,12 +105,15 @@ public final class PufferfishFlailOrbitClientTest {
                                 remaining.setInt(player, stack.getUseDuration(player) - ticks);
                                 model.setupAnim(player, 1.2F, 0.6F, ticks, 35, 45);
                                 var capture = new Capture();
-                                var pose = new PoseStack();
+                                var pose = bodyPose(player);
                                 layer.render(pose, capture, LIGHT, player, 0, 0, 0, ticks, 0, 0);
-                                if (capture.head.isEmpty() || !pose.clear()) throw new IllegalStateException("Missing third-person charging head");
+                                var worldPose = new PoseStack();
+                                renderHead(headRenderer, head, worldPose, capture);
+                                capture.verifyTether(head.renderPosition(0));
+                                if (capture.head.isEmpty() || !worldPose.clear()) throw new IllegalStateException("Missing third-person charging head");
                                 var center = new Vector3f();
                                 for (var vertex : capture.head) {
-                                    if (side * vertex.x < 0.50F) throw new IllegalStateException("Charging flail crossed the player's body");
+                                    if (side * vertex.x < 0.50F) throw new IllegalStateException("Charging flail crossed the player's body: vertex=" + vertex + ", side=" + side + ", arm=" + arm + ", hand=" + hand + ", ticks=" + ticks + ", position=" + head.renderPosition(0) + ", yaw=" + player.getYRot() + ", size=" + capture.head.size());
                                     center.add(vertex);
                                 }
                                 center.div(capture.head.size());
@@ -96,13 +121,14 @@ public final class PufferfishFlailOrbitClientTest {
                                 max.max(center);
                                 if (!slim && arm == HumanoidArm.RIGHT && hand == InteractionHand.MAIN_HAND && !crouching
                                         && ticks >= duration && ticks < duration + 12 && (ticks - duration) % 3 == 0) {
-                                    preview(minecraft, player, model, layer, ticks - duration);
+                                    preview(minecraft, player, model, layer, ticks - duration, headRenderer, head);
                                 }
                             }
                             if (max.x - min.x > 0.03F || max.y - min.y < 1.0F || max.z - min.z < 1.0F) {
                                 throw new IllegalStateException("Third-person flail did not orbit vertically beside the body");
                             }
                         }
+                        head.discard();
                         player.stopUsingItem();
                         player.setItemInHand(hand, ItemStack.EMPTY);
                     }
@@ -113,11 +139,16 @@ public final class PufferfishFlailOrbitClientTest {
         } finally {
             player.discard();
             minecraft.level = oldLevel;
+            view.popMatrix();
+            RenderSystem.applyModelViewMatrix();
+            RenderSystem.restoreProjectionMatrix();
+            NeoForge.EVENT_BUS.post(new RenderFrameEvent.Pre(DeltaTracker.ZERO));
         }
     }
 
     private static void preview(Minecraft minecraft, AbstractClientPlayer player, PlayerModel<AbstractClientPlayer> model,
-            ItemInHandLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> layer, int frame) {
+            ItemInHandLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> layer, int frame,
+            PufferfishFlailHeadRenderer renderer, PufferfishFlailHead head) {
         var target = new TextureTarget(1000, 440, true, Minecraft.ON_OSX);
         target.setClearColor(0.12F, 0.15F, 0.18F, 1);
         target.clear(Minecraft.ON_OSX);
@@ -130,13 +161,15 @@ public final class PufferfishFlailOrbitClientTest {
         Lighting.setupFor3DItems();
         try {
             for (int panel = 0; panel < 2; panel++) {
-                var pose = new PoseStack();
-                pose.translate(250 + panel * 500, 120, 0);
-                pose.scale(170, 170, -170);
-                pose.mulPose(Axis.YP.rotationDegrees(panel == 0 ? 160 : 90));
+                view.identity().translate(250 + panel * 500, 360, 0).scale(170, -170, 170)
+                        .rotateY((float) Math.toRadians(panel == 0 ? 160 : 90));
+                RenderSystem.applyModelViewMatrix();
+                captureWorld(minecraft, new Matrix4f(view));
+                var pose = bodyPose(player);
                 var buffers = minecraft.renderBuffers().bufferSource();
                 model.renderToBuffer(pose, buffers.getBuffer(RenderType.entityCutoutNoCull(player.getSkin().texture())), LIGHT, OverlayTexture.NO_OVERLAY);
                 layer.render(pose, buffers, LIGHT, player, 0, 0, 0, 0, 0, 0);
+                renderHead(renderer, head, new PoseStack(), buffers);
                 buffers.endBatch();
             }
             try (var image = Screenshot.takeScreenshot(target)) {
@@ -148,21 +181,74 @@ public final class PufferfishFlailOrbitClientTest {
             view.popMatrix();
             RenderSystem.applyModelViewMatrix();
             RenderSystem.restoreProjectionMatrix();
+            captureWorld(minecraft, new Matrix4f(RenderSystem.getModelViewMatrix()));
             target.destroyBuffers();
             minecraft.getMainRenderTarget().bindWrite(true);
         }
     }
 
+    private static PoseStack bodyPose(AbstractClientPlayer player) {
+        var pose = new PoseStack();
+        float scale = player.getScale();
+        pose.translate(0, player.isCrouching() ? -0.125 * scale : 0, 0);
+        pose.scale(0.9375F * scale, -0.9375F * scale, -0.9375F * scale);
+        pose.translate(0, -1.501, 0);
+        return pose;
+    }
+
+    private static void captureWorld(Minecraft minecraft, Matrix4f view) {
+        var camera = new Camera() { { setPosition(Vec3.ZERO); } };
+        NeoForge.EVENT_BUS.post(new RenderLevelStageEvent(RenderLevelStageEvent.Stage.AFTER_SKY,
+                minecraft.levelRenderer, null, view, RenderSystem.getProjectionMatrix(), 0, DeltaTracker.ZERO, camera, null));
+    }
+
+    private static void renderHead(PufferfishFlailHeadRenderer renderer, PufferfishFlailHead head, PoseStack pose, MultiBufferSource buffers) {
+        pose.pushPose();
+        var position = head.getPosition(0);
+        pose.translate(position.x, position.y, position.z);
+        renderer.render(head, 0, 0, pose, buffers, LIGHT);
+        pose.popPose();
+    }
+
     private static final class Capture implements MultiBufferSource, VertexConsumer {
         private final List<Vector3f> head = new ArrayList<>();
         private boolean recording;
+        private final List<List<Vector3f>> groups = new ArrayList<>();
+        private List<Vector3f> current;
         @Override
         public VertexConsumer getBuffer(RenderType type) {
+            current = new ArrayList<>();
+            groups.add(current);
             recording = type == RenderType.entityCutoutNoCull(PufferfishTextures.netheriteEntity());
             return this;
         }
         @Override
-        public VertexConsumer addVertex(float x, float y, float z) { if (recording) head.add(new Vector3f(x, y, z)); return this; }
+        public VertexConsumer addVertex(float x, float y, float z) {
+            var vertex = new Vector3f(x, y, z);
+            current.add(vertex);
+            if (recording) head.add(vertex);
+            return this;
+        }
+
+        void verifyTether(Vec3 position) {
+            if (groups.size() != 4) throw new IllegalStateException("Third-person swing lost its grip, tether, or head");
+            var bands = groups.get(1);
+            var chain = groups.get(2);
+            var bottom = new Vector3f();
+            var top = new Vector3f();
+            var first = new Vector3f();
+            var last = new Vector3f();
+            for (int i = 0; i < 24; i++) { bottom.add(bands.get(i)); top.add(bands.get(i + 24)); }
+            for (int i = 0; i < 96; i++) { first.add(chain.get(i)); last.add(chain.get(chain.size() - 96 + i)); }
+            first.div(96);
+            last.div(96);
+            if (last.distance(position.toVector3f()) > 0.30F || top.div(24).distance(first) > 0.13F) {
+                throw new IllegalStateException("Third-person chain detached from the grip or world head: head=" + position + ", end=" + last + ", grip=" + top + ", start=" + first + ", groups=" + groups.stream().map(List::size).toList());
+            }
+            if (top.sub(bottom.div(24)).normalize().dot(last.sub(first).normalize()) < 0.995F) {
+                throw new IllegalStateException("Third-person grip ignored chain tension");
+            }
+        }
         @Override
         public VertexConsumer setColor(int r, int g, int b, int a) { return this; }
         @Override

@@ -3,9 +3,6 @@
 
 package org.glavo.kaleidoscope.pufferfish;
 
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
@@ -61,30 +58,33 @@ public final class PufferfishFlailItem extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         var stack = player.getItemInHand(hand);
-        if (player.isSpectator() || player.getCooldowns().isOnCooldown(this)) {
+        if (player.isSpectator() || player.getCooldowns().isOnCooldown(this) || activeHead(player) != null) {
             return InteractionResultHolder.fail(stack);
+        }
+        if (!level.isClientSide()) {
+            var head = new PufferfishFlailHead(level, player, hand, 0);
+            head.beginCharging();
+            if (!level.addFreshEntity(head)) return InteractionResultHolder.fail(stack);
         }
         player.startUsingItem(hand);
         return InteractionResultHolder.consume(stack);
     }
 
-    /// Releases the charged head; short taps and canceled spawns do not incur a cooldown.
+    public static PufferfishFlailHead activeHead(Player player) {
+        return player.level().getEntitiesOfClass(PufferfishFlailHead.class, player.getBoundingBox().inflate(16),
+                head -> head.getOwner() == player && !head.isRemoved()).stream().findFirst().orElse(null);
+    }
+
+    /// Locks damage and aim, allowing the same head to finish its swing before release.
     @Override
     public void releaseUsing(ItemStack stack, Level level, LivingEntity entity, int remainingTicks) {
-        if (!(entity instanceof Player player) || level.isClientSide() || player.isSpectator()
+        if (!(entity instanceof Player player) || player.isSpectator()
                 || player.getCooldowns().isOnCooldown(this) || player.getUseItem() != stack
                 || player.getItemInHand(player.getUsedItemHand()) != stack) return;
         int elapsed = getUseDuration(stack, player) - remainingTicks;
-        if (elapsed < MIN_CHARGE_TICKS) return;
-        var hand = player.getUsedItemHand();
-        var head = new PufferfishFlailHead(level, player, hand, charge(stack, elapsed));
-        head.shootFromRotation(player, player.getXRot(), player.getYRot(), 0, 1.2F, 0);
-        if (!level.addFreshEntity(head)) return;
-        player.getCooldowns().addCooldown(PufferfishItems.FLAIL.get(), COOLDOWN);
-        player.getCooldowns().addCooldown(PufferfishItems.NETHERITE_FLAIL.get(), COOLDOWN);
-        player.getCooldowns().addCooldown(PufferfishItems.HEAVY_FLAIL.get(), COOLDOWN);
-        player.awardStat(Stats.ITEM_USED.get(this));
-        level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.CHAIN_HIT,
-                SoundSource.PLAYERS, 0.8F, 1.0F);
+        var head = activeHead(player);
+        if (head == null || !head.isCharging()) return;
+        if (elapsed < MIN_CHARGE_TICKS) head.discard();
+        else head.queueRelease(elapsed, player.getYRot(), player.getXRot());
     }
 }
