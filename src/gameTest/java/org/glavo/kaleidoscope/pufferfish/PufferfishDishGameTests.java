@@ -45,6 +45,15 @@ public final class PufferfishDishGameTests {
     /// Verifies food recovery and bowl returns for single and stacked meals without applying raw-fish poison.
     @GameTest(template = "empty")
     public static void cookedDishesRestoreFoodAndReturnBowls(GameTestHelper helper) {
+        var pie = KaleidoscopePufferfish.id("pufferfish_stargazy_pie");
+        boolean cookery = ModList.get().isLoaded("kaleidoscope_cookery");
+        helper.assertTrue(net.minecraft.core.registries.BuiltInRegistries.ITEM.containsKey(pie) == cookery
+                && net.minecraft.core.registries.BuiltInRegistries.BLOCK.containsKey(pie) == cookery,
+                "Placeable pie ignored its optional Cookery dependency");
+        for (var name : List.of("pufferfish_stargazy_pie", "pufferfish_stargazy_pie_flexible")) {
+            helper.assertTrue(helper.getLevel().getRecipeManager().byKey(KaleidoscopePufferfish.id("compat/cookery/" + name)).isPresent()
+                    == cookery, "Pie recipe ignored its mod condition");
+        }
         for (var item : List.of(PufferfishItems.BRAISED.get(), PufferfishItems.BRAISED_RICE_BOWL.get(), PufferfishItems.ZOSUI.get())) {
             for (int count : new int[] {1, 2}) {
                 var player = helper.makeMockPlayer(GameType.SURVIVAL);

@@ -38,6 +38,7 @@ public final class PufferfishCuttingGameTests {
     public static void register(RegisterGameTestsEvent event) {
         if (ModList.get().isLoaded("kaleidoscope_cookery")) event.register(CookeryCuttingGameTests.class);
         if (ModList.get().isLoaded("kaleidoscope_cookery")) event.register(CookeryDishGameTests.class);
+        if (ModList.get().isLoaded("kaleidoscope_cookery")) event.register(org.glavo.kaleidoscope.pufferfish.compat.cooking.CookeryPieGameTests.class);
         if (ModList.get().isLoaded("farmersdelight")) event.register(FarmersDelightCuttingGameTests.class);
     }
 

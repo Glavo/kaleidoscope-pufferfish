@@ -86,6 +86,9 @@ public class KaleidoscopePufferfish {
                     output.accept(PufferfishItems.ZOSUI);
                     output.accept(PufferfishItems.RAW_BAOZI);
                     output.accept(PufferfishItems.BAOZI);
+                    if (ModList.get().isLoaded("kaleidoscope_cookery")) {
+                        output.accept(org.glavo.kaleidoscope.pufferfish.compat.cookery.CookeryFoodIntegration.STARGAZY_PIE_ITEM);
+                    }
                     output.accept(PufferfishItems.FLAIL);
                     output.accept(PufferfishItems.NETHERITE_FLAIL);
                     output.accept(PufferfishItems.HEAVY_FLAIL);
@@ -111,6 +114,9 @@ public class KaleidoscopePufferfish {
             CreateIntegration.register(bus, container);
         }
         PufferfishItems.register(bus);
+        if (ModList.get().isLoaded("kaleidoscope_cookery")) {
+            org.glavo.kaleidoscope.pufferfish.compat.cookery.CookeryFoodIntegration.register(bus);
+        }
         PufferfishShields.register(bus);
         PufferfishArmor.register(bus);
         PufferfishBoats.register(bus);

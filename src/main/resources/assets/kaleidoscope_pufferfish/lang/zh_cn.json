@@ -183,5 +183,7 @@
   "item.kaleidoscope_pufferfish.heavy_pufferfish_skin_leggings": "沉重河豚皮裤子",
   "item.kaleidoscope_pufferfish.heavy_pufferfish_skin_boots": "沉重河豚皮靴子",
   "item.kaleidoscope_pufferfish.heavy_pufferfish_skin_boat": "沉重河豚皮划艇",
-  "entity.kaleidoscope_pufferfish.heavy_pufferfish_skin_boat": "沉重河豚皮划艇"
+  "entity.kaleidoscope_pufferfish.heavy_pufferfish_skin_boat": "沉重河豚皮划艇",
+  "block.kaleidoscope_pufferfish.pufferfish_stargazy_pie": "河豚仰望星空派",
+  "tooltip.kaleidoscope_pufferfish.pufferfish_stargazy_pie.maxim": "满盘河豚，一同仰望星空。"
 }

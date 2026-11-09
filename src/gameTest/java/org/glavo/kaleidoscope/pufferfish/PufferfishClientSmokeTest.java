@@ -142,6 +142,7 @@ public final class PufferfishClientSmokeTest {
     private static void verifyDishModels(Minecraft minecraft) {
         if (net.neoforged.fml.ModList.get().isLoaded("kaleidoscope_cookery")) {
             org.glavo.kaleidoscope.pufferfish.compat.cooking.CookeryBaoziClientTest.preview(minecraft);
+            org.glavo.kaleidoscope.pufferfish.compat.cooking.CookeryPieClientTest.verify(minecraft);
         }
         try (var preview = new com.mojang.blaze3d.platform.NativeImage(1280, 256, true)) {
             var items = java.util.List.of(PufferfishItems.BRAISED.get(), PufferfishItems.BRAISED_RICE_BOWL.get(), PufferfishItems.ZOSUI.get(),

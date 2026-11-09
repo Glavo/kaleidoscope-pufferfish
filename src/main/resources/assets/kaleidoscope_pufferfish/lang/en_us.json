@@ -183,5 +183,7 @@
   "item.kaleidoscope_pufferfish.heavy_pufferfish_skin_leggings": "Heavy Pufferfish Skin Pants",
   "item.kaleidoscope_pufferfish.heavy_pufferfish_skin_boots": "Heavy Pufferfish Skin Boots",
   "item.kaleidoscope_pufferfish.heavy_pufferfish_skin_boat": "Heavy Pufferfish Skin Rowboat",
-  "entity.kaleidoscope_pufferfish.heavy_pufferfish_skin_boat": "Heavy Pufferfish Skin Rowboat"
+  "entity.kaleidoscope_pufferfish.heavy_pufferfish_skin_boat": "Heavy Pufferfish Skin Rowboat",
+  "block.kaleidoscope_pufferfish.pufferfish_stargazy_pie": "Pufferfish Stargazy Pie",
+  "tooltip.kaleidoscope_pufferfish.pufferfish_stargazy_pie.maxim": "A skyward stare in every serving."
 }

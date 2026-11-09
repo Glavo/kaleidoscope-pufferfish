@@ -341,7 +341,44 @@ val generateBoatResources = tasks.register<Sync>("generateBoatResources") {
     }
 }
 
+val generatePieModels = tasks.register<Sync>("generatePieModels") {
+    inputs.property("modId", modId)
+    filteringCharset = "UTF-8"
+    into(layout.buildDirectory.dir("generated/resources/pufferfishPie"))
+    fun uv(tile: Int) = listOf(tile % 4 * 4, tile / 4 * 4, tile % 4 * 4 + 4, tile / 4 * 4 + 4)
+    fun box(x: Double, y: Double, z: Double, width: Double, height: Double, depth: Double, tile: Int, top: Int = tile): Map<String, Any> = mapOf(
+        "from" to listOf(x, y, z), "to" to listOf(x + width, y + height, z + depth),
+        "faces" to listOf("north", "south", "east", "west", "up", "down").associateWith {
+            mapOf("texture" to "#pie", "uv" to uv(if (it == "up") top else tile))
+        }
+    )
+    fun fish(x: Double, z: Double): List<Map<String, Any>> = listOf(
+        box(x - 1.7, 4.0, z - 1.7, 3.4, 4.0, 3.4, 1, 0),
+        box(x - 2.4, 5.0, z - 0.5, 0.7, 1.0, 1.0, 5),
+        box(x + 1.7, 5.0, z - 0.5, 0.7, 1.0, 1.0, 5),
+        box(x - 0.4, 5.5, z - 2.4, 0.8, 0.8, 0.7, 5),
+        box(x - 0.4, 5.5, z + 1.7, 0.8, 0.8, 0.7, 5)
+    )
+    val plate = listOf(box(2.0, 0.0, 1.0, 12.0, 1.0, 14.0, 4), box(1.0, 0.0, 2.0, 1.0, 1.0, 12.0, 4),
+        box(14.0, 0.0, 2.0, 1.0, 1.0, 12.0, 4))
+    val portions = listOf(2.0 to 2.0, 8.0 to 2.0, 2.0 to 8.0, 8.0 to 8.0).mapIndexed { index, (x, z) ->
+        listOf(box(x, 1.0, z, 6.0, 2.0, 6.0, 2), box(x + 0.3, 3.0, z + 0.3, 5.4, 1.0, 5.4, 3)) +
+                fish(if (x == 2.0) 4.0 else 12.0, if (z == 2.0) 4.0 else 12.0) +
+                if (index == 3) fish(8.0, 8.0) else emptyList()
+    }
+    for (bites in 0..4) {
+        val elements = JsonOutput.toJson(plate + portions.drop(bites).flatten())
+        inputs.property("elements$bites", elements)
+        from("src/main/modelTemplates/pufferfish_pie.json") {
+            expand("modId" to modId, "elements" to elements)
+            into("assets/$modId/models/block")
+            rename { "pufferfish_stargazy_pie_$bites.json" }
+        }
+    }
+}
+
 sourceSets.main {
+    resources.srcDir(generatePieModels)
     resources.srcDir(generateBoatResources)
     resources.srcDir(generateArmorResources)
     resources.srcDir(generateShieldResources)
