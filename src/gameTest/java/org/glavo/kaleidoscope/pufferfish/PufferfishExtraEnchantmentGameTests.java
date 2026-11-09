@@ -103,7 +103,8 @@ public final class PufferfishExtraEnchantmentGameTests {
                             double expected = (ranged ? PufferfishCombat.damage(stack) : player.getAttributeValue(Attributes.ATTACK_DAMAGE))
                                     + (affected ? 2.5 * rank : 0);
                             if (ranged && PufferfishItems.isFlail(stack)) {
-                                expected = ((PufferfishItems.hasHeavyCombat(stack) ? 10 : PufferfishItems.hasNetheriteCombat(stack) ? 6 : 1) + (affected ? 2.5 * rank : 0)) * 1.5;
+                                expected = ((PufferfishItems.hasHeavyCombat(stack) ? 10 : PufferfishItems.hasNetheriteCombat(stack) ? 6 : 1) + (affected ? 2.5 * rank : 0))
+                                        * (PufferfishItems.hasHeavyCombat(stack) ? 1.6 : 2);
                             }
                             if (ranged) {
                                 net.minecraft.world.entity.projectile.ThrowableItemProjectile projectile;

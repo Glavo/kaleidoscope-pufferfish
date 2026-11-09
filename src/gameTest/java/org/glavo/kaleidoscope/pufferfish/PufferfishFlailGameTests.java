@@ -262,7 +262,7 @@ public final class PufferfishFlailGameTests {
             helper.getLevel().addFreshEntity(head);
             head.tick();
             boolean netherite = PufferfishItems.hasNetheriteCombat(new ItemStack(item));
-            helper.assertTrue(head.isReturning() && target.getHealth() == (PufferfishItems.hasHeavyCombat(head.getItem()) ? 5 : netherite ? 11 : 18.5F)
+            helper.assertTrue(head.isReturning() && target.getHealth() == (PufferfishItems.hasHeavyCombat(head.getItem()) ? 4 : netherite ? 8 : 18)
                     && target.hasEffect(MobEffects.POISON), "Flying head did not hit and start returning");
             float health = target.getHealth();
             target.invulnerableTime = 0;
@@ -311,7 +311,7 @@ public final class PufferfishFlailGameTests {
                     helper.getLevel().addFreshEntity(restored);
                     restored.tick();
                     float baseline = (PufferfishItems.hasHeavyCombat(stack) ? 10 : PufferfishItems.hasNetheriteCombat(stack) ? 6 : 1) + (rank == 0 ? 0 : 3);
-                    float expected = baseline * 1.5F * Math.min(1, (float) elapsed / duration);
+                    float expected = baseline * (PufferfishItems.hasHeavyCombat(stack) ? 1.6F : 2) * Math.min(1, (float) elapsed / duration);
                     helper.assertTrue(Math.abs(100 - target.getHealth() - expected) < 0.001
                             && restored.isReturning() && target.hasEffect(MobEffects.POISON),
                             "Charge damage or saved charge was incorrect: elapsed=" + elapsed + ", expected=" + expected
@@ -496,7 +496,7 @@ public final class PufferfishFlailGameTests {
                         head.tickCount++;
                         head.tick();
                     }
-                    float expectedDamage = PufferfishItems.hasHeavyCombat(stack) ? 15 : PufferfishItems.hasNetheriteCombat(stack) ? 9 : 1.5F;
+                    float expectedDamage = PufferfishItems.hasHeavyCombat(stack) ? 16 : PufferfishItems.hasNetheriteCombat(stack) ? 12 : 2;
                     helper.assertTrue(Math.abs(100 - target.getHealth() - expectedDamage) < 0.001
                             && target.hasEffect(MobEffects.POISON), "Aimed flail missed: distance=" + distance + ", pitch=" + pitch + ", arm=" + arm + ", hand=" + hand + ", target=" + type);
                     helper.assertTrue(head.isReturning() && target.getBoundingBox().inflate(0.301).contains(head.position()),
@@ -529,7 +529,7 @@ public final class PufferfishFlailGameTests {
             head.tick();
             helper.assertTrue(head.isReturning() && head.position().distanceTo(player.getEyePosition()) <= PufferfishFlailHead.REACH + 0.00001,
                     "Last outward segment exceeded the tether limit");
-            helper.assertTrue(target.getHealth() == (distance < 6.5 ? 18.5F : 20), "Last segment missed a reachable hit or damaged beyond reach");
+            helper.assertTrue(target.getHealth() == (distance < 6.5 ? 18 : 20), "Last segment missed a reachable hit or damaged beyond reach");
             head.discard();
             target.discard();
         }

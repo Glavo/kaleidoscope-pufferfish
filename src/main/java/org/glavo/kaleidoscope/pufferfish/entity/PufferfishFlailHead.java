@@ -322,7 +322,8 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
         var target = result.getEntity();
         var source = new DamageSource(registryAccess().registryOrThrow(Registries.DAMAGE_TYPE)
                 .getHolderOrThrow(ThrownPufferfish.DAMAGE_TYPE), this, getOwner());
-        if (target.hurt(source, PufferfishCombat.projectileDamage(server, getItem(), target, source) * (1.5F * charge))) {
+        float fullChargeMultiplier = PufferfishItems.hasHeavyCombat(getItem()) ? 1.6F : 2;
+        if (target.hurt(source, PufferfishCombat.projectileDamage(server, getItem(), target, source) * (fullChargeMultiplier * charge))) {
             if (target instanceof LivingEntity living) {
                 PufferfishCombat.hitEffects(getItem(), living, getEffectSource(), getDeltaMovement());
             }
