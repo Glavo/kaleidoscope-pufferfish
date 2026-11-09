@@ -87,9 +87,9 @@ public final class PufferfishCombat {
         }
     }
 
-    /// Attempts to apply three seconds of poison and adds Punch knockback, respecting effect immunity and knockback resistance.
+    /// Applies the fish's poison and Punch knockback, respecting immunity and knockback resistance.
     public static void hitEffects(ItemStack stack, LivingEntity target, Entity source, Vec3 direction) {
-        target.addEffect(new MobEffectInstance(MobEffects.POISON, POISON_DURATION_TICKS, PufferfishItems.hasNetheriteCombat(stack) ? 1 : 0), source);
+        applyPoison(stack, target, source);
         int punch = enchantmentLevel(stack, Enchantments.PUNCH);
         if (punch > 0) {
             double resistance = Math.max(0, 1 - target.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE));
@@ -97,6 +97,16 @@ public final class PufferfishCombat {
             if (push.lengthSqr() > 0) target.push(push.x, 0.1, push.z);
         }
     }
+
+    /// Oxidation strengthens copper poison; wax prevents it without removing existing effects.
+    public static void applyPoison(ItemStack stack, LivingEntity target, Entity source) {
+        int copper = CopperPufferfish.index(stack);
+        if (copper >= 4) return;
+        int duration = POISON_DURATION_TICKS + Math.max(copper, 0) * 10;
+        int amplifier = copper == 3 || PufferfishItems.hasNetheriteCombat(stack) ? 1 : 0;
+        target.addEffect(new MobEffectInstance(MobEffects.POISON, duration, amplifier), source);
+    }
+
     /// Returns the stored level of the specified enchantment, or zero when absent.
     private static int enchantmentLevel(ItemStack stack, ResourceKey<Enchantment> key) {
         return stack.getEnchantments().entrySet().stream().filter(entry -> entry.getKey().is(key))

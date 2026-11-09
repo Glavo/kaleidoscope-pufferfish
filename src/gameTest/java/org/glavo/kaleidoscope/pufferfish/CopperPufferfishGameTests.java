@@ -11,6 +11,11 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -27,6 +32,66 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(KaleidoscopePufferfish.MODID)
 @PrefixGameTestTemplate(false)
 public final class CopperPufferfishGameTests {
+    @GameTest(template = "empty")
+    public static void oxidationStrengthensAttackAndRetaliationPoison(GameTestHelper helper) {
+        for (int stage = 0; stage < 8; stage++) {
+            var fish = new ItemStack(PufferfishItems.COPPER_VARIANTS.get(stage).get());
+            var player = helper.makeMockPlayer(GameType.SURVIVAL);
+            var target = EntityType.PIG.create(helper.getLevel());
+            player.setItemSlot(EquipmentSlot.MAINHAND, fish);
+            helper.assertTrue(target.hurt(target.damageSources().playerAttack(player), 1), "Melee damage failed");
+            assertPoison(helper, target, stage);
+
+            target.removeEffect(MobEffects.POISON);
+            PufferfishCombat.hitEffects(fish, target, player, Vec3.ZERO);
+            assertPoison(helper, target, stage);
+
+            target.removeEffect(MobEffects.POISON);
+            player.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+            player.setItemSlot(EquipmentSlot.HEAD, fish);
+            helper.assertTrue(player.hurt(player.damageSources().mobAttack(target), 1), "Retaliation damage failed");
+            assertPoison(helper, target, stage);
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void waxDoesNotRemoveExistingPoisonOrThorns(GameTestHelper helper) {
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        var target = EntityType.PIG.create(helper.getLevel());
+        var fish = new ItemStack(PufferfishItems.COPPER_VARIANTS.get(7).get());
+        target.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 2));
+        PufferfishCombat.hitEffects(fish, target, player, Vec3.ZERO);
+        var poison = target.getEffect(MobEffects.POISON);
+        helper.assertTrue(poison != null && poison.getDuration() == 200 && poison.getAmplifier() == 2,
+                "Wax changed an existing poison effect");
+        target.removeEffect(MobEffects.POISON);
+        player.setItemSlot(EquipmentSlot.HEAD, fish);
+        player.getRandom().setSeed(4291);
+        int reflected = 0;
+        for (int i = 0; i < 64; i++) {
+            player.invulnerableTime = 0;
+            player.setHealth(player.getMaxHealth());
+            target.invulnerableTime = 0;
+            target.setHealth(target.getMaxHealth());
+            player.hurt(player.damageSources().mobAttack(target), 1);
+            if (target.getHealth() < target.getMaxHealth()) reflected++;
+            helper.assertTrue(!target.hasEffect(MobEffects.POISON), "Waxed headgear poisoned its attacker");
+        }
+        helper.assertTrue(reflected > 0, "Wax disabled thorns retaliation");
+        helper.succeed();
+    }
+
+    private static void assertPoison(GameTestHelper helper, LivingEntity target, int stage) {
+        var poison = target.getEffect(MobEffects.POISON);
+        if (stage >= 4) {
+            helper.assertTrue(poison == null, "Waxed copper applied poison");
+        } else {
+            helper.assertTrue(poison != null && poison.getDuration() == 60 + stage * 10
+                    && poison.getAmplifier() == (stage == 3 ? 1 : 0), "Incorrect oxidation poison strength");
+        }
+    }
+
     @GameTest(template = "empty")
     public static void waxingPreservesComponentsAndRejectsWaxedFish(GameTestHelper helper) {
         for (int i = 0; i < 8; i++) {
