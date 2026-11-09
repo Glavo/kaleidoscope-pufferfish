@@ -9,14 +9,14 @@ import net.minecraft.client.resources.metadata.animation.FrameSize;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceMetadata;
 
-/// Supplies overlapping fan-shaped fish slices with a green garnish.
+/// Supplies overlapping fan-shaped fish slices.
 public final class PufferfishSashimiTexture {
-    /// Pixel rows using transparency, flesh shading, curved grain, and two garnish greens.
+    /// Pixel rows using transparency, flesh shading, and curved grain.
     private static final String[] PIXELS = {
             "................", "........oooo....", "......oohhhhso..", ".....ohhfffvvso.",
             ".....ohfffvffso.", "....oooofvffso..", "...ohhhhossso...", "..ohhfffvvsoo...",
-            "..ohfffvffso....", ".oooofvffso..g..", "ohhhhosso...glg.", "ohhfffvvso.gllgg",
-            ".ohfffvfso..glg.", "..ossssso...gg..", "...oooo.........", "................"
+            "..ohfffvffso....", ".oooofvffso.....", "ohhhhosso......", "ohhfffvvso......",
+            ".ohfffvfso......", "..ossssso.......", "...oooo.........", "................"
     };
 
     /// Prevents construction of the sprite factory.
@@ -33,8 +33,6 @@ public final class PufferfishSashimiTexture {
                     case 'f' -> golden ? 0xF4CF64 : 0xFFEDE3;
                     case 'h' -> golden ? 0xFFF3B0 : 0xFFFAF3;
                     case 'v' -> golden ? 0xE4AE46 : 0xE8C9C4;
-                    case 'g' -> 0x4F7945;
-                    case 'l' -> 0x94B960;
                     default -> -1;
                 };
                 if (rgb >= 0) image.setPixelRGBA(x, y, 0xFF000000 | ((rgb & 255) << 16) | (rgb & 0xFF00) | (rgb >>> 16));
