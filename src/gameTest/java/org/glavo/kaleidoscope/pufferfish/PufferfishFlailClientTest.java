@@ -43,9 +43,9 @@ public final class PufferfishFlailClientTest {
     /// Prevents construction of the test holder.
     private PufferfishFlailClientTest() {}
 
-    /// Verifies both variants in every display context and saves a three-variant preview.
+    /// Verifies all variants in every display context and saves inventory previews.
     public static void verify(Minecraft minecraft) {
-        for (var item : new PufferfishFlailItem[] {PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get()}) {
+        for (var item : new PufferfishFlailItem[] {PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get()}) {
             var stack = new ItemStack(item);
             stack.set(KaleidoscopePufferfish.COLOR.get(), DyeColor.RED);
             var model = minecraft.getItemRenderer().getModel(stack, null, null, 0);
@@ -60,6 +60,10 @@ public final class PufferfishFlailClientTest {
                 if (capture.vertices < 300 || capture.types.size() != 3 || !pose.clear()) {
                     throw new IllegalStateException("Flail head, grip, or chain failed to render: " + context);
                 }
+                if (item == PufferfishItems.HEAVY_FLAIL.get() && !capture.types.contains(RenderType.entityCutoutNoCull(
+                        org.glavo.kaleidoscope.pufferfish.client.PufferfishTextures.heavyEntity()))) {
+                    throw new IllegalStateException("Heavy flail used the wrong fish texture");
+                }
             }
         }
         verifyFlight(minecraft);
@@ -69,12 +73,12 @@ public final class PufferfishFlailClientTest {
 
     /// Renders at native inventory resolutions rather than shrinking a large preview.
     private static void previewSlots(Minecraft minecraft) {
-        var target = new TextureTarget(360, 180, true, Minecraft.ON_OSX);
+        var target = new TextureTarget(480, 180, true, Minecraft.ON_OSX);
         target.setClearColor(0.55F, 0.55F, 0.55F, 1);
         target.clear(Minecraft.ON_OSX);
         target.bindWrite(true);
         RenderSystem.backupProjectionMatrix();
-        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 360, 180, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
+        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 480, 180, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
         var view = RenderSystem.getModelViewStack();
         view.pushMatrix().identity();
         RenderSystem.applyModelViewMatrix();
@@ -83,7 +87,7 @@ public final class PufferfishFlailClientTest {
         try {
             var red = new ItemStack(PufferfishItems.FLAIL.get());
             red.set(KaleidoscopePufferfish.COLOR.get(), DyeColor.RED);
-            var stacks = new ItemStack[] {new ItemStack(PufferfishItems.FLAIL.get()), red, new ItemStack(PufferfishItems.NETHERITE_FLAIL.get())};
+            var stacks = new ItemStack[] {new ItemStack(PufferfishItems.FLAIL.get()), red, new ItemStack(PufferfishItems.NETHERITE_FLAIL.get()), new ItemStack(PufferfishItems.HEAVY_FLAIL.get())};
             for (int row = 0; row < 3; row++) {
                 int size = 16 << row;
                 for (int column = 0; column < stacks.length; column++) {
@@ -252,14 +256,14 @@ public final class PufferfishFlailClientTest {
         }
     }
 
-    /// Saves ordinary, dyed, and netherite flails using their actual GUI display transforms.
+    /// Saves ordinary, dyed, netherite, and heavy flails using their actual GUI display transforms.
     private static void preview(Minecraft minecraft) {
-        var target = new TextureTarget(900, 440, true, Minecraft.ON_OSX);
+        var target = new TextureTarget(1200, 440, true, Minecraft.ON_OSX);
         target.setClearColor(0.08F, 0.14F, 0.2F, 1);
         target.clear(Minecraft.ON_OSX);
         target.bindWrite(true);
         RenderSystem.backupProjectionMatrix();
-        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 900, 440, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
+        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 1200, 440, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
         var view = RenderSystem.getModelViewStack();
         view.pushMatrix().identity();
         RenderSystem.applyModelViewMatrix();
@@ -268,7 +272,7 @@ public final class PufferfishFlailClientTest {
         try {
             var red = new ItemStack(PufferfishItems.FLAIL.get());
             red.set(KaleidoscopePufferfish.COLOR.get(), DyeColor.RED);
-            var stacks = new ItemStack[] {new ItemStack(PufferfishItems.FLAIL.get()), red, new ItemStack(PufferfishItems.NETHERITE_FLAIL.get())};
+            var stacks = new ItemStack[] {new ItemStack(PufferfishItems.FLAIL.get()), red, new ItemStack(PufferfishItems.NETHERITE_FLAIL.get()), new ItemStack(PufferfishItems.HEAVY_FLAIL.get())};
             for (int i = 0; i < stacks.length; i++) {
                 var pose = new PoseStack();
                 pose.translate(150 + i * 300, 220, 0);

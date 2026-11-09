@@ -201,7 +201,7 @@ public final class PufferfishSmashGameTests {
         helper.assertTrue(!PufferfishCombat.canSmash(player, player.getMainHandItem()), "Elytra flight enabled a smash");
         player.stopFallFlying();
         for (var stack : List.of(new ItemStack(PufferfishItems.GOLDEN.get()), new ItemStack(PufferfishItems.SASHIMI.get()),
-                new ItemStack(PufferfishItems.FLAIL.get()), new ItemStack(PufferfishItems.NETHERITE_FLAIL.get()), new ItemStack(Items.COD))) {
+                new ItemStack(PufferfishItems.FLAIL.get()), new ItemStack(PufferfishItems.NETHERITE_FLAIL.get()), new ItemStack(PufferfishItems.HEAVY_FLAIL.get()), new ItemStack(Items.COD))) {
             helper.assertTrue(!PufferfishCombat.canSmash(player, stack), "Unrelated item acquired fish smash behavior");
         }
         helper.succeed();

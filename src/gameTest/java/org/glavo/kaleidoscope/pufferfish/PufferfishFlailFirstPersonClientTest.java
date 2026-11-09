@@ -190,7 +190,7 @@ public final class PufferfishFlailFirstPersonClientTest {
             PoseStack pose, TextureTarget target, HumanoidArm arm) throws ReflectiveOperationException, java.io.IOException {
         var remaining = net.minecraft.world.entity.LivingEntity.class.getDeclaredField("useItemRemaining");
         remaining.setAccessible(true);
-        for (var item : new PufferfishFlailItem[] {PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get()}) {
+        for (var item : new PufferfishFlailItem[] {PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get()}) {
             var stack = new ItemStack(item);
             player.setItemInHand(InteractionHand.MAIN_HAND, stack);
             stack.use(player.level(), player, InteractionHand.MAIN_HAND);
@@ -222,7 +222,8 @@ public final class PufferfishFlailFirstPersonClientTest {
                                 InteractionHand.MAIN_HAND, 0F, stack, 0F, pose, buffers, LIGHT);
                         buffers.endBatch();
                         try (var image = Screenshot.takeScreenshot(target)) {
-                            image.writeToFile(Path.of("pufferfish-flail-charge-" + (item == PufferfishItems.FLAIL.get() ? "normal-" : "netherite-") + ticks + ".png"));
+                            image.writeToFile(Path.of("pufferfish-flail-charge-" + (item == PufferfishItems.FLAIL.get() ? "normal-"
+                                    : item == PufferfishItems.HEAVY_FLAIL.get() ? "heavy-" : "netherite-") + ticks + ".png"));
                         }
                     }
                 }

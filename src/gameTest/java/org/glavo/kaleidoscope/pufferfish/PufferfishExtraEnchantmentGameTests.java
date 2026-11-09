@@ -82,7 +82,7 @@ public final class PufferfishExtraEnchantmentGameTests {
     @GameTest(template = "empty")
     public static void creatureDamageEnchantmentsAffectMeleeAndProjectiles(GameTestHelper helper) {
         for (var item : List.of(Items.PUFFERFISH, PufferfishItems.NETHERITE.get(), PufferfishItems.HEAVY.get(),
-                PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get())) {
+                PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get())) {
             for (var key : List.of(Enchantments.SMITE, Enchantments.BANE_OF_ARTHROPODS)) {
                 for (int rank = 1; rank <= 5; rank++) {
                     for (var type : List.of(EntityType.ZOMBIE, EntityType.SPIDER, EntityType.VILLAGER)) {

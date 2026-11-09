@@ -20,7 +20,7 @@ import org.glavo.kaleidoscope.pufferfish.entity.PufferfishFlailHead;
 
 /// A reusable melee weapon whose tethered head can be launched without consuming the item.
 public final class PufferfishFlailItem extends Item {
-    /// The cooldown in ticks shared by both flail variants after a successful launch.
+    /// The cooldown in ticks shared by all flail variants after a successful launch.
     public static final int COOLDOWN = 30;
     public static final int MIN_CHARGE_TICKS = 3;
 
@@ -32,7 +32,8 @@ public final class PufferfishFlailItem extends Item {
     }
 
     public static int chargeTicks(ItemStack stack) {
-        int base = PufferfishCombatConfig.value(PufferfishItems.hasNetheriteCombat(stack)
+        int base = PufferfishCombatConfig.value(PufferfishItems.hasHeavyCombat(stack) ? PufferfishCombatConfig.HEAVY_FLAIL_CHARGE_TICKS
+                : PufferfishItems.hasNetheriteCombat(stack)
                 ? PufferfishCombatConfig.NETHERITE_FLAIL_CHARGE_TICKS : PufferfishCombatConfig.NORMAL_FLAIL_CHARGE_TICKS);
         int density = stack.getEnchantments().entrySet().stream().filter(entry -> entry.getKey().is(Enchantments.DENSITY))
                 .mapToInt(entry -> entry.getIntValue()).findFirst().orElse(0);
@@ -81,6 +82,7 @@ public final class PufferfishFlailItem extends Item {
         if (!level.addFreshEntity(head)) return;
         player.getCooldowns().addCooldown(PufferfishItems.FLAIL.get(), COOLDOWN);
         player.getCooldowns().addCooldown(PufferfishItems.NETHERITE_FLAIL.get(), COOLDOWN);
+        player.getCooldowns().addCooldown(PufferfishItems.HEAVY_FLAIL.get(), COOLDOWN);
         player.awardStat(Stats.ITEM_USED.get(this));
         level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.CHAIN_HIT,
                 SoundSource.PLAYERS, 0.8F, 1.0F);

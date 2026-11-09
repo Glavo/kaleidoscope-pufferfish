@@ -1,0 +1,21 @@
+{
+  "type": "kaleidoscope_pufferfish:pufferfish_flail",
+  "category": "equipment",
+  "pattern": [
+    "  F",
+    " C ",
+    "C  "
+  ],
+  "key": {
+    "F": {
+      "item": "kaleidoscope_pufferfish:heavy_pufferfish"
+    },
+    "C": {
+      "item": "minecraft:chain"
+    }
+  },
+  "result": {
+    "id": "kaleidoscope_pufferfish:heavy_pufferfish_flail",
+    "count": 1
+  }
+}

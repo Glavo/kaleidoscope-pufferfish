@@ -69,7 +69,7 @@ public class KaleidoscopePufferfishClient {
 
     private void registerItemExtensions(RegisterClientExtensionsEvent event) {
         event.registerItem(PufferfishConduitRenderer.itemExtensions(), PufferfishBlocks.CONDUIT.get().asItem());
-        event.registerItem(flailRenderer(), PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get());
+        event.registerItem(flailRenderer(), PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get());
     }
 
     private void registerSprites(RegisterSpriteSourceTypesEvent event) {

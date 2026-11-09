@@ -80,7 +80,7 @@ public final class PufferfishCuttingGameTests {
             helper.assertTrue(fish.is(pufferfish) && fish.is(rawFish) && !fish.is(safeFish), "Whole fish cooking tags are incorrect");
         }
         for (var item : new net.minecraft.world.item.Item[] {PufferfishItems.NETHERITE.get(), PufferfishItems.HEAVY.get(),
-                PufferfishItems.GOLDEN.get(), PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), Items.PUFFERFISH_BUCKET}) {
+                PufferfishItems.GOLDEN.get(), PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get(), Items.PUFFERFISH_BUCKET}) {
             helper.assertTrue(!new ItemStack(item).is(pufferfish), "Equipment or special fish entered the raw pufferfish tag");
         }
         var manager = helper.getLevel().getRecipeManager();

@@ -85,6 +85,7 @@ public class KaleidoscopePufferfish {
                     output.accept(PufferfishItems.ZOSUI);
                     output.accept(PufferfishItems.FLAIL);
                     output.accept(PufferfishItems.NETHERITE_FLAIL);
+                    output.accept(PufferfishItems.HEAVY_FLAIL);
                     output.accept(PufferfishBlocks.NETHERITE);
                     output.accept(PufferfishBlocks.get(null));
                     output.accept(PufferfishBlocks.skin(null));

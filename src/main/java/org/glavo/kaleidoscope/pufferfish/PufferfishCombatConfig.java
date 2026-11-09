@@ -43,6 +43,7 @@ public final class PufferfishCombatConfig {
     public static final ModConfigSpec.IntValue THROW_COOLDOWN_TICKS;
     public static final ModConfigSpec.IntValue NORMAL_FLAIL_CHARGE_TICKS;
     public static final ModConfigSpec.IntValue NETHERITE_FLAIL_CHARGE_TICKS;
+    public static final ModConfigSpec.IntValue HEAVY_FLAIL_CHARGE_TICKS;
     public static final ModConfigSpec.DoubleValue FLAIL_DENSITY_CHARGE_PENALTY;
 
     static {
@@ -94,6 +95,8 @@ public final class PufferfishCombatConfig {
                 .worldRestart().defineInRange("normalChargeTicks", 20, 3, 1200);
         NETHERITE_FLAIL_CHARGE_TICKS = builder.comment("Ticks to fully charge netherite flails.")
                 .worldRestart().defineInRange("netheriteChargeTicks", 30, 3, 1200);
+        HEAVY_FLAIL_CHARGE_TICKS = builder.comment("Ticks to fully charge heavy flails.")
+                .worldRestart().defineInRange("heavyChargeTicks", 40, 3, 1200);
         FLAIL_DENSITY_CHARGE_PENALTY = builder.comment("Charge time multiplier is 1 + this value * Density level.")
                 .worldRestart().defineInRange("densityChargePenaltyPerLevel", 0.2, 0.0, 16.0);
         builder.pop();

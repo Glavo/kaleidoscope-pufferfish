@@ -79,7 +79,8 @@ public final class PufferfishFlailModel {
     /// Renders a head centered at the current origin, preserving dye and enchantment glint.
     public void renderHead(ItemStack stack, PoseStack pose, MultiBufferSource buffers, int light, int overlay, float age) {
         var color = stack.get(KaleidoscopePufferfish.COLOR.get());
-        var texture = PufferfishItems.hasNetheriteCombat(stack) ? PufferfishTextures.netheriteEntity()
+        var texture = PufferfishItems.hasHeavyCombat(stack) ? PufferfishTextures.heavyEntity()
+                : PufferfishItems.hasNetheriteCombat(stack) ? PufferfishTextures.netheriteEntity()
                 : color == null ? FISH_TEXTURE : PufferfishTextures.entity(color);
         pose.pushPose();
         pose.scale(0.8F, -0.8F, -0.8F);

@@ -61,13 +61,14 @@ public final class PufferfishFlailGameTests {
         return CraftingInput.of(3, 3, items);
     }
 
-    /// Verifies both recipes, all dye colors, component preservation, and invalid inputs.
+    /// Verifies all recipes, dye colors, component preservation, and invalid inputs.
     @GameTest(template = "empty")
     public static void diagonalRecipesPreserveFishComponents(GameTestHelper helper) {
         var variants = new ArrayList<ItemStack>();
         variants.add(new ItemStack(Items.PUFFERFISH));
         for (var color : DyeColor.values()) variants.add(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
         variants.add(new ItemStack(PufferfishItems.NETHERITE.get()));
+        variants.add(new ItemStack(PufferfishItems.HEAVY.get()));
         var enchantment = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.PUNCH);
         for (var fish : variants) {
             fish.setCount(8);
@@ -78,7 +79,8 @@ public final class PufferfishFlailGameTests {
                 var grid = input(fish, mirrored);
                 var recipe = helper.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, grid, helper.getLevel()).orElseThrow().value();
                 var result = recipe.assemble(grid, helper.getLevel().registryAccess());
-                helper.assertTrue(result.is(PufferfishItems.isNetherite(fish) ? PufferfishItems.NETHERITE_FLAIL.get() : PufferfishItems.FLAIL.get())
+                helper.assertTrue(result.is(PufferfishItems.isHeavy(fish) ? PufferfishItems.HEAVY_FLAIL.get()
+                        : PufferfishItems.isNetherite(fish) ? PufferfishItems.NETHERITE_FLAIL.get() : PufferfishItems.FLAIL.get())
                         && result.getCount() == 1 && result.getMaxStackSize() == 1, "Wrong flail recipe output");
                 helper.assertTrue(result.get(KaleidoscopePufferfish.COLOR.get()) == PufferfishColors.get(fish)
                         && result.getHoverName().equals(fish.getHoverName()) && result.getEnchantments().getLevel(enchantment) == 2,
@@ -103,16 +105,17 @@ public final class PufferfishFlailGameTests {
     /// Verifies melee damage and poison without treating a flail as wearable fish or engine fuel.
     @GameTest(template = "empty")
     public static void flailsDealMeleeDamageWithoutFishEquipmentBehavior(GameTestHelper helper) {
-        for (var item : List.of(PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get())) {
+        for (var item : List.of(PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get())) {
             var stack = new ItemStack(item);
             var player = player(helper, stack);
-            for (int i = 0; i < 22; i++) player.tick();
+            for (int i = 0; i < 40; i++) player.tick();
             player.setOnGround(true);
             var target = helper.spawn(EntityType.VILLAGER, new BlockPos(2, 3, 3));
             target.setNoAi(true);
-            boolean netherite = item == PufferfishItems.NETHERITE_FLAIL.get();
+            boolean netherite = PufferfishItems.hasNetheriteCombat(new ItemStack(item));
             helper.assertTrue(player.getAttributeValue(Attributes.ATTACK_DAMAGE) == (netherite ? 12 : 6)
-                    && player.getAttributeValue(Attributes.ATTACK_SPEED) == 1, "Incorrect flail melee attributes");
+                    && Math.abs(player.getAttributeValue(Attributes.ATTACK_SPEED) - (PufferfishItems.hasHeavyCombat(stack) ? 0.6 : 1)) < 0.000001,
+                    "Incorrect flail melee attributes");
             player.attack(target);
             var poison = target.getEffect(MobEffects.POISON);
             helper.assertTrue(target.getHealth() == (netherite ? 8 : 14) && poison != null
@@ -125,11 +128,12 @@ public final class PufferfishFlailGameTests {
         helper.succeed();
     }
 
-    /// Verifies successful launches preserve the item and share a cooldown across both variants.
+    /// Verifies successful launches preserve the item and share a cooldown across all variants.
     @GameTest(template = "empty")
     public static void launchPreservesTheWeaponAndRespectsCooldown(GameTestHelper helper) {
-        for (var hand : InteractionHand.values()) {
-            var stack = new ItemStack(PufferfishItems.FLAIL.get());
+        for (var hand : InteractionHand.values()) for (var item : List.of(
+                PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get())) {
+            var stack = new ItemStack(item);
             stack.set(KaleidoscopePufferfish.COLOR.get(), DyeColor.BLUE);
             var player = player(helper, ItemStack.EMPTY);
             player.setItemInHand(hand, stack);
@@ -146,9 +150,33 @@ public final class PufferfishFlailGameTests {
             helper.assertTrue(head.getOwner() == player && head.getHand() == hand && ItemStack.matches(head.getItem(), original)
                     && ItemStack.matches(stack, original), "Launch lost ownership or changed the held item");
             helper.assertTrue(player.getCooldowns().isOnCooldown(PufferfishItems.FLAIL.get())
-                    && player.getCooldowns().isOnCooldown(PufferfishItems.NETHERITE_FLAIL.get()), "Flail variants did not share cooldown");
+                    && player.getCooldowns().isOnCooldown(PufferfishItems.NETHERITE_FLAIL.get())
+                    && player.getCooldowns().isOnCooldown(PufferfishItems.HEAVY_FLAIL.get()), "Flail variants did not share cooldown");
             helper.assertTrue(stack.use(helper.getLevel(), player, hand).getResult() == InteractionResult.FAIL, "Cooldown allowed another launch");
             head.discard();
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void heavyFlailAcceptsOnlyFlailEnchantments(GameTestHelper helper) {
+        var stack = new ItemStack(PufferfishItems.HEAVY_FLAIL.get());
+        var player = player(helper, stack);
+        var supported = List.of(Enchantments.DENSITY, Enchantments.BREACH, Enchantments.PUNCH, Enchantments.SMITE,
+                Enchantments.BANE_OF_ARTHROPODS, Enchantments.VANISHING_CURSE, Enchantments.THORNS, Enchantments.CHANNELING);
+        var unsupported = List.of(Enchantments.AQUA_AFFINITY, Enchantments.LOYALTY, Enchantments.WIND_BURST, Enchantments.BINDING_CURSE);
+        for (var keys : List.of(supported, unsupported)) {
+            for (var key : keys) {
+                var enchantment = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(key);
+                var book = new ItemStack(Items.ENCHANTED_BOOK);
+                EnchantmentHelper.updateEnchantments(book, entries -> entries.set(enchantment, 1));
+                var menu = new net.minecraft.world.inventory.AnvilMenu(1, player.getInventory());
+                menu.getSlot(0).set(stack.copy());
+                menu.getSlot(1).set(book);
+                var output = menu.getSlot(2).getItem();
+                helper.assertTrue(supported.contains(key) ? output.is(stack.getItem()) && output.getEnchantments().getLevel(enchantment) == 1
+                        : output.isEmpty(), "Heavy flail accepted the wrong enchantment set: " + key);
+            }
         }
         helper.succeed();
     }
@@ -211,7 +239,7 @@ public final class PufferfishFlailGameTests {
     /// Verifies the flying head damages once and does not damage again while returning.
     @GameTest(template = "empty")
     public static void flyingHeadHitsOnceAndReturns(GameTestHelper helper) {
-        for (var item : List.of(PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get())) {
+        for (var item : List.of(PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get())) {
             var player = player(helper, new ItemStack(item));
             var target = helper.spawn(EntityType.VILLAGER, new BlockPos(2, 3, 4));
             target.setNoAi(true);
@@ -221,7 +249,7 @@ public final class PufferfishFlailGameTests {
             head.setDeltaMovement(0, 0, 3);
             helper.getLevel().addFreshEntity(head);
             head.tick();
-            boolean netherite = item == PufferfishItems.NETHERITE_FLAIL.get();
+            boolean netherite = PufferfishItems.hasNetheriteCombat(new ItemStack(item));
             helper.assertTrue(head.isReturning() && target.getHealth() == (netherite ? 5 : 17)
                     && target.hasEffect(MobEffects.POISON), "Flying head did not hit and start returning");
             float health = target.getHealth();
@@ -238,7 +266,7 @@ public final class PufferfishFlailGameTests {
     @GameTest(template = "empty")
     public static void chargedDamageScalesAndSurvivesSaving(GameTestHelper helper) {
         var density = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.DENSITY);
-        for (var item : List.of(PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get())) {
+        for (var item : List.of(PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get())) {
             for (int rank : new int[] {0, 5}) {
                 var stack = new ItemStack(item);
                 stack.set(KaleidoscopePufferfish.COLOR.get(), DyeColor.CYAN);
@@ -269,7 +297,7 @@ public final class PufferfishFlailGameTests {
                     restored.setDeltaMovement(0, 0, 3);
                     helper.getLevel().addFreshEntity(restored);
                     restored.tick();
-                    float baseline = (item == PufferfishItems.NETHERITE_FLAIL.get() ? 10 : 2) + (rank == 0 ? 0 : 3);
+                    float baseline = (PufferfishItems.hasNetheriteCombat(stack) ? 10 : 2) + (rank == 0 ? 0 : 3);
                     float expected = baseline * 1.5F * Math.min(1, (float) elapsed / duration);
                     helper.assertTrue(Math.abs(100 - target.getHealth() - expected) < 0.001
                             && restored.isReturning() && target.hasEffect(MobEffects.POISON),
@@ -291,7 +319,10 @@ public final class PufferfishFlailGameTests {
         int normalDuration = PufferfishFlailItem.chargeTicks(new ItemStack(PufferfishItems.FLAIL.get()));
         helper.assertTrue(PufferfishFlailItem.chargeTicks(new ItemStack(PufferfishItems.NETHERITE_FLAIL.get())) > normalDuration,
                 "Netherite flail did not take longer to charge");
-        for (var item : List.of(PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get())) {
+        helper.assertTrue(PufferfishFlailItem.chargeTicks(new ItemStack(PufferfishItems.HEAVY_FLAIL.get()))
+                > PufferfishFlailItem.chargeTicks(new ItemStack(PufferfishItems.NETHERITE_FLAIL.get())),
+                "Heavy flail did not take longer to charge than netherite");
+        for (var item : List.of(PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get())) {
             int previousDuration = 0;
             for (int rank : new int[] {0, 1, 5}) {
                 var stack = new ItemStack(item);
