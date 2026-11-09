@@ -119,6 +119,7 @@ public final class PufferfishClientSmokeTest {
         PufferfishHeadgearClientTest.verify(minecraft);
         PufferfishGloveClientTest.verify(minecraft);
         PufferfishConduitClientTest.verify(minecraft);
+        PufferfishPlacementClientTest.verify(minecraft);
         PufferfishFlailClientTest.verify(minecraft);
         PufferfishShieldClientTest.verify(minecraft);
         PufferfishArmorClientTest.verify(minecraft);

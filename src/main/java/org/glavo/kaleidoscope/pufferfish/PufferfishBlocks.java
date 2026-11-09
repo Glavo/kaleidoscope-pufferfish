@@ -25,6 +25,11 @@ public final class PufferfishBlocks {
     private static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(KaleidoscopePufferfish.MODID);
     private static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(KaleidoscopePufferfish.MODID);
     private static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, KaleidoscopePufferfish.MODID);
+    public static final DeferredBlock<PlacedPufferfishBlock> PLACED_FISH = BLOCKS.registerBlock("placed_pufferfish",
+            PlacedPufferfishBlock::new, BlockBehaviour.Properties.of().strength(0.2F).noOcclusion()
+                    .sound(SoundType.WET_GRASS).pushReaction(net.minecraft.world.level.material.PushReaction.DESTROY));
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PlacedPufferfishBlockEntity>> PLACED_FISH_ENTITY =
+            BLOCK_ENTITIES.register("placed_pufferfish", () -> BlockEntityType.Builder.of(PlacedPufferfishBlockEntity::new, PLACED_FISH.get()).build(null));
     public static final DeferredBlock<PufferfishConduitBlock> CONDUIT = BLOCKS.registerBlock("pufferfish_conduit",
             PufferfishConduitBlock::new, BlockBehaviour.Properties.ofFullCopy(Blocks.CONDUIT));
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PufferfishConduitBlockEntity>> CONDUIT_ENTITY =

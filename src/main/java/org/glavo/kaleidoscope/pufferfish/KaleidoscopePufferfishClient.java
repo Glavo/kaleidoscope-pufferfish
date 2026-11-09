@@ -89,6 +89,7 @@ public class KaleidoscopePufferfishClient {
         event.registerEntityRenderer(KaleidoscopePufferfish.THROWN_PUFFERFISH.get(), ThrownItemRenderer::new);
         event.registerEntityRenderer(KaleidoscopePufferfish.FLAIL_HEAD.get(), PufferfishFlailHeadRenderer::new);
         event.registerBlockEntityRenderer(PufferfishBlocks.CONDUIT_ENTITY.get(), PufferfishConduitRenderer::new);
+        event.registerBlockEntityRenderer(PufferfishBlocks.PLACED_FISH_ENTITY.get(), org.glavo.kaleidoscope.pufferfish.client.PlacedPufferfishRenderer::new);
     }
 
     private void registerItemExtensions(RegisterClientExtensionsEvent event) {

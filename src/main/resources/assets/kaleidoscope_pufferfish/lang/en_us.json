@@ -206,5 +206,6 @@
   "item.kaleidoscope_pufferfish.diamond_pufferfish_skin_chestplate": "Diamond Pufferfish Skin Tunic",
   "item.kaleidoscope_pufferfish.diamond_pufferfish_skin_leggings": "Diamond Pufferfish Skin Pants",
   "item.kaleidoscope_pufferfish.diamond_pufferfish_skin_boots": "Diamond Pufferfish Skin Boots",
-  "item.kaleidoscope_pufferfish.diamond_pufferfish_skin_shield": "Diamond Pufferfish Skin Shield"
+  "item.kaleidoscope_pufferfish.diamond_pufferfish_skin_shield": "Diamond Pufferfish Skin Shield",
+  "block.kaleidoscope_pufferfish.placed_pufferfish": "Pufferfish Display"
 }

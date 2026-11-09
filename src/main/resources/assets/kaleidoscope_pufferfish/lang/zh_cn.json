@@ -206,5 +206,6 @@
   "item.kaleidoscope_pufferfish.diamond_pufferfish_skin_chestplate": "钻石河豚皮上衣",
   "item.kaleidoscope_pufferfish.diamond_pufferfish_skin_leggings": "钻石河豚皮裤子",
   "item.kaleidoscope_pufferfish.diamond_pufferfish_skin_boots": "钻石河豚皮靴子",
-  "item.kaleidoscope_pufferfish.diamond_pufferfish_skin_shield": "钻石河豚皮盾"
+  "item.kaleidoscope_pufferfish.diamond_pufferfish_skin_shield": "钻石河豚皮盾",
+  "block.kaleidoscope_pufferfish.placed_pufferfish": "河豚摆件"
 }
