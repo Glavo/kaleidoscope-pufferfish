@@ -15,11 +15,14 @@ import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.entity.vehicle.Boat;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import com.mojang.math.Axis;
 
 public final class PufferfishBoatClientTest {
     public static void verify(Minecraft minecraft) {
+        verifySpeed(minecraft);
         for (var entry : PufferfishBoats.VARIANTS.entrySet()) {
             var stack = new ItemStack(entry.getValue().item().get());
             var model = minecraft.getItemRenderer().getModel(stack, null, null, 0);
@@ -54,6 +57,64 @@ public final class PufferfishBoatClientTest {
         }
         preview(minecraft);
         detail(minecraft);
+    }
+
+    private static void verifySpeed(Minecraft minecraft) {
+        var level = PufferfishHeadgearClientTest.level(minecraft);
+        try {
+            var control = Boat.class.getDeclaredMethod("controlBoat");
+            var drift = Boat.class.getDeclaredMethod("floatBoat");
+            var status = Boat.class.getDeclaredField("status");
+            var oldStatus = Boat.class.getDeclaredField("oldStatus");
+            control.setAccessible(true);
+            drift.setAccessible(true);
+            status.setAccessible(true);
+            oldStatus.setAccessible(true);
+            for (var variant : PufferfishBoats.VARIANTS.values()) {
+                for (int input = 0; input < 5; input++) {
+                    var vanilla = new Boat(level, 0, 0, 0);
+                    var kayak = variant.entity().get().create(level);
+                    for (var boat : new Boat[] {vanilla, kayak}) {
+                        status.set(boat, Boat.Status.IN_WATER);
+                        oldStatus.set(boat, Boat.Status.IN_WATER);
+                        var player = new net.minecraft.client.player.RemotePlayer(level,
+                                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "kayak-speed-test"));
+                        player.startRiding(boat, true);
+                        boat.setInput(input == 2 || input == 4, input == 3, input == 0 || input == 4, input == 1);
+                    }
+                    for (int tick = 0; tick < 140; tick++) {
+                        if (tick == 100) {
+                            vanilla.setInput(false, false, false, false);
+                            kayak.setInput(false, false, false, false);
+                        }
+                        drift.invoke(vanilla);
+                        drift.invoke(kayak);
+                        control.invoke(vanilla);
+                        control.invoke(kayak);
+                        var expected = vanilla.getDeltaMovement().multiply(1.25, 1, 1.25);
+                        if (kayak.getDeltaMovement().distanceTo(expected) > 1.0E-7 || kayak.getYRot() != vanilla.getYRot()) {
+                            throw new IllegalStateException("Kayak speed or steering differed from the expected boat ratio");
+                        }
+                        if (input == 0 && tick == 99 && Math.abs(kayak.getDeltaMovement().horizontalDistance() - 0.5) > 0.0001) {
+                            throw new IllegalStateException("Kayak did not reach 125 percent of vanilla cruising speed");
+                        }
+                    }
+                    vanilla.ejectPassengers();
+                    kayak.ejectPassengers();
+                    vanilla.setDeltaMovement(new Vec3(0.1, 0.2, -0.3));
+                    kayak.setDeltaMovement(vanilla.getDeltaMovement());
+                    drift.invoke(vanilla);
+                    drift.invoke(kayak);
+                    control.invoke(vanilla);
+                    control.invoke(kayak);
+                    if (kayak.getDeltaMovement().distanceTo(vanilla.getDeltaMovement()) > 1.0E-7) {
+                        throw new IllegalStateException("Unoccupied kayak amplified external movement");
+                    }
+                }
+            }
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Could not verify kayak movement", exception);
+        }
     }
 
     private static void preview(Minecraft minecraft) {
