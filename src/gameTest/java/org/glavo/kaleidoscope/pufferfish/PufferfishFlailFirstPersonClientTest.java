@@ -203,8 +203,10 @@ public final class PufferfishFlailFirstPersonClientTest {
                 throw new IllegalStateException("Flail spin did not accelerate to a stable full-charge speed");
             }
             List<Vector3f> previous = null;
+            var minimum = new Vector3f(Float.POSITIVE_INFINITY);
+            var maximum = new Vector3f(Float.NEGATIVE_INFINITY);
             try {
-                for (int ticks : new int[] {0, duration / 4, duration / 2, duration, duration + 10}) {
+                for (int ticks = 0; ticks <= duration + 24; ticks++) {
                     remaining.setInt(player, stack.getUseDuration(player) - ticks);
                     var capture = new Capture();
                     nativeRender.invoke(minecraft.getEntityRenderDispatcher().getItemInHandRenderer(), player, 0F, -35F,
@@ -214,7 +216,21 @@ public final class PufferfishFlailFirstPersonClientTest {
                     }
                     capture.verifyGrip();
                     previous = capture.groups.get(3);
-                    if (arm == HumanoidArm.RIGHT) {
+                    if (ticks >= 4) {
+                        var center = new Vector3f();
+                        for (var vertex : previous) {
+                            var viewVertex = RenderSystem.getModelViewMatrix().transformPosition(new Vector3f(vertex));
+                            if (viewVertex.x * (arm == HumanoidArm.RIGHT ? 1 : -1) < 0.60F) {
+                                throw new IllegalStateException("Charging head entered the player's forward view");
+                            }
+                            center.add(viewVertex);
+                        }
+                        center.div(previous.size());
+                        minimum.min(center);
+                        maximum.max(center);
+                    }
+                    if (arm == HumanoidArm.RIGHT && (ticks == 0 || ticks == duration / 4 || ticks == duration / 2
+                            || ticks >= duration && ticks < duration + 12)) {
                         target.clear(Minecraft.ON_OSX);
                         target.bindWrite(true);
                         var buffers = minecraft.renderBuffers().bufferSource();
@@ -226,6 +242,9 @@ public final class PufferfishFlailFirstPersonClientTest {
                                     : item == PufferfishItems.HEAVY_FLAIL.get() ? "heavy-" : "netherite-") + ticks + ".png"));
                         }
                     }
+                }
+                if (maximum.x - minimum.x > 0.03F || maximum.y - minimum.y < 1.0F || maximum.z - minimum.z < 1.0F) {
+                    throw new IllegalStateException("First-person flail did not rotate in a vertical plane beside the body");
                 }
             } finally {
                 player.stopUsingItem();

@@ -117,6 +117,7 @@ public final class PufferfishClientSmokeTest {
         PufferfishConduitClientTest.verify(minecraft);
         PufferfishFlailClientTest.verify(minecraft);
         PufferfishFlailFirstPersonClientTest.verify(minecraft);
+        PufferfishFlailOrbitClientTest.verify(minecraft);
         if (net.neoforged.fml.ModList.get().isLoaded("create")) {
             org.glavo.kaleidoscope.pufferfish.compat.create.PufferfishEngineClientTest.verify(minecraft);
         }
