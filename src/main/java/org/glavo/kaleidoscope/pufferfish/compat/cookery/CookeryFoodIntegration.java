@@ -8,9 +8,9 @@ import com.github.ysbbbbbb.kaleidoscopecookery.init.ModFoods;
 import com.github.ysbbbbbb.kaleidoscopecookery.item.BowlFoodBlockItem;
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.food.Foods;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.bus.api.IEventBus;
@@ -31,10 +31,11 @@ public final class CookeryFoodIntegration {
 
     private CookeryFoodIntegration() {}
 
-    /// Adds three seconds of Poison I before Cookery applies food quality scaling.
+    /// Uses pufferfish's food poison before Cookery applies food quality scaling.
     private static FoodProperties withPoison(FoodProperties food) {
         var effects = new ArrayList<>(food.effects());
-        effects.add(new FoodProperties.PossibleEffect(() -> new MobEffectInstance(MobEffects.POISON, 60), 1));
+        effects.add(Foods.PUFFERFISH.effects().stream()
+                .filter(effect -> effect.effect().getEffect().equals(MobEffects.POISON)).findFirst().orElseThrow());
         return new FoodProperties(food.nutrition(), food.saturation(), food.canAlwaysEat(), food.eatSeconds(),
                 food.usingConvertsTo(), List.copyOf(effects));
     }

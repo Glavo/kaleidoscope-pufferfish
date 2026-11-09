@@ -119,9 +119,9 @@ public final class CookeryPieGameTests {
             helper.assertTrue(player.getFoodData().getFoodLevel() == 3
                     && level.getBlockState(pos).getValue(block.getBites()) == bite + 1, "Pie portion was not consumed");
             var poison = player.getEffect(MobEffects.POISON);
-            helper.assertTrue(poison != null && poison.getDuration() == 60 && poison.getAmplifier() == 0
+            helper.assertTrue(poison != null && poison.getDuration() == 1200 && poison.getAmplifier() == 1
                     && player.hasEffect(MobEffects.UNLUCK) && player.getActiveEffects().size() == 3,
-                    "Pie portion did not add Poison I while preserving its original effects");
+                    "Pie portion did not add pufferfish's Poison II while preserving its original effects");
             drops = Block.getDrops(level.getBlockState(pos), level, pos, null);
             helper.assertTrue(drops.size() == 1 && drops.getFirst().is(Items.BOWL), "Partially eaten pie returned edible food");
         }
@@ -132,16 +132,16 @@ public final class CookeryPieGameTests {
         var remainder = new ItemStack(item).finishUsingItem(level, player);
         var poison = player.getEffect(MobEffects.POISON);
         helper.assertTrue(remainder.is(Items.BOWL) && player.getFoodData().getFoodLevel() == 13
-                && player.hasEffect(MobEffects.UNLUCK) && poison != null && poison.getDuration() == 60
-                && poison.getAmplifier() == 0 && player.getActiveEffects().size() == 3,
+                && player.hasEffect(MobEffects.UNLUCK) && poison != null && poison.getDuration() == 1200
+                && poison.getAmplifier() == 1 && player.getActiveEffects().size() == 3,
                 "Whole pie lost its poison, original effects, nutrition, or bowl return");
         player.removeAllEffects();
         stack.finishUsingItem(level, player);
-        helper.assertTrue(player.getEffect(MobEffects.POISON).getDuration() == 72, "Whole pie poison ignored Superb quality");
+        helper.assertTrue(player.getEffect(MobEffects.POISON).getDuration() == 1440, "Whole pie poison ignored Superb quality");
         player.removeAllEffects();
         level.setBlockAndUpdate(pos, state);
         state.useWithoutItem(level, player, new BlockHitResult(Vec3.atCenterOf(pos), Direction.UP, pos, false));
-        helper.assertTrue(player.getEffect(MobEffects.POISON).getDuration() == 72, "Placed pie poison ignored Superb quality");
+        helper.assertTrue(player.getEffect(MobEffects.POISON).getDuration() == 1440, "Placed pie poison ignored Superb quality");
         helper.succeed();
     }
 }
