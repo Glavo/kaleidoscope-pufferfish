@@ -1,0 +1,21 @@
+{
+  "type": "${modId}:pufferfish_flail",
+  "category": "equipment",
+  "pattern": [
+    "  F",
+    " C ",
+    "C  "
+  ],
+  "key": {
+    "F": {
+      "item": "${modId}:${fishName}"
+    },
+    "C": {
+      "item": "minecraft:chain"
+    }
+  },
+  "result": {
+    "id": "${modId}:${flailName}",
+    "count": 1
+  }
+}

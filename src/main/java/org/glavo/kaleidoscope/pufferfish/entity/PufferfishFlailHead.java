@@ -171,9 +171,7 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
         entityData.set(PHASE, 0);
         flightStartTick = tickCount;
         if (!level().isClientSide()) {
-            player.getCooldowns().addCooldown(PufferfishItems.FLAIL.get(), PufferfishFlailItem.COOLDOWN);
-            player.getCooldowns().addCooldown(PufferfishItems.NETHERITE_FLAIL.get(), PufferfishFlailItem.COOLDOWN);
-            player.getCooldowns().addCooldown(PufferfishItems.HEAVY_FLAIL.get(), PufferfishFlailItem.COOLDOWN);
+            PufferfishItems.FLAIL_VARIANTS.forEach(item -> player.getCooldowns().addCooldown(item.get(), PufferfishFlailItem.COOLDOWN));
             player.awardStat(Stats.ITEM_USED.get(getItem().getItem()));
             level().playSound(null, position().x, position().y, position().z, SoundEvents.CHAIN_HIT, SoundSource.PLAYERS, 0.8F, 1);
         }

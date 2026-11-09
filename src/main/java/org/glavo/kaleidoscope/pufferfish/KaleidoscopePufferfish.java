@@ -94,9 +94,7 @@ public class KaleidoscopePufferfish {
                     if (ModList.get().isLoaded("kaleidoscope_cookery")) {
                         output.accept(org.glavo.kaleidoscope.pufferfish.compat.cookery.CookeryFoodIntegration.STARGAZY_PIE_ITEM);
                     }
-                    output.accept(PufferfishItems.FLAIL);
-                    output.accept(PufferfishItems.NETHERITE_FLAIL);
-                    output.accept(PufferfishItems.HEAVY_FLAIL);
+                    PufferfishItems.FLAIL_VARIANTS.forEach(output::accept);
                     output.accept(PufferfishBlocks.skin(null));
                     output.accept(PufferfishBlocks.GOLDEN_SKIN);
                     PufferfishBlocks.COPPER_SKINS.forEach(output::accept);
@@ -110,6 +108,9 @@ public class KaleidoscopePufferfish {
                     for (DyeColor color : DyeColor.values()) {
                         output.accept(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
                         output.accept(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH_BUCKET), color));
+                        var flail = new ItemStack(PufferfishItems.FLAIL.get());
+                        flail.set(COLOR.get(), color);
+                        output.accept(flail);
                         output.accept(PufferfishBlocks.skin(color));
                     }
                 }).build());

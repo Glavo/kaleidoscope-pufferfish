@@ -45,7 +45,7 @@ public final class PufferfishFlailClientTest {
 
     /// Verifies all variants in every display context and saves inventory previews.
     public static void verify(Minecraft minecraft) {
-        for (var item : new PufferfishFlailItem[] {PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get()}) {
+        for (var item : PufferfishItems.FLAIL_VARIANTS.stream().map(holder -> holder.get()).toList()) {
             var stack = new ItemStack(item);
             stack.set(KaleidoscopePufferfish.COLOR.get(), DyeColor.RED);
             var model = minecraft.getItemRenderer().getModel(stack, null, null, 0);

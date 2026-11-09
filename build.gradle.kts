@@ -389,6 +389,30 @@ val generatePieModels = tasks.register<Sync>("generatePieModels") {
     }
 }
 
+val generateFlailResources = tasks.register<Sync>("generateFlailResources") {
+    val materials = listOf("golden", "copper", "exposed_copper", "weathered_copper", "oxidized_copper",
+        "waxed_copper", "waxed_exposed_copper", "waxed_weathered_copper", "waxed_oxidized_copper", "iron", "diamond")
+    inputs.property("modId", modId)
+    inputs.property("materials", materials)
+    filteringCharset = "UTF-8"
+    into(layout.buildDirectory.dir("generated/resources/pufferfishFlails"))
+    for (material in materials) {
+        val fishName = "${material}_pufferfish"
+        val flailName = "${fishName}_flail"
+        for ((template, target) in mapOf(
+            "recipe" to "data/$modId/recipe/$flailName.json",
+            "advancement" to "data/$modId/advancement/recipes/combat/$flailName.json",
+            "model" to "assets/$modId/models/item/$flailName.json"
+        )) {
+            from("src/main/flailTemplates/$template.json") {
+                expand("modId" to modId, "fishName" to fishName, "flailName" to flailName,
+                    "textureName" to fishName.removePrefix("waxed_"))
+                into(target.substringBeforeLast('/'))
+                rename { target.substringAfterLast('/') }
+            }
+        }
+    }
+}
 val generateMaterialFishRecipes = tasks.register<Sync>("generateMaterialFishRecipes") {
     val materials = mapOf("copper" to "copper_ingot", "iron" to "iron_ingot", "diamond" to "diamond")
     inputs.property("modId", modId)
@@ -410,6 +434,7 @@ val generateMaterialFishRecipes = tasks.register<Sync>("generateMaterialFishReci
 }
 
 sourceSets.main {
+    resources.srcDir(generateFlailResources)
     resources.srcDir(generateMaterialFishRecipes)
     resources.srcDir(generatePieModels)
     resources.srcDir(generateBoatResources)
@@ -419,6 +444,7 @@ sourceSets.main {
     resources.srcDir(generateItemModels)
     resources.srcDir(generateSkinResources)
 }
+neoForge.ideSyncTask(generateFlailResources)
 neoForge.ideSyncTask(generateModMetadata)
 neoForge.ideSyncTask(generateItemModels)
 neoForge.ideSyncTask(generateSkinResources)

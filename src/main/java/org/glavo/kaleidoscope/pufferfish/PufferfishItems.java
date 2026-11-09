@@ -64,12 +64,13 @@ public final class PufferfishItems {
                     .usingConvertsTo(Items.BOWL).build())));
     /// The reusable flail crafted from an ordinary or dyed pufferfish and two chains.
     public static final DeferredItem<PufferfishFlailItem> FLAIL = ITEMS.register("pufferfish_flail",
-            () -> new PufferfishFlailItem(new Item.Properties().stacksTo(1)));
+            () -> new PufferfishFlailItem(new Item.Properties().stacksTo(1), () -> Items.PUFFERFISH));
     /// The fire-resistant flail crafted from a netherite pufferfish and two chains.
     public static final DeferredItem<PufferfishFlailItem> NETHERITE_FLAIL = ITEMS.register("netherite_pufferfish_flail",
-            () -> new PufferfishFlailItem(new Item.Properties().stacksTo(1).fireResistant()));
+            () -> new PufferfishFlailItem(new Item.Properties().stacksTo(1).fireResistant(), () -> PufferfishItems.NETHERITE.get()));
     public static final DeferredItem<PufferfishFlailItem> HEAVY_FLAIL = ITEMS.register("heavy_pufferfish_flail",
-            () -> new PufferfishFlailItem(new Item.Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant()));
+            () -> new PufferfishFlailItem(new Item.Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant(), () -> PufferfishItems.HEAVY.get()));
+    public static final java.util.List<DeferredItem<PufferfishFlailItem>> FLAIL_VARIANTS = registerFlails();
     public static final DeferredItem<Item> NETHERITE = ITEMS.register("netherite_pufferfish", () -> new Item(
             new Item.Properties().fireResistant().attributes(ItemAttributeModifiers.builder()
                     .add(Attributes.ARMOR, new AttributeModifier(KaleidoscopePufferfish.id("netherite_head_armor"),
@@ -103,6 +104,26 @@ public final class PufferfishItems {
 
     private PufferfishItems() {}
 
+    private static java.util.List<DeferredItem<PufferfishFlailItem>> registerFlails() {
+        var flails = new java.util.ArrayList<DeferredItem<PufferfishFlailItem>>();
+        flails.add(FLAIL);
+        var fish = new java.util.ArrayList<>(COPPER_VARIANTS);
+        fish.addFirst(GOLDEN);
+        fish.add(IRON);
+        fish.add(DIAMOND);
+        for (var head : fish) {
+            flails.add(ITEMS.register(head.getId().getPath() + "_flail",
+                    () -> new PufferfishFlailItem(new Item.Properties().stacksTo(1), head)));
+        }
+        flails.add(NETHERITE_FLAIL);
+        flails.add(HEAVY_FLAIL);
+        return java.util.List.copyOf(flails);
+    }
+
+    public static ItemStack flailFish(ItemStack stack) {
+        return stack.getItem() instanceof PufferfishFlailItem flail ? flail.fish(stack) : stack;
+    }
+
     private static DeferredItem<Item> registerMaterialFish(String material) {
         return ITEMS.register(material + "_pufferfish", () -> new Item(new Item.Properties()) {
             @Override
@@ -135,7 +156,7 @@ public final class PufferfishItems {
 
     /// Returns whether the stack is a flail variant.
     public static boolean isFlail(ItemStack stack) {
-        return stack.is(FLAIL.get()) || stack.is(NETHERITE_FLAIL.get()) || stack.is(HEAVY_FLAIL.get());
+        return stack.getItem() instanceof PufferfishFlailItem;
     }
 
     public static boolean hasHeavyCombat(ItemStack stack) {

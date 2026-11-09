@@ -96,7 +96,7 @@ public class KaleidoscopePufferfishClient {
         event.registerItem(boatRenderer(), PufferfishBoats.VARIANTS.values().stream().map(variant -> variant.item().get()).toArray(net.minecraft.world.item.Item[]::new));
         event.registerItem(PufferfishConduitRenderer.itemExtensions(), PufferfishBlocks.CONDUIT.get().asItem());
         event.registerItem(shieldRenderer(), PufferfishShields.VARIANTS.values().stream().map(holder -> holder.get()).toArray(net.minecraft.world.item.Item[]::new));
-        event.registerItem(flailRenderer(), PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get());
+        event.registerItem(flailRenderer(), PufferfishItems.FLAIL_VARIANTS.stream().map(item -> item.get()).toArray(net.minecraft.world.item.Item[]::new));
     }
 
     private void registerSprites(RegisterSpriteSourceTypesEvent event) {

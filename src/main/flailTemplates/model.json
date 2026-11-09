@@ -1,0 +1,6 @@
+{
+  "parent": "${modId}:item/pufferfish_flail",
+  "textures": {
+    "particle": "${modId}:item/${textureName}"
+  }
+}

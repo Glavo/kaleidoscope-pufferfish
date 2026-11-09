@@ -77,8 +77,8 @@ public final class PufferfishFlailGameTests {
         var variants = new ArrayList<ItemStack>();
         variants.add(new ItemStack(Items.PUFFERFISH));
         for (var color : DyeColor.values()) variants.add(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
-        variants.add(new ItemStack(PufferfishItems.NETHERITE.get()));
-        variants.add(new ItemStack(PufferfishItems.HEAVY.get()));
+        PufferfishItems.FLAIL_VARIANTS.stream().skip(1)
+                .forEach(item -> variants.add(PufferfishItems.flailFish(new ItemStack(item.get()))));
         var enchantment = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.PUNCH);
         for (var fish : variants) {
             fish.setCount(8);
@@ -89,8 +89,7 @@ public final class PufferfishFlailGameTests {
                 var grid = input(fish, mirrored);
                 var recipe = helper.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, grid, helper.getLevel()).orElseThrow().value();
                 var result = recipe.assemble(grid, helper.getLevel().registryAccess());
-                helper.assertTrue(result.is(PufferfishItems.isHeavy(fish) ? PufferfishItems.HEAVY_FLAIL.get()
-                        : PufferfishItems.isNetherite(fish) ? PufferfishItems.NETHERITE_FLAIL.get() : PufferfishItems.FLAIL.get())
+                helper.assertTrue(PufferfishItems.isFlail(result) && PufferfishItems.flailFish(result).is(fish.getItem())
                         && result.getCount() == 1 && result.getMaxStackSize() == 1, "Wrong flail recipe output");
                 helper.assertTrue(result.get(KaleidoscopePufferfish.COLOR.get()) == PufferfishColors.get(fish)
                         && result.getHoverName().equals(fish.getHoverName()) && result.getEnchantments().getLevel(enchantment) == 2,
@@ -115,15 +114,15 @@ public final class PufferfishFlailGameTests {
     /// Verifies left-click casts replace direct melee and preserve fish-specific poison.
     @GameTest(template = "empty")
     public static void flailsCastInsteadOfDealingDirectMeleeDamage(GameTestHelper helper) {
-        for (var item : List.of(PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get())) {
+        for (var item : PufferfishItems.FLAIL_VARIANTS.stream().map(holder -> holder.get()).toList()) {
             var stack = new ItemStack(item);
             var player = player(helper, stack);
             for (int i = 0; i < 40; i++) player.tick();
             player.setOnGround(true);
             var target = helper.spawn(EntityType.VILLAGER, new BlockPos(2, 3, 3));
             target.setNoAi(true);
-            boolean netherite = PufferfishItems.hasNetheriteCombat(new ItemStack(item));
-            float damage = PufferfishItems.hasHeavyCombat(stack) ? 10 : netherite ? 6 : 1;
+
+            float damage = PufferfishCombat.damage(PufferfishItems.flailFish(stack));
             helper.assertTrue(player.getAttributeValue(Attributes.ATTACK_DAMAGE) == damage
                     && Math.abs(player.getAttributeValue(Attributes.ATTACK_SPEED) - 1) < 0.000001,
                     "Incorrect short cast attributes");
@@ -132,8 +131,16 @@ public final class PufferfishFlailGameTests {
             helper.assertTrue(target.getHealth() == 20 && head != null && head.isShortCast(), "Left click dealt direct melee damage or failed to cast");
             for (int tick = 0; tick < 8 && !head.isReturning(); tick++) { head.tickCount++; head.tick(); }
             var poison = target.getEffect(MobEffects.POISON);
-            helper.assertTrue(target.getHealth() == 20 - damage && poison != null
-                    && poison.getDuration() == 60 && poison.getAmplifier() == (netherite ? 1 : 0), "Short cast damage or poison failed");
+            int copper = CopperPufferfish.index(PufferfishItems.flailFish(stack));
+            int duration = copper > 0 && copper < 4 ? copper * 120 : 60;
+            int amplifier = copper > 0 && copper < 4 ? copper - 1 : PufferfishItems.hasNetheriteCombat(stack) ? 1 : 0;
+            helper.assertTrue(target.getHealth() == 20 - damage, "Short cast damage failed");
+            helper.assertTrue(copper >= 4 ? poison == null
+                    : poison != null && poison.getDuration() == duration && poison.getAmplifier() == amplifier,
+                    "Short cast poison did not match its fish");
+            for (var variant : PufferfishItems.FLAIL_VARIANTS) {
+                helper.assertTrue(player.getCooldowns().isOnCooldown(variant.get()), "Flail variants did not share short-cast cooldown");
+            }
             for (int tick = 0; tick < 30 && !head.isRemoved(); tick++) { head.tickCount++; head.tick(); }
             helper.assertTrue(head.isRemoved() && target.getHealth() == 20 - damage && ItemStack.matches(stack, player.getMainHandItem()),
                     "Return flight duplicated damage or lost the weapon");

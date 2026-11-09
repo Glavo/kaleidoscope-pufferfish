@@ -24,13 +24,17 @@ public final class PufferfishFlailItem extends Item {
     /// The cooldown in ticks shared by all flail variants after a successful launch.
     public static final int COOLDOWN = 30;
     public static final int MIN_CHARGE_TICKS = 3;
+    private final java.util.function.Supplier<? extends Item> fish;
 
     /// Creates a flail with the supplied item properties.
     ///
     /// @param properties the item properties, including a maximum stack size of one
-    public PufferfishFlailItem(Properties properties) {
+    public PufferfishFlailItem(Properties properties, java.util.function.Supplier<? extends Item> fish) {
         super(properties);
+        this.fish = fish;
     }
+
+    public ItemStack fish(ItemStack stack) { return stack.transmuteCopy(fish.get(), 1); }
 
     public static int chargeTicks(ItemStack stack) {
         int base = PufferfishCombatConfig.value(PufferfishItems.hasHeavyCombat(stack) ? PufferfishCombatConfig.HEAVY_FLAIL_CHARGE_TICKS
@@ -90,9 +94,7 @@ public final class PufferfishFlailItem extends Item {
         if (!player.level().addFreshEntity(head)) return false;
         int cooldown = PufferfishCombatConfig.value(PufferfishCombatConfig.THROW_COOLDOWN_TICKS);
         if (cooldown > 0) {
-            player.getCooldowns().addCooldown(PufferfishItems.FLAIL.get(), cooldown);
-            player.getCooldowns().addCooldown(PufferfishItems.NETHERITE_FLAIL.get(), cooldown);
-            player.getCooldowns().addCooldown(PufferfishItems.HEAVY_FLAIL.get(), cooldown);
+            PufferfishItems.FLAIL_VARIANTS.forEach(item -> player.getCooldowns().addCooldown(item.get(), cooldown));
         }
         player.swing(InteractionHand.MAIN_HAND, true);
         player.resetAttackStrengthTicker();

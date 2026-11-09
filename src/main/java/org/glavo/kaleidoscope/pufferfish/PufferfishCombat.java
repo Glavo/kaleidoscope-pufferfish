@@ -100,6 +100,7 @@ public final class PufferfishCombat {
 
     /// Oxidation strengthens copper poison; wax prevents it without removing existing effects.
     public static void applyPoison(ItemStack stack, LivingEntity target, Entity source) {
+        stack = PufferfishItems.flailFish(stack);
         int copper = CopperPufferfish.index(stack);
         if (copper >= 4) return;
         int duration = copper > 0 ? copper * 120 : POISON_DURATION_TICKS;
@@ -114,6 +115,7 @@ public final class PufferfishCombat {
     }
 
     private static float throwingBaseDamage(ItemStack stack) {
+        stack = PufferfishItems.flailFish(stack);
         if (CopperPufferfish.index(stack) >= 0) return PufferfishCombatConfig.value(PufferfishCombatConfig.COPPER_DAMAGE).floatValue();
         if (stack.is(PufferfishItems.IRON.get())) return PufferfishCombatConfig.value(PufferfishCombatConfig.IRON_DAMAGE).floatValue();
         if (stack.is(PufferfishItems.DIAMOND.get())) return PufferfishCombatConfig.value(PufferfishCombatConfig.DIAMOND_DAMAGE).floatValue();
