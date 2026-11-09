@@ -72,6 +72,7 @@ public final class PufferfishClientSmokeTest {
             }
         }
         verifySkin(minecraft, null);
+        verifySkin(minecraft, PufferfishBlocks.GOLDEN_SKIN.get(), "golden_pufferfish_skin");
         for (DyeColor color : DyeColor.values()) {
             verifySkin(minecraft, color);
         }
@@ -126,7 +127,7 @@ public final class PufferfishClientSmokeTest {
             projectileRendererChecked = false;
             minecraft.reloadResourcePacks();
         } else {
-            LogUtils.getLogger().info("Pufferfish client smoke test passed: 40 item models, 17 skins, cutting models, headgear, gloves, flails and conduit rendering, projectile renderers, model override delegation, and resource reload");
+            LogUtils.getLogger().info("Pufferfish client smoke test passed: 40 item models, 18 skins, cutting models, headgear, gloves, flails and conduit rendering, projectile renderers, model override delegation, and resource reload");
             minecraft.stop();
         }
     }
@@ -242,10 +243,13 @@ public final class PufferfishClientSmokeTest {
 
     /// Checks that each skin's block and item models use the matching skin texture and a thin top face.
     private static void verifySkin(Minecraft minecraft, DyeColor color) {
-        var block = PufferfishBlocks.skin(color);
+        verifySkin(minecraft, PufferfishBlocks.skin(color), PufferfishBlocks.skinName(color));
+    }
+
+    private static void verifySkin(Minecraft minecraft, PufferfishSkinBlock block, String color) {
         var state = block.defaultBlockState();
         var stack = new ItemStack(block);
-        var texture = KaleidoscopePufferfish.id("block/" + PufferfishBlocks.skinName(color));
+        var texture = KaleidoscopePufferfish.id("block/" + color);
         var blockModel = minecraft.getBlockRenderer().getBlockModel(state);
         var itemModel = minecraft.getItemRenderer().getModel(stack, null, null, 0);
         for (var model : new BakedModel[] {blockModel, itemModel}) {

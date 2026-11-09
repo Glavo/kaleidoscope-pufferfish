@@ -36,6 +36,7 @@ public final class PufferfishSpriteSource implements SpriteSource {
         addDish(manager, output, true);
         addZosui(manager, output);
         addSkin(manager, output, null);
+        addSkin(manager, output, "golden_pufferfish_skin", null);
         for (DyeColor color : DyeColor.values()) {
             addSkin(manager, output, color);
         }
@@ -91,7 +92,11 @@ public final class PufferfishSpriteSource implements SpriteSource {
 
     /// Adds a skin sprite from a resource-pack replacement or the entity's unfolded skin.
     private static void addSkin(ResourceManager manager, Output output, DyeColor color) {
-        var id = KaleidoscopePufferfish.id("block/" + PufferfishBlocks.skinName(color));
+        addSkin(manager, output, PufferfishBlocks.skinName(color), color);
+    }
+
+    private static void addSkin(ResourceManager manager, Output output, String skinName, DyeColor color) {
+        var id = KaleidoscopePufferfish.id("block/" + skinName);
         var replacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(id));
         if (replacement.isPresent()) {
             output.add(id, replacement.get());

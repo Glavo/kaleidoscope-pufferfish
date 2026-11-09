@@ -111,8 +111,10 @@ public final class PufferfishSkinGameTests {
         var level = helper.getLevel();
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         var base = helper.absolutePos(new BlockPos(2, 2, 2));
-        for (var color : colors()) {
-            var block = PufferfishBlocks.skin(color);
+        var skins = new ArrayList<PufferfishSkinBlock>();
+        for (var color : colors()) skins.add(PufferfishBlocks.skin(color));
+        skins.add(PufferfishBlocks.GOLDEN_SKIN.get());
+        for (var block : skins) {
             for (var normal : Direction.values()) {
                 var pos = base.relative(normal);
                 for (var facing : Direction.Plane.HORIZONTAL) {

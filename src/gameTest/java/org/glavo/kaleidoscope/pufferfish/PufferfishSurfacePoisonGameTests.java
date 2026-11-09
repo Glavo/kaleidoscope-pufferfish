@@ -45,11 +45,12 @@ public final class PufferfishSurfacePoisonGameTests {
         return entity;
     }
 
-    /// Verifies all seventeen skins poison grounded entities through the event bus.
+    /// Verifies all eighteen skins poison grounded entities through the event bus.
     @GameTest(template = "empty")
     public static void everyPufferfishSurfacePoisonsStandingEntities(GameTestHelper helper) {
         var states = new ArrayList<BlockState>();
         states.add(PufferfishBlocks.skin(null).defaultBlockState());
+        states.add(PufferfishBlocks.GOLDEN_SKIN.get().defaultBlockState());
         for (var color : DyeColor.values()) {
             states.add(PufferfishBlocks.skin(color).defaultBlockState());
         }

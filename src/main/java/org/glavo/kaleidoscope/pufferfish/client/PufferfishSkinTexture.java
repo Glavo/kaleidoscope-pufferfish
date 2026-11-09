@@ -55,7 +55,9 @@ public final class PufferfishSkinTexture {
                         int sourceX = x / width * size.width() + (int) (u * size.width() / 32);
                         int sourceY = y / height * size.height() + (int) (v * size.height() / 32);
                         int pixel = source.getPixelRGBA(sourceX, sourceY);
-                        if (color != null && edge >= 4) pixel = tint(pixel, color);
+                        if (id.getPath().equals("block/golden_pufferfish_skin")) {
+                            pixel = tint(pixel, edge < 4 ? 0xFFF2A6 : 0xFFC52B);
+                        } else if (color != null && edge >= 4) pixel = tint(pixel, color);
                         image.setPixelRGBA(x, y, pixel);
                     }
                 }

@@ -87,6 +87,7 @@ public class KaleidoscopePufferfish {
                     output.accept(PufferfishItems.NETHERITE_FLAIL);
                     output.accept(PufferfishItems.HEAVY_FLAIL);
                     output.accept(PufferfishBlocks.skin(null));
+                    output.accept(PufferfishBlocks.GOLDEN_SKIN);
                     for (DyeColor color : DyeColor.values()) {
                         output.accept(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
                         output.accept(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH_BUCKET), color));

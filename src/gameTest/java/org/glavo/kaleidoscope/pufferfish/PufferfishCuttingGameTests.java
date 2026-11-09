@@ -115,7 +115,7 @@ public final class PufferfishCuttingGameTests {
         helper.assertTrue(drops.size() == 2
                 && drops.stream().allMatch(entity -> entity.getItem().getCount() == 1)
                 && drops.stream().anyMatch(entity -> entity.getItem().is(sashimi))
-                && drops.stream().anyMatch(entity -> entity.getItem().is(PufferfishBlocks.skin(color).asItem())),
+                && drops.stream().anyMatch(entity -> entity.getItem().is((sashimi == PufferfishItems.GOLDEN_SASHIMI.get() ? PufferfishBlocks.GOLDEN_SKIN.get() : PufferfishBlocks.skin(color)).asItem())),
                 "Cutting must drop exactly one sashimi and one matching skin");
         drops.forEach(ItemEntity::discard);
     }

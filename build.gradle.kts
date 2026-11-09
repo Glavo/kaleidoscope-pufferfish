@@ -216,6 +216,21 @@ val generateSkinResources = tasks.register<Sync>("generateSkinResources") {
             }
         }
     }
+    for ((template, target) in mapOf(
+        "blockstate" to "assets/$modId/blockstates/golden_pufferfish_skin.json",
+        "block_model" to "assets/$modId/models/block/golden_pufferfish_skin.json",
+        "item_model" to "assets/$modId/models/item/golden_pufferfish_skin.json",
+        "loot" to "data/$modId/loot_table/blocks/golden_pufferfish_skin.json",
+        "pressing" to "data/$modId/recipe/pressing/golden_pufferfish_skin.json"
+    )) {
+        from("src/main/skinTemplates/$template.json") {
+            expand("modId" to modId, "blockName" to "golden_pufferfish_skin",
+                "blockId" to "$modId:golden_pufferfish_skin",
+                "ingredient" to JsonOutput.toJson(mapOf("item" to "$modId:golden_pufferfish")))
+            into(target.substringBeforeLast('/'))
+            rename { target.substringAfterLast('/') }
+        }
+    }
     for (stage in 0..3) {
         from("src/main/skinTemplates/chopping_stage_$stage.json") {
             expand("modId" to modId, "blockName" to "pufferfish_skin",

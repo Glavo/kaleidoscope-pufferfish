@@ -26,6 +26,9 @@ public final class PufferfishBlocks {
             PufferfishConduitBlock::new, BlockBehaviour.Properties.ofFullCopy(Blocks.CONDUIT));
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PufferfishConduitBlockEntity>> CONDUIT_ENTITY =
             BLOCK_ENTITIES.register("pufferfish_conduit", () -> BlockEntityType.Builder.of(PufferfishConduitBlockEntity::new, CONDUIT.get()).build(null));
+    public static final DeferredBlock<PufferfishSkinBlock> GOLDEN_SKIN = BLOCKS.registerBlock("golden_pufferfish_skin",
+            PufferfishSkinBlock::new, BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CARPET)
+                    .mapColor(MapColor.GOLD).sound(SoundType.WET_GRASS));
     /// The placeable skin obtained from undyed pufferfish.
     private static final DeferredBlock<PufferfishSkinBlock> PLAIN_SKIN = registerSkin(null);
     /// Placeable skins indexed by the dye color of their ingredient fish.
@@ -33,6 +36,7 @@ public final class PufferfishBlocks {
 
     static {
         ITEMS.registerSimpleBlockItem(CONDUIT);
+        ITEMS.registerSimpleBlockItem(GOLDEN_SKIN);
         for (DyeColor color : DyeColor.values()) {
             COLORED_SKINS.put(color, registerSkin(color));
         }
