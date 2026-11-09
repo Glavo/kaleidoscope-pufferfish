@@ -19,10 +19,15 @@ import org.glavo.kaleidoscope.pufferfish.PufferfishArmor;
 /// Applies pufferfish skin to vanilla armor silhouettes and UV layouts.
 public final class PufferfishArmorTextures implements ResourceManagerReloadListener {
     private static final ResourceLocation FISH = ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png");
+    private static final String[] SPINES = {
+            "..t.....", ".sbs....", "........", "......t.",
+            ".....sbs", "........", "........", "........"
+    };
     private final Set<ResourceLocation> generated = new HashSet<>();
 
     public static void skin(ResourceManager manager, NativeImage mask, String name, boolean worn) {
         String prefix = name.substring(0, name.indexOf("pufferfish_skin"));
+        int ventral = prefix.equals("heavy_") ? 0xCADFE4 : prefix.equals("netherite_") ? 0xBAB4B3 : 0xF4E4B0;
         int tint = -1;
         for (var color : DyeColor.values()) if (prefix.equals(color.getName() + "_")) tint = color.getTextureDiffuseColor();
         String overlayPath = worn ? "textures/models/armor/leather_layer_" + (name.endsWith("_leggings") ? 2 : 1) + "_overlay.png"
@@ -37,14 +42,14 @@ public final class PufferfishArmorTextures implements ResourceManagerReloadListe
                 if ((original >>> 24) == 0) continue;
                 int u = x * (worn ? 64 : 16) / mask.getWidth();
                 int v = y * (worn ? 32 : 16) / mask.getHeight();
-                boolean belly = worn ? u >= 22 && u < 26 && v >= 22 : u >= 6 && u < 10 && v >= 7;
+                boolean belly = belly(u, v, name, worn);
                 int sx = belly ? u % 8 : 8 + u % 8;
                 int sy = belly ? 12 + v % 4 : v % 8;
                 int pixel = fish.getPixelRGBA(sx * fish.getWidth() / 32, sy * fish.getWidth() / 32);
                 if (prefix.equals("golden_")) {
                     int shade = Math.max(original & 255, Math.max(original >>> 8 & 255, original >>> 16 & 255));
                     int gold = GoldenSkinMaterial.shade(pixel, shade, u, v, belly);
-                    mask.setPixelRGBA(x, y, original & 0xFF000000 | gold & 0xFFFFFF);
+                    mask.setPixelRGBA(x, y, original & 0xFF000000 | detail(gold, u, v, belly, true, ventral) & 0xFFFFFF);
                     continue;
                 }
                 int red = pixel & 255;
@@ -57,12 +62,53 @@ public final class PufferfishArmorTextures implements ResourceManagerReloadListe
                     green = (color >>> 8 & 255) * brightness / 255;
                     blue = (color & 255) * brightness / 255;
                 }
-                int shade = Math.max(original & 255, Math.max(original >>> 8 & 255, original >>> 16 & 255));
-                mask.setPixelRGBA(x, y, original & 0xFF000000 | blue * shade / 255 << 16 | green * shade / 255 << 8 | red * shade / 255);
+                int shade = 160 + Math.max(original & 255, Math.max(original >>> 8 & 255, original >>> 16 & 255)) * 95 / 255;
+                int shaded = blue * shade / 255 << 16 | green * shade / 255 << 8 | red * shade / 255;
+                mask.setPixelRGBA(x, y, original & 0xFF000000 | detail(shaded, u, v, belly, false, ventral) & 0xFFFFFF);
             }
         } catch (IOException exception) {
             throw new IllegalStateException("Could not generate pufferfish armor texture", exception);
         }
+    }
+
+    private static boolean belly(int u, int v, String name, boolean worn) {
+        if (!worn) {
+            if (name.endsWith("_helmet")) return v >= 7 && u >= 4 && u < 12;
+            if (name.endsWith("_chestplate")) return v >= 6 && v < 14 && u >= (v < 8 ? 6 : 5) && u < (v < 8 ? 10 : 11);
+            if (name.endsWith("_leggings")) return v >= 7 && v < 12 && (u == 5 || u == 10);
+            return v >= 11 && (u >= 3 && u < 7 || u >= 9 && u < 13);
+        }
+        if (v < 16) return u >= 8 && u < 16 && v >= 12;
+        if (u >= 20 && u < 28 && v >= 22) {
+            int inset = v == 22 || v >= 30 ? 2 : 1;
+            return u >= 20 + inset && u < 28 - inset;
+        }
+        return u >= 5 && u < 7 && v >= 29 && v < 31;
+    }
+
+    /// Small shaded spine roots keep the hide recognizable at the native pixel scale.
+    private static int detail(int pixel, int u, int v, boolean belly, boolean golden, int ventral) {
+        int r = pixel & 255;
+        int g = pixel >>> 8 & 255;
+        int b = pixel >>> 16 & 255;
+        if (belly) {
+            if (!golden) {
+                r = (r + 3 * (ventral >>> 16 & 255)) / 4;
+                g = (g + 3 * (ventral >>> 8 & 255)) / 4;
+                b = (b + 3 * (ventral & 255)) / 4;
+            }
+            if (v % 4 == 0) { r = r * 9 / 10; g = g * 9 / 10; b = b * 9 / 10; }
+        } else {
+            char mark = SPINES[v % 8].charAt(u % 8);
+            if (mark == 'b') { r = r * 45 / 100; g = g * 45 / 100; b = b * 45 / 100; }
+            else if (mark == 's') { r = r * 75 / 100; g = g * 75 / 100; b = b * 75 / 100; }
+            else if (mark == 't') {
+                r = (r + (ventral >>> 16 & 255)) / 2;
+                g = (g + (ventral >>> 8 & 255)) / 2;
+                b = (b + (ventral & 255)) / 2;
+            }
+        }
+        return b << 16 | g << 8 | r;
     }
 
     @Override
