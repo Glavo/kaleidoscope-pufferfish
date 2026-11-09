@@ -129,11 +129,20 @@ public final class PufferfishRowingClientTest {
         pose.mulPose(Axis.YP.rotationDegrees(yaw));
         pose.translate(offset.x, offset.y, offset.z);
         pose.mulPose(PufferfishRowingAnimation.playerTransform(player, yaw));
+        var hull = new java.util.ArrayList<Vector3f>();
+        new org.glavo.kaleidoscope.pufferfish.client.PufferfishBoatModel().renderToBuffer(new PoseStack(),
+                new Vertices(hull::add), 15728880, OverlayTexture.NO_OVERLAY, -1);
+        var deck = new java.util.ArrayList<Vector3f>();
+        for (int i = 0; i < hull.size(); i += 4) {
+            var quad = hull.subList(i, i + 4);
+            if (quad.stream().allMatch(v -> v.x >= 10F / 16 && v.x <= 1 && v.y < 0)) deck.addAll(quad);
+        }
+        float[] clearance = {Float.POSITIVE_INFINITY};
         var vertices = new Vertices(point -> {
-            if (point.y < 0.25F - 0.001F || Math.abs(point.x) > 5F / 16 || point.z > 1
-                    || (point.z > 10F / 16 && point.y > 0.6125F + 0.001F)) {
+            if (point.y < 0.25F - 0.001F || Math.abs(point.x) > 5F / 16 || point.z > 1) {
                 throw new IllegalStateException("Kayak passenger leg escaped the footwell: " + point);
             }
+            if (point.z > 10F / 16) clearance[0] = Math.min(clearance[0], deckClearance(point, deck));
             if (boat.getControllingPassenger() != player && point.z > 0.7F / 16) {
                 throw new IllegalStateException("Rear passenger foot intersected the front backrest: " + point);
             }
@@ -145,6 +154,29 @@ public final class PufferfishRowingClientTest {
         model.copyPropertiesTo(armor);
         armor.leftLeg.render(pose, vertices, 15728880, OverlayTexture.NO_OVERLAY);
         armor.rightLeg.render(pose, vertices, 15728880, OverlayTexture.NO_OVERLAY);
+        if (clearance[0] < 0.015F) {
+            throw new IllegalStateException("Kayak leg intersects the sloped deck: clearance=" + clearance[0]);
+        }
+    }
+
+    private static float deckClearance(Vector3f point, java.util.List<Vector3f> deck) {
+        boolean covered = false;
+        float clearance = Float.POSITIVE_INFINITY;
+        for (int i = 0; i < deck.size(); i += 4) for (int corner = 1; corner <= 2; corner++) {
+            var a = deck.get(i);
+            var b = deck.get(i + corner);
+            var c = deck.get(i + corner + 1);
+            float determinant = (b.z - c.z) * (a.x - c.x) + (c.x - b.x) * (a.z - c.z);
+            if (Math.abs(determinant) < 1.0E-6F) continue;
+            float u = ((b.z - c.z) * (point.z - c.x) + (c.x - b.x) * (point.x - c.z)) / determinant;
+            float v = ((c.z - a.z) * (point.z - c.x) + (a.x - c.x) * (point.x - c.z)) / determinant;
+            if (u < -0.0001F || v < -0.0001F || u + v > 1.0001F) continue;
+            covered = true;
+            float roof = 0.375F - (u * a.y + v * b.y + (1 - u - v) * c.y);
+            clearance = Math.min(clearance, roof - point.y);
+        }
+        if (!covered) throw new IllegalStateException("Kayak foot extends beyond the covered footwell");
+        return clearance;
     }
 
     private record Vertices(Consumer<Vector3f> check) implements VertexConsumer {
@@ -182,8 +214,8 @@ public final class PufferfishRowingClientTest {
                     var pose = new PoseStack();
                     pose.translate(200 + column * 400, 265 + row * 330, 0);
                     pose.scale(105, -105, 105);
-                    pose.mulPose(Axis.XP.rotationDegrees(column == 0 ? 0 : 20));
-                    pose.mulPose(Axis.YP.rotationDegrees(column == 0 ? -90 : column == 1 ? -35 : 145));
+                    pose.mulPose(Axis.XP.rotationDegrees(column == 0 ? 0 : column == 1 ? 20 : 65));
+                    pose.mulPose(Axis.YP.rotationDegrees(column == 0 ? -90 : -35));
                     var buffers = minecraft.renderBuffers().bufferSource();
                     ((PufferfishBoatRenderer) minecraft.getEntityRenderDispatcher().getRenderer(boat)).render(boat, 0, 1, pose, buffers, 15728880);
                     for (var rider : boat.getPassengers()) {

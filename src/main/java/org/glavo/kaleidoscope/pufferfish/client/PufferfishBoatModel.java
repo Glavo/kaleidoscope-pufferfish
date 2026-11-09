@@ -37,7 +37,7 @@ public final class PufferfishBoatModel extends ListModel<Boat> implements WaterP
         paddle = baked.getChild("paddle");
         water = baked.getChild("water");
         float[][] sections = {{-26, 0.15F, -2, 0}, {-21, 2.5F, -2.5F, 2}, {-15, 6, -3, 4},
-                {10, 6, -3, 4}, {16, 5.5F, -3, 3}, {22, 2, -2, 1}, {26, 0.15F, -1, 0}};
+                {10, 6, -4.5F, 4}, {16, 5.5F, -4.5F, 3}, {22, 2, -2, 1}, {26, 0.15F, -1, 0}};
         for (int i = 0; i < sections.length - 1; i++) {
             var a = sections[i];
             var b = sections[i + 1];
@@ -61,7 +61,7 @@ public final class PufferfishBoatModel extends ListModel<Boat> implements WaterP
             face(2, v(-15, -4, side * 5), v(10, -4, side * 5), v(10, 2, side * 5), v(-15, 2, side * 5));
         }
         box(-15.4F, -4.4F, -5, 0.8F, 0.8F, 10, 3);
-        box(9.6F, -4.6F, -5, 0.8F, 0.8F, 10, 3);
+        box(9.6F, -5.3F, -5, 0.8F, 0.8F, 10, 3);
         for (float seat : new float[] {PufferfishBoat.REAR_SEAT * 16, PufferfishBoat.FRONT_SEAT * 16}) {
             box(seat - 2, 0.8F, -4.4F, 4, 1, 8.8F, 2);
             box(seat - 2.5F, -4.5F, -4.4F, 0.8F, 5.3F, 8.8F, 2);
