@@ -36,6 +36,12 @@ public class KaleidoscopePufferfishClient {
     /// The item renderer shared by both flail variants and refreshed with client resources.
     private PufferfishFlailItemRenderer flailRenderer;
     private org.glavo.kaleidoscope.pufferfish.client.PufferfishShieldRenderer shieldRenderer;
+    private org.glavo.kaleidoscope.pufferfish.client.PufferfishBoatItemRenderer boatRenderer;
+
+    private org.glavo.kaleidoscope.pufferfish.client.PufferfishBoatItemRenderer boatRenderer() {
+        if (boatRenderer == null) boatRenderer = new org.glavo.kaleidoscope.pufferfish.client.PufferfishBoatItemRenderer();
+        return boatRenderer;
+    }
 
     private org.glavo.kaleidoscope.pufferfish.client.PufferfishShieldRenderer shieldRenderer() {
         if (shieldRenderer == null) shieldRenderer = new org.glavo.kaleidoscope.pufferfish.client.PufferfishShieldRenderer();
@@ -85,6 +91,7 @@ public class KaleidoscopePufferfishClient {
     }
 
     private void registerItemExtensions(RegisterClientExtensionsEvent event) {
+        event.registerItem(boatRenderer(), PufferfishBoats.VARIANTS.values().stream().map(variant -> variant.item().get()).toArray(net.minecraft.world.item.Item[]::new));
         event.registerItem(PufferfishConduitRenderer.itemExtensions(), PufferfishBlocks.CONDUIT.get().asItem());
         event.registerItem(shieldRenderer(), PufferfishShields.VARIANTS.values().stream().map(holder -> holder.get()).toArray(net.minecraft.world.item.Item[]::new));
         event.registerItem(flailRenderer(), PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get());
@@ -102,6 +109,7 @@ public class KaleidoscopePufferfishClient {
     }
 
     private void registerReloadListeners(RegisterClientReloadListenersEvent event) {
+        event.registerReloadListener(boatRenderer());
         event.registerReloadListener(new PufferfishTextures());
         event.registerReloadListener(new org.glavo.kaleidoscope.pufferfish.client.PufferfishBoatTextures());
         event.registerReloadListener(new org.glavo.kaleidoscope.pufferfish.client.PufferfishArmorTextures());

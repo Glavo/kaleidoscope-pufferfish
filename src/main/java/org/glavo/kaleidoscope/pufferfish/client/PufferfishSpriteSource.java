@@ -18,12 +18,6 @@ public final class PufferfishSpriteSource implements SpriteSource {
 
     @Override
     public void run(ResourceManager manager, Output output) {
-        for (var name : org.glavo.kaleidoscope.pufferfish.PufferfishBoats.VARIANTS.keySet()) {
-            var id = KaleidoscopePufferfish.id("item/" + name);
-            var replacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(id));
-            if (replacement.isPresent()) output.add(id, replacement.get());
-            else output.add(id, loader -> PufferfishBoatTextures.item(manager, id, name));
-        }
         for (var name : org.glavo.kaleidoscope.pufferfish.PufferfishArmor.VARIANTS.keySet()) {
             var id = KaleidoscopePufferfish.id("item/" + name);
             var replacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(id));
