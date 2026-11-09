@@ -56,7 +56,9 @@ public final class PufferfishFlailHeadRenderer extends EntityRenderer<Pufferfish
             var offset = hand.subtract(position.add(correction));
             double distance = offset.length();
             var attachment = offset.normalize().scale(Math.min(0.20, distance * 0.5));
-            double sag = Math.min(0.35, distance * 0.12) * (head.isReturning() ? 1 : Math.max(0.1, 1 - distance / PufferfishFlailHead.REACH));
+            // The tether is taut during launch and retrieval, with slack only as the head reaches the grip.
+            double sag = head.isReturning() && distance < 1
+                    ? 0.08 * distance * (1 - distance) : 0;
             pose.pushPose();
             pose.translate(attachment.x, attachment.y, attachment.z);
             model.renderChain(head.getItem(), offset.subtract(attachment), sag, pose, buffers, light);

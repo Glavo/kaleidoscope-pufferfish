@@ -22,6 +22,7 @@ import net.minecraft.client.Screenshot;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -63,12 +64,59 @@ public final class PufferfishFlailClientTest {
         }
         verifyFlight(minecraft);
         preview(minecraft);
+        previewSlots(minecraft);
+    }
+
+    /// Renders at native inventory resolutions rather than shrinking a large preview.
+    private static void previewSlots(Minecraft minecraft) {
+        var target = new TextureTarget(360, 180, true, Minecraft.ON_OSX);
+        target.setClearColor(0.55F, 0.55F, 0.55F, 1);
+        target.clear(Minecraft.ON_OSX);
+        target.bindWrite(true);
+        RenderSystem.backupProjectionMatrix();
+        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 360, 180, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
+        var view = RenderSystem.getModelViewStack();
+        view.pushMatrix().identity();
+        RenderSystem.applyModelViewMatrix();
+        Lighting.setupForFlatItems();
+        RenderSystem.setShaderColor(1, 1, 1, 1);
+        try {
+            var red = new ItemStack(PufferfishItems.FLAIL.get());
+            red.set(KaleidoscopePufferfish.COLOR.get(), DyeColor.RED);
+            var stacks = new ItemStack[] {new ItemStack(PufferfishItems.FLAIL.get()), red, new ItemStack(PufferfishItems.NETHERITE_FLAIL.get())};
+            for (int row = 0; row < 3; row++) {
+                int size = 16 << row;
+                for (int column = 0; column < stacks.length; column++) {
+                    var pose = new PoseStack();
+                    pose.translate(60 + column * 120, new int[] {20, 60, 130}[row], 0);
+                    pose.scale(size, -size, size);
+                    var buffers = minecraft.renderBuffers().bufferSource();
+                    minecraft.getItemRenderer().renderStatic(stacks[column], ItemDisplayContext.GUI, LIGHT, OverlayTexture.NO_OVERLAY,
+                            pose, buffers, null, 0);
+                    buffers.endBatch();
+                }
+            }
+            try (var image = Screenshot.takeScreenshot(target)) {
+                image.writeToFile(Path.of("pufferfish-flail-slots-preview.png"));
+            }
+        } catch (IOException exception) {
+            throw new IllegalStateException("Could not save flail slot preview", exception);
+        } finally {
+            view.popMatrix();
+            RenderSystem.applyModelViewMatrix();
+            RenderSystem.restoreProjectionMatrix();
+            target.destroyBuffers();
+            minecraft.getMainRenderTarget().bindWrite(true);
+        }
     }
 
     private static void verifyFlight(Minecraft minecraft) {
         var previousLevel = minecraft.level;
         var level = PufferfishHeadgearClientTest.level(minecraft);
-        var player = new RemotePlayer(level, new GameProfile(UUID.randomUUID(), "flail-render-test"));
+        var player = new RemotePlayer(level, new GameProfile(UUID.randomUUID(), "flail-render-test")) {
+            @Override
+            public boolean isSpectator() { return false; }
+        };
         player.setPos(0, 64, 0);
         player.setOldPosAndRot();
         level.addEntity(player);
@@ -84,7 +132,9 @@ public final class PufferfishFlailClientTest {
                     var stack = new ItemStack(PufferfishItems.FLAIL.get());
                     player.setItemInHand(hand, stack);
                     var head = new PufferfishFlailHead(level, player, hand);
-                    head.setPos(player.getEyePosition().add(2, 0, 0));
+                    int side = (hand == InteractionHand.MAIN_HAND ? arm : arm.getOpposite()) == HumanoidArm.RIGHT ? 1 : -1;
+                    var attachment = player.getEyePosition().add(-side * 0.35, -0.45, 0.8);
+                    head.setPos(attachment.add(2, 0, 0));
                     head.setOldPosAndRot();
                     level.addEntity(head);
                     try {
@@ -100,20 +150,22 @@ public final class PufferfishFlailClientTest {
                         for (float direction : new float[] {90, -90}) {
                             head.setYRot(direction);
                             head.yRotO = direction;
-                            var capture = new Capture();
+                            var capture = tetherCapture(attachment.subtract(head.getPosition(0.5F)));
                             var pose = new PoseStack();
                             renderer.render(head, direction, 0.5F, pose, capture, LIGHT);
                             if (capture.vertices < 300 || capture.types.size() != 2 || !pose.clear()
                                     || capture.geometry == previousGeometry) throw new IllegalStateException("Flying flail failed to turn or render its chain");
+                            verifyTautChain(capture);
                             previousGeometry = capture.geometry;
                         }
                         head.tickCount = 8;
                         head.tick();
                         if (!head.isReturning()) throw new IllegalStateException("Flail render test did not enter return flight");
-                        var returning = new Capture();
+                        var returning = tetherCapture(attachment.subtract(head.getPosition(0.5F)));
                         var pose = new PoseStack();
                         renderer.render(head, head.getYRot(), 0.5F, pose, returning, LIGHT);
                         if (returning.vertices < 300 || !pose.clear()) throw new IllegalStateException("Returning flail failed to render");
+                        verifyTautChain(returning);
                     } finally {
                         head.discard();
                     }
@@ -127,9 +179,76 @@ public final class PufferfishFlailClientTest {
                 model.renderChain(stack, offset, 0.2, pose, capture, LIGHT);
                 if (capture.vertices != 0 || !pose.clear()) throw new IllegalStateException("Invalid chain emitted geometry");
             }
+            previewFlight(minecraft, player, renderer);
         } finally {
             player.discard();
             minecraft.level = previousLevel;
+        }
+    }
+
+    private static Capture tetherCapture(Vec3 end) {
+        var capture = new Capture();
+        capture.tetherEnd = end;
+        return capture;
+    }
+
+    private static void verifyTautChain(Capture capture) {
+        if (capture.tetherVertices == 0 || capture.tetherDeviation > 0.034) {
+            throw new IllegalStateException("Moving flail chain is too thick or sags under tension: " + capture.tetherDeviation);
+        }
+    }
+
+    /// Samples the real outward and returning trajectory with its rendered tether.
+    private static void previewFlight(Minecraft minecraft, RemotePlayer player, PufferfishFlailHeadRenderer renderer) {
+        player.setMainArm(HumanoidArm.RIGHT);
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(PufferfishItems.FLAIL.get()));
+        var head = new PufferfishFlailHead(player.level(), player, InteractionHand.MAIN_HAND);
+        head.shoot(1, 0, 0, 1.2F, 0);
+        var attachment = player.getEyePosition().add(-0.35, -0.45, 0.8);
+        var target = new TextureTarget(900, 360, true, Minecraft.ON_OSX);
+        target.setClearColor(0.08F, 0.14F, 0.2F, 1);
+        target.clear(Minecraft.ON_OSX);
+        target.bindWrite(true);
+        RenderSystem.backupProjectionMatrix();
+        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 900, 360, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
+        var view = RenderSystem.getModelViewStack();
+        view.pushMatrix().identity();
+        RenderSystem.applyModelViewMatrix();
+        Lighting.setupFor3DItems();
+        RenderSystem.setShaderColor(1, 1, 1, 1);
+        try {
+            int[] frames = {1, 3, 4, 7, 11, 15};
+            for (int i = 0; i < frames.length; i++) {
+                while (head.tickCount < frames[i]) {
+                    head.setOldPosAndRot();
+                    head.tickCount++;
+                    head.tick();
+                }
+                var pose = new PoseStack();
+                pose.translate(25 + i % 3 * 300, 80 + i / 3 * 180, 0);
+                pose.scale(45, -45, 45);
+                var buffers = minecraft.renderBuffers().bufferSource();
+                pose.pushPose();
+                pose.translate(0, -0.23, 0);
+                new PufferfishFlailModel().renderGrip(head.getItem(), pose, buffers, LIGHT, OverlayTexture.NO_OVERLAY);
+                pose.popPose();
+                var position = head.getPosition(0.5F).subtract(attachment);
+                pose.translate(position.x, position.y, position.z);
+                renderer.render(head, head.getYRot(), 0.5F, pose, buffers, LIGHT);
+                buffers.endBatch();
+            }
+            try (var image = Screenshot.takeScreenshot(target)) {
+                image.writeToFile(Path.of("pufferfish-flail-flight-preview.png"));
+            }
+        } catch (IOException exception) {
+            throw new IllegalStateException("Could not save flail flight preview", exception);
+        } finally {
+            head.discard();
+            view.popMatrix();
+            RenderSystem.applyModelViewMatrix();
+            RenderSystem.restoreProjectionMatrix();
+            target.destroyBuffers();
+            minecraft.getMainRenderTarget().bindWrite(true);
         }
     }
 
@@ -180,18 +299,29 @@ public final class PufferfishFlailClientTest {
         /// Number of vertices emitted by the item renderer.
         private int vertices;
         private long geometry;
+        private RenderType currentType;
+        private Vec3 tetherEnd;
+        private double tetherDeviation;
+        private int tetherVertices;
 
         /// Creates an empty geometry capture.
         private Capture() {}
 
         @Override
-        public VertexConsumer getBuffer(RenderType type) { types.add(type); return this; }
+        public VertexConsumer getBuffer(RenderType type) { types.add(type); currentType = type; return this; }
         @Override
         public VertexConsumer addVertex(float x, float y, float z) {
             if (!Float.isFinite(x) || !Float.isFinite(y) || !Float.isFinite(z)) {
                 throw new IllegalStateException("Non-finite flail vertex");
             }
             vertices++;
+            if (tetherEnd != null && currentType == RenderType.entityCutoutNoCull(
+                    ResourceLocation.withDefaultNamespace("textures/block/iron_block.png"))) {
+                var vertex = new Vec3(x, y, z);
+                var projection = tetherEnd.scale(vertex.dot(tetherEnd) / tetherEnd.lengthSqr());
+                tetherDeviation = Math.max(tetherDeviation, vertex.distanceTo(projection));
+                tetherVertices++;
+            }
             geometry = 31 * geometry + Float.floatToIntBits(x);
             geometry = 31 * geometry + Float.floatToIntBits(y);
             geometry = 31 * geometry + Float.floatToIntBits(z);

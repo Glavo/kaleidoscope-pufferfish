@@ -37,6 +37,10 @@ public final class PufferfishFlailItemRenderer extends BlockEntityWithoutLevelRe
     @Override
     public void renderByItem(ItemStack stack, ItemDisplayContext context, PoseStack pose, MultiBufferSource buffers, int light, int overlay) {
         if (model == null) model = new PufferfishFlailModel();
+        if (context == ItemDisplayContext.GUI) {
+            renderIcon(stack, pose, buffers, light, overlay);
+            return;
+        }
         pose.pushPose();
         boolean held = context.firstPerson() || context == ItemDisplayContext.THIRD_PERSON_LEFT_HAND
                 || context == ItemDisplayContext.THIRD_PERSON_RIGHT_HAND;
@@ -47,14 +51,33 @@ public final class PufferfishFlailItemRenderer extends BlockEntityWithoutLevelRe
                 ? Minecraft.getInstance().level.getGameTime() + Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(false) : 0;
         double sway = held ? Mth.sin(age * 0.09F) * 0.035 : 0;
         var head = new Vec3(0.47 + sway, -0.24, 0.02);
-        pose.translate(0, 0.23, 0);
-        model.renderChain(stack, flying ? new Vec3(0, 0.09, 0) : head.add(0, -0.23 + 0.19, 0),
-                flying ? 0 : 0.12, pose, buffers, light);
         if (!flying) {
+            pose.translate(0, 0.23, 0);
+            model.renderChain(stack, head.add(0, -0.23 + 0.19, 0), 0.12, pose, buffers, light);
             pose.translate(head.x, head.y - 0.23, head.z);
             pose.mulPose(Axis.ZP.rotationDegrees(held ? (float) (-8 + sway * 100) : -8));
             model.renderHead(stack, pose, buffers, light, overlay, age);
         }
+        pose.popPose();
+    }
+
+    /// Keeps the face upright and large enough to read in a 16-pixel inventory slot.
+    private void renderIcon(ItemStack stack, PoseStack pose, MultiBufferSource buffers, int light, int overlay) {
+        pose.pushPose();
+        pose.translate(0.20, 0.23, 0.5);
+        pose.mulPose(Axis.ZP.rotationDegrees(-35));
+        model.renderGrip(stack, pose, buffers, light, overlay);
+        pose.popPose();
+        pose.pushPose();
+        pose.translate(0.332, 0.418, 0.5);
+        model.renderChain(stack, new Vec3(0.18, 0.13, 0), 0, pose, buffers, light);
+        pose.popPose();
+        pose.pushPose();
+        pose.translate(0.65, 0.65, 0.5);
+        pose.mulPose(Axis.YP.rotationDegrees(-15));
+        pose.mulPose(Axis.XP.rotationDegrees(10));
+        pose.scale(1.1F, 1.1F, 1.1F);
+        model.renderHead(stack, pose, buffers, light, overlay, 0);
         pose.popPose();
     }
 

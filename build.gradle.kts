@@ -72,6 +72,10 @@ neoForge {
     runs {
         create("client") {
             client()
+            programArguments.addAll(
+                "--width", providers.gradleProperty("clientWidth").getOrElse("1280"),
+                "--height", providers.gradleProperty("clientHeight").getOrElse("720")
+            )
             systemProperty("neoforge.enabledGameTestNamespaces", modId)
             systemProperty("kaleidoscope_pufferfish.clientSmokeTest", providers.gradleProperty("client_smoke_test").getOrElse("false"))
         }

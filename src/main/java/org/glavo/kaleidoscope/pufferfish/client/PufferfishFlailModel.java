@@ -46,10 +46,10 @@ public final class PufferfishFlailModel {
         fish = new PufferfishBigModel<>(Minecraft.getInstance().getEntityModels().bakeLayer(ModelLayers.PUFFERFISH_BIG));
         var mesh = new MeshDefinition();
         mesh.getRoot().addOrReplaceChild("link", CubeListBuilder.create()
-                .texOffs(2, 2).addBox(-0.9F, -1.5F, -0.2F, 0.4F, 3, 0.4F)
-                .texOffs(2, 2).addBox(0.5F, -1.5F, -0.2F, 0.4F, 3, 0.4F)
-                .texOffs(2, 2).addBox(-0.5F, -1.5F, -0.2F, 1, 0.4F, 0.4F)
-                .texOffs(2, 2).addBox(-0.5F, 1.1F, -0.2F, 1, 0.4F, 0.4F), PartPose.ZERO);
+                .texOffs(2, 2).addBox(-0.5F, -1, -0.1F, 0.2F, 2, 0.2F)
+                .texOffs(2, 2).addBox(0.3F, -1, -0.1F, 0.2F, 2, 0.2F)
+                .texOffs(2, 2).addBox(-0.3F, -1, -0.1F, 0.6F, 0.2F, 0.2F)
+                .texOffs(2, 2).addBox(-0.3F, 0.8F, -0.1F, 0.6F, 0.2F, 0.2F), PartPose.ZERO);
         link = LayerDefinition.create(mesh, 16, 16).bakeRoot();
         var handle = new MeshDefinition();
         handle.getRoot().addOrReplaceChild("grip", CubeListBuilder.create()
@@ -96,7 +96,7 @@ public final class PufferfishFlailModel {
         double length = offset.length();
         if (!Double.isFinite(length) || !Double.isFinite(sag) || length < 0.001) return;
         sag = Math.max(0, Math.min(sag, length * 0.35));
-        int count = Math.min(96, Math.max(1, (int) Math.ceil((length + sag) / 0.14)));
+        int count = Math.min(96, Math.max(1, (int) Math.ceil((length + sag) / 0.10)));
         var buffer = buffers.getBuffer(RenderType.entityCutoutNoCull(metalTexture(stack)));
         for (int i = 0; i < count; i++) {
             var start = chainPoint(offset, sag, (double) i / count);
@@ -108,7 +108,7 @@ public final class PufferfishFlailModel {
             pose.mulPose(new Quaternionf().rotationTo(new Vector3f(0, 1, 0),
                     new Vector3f((float) direction.x, (float) direction.y, (float) direction.z)));
             if ((i & 1) != 0) pose.mulPose(Axis.YP.rotationDegrees(90));
-            pose.scale(1, (float) (start.distanceTo(end) / 0.14), 1);
+            pose.scale(1, (float) (start.distanceTo(end) / 0.10), 1);
             link.render(pose, buffer, light, OverlayTexture.NO_OVERLAY, metalColor(stack));
             pose.popPose();
         }
