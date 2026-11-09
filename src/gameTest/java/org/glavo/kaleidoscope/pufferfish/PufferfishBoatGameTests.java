@@ -39,8 +39,7 @@ public final class PufferfishBoatGameTests {
         var pos = helper.absolutePos(new BlockPos(2, 2, 2));
         for (var entry : PufferfishBoats.VARIANTS.entrySet()) {
             var skin = new ItemStack(BuiltInRegistries.ITEM.get(KaleidoscopePufferfish.id(entry.getKey().replace("_boat", ""))));
-            var stick = new ItemStack(Items.STICK);
-            var input = CraftingInput.of(3, 3, List.of(stick, ItemStack.EMPTY, stick, skin, ItemStack.EMPTY, skin, skin, skin, skin));
+            var input = CraftingInput.of(3, 2, List.of(skin, ItemStack.EMPTY, skin, skin, skin, skin));
             var recipe = level.getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, level).orElseThrow().value();
             var result = recipe.assemble(input, level.registryAccess());
             helper.assertTrue(result.is(entry.getValue().item().get()) && result.is(ItemTags.BOATS) && result.getMaxStackSize() == 1,

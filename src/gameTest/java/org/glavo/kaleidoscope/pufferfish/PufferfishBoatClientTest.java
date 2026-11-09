@@ -59,12 +59,12 @@ public final class PufferfishBoatClientTest {
                 var buffers = minecraft.renderBuffers().bufferSource();
                 var pose = new PoseStack();
                 pose.translate(75 + index % 6 * 150, 28 + index / 6 * 180, 0);
-                pose.scale(30, -30, 30);
+                pose.scale(48, -48, 48);
                 minecraft.getItemRenderer().renderStatic(new ItemStack(item.item().get()), ItemDisplayContext.GUI, 15728880,
                         OverlayTexture.NO_OVERLAY, pose, buffers, null, 0);
                 pose = new PoseStack();
-                pose.translate(75 + index % 6 * 150, 72 + index / 6 * 180, 0);
-                pose.scale(48, -48, 48);
+                pose.translate(75 + index % 6 * 150, 130 + index / 6 * 180, 0);
+                pose.scale(42, -42, 42);
                 pose.mulPose(Axis.XP.rotationDegrees(25));
                 var boat = item.entity().get().create(level);
                 var renderer = (org.glavo.kaleidoscope.pufferfish.client.PufferfishBoatRenderer) minecraft.getEntityRenderDispatcher().getRenderer(boat);

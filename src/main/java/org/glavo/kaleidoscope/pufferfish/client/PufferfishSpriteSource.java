@@ -22,11 +22,7 @@ public final class PufferfishSpriteSource implements SpriteSource {
             var id = KaleidoscopePufferfish.id("item/" + name);
             var replacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(id));
             if (replacement.isPresent()) output.add(id, replacement.get());
-            else manager.getResource(ResourceLocation.withDefaultNamespace("textures/item/oak_boat.png"))
-                    .ifPresent(resource -> output.add(id, loader -> loader.loadSprite(id, resource, (sprite, size, image, metadata) -> {
-                        PufferfishBoatTextures.skin(manager, image, name, false);
-                        return new SpriteContents(sprite, size, image, metadata);
-                    })));
+            else output.add(id, loader -> PufferfishBoatTextures.item(manager, id, name));
         }
         for (var name : org.glavo.kaleidoscope.pufferfish.PufferfishArmor.VARIANTS.keySet()) {
             var id = KaleidoscopePufferfish.id("item/" + name);

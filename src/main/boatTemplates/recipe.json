@@ -2,7 +2,7 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "group": "${modId}:pufferfish_skin_boats",
-  "pattern": ["T T", "S S", "SSS"],
-  "key": {"S": {"item": "${modId}:${skinName}"}, "T": {"item": "minecraft:stick"}},
+  "pattern": ["S S", "SSS"],
+  "key": {"S": {"item": "${modId}:${skinName}"}},
   "result": {"id": "${modId}:${boatName}", "count": 1}
 }

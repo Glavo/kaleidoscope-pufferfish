@@ -13,11 +13,12 @@ import org.glavo.kaleidoscope.pufferfish.KaleidoscopePufferfish;
 import org.glavo.kaleidoscope.pufferfish.entity.PufferfishBoat;
 
 public final class PufferfishBoatRenderer extends BoatRenderer {
+    private final PufferfishBoatModel skinModel = new PufferfishBoatModel();
     public PufferfishBoatRenderer(EntityRendererProvider.Context context) { super(context, false); }
 
     @Override
     public Pair<ResourceLocation, ListModel<Boat>> getModelWithLocation(Boat boat) {
         return Pair.of(KaleidoscopePufferfish.id("textures/entity/boat/" + ((PufferfishBoat) boat).skinBoatName() + ".png"),
-                super.getModelWithLocation(boat).getSecond());
+                skinModel);
     }
 }
