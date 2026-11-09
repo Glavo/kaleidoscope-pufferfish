@@ -135,6 +135,11 @@ public final class PufferfishFlailGameTests {
             player.setItemInHand(hand, stack);
             var original = stack.copy();
             var result = stack.use(helper.getLevel(), player, hand);
+            helper.assertTrue(result.getResult().consumesAction() && player.isUsingItem()
+                    && helper.getLevel().getEntitiesOfClass(PufferfishFlailHead.class, player.getBoundingBox().inflate(3)).isEmpty()
+                    && !player.getCooldowns().isOnCooldown(stack.getItem()), "Starting charge launched or cooled down the weapon");
+            for (int i = 0; i < PufferfishFlailItem.chargeTicks(stack); i++) player.tick();
+            player.releaseUsingItem();
             var heads = helper.getLevel().getEntitiesOfClass(PufferfishFlailHead.class, player.getBoundingBox().inflate(3));
             helper.assertTrue(result.getResult().consumesAction() && heads.size() == 1, "Flail did not launch exactly one head");
             var head = heads.getFirst();
@@ -159,7 +164,10 @@ public final class PufferfishFlailGameTests {
         NeoForge.EVENT_BUS.addListener(cancel);
         try {
             var result = stack.use(helper.getLevel(), player, InteractionHand.MAIN_HAND);
-            helper.assertTrue(result.getResult() == InteractionResult.FAIL && stack.getCount() == 1
+            for (int i = 0; i < PufferfishFlailItem.chargeTicks(stack); i++) player.tick();
+            player.releaseUsingItem();
+            helper.assertTrue(result.getResult().consumesAction() && stack.getCount() == 1
+                    && helper.getLevel().getEntitiesOfClass(PufferfishFlailHead.class, player.getBoundingBox().inflate(3)).isEmpty()
                     && !player.getCooldowns().isOnCooldown(stack.getItem()), "Canceled launch consumed or cooled down the weapon");
         } finally {
             NeoForge.EVENT_BUS.unregister(cancel);
@@ -214,7 +222,7 @@ public final class PufferfishFlailGameTests {
             helper.getLevel().addFreshEntity(head);
             head.tick();
             boolean netherite = item == PufferfishItems.NETHERITE_FLAIL.get();
-            helper.assertTrue(head.isReturning() && target.getHealth() == (netherite ? 8 : 14)
+            helper.assertTrue(head.isReturning() && target.getHealth() == (netherite ? 5 : 17)
                     && target.hasEffect(MobEffects.POISON), "Flying head did not hit and start returning");
             float health = target.getHealth();
             target.invulnerableTime = 0;
@@ -223,6 +231,117 @@ public final class PufferfishFlailGameTests {
             helper.assertTrue(target.getHealth() == health, "Returning head dealt another hit");
             head.discard();
             target.discard();
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void chargedDamageScalesAndSurvivesSaving(GameTestHelper helper) {
+        var density = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.DENSITY);
+        for (var item : List.of(PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get())) {
+            for (int rank : new int[] {0, 5}) {
+                var stack = new ItemStack(item);
+                stack.set(KaleidoscopePufferfish.COLOR.get(), DyeColor.CYAN);
+                if (rank > 0) EnchantmentHelper.updateEnchantments(stack, entries -> entries.set(density, rank));
+                int duration = PufferfishFlailItem.chargeTicks(stack);
+                for (int elapsed : new int[] {3, duration / 2, duration, duration * 2}) {
+                    var player = player(helper, stack.copy());
+                    var held = player.getMainHandItem();
+                    held.use(helper.getLevel(), player, InteractionHand.MAIN_HAND);
+                    for (int tick = 0; tick < elapsed; tick++) player.tick();
+                    player.releaseUsingItem();
+                    var heads = helper.getLevel().getEntitiesOfClass(PufferfishFlailHead.class, player.getBoundingBox().inflate(3));
+                    helper.assertTrue(heads.size() == 1, "Charged release did not spawn one head");
+                    var head = heads.getFirst();
+                    var tag = new net.minecraft.nbt.CompoundTag();
+                    head.addAdditionalSaveData(tag);
+                    var restored = new PufferfishFlailHead(helper.getLevel(), player, InteractionHand.MAIN_HAND, 0);
+                    restored.readAdditionalSaveData(tag);
+                    // Mock players are not registered for UUID lookup after loading.
+                    restored.setOwner(player);
+                    head.discard();
+                    var target = helper.spawn(EntityType.VILLAGER, new BlockPos(2, 3, 4));
+                    target.setNoAi(true);
+                    target.setNoGravity(true);
+                    target.getAttribute(Attributes.MAX_HEALTH).setBaseValue(100);
+                    target.setHealth(100);
+                    restored.setPos(target.getX(), target.getY() + 0.8, target.getZ() - 2);
+                    restored.setDeltaMovement(0, 0, 3);
+                    helper.getLevel().addFreshEntity(restored);
+                    restored.tick();
+                    float baseline = (item == PufferfishItems.NETHERITE_FLAIL.get() ? 10 : 2) + (rank == 0 ? 0 : 3);
+                    float expected = baseline * 1.5F * Math.min(1, (float) elapsed / duration);
+                    helper.assertTrue(Math.abs(100 - target.getHealth() - expected) < 0.001
+                            && restored.isReturning() && target.hasEffect(MobEffects.POISON),
+                            "Charge damage or saved charge was incorrect: elapsed=" + elapsed + ", expected=" + expected
+                                    + ", actual=" + (100 - target.getHealth()) + ", removed=" + restored.isRemoved()
+                                    + ", owner=" + (restored.getOwner() == player) + ", charge=" + tag.getFloat("Charge"));
+                    restored.discard();
+                    target.discard();
+                }
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void weightChangesChargeTimeWithoutChangingRange(GameTestHelper helper) {
+        var density = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.DENSITY);
+        double referenceRange = -1;
+        int normalDuration = PufferfishFlailItem.chargeTicks(new ItemStack(PufferfishItems.FLAIL.get()));
+        helper.assertTrue(PufferfishFlailItem.chargeTicks(new ItemStack(PufferfishItems.NETHERITE_FLAIL.get())) > normalDuration,
+                "Netherite flail did not take longer to charge");
+        for (var item : List.of(PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get())) {
+            int previousDuration = 0;
+            for (int rank : new int[] {0, 1, 5}) {
+                var stack = new ItemStack(item);
+                if (rank > 0) EnchantmentHelper.updateEnchantments(stack, entries -> entries.set(density, rank));
+                int duration = PufferfishFlailItem.chargeTicks(stack);
+                helper.assertTrue(duration > previousDuration, "Density did not increase charge time");
+                previousDuration = duration;
+                var player = player(helper, stack);
+                // Keep the flight above the test structure's barrier enclosure.
+                player.setPos(player.position().add(0, 12, 0));
+                player.setXRot(-90);
+                stack.use(helper.getLevel(), player, InteractionHand.MAIN_HAND);
+                for (int tick = 0; tick < duration; tick++) player.tick();
+                player.releaseUsingItem();
+                var head = helper.getLevel().getEntitiesOfClass(PufferfishFlailHead.class, player.getBoundingBox().inflate(3)).getFirst();
+                helper.assertTrue(head.getOwner() == player && player.isAlive()
+                        && ItemStack.isSameItemSameComponents(player.getMainHandItem(), head.getItem()),
+                        "Range fixture has an invalid owner or weapon: owner=" + (head.getOwner() == player)
+                                + ", health=" + player.getHealth() + ", velocity=" + head.getDeltaMovement());
+                var initialVelocity = head.getDeltaMovement();
+                double range = 0;
+                for (int tick = 0; tick < PufferfishFlailItem.COOLDOWN && !head.isRemoved(); tick++) {
+                    head.tickCount++;
+                    head.tick();
+                    range = Math.max(range, head.position().distanceTo(player.getEyePosition()));
+                }
+                helper.assertTrue(head.isRemoved() && range > 4 && range <= PufferfishFlailHead.REACH,
+                        "Charged flail exceeded its tether or failed to return: range=" + range + ", removed=" + head.isRemoved()
+                                + ", initial=" + initialVelocity + ", velocity=" + head.getDeltaMovement() + ", player=" + player.position());
+                if (referenceRange < 0) referenceRange = range;
+                helper.assertTrue(Math.abs(range - referenceRange) < 0.001, "Weight changed the charged throw range");
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void shortTapsAndInterruptedChargesDoNotLaunch(GameTestHelper helper) {
+        for (int scenario = 0; scenario < 3; scenario++) {
+            var stack = new ItemStack(PufferfishItems.FLAIL.get());
+            var player = player(helper, stack);
+            stack.use(helper.getLevel(), player, InteractionHand.MAIN_HAND);
+            int ticks = scenario == 0 ? 2 : PufferfishFlailItem.chargeTicks(stack);
+            for (int tick = 0; tick < ticks; tick++) player.tick();
+            if (scenario == 1) player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+            if (scenario == 2) player.stopUsingItem();
+            else player.releaseUsingItem();
+            helper.assertTrue(helper.getLevel().getEntitiesOfClass(PufferfishFlailHead.class, player.getBoundingBox().inflate(3)).isEmpty()
+                    && !player.getCooldowns().isOnCooldown(stack.getItem()) && stack.getCount() == 1,
+                    "Short or interrupted charge launched, consumed, or cooled down the weapon");
         }
         helper.succeed();
     }

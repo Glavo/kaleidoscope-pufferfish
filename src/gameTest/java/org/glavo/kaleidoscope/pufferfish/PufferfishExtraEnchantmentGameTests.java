@@ -102,6 +102,9 @@ public final class PufferfishExtraEnchantmentGameTests {
                             boolean affected = key == Enchantments.SMITE ? type == EntityType.ZOMBIE : type == EntityType.SPIDER;
                             double expected = (ranged ? PufferfishCombat.damage(stack) : player.getAttributeValue(Attributes.ATTACK_DAMAGE))
                                     + (affected ? 2.5 * rank : 0);
+                            if (ranged && PufferfishItems.isFlail(stack)) {
+                                expected = ((PufferfishItems.hasNetheriteCombat(stack) ? 10 : 2) + (affected ? 2.5 * rank : 0)) * 1.5;
+                            }
                             if (ranged) {
                                 net.minecraft.world.entity.projectile.ThrowableItemProjectile projectile;
                                 if (PufferfishItems.isFlail(stack)) {

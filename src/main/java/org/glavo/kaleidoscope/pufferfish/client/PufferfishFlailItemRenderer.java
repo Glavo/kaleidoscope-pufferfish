@@ -4,8 +4,11 @@
 package org.glavo.kaleidoscope.pufferfish.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -16,6 +19,9 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.util.Mth;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import org.glavo.kaleidoscope.pufferfish.entity.PufferfishFlailHead;
+import org.glavo.kaleidoscope.pufferfish.PufferfishFlailItem;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
 /// Renders a held or displayed flail, leaving only its grip while the head is in flight.
 public final class PufferfishFlailItemRenderer extends BlockEntityWithoutLevelRenderer implements IClientItemExtensions {
@@ -29,6 +35,16 @@ public final class PufferfishFlailItemRenderer extends BlockEntityWithoutLevelRe
 
     @Override
     public BlockEntityWithoutLevelRenderer getCustomRenderer() { return this; }
+
+    @Override
+    public boolean applyForgeHandTransform(PoseStack pose, LocalPlayer player, HumanoidArm arm, ItemStack stack,
+            float partialTick, float equip, float swing) {
+        if (player.isUsingItem() && player.getUseItem() == stack) {
+            float lift = Mth.clamp((player.getTicksUsingItem() + partialTick) / 4, 0, 1);
+            pose.translate((arm == HumanoidArm.RIGHT ? -0.15 : 0.15) * lift, 0.35 * lift, -0.15 * lift);
+        }
+        return false;
+    }
 
     /// Invalidates the baked fish geometry after a resource reload.
     @Override
@@ -55,13 +71,41 @@ public final class PufferfishFlailItemRenderer extends BlockEntityWithoutLevelRe
         double sway = held ? Mth.sin(age * 0.09F) * 0.035 : 0;
         var head = new Vec3(0.47 + sway, -0.24, 0.02);
         if (flying == null) {
-            pose.translate(0, 0.23, 0);
-            model.renderChain(stack, head.add(0, -0.23 + 0.19, 0), 0.12, pose, buffers, light);
-            pose.translate(head.x, head.y - 0.23, head.z);
+            float charging = held ? chargingTicks(stack) : -1;
+            var anchor = new Vec3(0, 0.20, 0);
+            if (charging >= 0) {
+                double angle = PufferfishFlailItem.spinAngle(stack, charging);
+                var orbit = anchor.add(0.08, -0.45 * Math.cos(angle), 0.45 * Math.sin(angle));
+                if (context.firstPerson()) {
+                    float side = context == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND ? 1 : -1;
+                    // Keep the first-person orbit at a stable camera depth, away from the near plane.
+                    var cameraOffset = new Matrix4f(RenderSystem.getModelViewMatrix()).mul(pose.last().pose()).invert()
+                            .transformDirection(new Vector3f((float) (-side * 0.30 * Math.sin(angle)),
+                                    (float) (-0.30 * Math.cos(angle)), -0.15F));
+                    orbit = anchor.add(cameraOffset.x, cameraOffset.y, cameraOffset.z);
+                }
+                head = head.lerp(orbit, Mth.clamp(charging / 4, 0, 1));
+            }
+            var offset = head.subtract(anchor);
+            var end = charging >= 0 ? offset.subtract(offset.normalize().scale(0.20)) : offset.add(0, 0.19, 0);
+            pose.translate(anchor.x, anchor.y, anchor.z);
+            model.renderChain(stack, end, charging >= 0 ? 0 : 0.12, pose, buffers, light);
+            pose.translate(offset.x, offset.y, offset.z);
             pose.mulPose(Axis.ZP.rotationDegrees(held ? (float) (-8 + sway * 100) : -8));
             model.renderHead(stack, pose, buffers, light, overlay, age);
         }
         pose.popPose();
+    }
+
+    private static float chargingTicks(ItemStack stack) {
+        var minecraft = Minecraft.getInstance();
+        if (minecraft.level == null) return -1;
+        for (var player : minecraft.level.players()) {
+            if (player.isUsingItem() && player.getUseItem() == stack) {
+                return player.getTicksUsingItem() + minecraft.getTimer().getGameTimeDeltaPartialTick(false);
+            }
+        }
+        return -1;
     }
 
     /// Keeps the face upright and large enough to read in a 16-pixel inventory slot.

@@ -37,17 +37,22 @@ public final class PufferfishCombat {
                 .mapToInt(entry -> entry.getIntValue()).findFirst().orElse(0);
     }
 
-    /// Returns projectile or flail damage with the flat Density bonus; handheld fish melee uses separate rules.
+    /// Returns fish throwing or flail melee damage with the flat Density bonus.
     public static float damage(ItemStack stack) {
-        int density = enchantmentLevel(stack, Enchantments.DENSITY);
         float base = PufferfishItems.isFlail(stack) ? (PufferfishItems.hasNetheriteCombat(stack) ? 12 : 6)
                 : (PufferfishItems.hasNetheriteCombat(stack) ? 10 : 2);
-        return base + (density > 0 ? 0.5F + 0.5F * density : 0);
+        return base + densityBonus(stack);
     }
 
-    /// Applies target-dependent enchantment damage using the projectile's carried weapon, independently of the owner's current hand.
+    private static float densityBonus(ItemStack stack) {
+        int density = enchantmentLevel(stack, Enchantments.DENSITY);
+        return density > 0 ? 0.5F + 0.5F * density : 0;
+    }
+
+    /// Returns corresponding fish throwing damage with enchantments, before any flail charge multiplier.
     public static float projectileDamage(ServerLevel level, ItemStack stack, Entity target, DamageSource source) {
-        return EnchantmentHelper.modifyDamage(level, stack, target, source, damage(stack));
+        float base = (PufferfishItems.hasNetheriteCombat(stack) ? 10 : 2) + densityBonus(stack);
+        return EnchantmentHelper.modifyDamage(level, stack, target, source, base);
     }
 
     /// Adds main-hand weapon attributes, applying configured base damage only to handheld fish.

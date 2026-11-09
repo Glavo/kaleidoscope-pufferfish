@@ -156,6 +156,10 @@ public final class PufferfishFlailFirstPersonClientTest {
                                     nativeRender.invoke(context.getItemInHandRenderer(), player, 0F, pitch, hand, swing, stack,
                                             swing * 0.5F, pose, stale, LIGHT);
                                     if (stale.groups.size() != 2) throw new IllegalStateException("Flail reused a previous frame's camera transform");
+                                    if (fov == 70 && pitch == -35 && hand == InteractionHand.MAIN_HAND && swing == 0) {
+                                        head.discard();
+                                        verifyCharging(minecraft, player, nativeRender, pose, target, arm);
+                                    }
                                 } finally {
                                     head.discard();
                                 }
@@ -182,6 +186,52 @@ public final class PufferfishFlailFirstPersonClientTest {
         }
     }
 
+    private static void verifyCharging(Minecraft minecraft, LocalPlayer player, java.lang.reflect.Method nativeRender,
+            PoseStack pose, TextureTarget target, HumanoidArm arm) throws ReflectiveOperationException, java.io.IOException {
+        var remaining = net.minecraft.world.entity.LivingEntity.class.getDeclaredField("useItemRemaining");
+        remaining.setAccessible(true);
+        for (var item : new PufferfishFlailItem[] {PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get()}) {
+            var stack = new ItemStack(item);
+            player.setItemInHand(InteractionHand.MAIN_HAND, stack);
+            stack.use(player.level(), player, InteractionHand.MAIN_HAND);
+            int duration = PufferfishFlailItem.chargeTicks(stack);
+            double slow = PufferfishFlailItem.spinAngle(stack, 1) - PufferfishFlailItem.spinAngle(stack, 0);
+            double medium = PufferfishFlailItem.spinAngle(stack, duration / 2F + 1) - PufferfishFlailItem.spinAngle(stack, duration / 2F);
+            double fast = PufferfishFlailItem.spinAngle(stack, duration + 1) - PufferfishFlailItem.spinAngle(stack, duration);
+            double held = PufferfishFlailItem.spinAngle(stack, duration + 21) - PufferfishFlailItem.spinAngle(stack, duration + 20);
+            if (!(slow < medium && medium < fast && Math.abs(fast - held) < 0.000001)) {
+                throw new IllegalStateException("Flail spin did not accelerate to a stable full-charge speed");
+            }
+            List<Vector3f> previous = null;
+            try {
+                for (int ticks : new int[] {0, duration / 4, duration / 2, duration, duration + 10}) {
+                    remaining.setInt(player, stack.getUseDuration(player) - ticks);
+                    var capture = new Capture();
+                    nativeRender.invoke(minecraft.getEntityRenderDispatcher().getItemInHandRenderer(), player, 0F, -35F,
+                            InteractionHand.MAIN_HAND, 0F, stack, 0F, pose, capture, LIGHT);
+                    if (capture.groups.size() != 4 || capture.groups.get(3).equals(previous)) {
+                        throw new IllegalStateException("Charging flail did not render a moving head");
+                    }
+                    capture.verifyGrip();
+                    previous = capture.groups.get(3);
+                    if (arm == HumanoidArm.RIGHT) {
+                        target.clear(Minecraft.ON_OSX);
+                        target.bindWrite(true);
+                        var buffers = minecraft.renderBuffers().bufferSource();
+                        nativeRender.invoke(minecraft.getEntityRenderDispatcher().getItemInHandRenderer(), player, 0F, -35F,
+                                InteractionHand.MAIN_HAND, 0F, stack, 0F, pose, buffers, LIGHT);
+                        buffers.endBatch();
+                        try (var image = Screenshot.takeScreenshot(target)) {
+                            image.writeToFile(Path.of("pufferfish-flail-charge-" + (item == PufferfishItems.FLAIL.get() ? "normal-" : "netherite-") + ticks + ".png"));
+                        }
+                    }
+                }
+            } finally {
+                player.stopUsingItem();
+            }
+        }
+    }
+
     private static final class Capture implements MultiBufferSource {
         private final List<List<Vector3f>> groups = new ArrayList<>();
 
@@ -191,7 +241,11 @@ public final class PufferfishFlailFirstPersonClientTest {
             groups.add(vertices);
             return new VertexConsumer() {
                 @Override
-                public VertexConsumer addVertex(float x, float y, float z) { vertices.add(new Vector3f(x, y, z)); return this; }
+                public VertexConsumer addVertex(float x, float y, float z) {
+                    if (!Float.isFinite(x) || !Float.isFinite(y) || !Float.isFinite(z)) throw new IllegalStateException("Non-finite flail geometry");
+                    vertices.add(new Vector3f(x, y, z));
+                    return this;
+                }
                 @Override
                 public VertexConsumer setColor(int red, int green, int blue, int alpha) { return this; }
                 @Override
@@ -209,6 +263,17 @@ public final class PufferfishFlailFirstPersonClientTest {
             if (groups.size() != 3 || groups.get(1).size() != 48 || groups.get(2).size() < 192) {
                 throw new IllegalStateException("First-person grip did not render its tether");
             }
+            var chain = groups.get(2);
+            verifyGrip();
+            var end = new Vector3f();
+            for (var vertex : chain.subList(chain.size() - 96, chain.size())) end.add(vertex);
+            handToClip.transformProject(end.div(96));
+            if (!end.isFinite() || Math.hypot(end.x - headClip.x, end.y - headClip.y) > 0.12) {
+                throw new IllegalStateException("First-person chain missed the world-rendered head");
+            }
+        }
+
+        void verifyGrip() {
             var bands = groups.get(1);
             var chain = groups.get(2);
             float gap = Float.POSITIVE_INFINITY;
@@ -223,12 +288,6 @@ public final class PufferfishFlailFirstPersonClientTest {
                 }
             }
             if (gap > 0.015F) throw new IllegalStateException("First-person chain detached from the grip: " + gap);
-            var end = new Vector3f();
-            for (var vertex : chain.subList(chain.size() - 96, chain.size())) end.add(vertex);
-            handToClip.transformProject(end.div(96));
-            if (!end.isFinite() || Math.hypot(end.x - headClip.x, end.y - headClip.y) > 0.12) {
-                throw new IllegalStateException("First-person chain missed the world-rendered head");
-            }
         }
     }
 }

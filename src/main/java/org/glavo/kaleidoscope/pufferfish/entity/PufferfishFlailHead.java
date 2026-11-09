@@ -4,6 +4,8 @@
 package org.glavo.kaleidoscope.pufferfish.entity;
 
 import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Mth;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -42,6 +44,7 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
     private static final EntityDataAccessor<Boolean> RETURNING = SynchedEntityData.defineId(PufferfishFlailHead.class, EntityDataSerializers.BOOLEAN);
     /// Whether the weapon was launched from the off hand.
     private static final EntityDataAccessor<Boolean> OFF_HAND = SynchedEntityData.defineId(PufferfishFlailHead.class, EntityDataSerializers.BOOLEAN);
+    private float charge = 1;
 
     /// Creates a head for entity loading or network spawning.
     public PufferfishFlailHead(EntityType<? extends PufferfishFlailHead> type, Level level) {
@@ -51,10 +54,28 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
 
     /// Creates a head holding a copy of the weapon in the owner's specified hand.
     public PufferfishFlailHead(Level level, Player owner, InteractionHand hand) {
+        this(level, owner, hand, 1);
+    }
+
+    public PufferfishFlailHead(Level level, Player owner, InteractionHand hand, float charge) {
         super(KaleidoscopePufferfish.FLAIL_HEAD.get(), owner, level);
+        this.charge = Float.isFinite(charge) ? Mth.clamp(charge, 0, 1) : 0;
         entityData.set(OFF_HAND, hand == InteractionHand.OFF_HAND);
         setItem(owner.getItemInHand(hand));
         setNoGravity(true);
+    }
+
+    @Override
+    public void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+        tag.putFloat("Charge", charge);
+    }
+
+    @Override
+    public void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        float saved = tag.contains("Charge") ? tag.getFloat("Charge") : 1;
+        charge = Float.isFinite(saved) ? Mth.clamp(saved, 0, 1) : 0;
     }
 
     @Override
@@ -138,7 +159,7 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
         var target = result.getEntity();
         var source = new DamageSource(registryAccess().registryOrThrow(Registries.DAMAGE_TYPE)
                 .getHolderOrThrow(ThrownPufferfish.DAMAGE_TYPE), this, getOwner());
-        if (target.hurt(source, PufferfishCombat.projectileDamage(server, getItem(), target, source))) {
+        if (target.hurt(source, PufferfishCombat.projectileDamage(server, getItem(), target, source) * (1.5F * charge))) {
             if (target instanceof LivingEntity living) {
                 PufferfishCombat.hitEffects(getItem(), living, getEffectSource(), getDeltaMovement());
             }
