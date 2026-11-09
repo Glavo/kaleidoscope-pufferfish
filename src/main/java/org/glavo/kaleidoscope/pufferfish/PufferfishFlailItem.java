@@ -6,6 +6,10 @@ package org.glavo.kaleidoscope.pufferfish;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.stats.Stats;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -15,7 +19,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import org.glavo.kaleidoscope.pufferfish.entity.PufferfishFlailHead;
 
-/// A reusable melee weapon whose tethered head can be launched without consuming the item.
+/// A reusable weapon with short left-click casts and charged right-click casts.
 public final class PufferfishFlailItem extends Item {
     /// The cooldown in ticks shared by all flail variants after a successful launch.
     public static final int COOLDOWN = 30;
@@ -73,6 +77,34 @@ public final class PufferfishFlailItem extends Item {
     public static PufferfishFlailHead activeHead(Player player) {
         return player.level().getEntitiesOfClass(PufferfishFlailHead.class, player.getBoundingBox().inflate(16),
                 head -> head.getOwner() == player && !head.isRemoved()).stream().findFirst().orElse(null);
+    }
+
+    /// Casts once from the main hand without consuming the weapon or dealing direct melee damage.
+    public static boolean attack(Player player) {
+        var stack = player.getMainHandItem();
+        if (player.level().isClientSide() || !player.isAlive() || player.isSpectator() || player.isUsingItem()
+                || !PufferfishItems.isFlail(stack) || player.getCooldowns().isOnCooldown(stack.getItem())
+                || activeHead(player) != null) return false;
+        var head = new PufferfishFlailHead(player.level(), player, InteractionHand.MAIN_HAND);
+        head.beginShortCast();
+        if (!player.level().addFreshEntity(head)) return false;
+        int cooldown = PufferfishCombatConfig.value(PufferfishCombatConfig.THROW_COOLDOWN_TICKS);
+        if (cooldown > 0) {
+            player.getCooldowns().addCooldown(PufferfishItems.FLAIL.get(), cooldown);
+            player.getCooldowns().addCooldown(PufferfishItems.NETHERITE_FLAIL.get(), cooldown);
+            player.getCooldowns().addCooldown(PufferfishItems.HEAVY_FLAIL.get(), cooldown);
+        }
+        player.swing(InteractionHand.MAIN_HAND, true);
+        player.resetAttackStrengthTicker();
+        player.awardStat(Stats.ITEM_USED.get(stack.getItem()));
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.CHAIN_HIT, SoundSource.PLAYERS, 0.8F, 1.2F);
+        return true;
+    }
+
+    @Override
+    public boolean onLeftClickEntity(ItemStack stack, Player player, Entity target) {
+        attack(player);
+        return true;
     }
 
     /// Locks damage and aim, allowing the same head to finish its swing before release.

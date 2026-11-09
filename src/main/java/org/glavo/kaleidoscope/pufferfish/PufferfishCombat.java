@@ -37,11 +37,9 @@ public final class PufferfishCombat {
                 .mapToInt(entry -> entry.getIntValue()).findFirst().orElse(0);
     }
 
-    /// Returns fish throwing or flail melee damage with the flat Density bonus.
+    /// Returns fish throwing or short flail cast damage with the flat Density bonus.
     public static float damage(ItemStack stack) {
-        float base = PufferfishItems.isFlail(stack) ? (PufferfishItems.hasNetheriteCombat(stack) ? 12 : 6)
-                : throwingBaseDamage(stack);
-        return base + densityBonus(stack);
+        return throwingBaseDamage(stack) + densityBonus(stack);
     }
 
     private static float throwingBaseDamage(ItemStack stack) {
@@ -67,7 +65,8 @@ public final class PufferfishCombat {
         float meleeDamage = PufferfishItems.isHeavy(stack) ? (float) (6 * meleeMultiplier()) : damage(stack);
         event.addModifier(Attributes.ATTACK_DAMAGE, new AttributeModifier(Item.BASE_ATTACK_DAMAGE_ID,
                 meleeDamage - 1, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
-        double speed = PufferfishItems.hasHeavyCombat(stack) ? 0.6 : PufferfishItems.isFlail(stack) ? 1
+        double speed = PufferfishItems.isFlail(stack) ? 20.0 / Math.max(1, PufferfishCombatConfig.value(PufferfishCombatConfig.THROW_COOLDOWN_TICKS))
+                : PufferfishItems.hasHeavyCombat(stack) ? 0.6
                 : PufferfishCombatConfig.value(PufferfishItems.isNetherite(stack)
                 ? PufferfishCombatConfig.NETHERITE_ATTACK_SPEED : PufferfishCombatConfig.NORMAL_ATTACK_SPEED);
         event.addModifier(Attributes.ATTACK_SPEED, new AttributeModifier(Item.BASE_ATTACK_SPEED_ID,

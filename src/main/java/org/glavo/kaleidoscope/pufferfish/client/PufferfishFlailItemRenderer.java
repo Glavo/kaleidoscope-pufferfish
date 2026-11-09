@@ -73,8 +73,8 @@ public final class PufferfishFlailItemRenderer extends BlockEntityWithoutLevelRe
             target = PufferfishFlailTether.localPosition(world, pose);
         }
         boolean armSwing = player != null && PufferfishFlailArmAnimation.activeHand(player) != null;
-        if (target != null && armSwing && !context.firstPerson()) {
-            pose.mulPose(Axis.ZP.rotationDegrees(-90));
+        if (target != null && (armSwing && !context.firstPerson() || flying != null && flying.isShortCast())) {
+            if (armSwing && !context.firstPerson()) pose.mulPose(Axis.ZP.rotationDegrees(-90));
             var world = flying != null ? flying.renderPosition(partialTick)
                     : PufferfishFlailMotion.orbit(player, player.getUsedItemHand(), stack,
                     player.getTicksUsingItem() + partialTick, player.getViewYRot(partialTick), partialTick);

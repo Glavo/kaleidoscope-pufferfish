@@ -122,13 +122,23 @@ public final class PufferfishExtraEnchantmentGameTests {
                                 projectile.tick();
                                 projectile.discard();
                             } else {
+                                if (PufferfishItems.isFlail(stack)) player.setPos(player.position().add(0, 0, 0.8));
                                 player.attack(target);
+                                if (PufferfishItems.isFlail(stack)) {
+                                    var head = PufferfishFlailItem.activeHead(player);
+                                    helper.assertTrue(head != null && head.isShortCast() && target.getHealth() == 1000,
+                                            "Flail left click did not replace direct melee");
+                                    head.setPos(target.getX(), target.getY() + 0.5, target.getZ() - 1.5);
+                                    head.setDeltaMovement(0, 0, 2);
+                                    head.tick();
+                                    head.discard();
+                                }
                             }
                             helper.assertTrue(Math.abs(1000 - target.getHealth() - expected) < 0.001,
                                     "Incorrect creature enchantment damage: " + item + ", " + key + ", rank=" + rank
                                             + ", target=" + type + ", ranged=" + ranged + ", expected=" + expected
                                             + ", actual=" + (1000 - target.getHealth()));
-                            if (!ranged && affected && key == Enchantments.BANE_OF_ARTHROPODS) {
+                            if (!ranged && !PufferfishItems.isFlail(stack) && affected && key == Enchantments.BANE_OF_ARTHROPODS) {
                                 var slow = target.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
                                 helper.assertTrue(slow != null && slow.getAmplifier() == 3 && slow.getDuration() >= 30,
                                         "Bane melee hit did not apply vanilla Slowness IV");

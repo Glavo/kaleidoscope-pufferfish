@@ -112,6 +112,7 @@ public class KaleidoscopePufferfish {
         RECIPES.register(bus);
         INGREDIENTS.register(bus);
         TABS.register(bus);
+        bus.addListener(FlailAttackPayload::register);
         NeoForge.EVENT_BUS.addListener(PufferfishColors::interact);
         NeoForge.EVENT_BUS.addListener(PufferfishColors::colorDrops);
         NeoForge.EVENT_BUS.addListener(PufferfishColors::legacyTooltip);

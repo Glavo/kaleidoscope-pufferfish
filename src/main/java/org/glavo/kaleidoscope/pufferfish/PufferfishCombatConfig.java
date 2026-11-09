@@ -85,7 +85,8 @@ public final class PufferfishCombatConfig {
                 "Applies to normal, dyed, netherite, and heavy pufferfish. Zero disables the penalty; 0.2 halves speed at Density V.")
                 .worldRestart().defineInRange("densitySpeedPenaltyPerLevel", 0.2, 0.0, 16.0);
         THROW_COOLDOWN_TICKS = builder.comment("Cooldown after a successful throw, shared by normal, dyed, netherite, and heavy pufferfish in both hands.",
-                "20 ticks equal one second. Zero disables the cooldown. Does not affect flails.")
+                "Also sets the cooldown for short flail casts; charged flail casts keep their own cooldown.",
+                "20 ticks equal one second. Zero disables the cooldown.")
                 .worldRestart().defineInRange("cooldownTicks", 20, 0, 1200);
         builder.pop().comment("Flail charge times. Weight affects charging, not launch speed or tether reach.").push("flail");
         NORMAL_FLAIL_CHARGE_TICKS = builder.comment("Ticks to fully charge ordinary and dyed flails.")

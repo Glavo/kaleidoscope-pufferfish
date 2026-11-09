@@ -112,9 +112,9 @@ public final class PufferfishFlailGameTests {
         helper.succeed();
     }
 
-    /// Verifies melee damage and poison without treating a flail as wearable fish or engine fuel.
+    /// Verifies left-click casts replace direct melee and preserve fish-specific poison.
     @GameTest(template = "empty")
-    public static void flailsDealMeleeDamageWithoutFishEquipmentBehavior(GameTestHelper helper) {
+    public static void flailsCastInsteadOfDealingDirectMeleeDamage(GameTestHelper helper) {
         for (var item : List.of(PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get())) {
             var stack = new ItemStack(item);
             var player = player(helper, stack);
@@ -123,16 +123,131 @@ public final class PufferfishFlailGameTests {
             var target = helper.spawn(EntityType.VILLAGER, new BlockPos(2, 3, 3));
             target.setNoAi(true);
             boolean netherite = PufferfishItems.hasNetheriteCombat(new ItemStack(item));
-            helper.assertTrue(player.getAttributeValue(Attributes.ATTACK_DAMAGE) == (netherite ? 12 : 6)
-                    && Math.abs(player.getAttributeValue(Attributes.ATTACK_SPEED) - (PufferfishItems.hasHeavyCombat(stack) ? 0.6 : 1)) < 0.000001,
-                    "Incorrect flail melee attributes");
+            float damage = PufferfishItems.hasHeavyCombat(stack) ? 10 : netherite ? 6 : 1;
+            helper.assertTrue(player.getAttributeValue(Attributes.ATTACK_DAMAGE) == damage
+                    && Math.abs(player.getAttributeValue(Attributes.ATTACK_SPEED) - 1) < 0.000001,
+                    "Incorrect short cast attributes");
             player.attack(target);
+            var head = PufferfishFlailItem.activeHead(player);
+            helper.assertTrue(target.getHealth() == 20 && head != null && head.isShortCast(), "Left click dealt direct melee damage or failed to cast");
+            for (int tick = 0; tick < 8 && !head.isReturning(); tick++) { head.tickCount++; head.tick(); }
             var poison = target.getEffect(MobEffects.POISON);
-            helper.assertTrue(target.getHealth() == (netherite ? 8 : 14) && poison != null
-                    && poison.getDuration() == 120 && poison.getAmplifier() == (netherite ? 1 : 0), "Flail melee damage or poison failed");
+            helper.assertTrue(target.getHealth() == 20 - damage && poison != null
+                    && poison.getDuration() == 120 && poison.getAmplifier() == (netherite ? 1 : 0), "Short cast damage or poison failed");
+            for (int tick = 0; tick < 30 && !head.isRemoved(); tick++) { head.tickCount++; head.tick(); }
+            helper.assertTrue(head.isRemoved() && target.getHealth() == 20 - damage && ItemStack.matches(stack, player.getMainHandItem()),
+                    "Return flight duplicated damage or lost the weapon");
             helper.assertTrue(!PufferfishItems.isPufferfish(stack), "Flail was classified as a fish ingredient");
             player.setItemSlot(EquipmentSlot.HEAD, stack);
             helper.assertTrue(!PufferfishHeadgear.isWearing(player), "Flail granted fish headgear effects");
+            target.discard();
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void shortCastsHitNearbyTargetsAndRespectTheirReach(GameTestHelper helper) {
+        for (var item : List.of(PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get()))
+                for (var arm : net.minecraft.world.entity.HumanoidArm.values())
+                for (double distance : new double[] {1, 2.3, 3.5}) for (float pitch : new float[] {-35, 0, 45}) {
+            var stack = new ItemStack(item);
+            stack.set(KaleidoscopePufferfish.COLOR.get(), DyeColor.BLUE);
+            var player = player(helper, stack);
+            player.setMainArm(arm);
+            player.setPos(player.position().add(0, 12, 0));
+            player.setXRot(pitch);
+            player.setOldPosAndRot();
+            var target = helper.spawn(EntityType.CHICKEN, new BlockPos(2, 3, 3));
+            target.setNoAi(true);
+            target.setNoGravity(true);
+            target.getAttribute(Attributes.MAX_HEALTH).setBaseValue(100);
+            target.setHealth(100);
+            var aim = player.getEyePosition().add(player.getLookAngle().scale(distance));
+            target.setPos(aim.x, aim.y - target.getBbHeight() / 2, aim.z);
+            helper.assertTrue(PufferfishFlailItem.attack(player), "Short cast failed");
+            var head = PufferfishFlailItem.activeHead(player);
+            helper.assertTrue(head.isShortCast() && !head.isSpinning() && !head.hasSwing()
+                    && head.position().distanceTo(PufferfishFlailMotion.grip(player, InteractionHand.MAIN_HAND, player.getYRot(), 1)) < 0.001,
+                    "Short cast did not start at the hand or entered the charging animation");
+            helper.assertTrue(!PufferfishFlailItem.attack(player), "Repeated input duplicated the head");
+            double range = 0;
+            for (int tick = 0; tick < 30 && !head.isRemoved(); tick++) {
+                head.tickCount++;
+                head.tick();
+                range = Math.max(range, head.position().distanceTo(player.getEyePosition()));
+            }
+            float damage = distance > 3 ? 0 : PufferfishItems.hasHeavyCombat(stack) ? 10 : PufferfishItems.hasNetheriteCombat(stack) ? 6 : 1;
+            helper.assertTrue(head.isRemoved() && range <= PufferfishFlailHead.SHORT_REACH + 1.0e-6 && target.getHealth() == 100 - damage,
+                    "Short cast missed, exceeded reach, or failed to return: distance=" + distance + ", pitch=" + pitch + ", arm=" + arm + ", damage=" + (100 - target.getHealth()));
+            helper.assertTrue(ItemStack.matches(stack, player.getMainHandItem()), "Short cast consumed or changed its weapon");
+            target.discard();
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void shortCastsUseConfiguredCooldownAndValidateTheHeldWeapon(GameTestHelper helper) {
+        var setting = PufferfishCombatConfig.THROW_COOLDOWN_TICKS;
+        int previous = setting.get();
+        try {
+            for (int cooldown : new int[] {0, 7, 20, 40}) {
+                setting.set(cooldown);
+                setting.clearCache();
+                var player = player(helper, new ItemStack(PufferfishItems.FLAIL.get()));
+                helper.assertTrue(PufferfishFlailItem.attack(player), "Valid short cast rejected");
+                var head = PufferfishFlailItem.activeHead(player);
+                helper.assertTrue(!PufferfishFlailItem.attack(player), "Active head did not block repeated input");
+                head.discard();
+                for (var item : List.of(PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get())) {
+                    helper.assertTrue(player.getCooldowns().isOnCooldown(item) == (cooldown > 0), "Short cast cooldown did not follow configuration");
+                }
+                player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(PufferfishItems.HEAVY_FLAIL.get()));
+                for (int tick = 0; tick < cooldown; tick++) {
+                    helper.assertTrue(!PufferfishFlailItem.attack(player), "Changing variants bypassed cooldown");
+                    player.getCooldowns().tick();
+                }
+                helper.assertTrue(PufferfishFlailItem.attack(player), "Short cast remained blocked after cooldown");
+                PufferfishFlailItem.activeHead(player).discard();
+            }
+            var player = player(helper, new ItemStack(Items.STICK));
+            player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(PufferfishItems.FLAIL.get()));
+            helper.assertTrue(!PufferfishFlailItem.attack(player), "Offhand flail allowed a main-hand attack");
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(PufferfishItems.FLAIL.get()));
+            player.getMainHandItem().use(helper.getLevel(), player, InteractionHand.MAIN_HAND);
+            helper.assertTrue(!PufferfishFlailItem.attack(player), "Short cast interrupted charging");
+            PufferfishFlailItem.activeHead(player).discard();
+        } finally {
+            setting.set(previous);
+            setting.clearCache();
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void savedShortCastsKeepUnmultipliedDensityDamage(GameTestHelper helper) {
+        for (var item : List.of(PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get())) {
+            var stack = new ItemStack(item);
+            var density = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.DENSITY);
+            EnchantmentHelper.updateEnchantments(stack, values -> values.set(density, 5));
+            var player = player(helper, stack);
+            PufferfishFlailItem.attack(player);
+            var original = PufferfishFlailItem.activeHead(player);
+            var tag = new net.minecraft.nbt.CompoundTag();
+            original.addAdditionalSaveData(tag);
+            original.discard();
+            var head = new PufferfishFlailHead(helper.getLevel(), player, InteractionHand.MAIN_HAND);
+            head.readAdditionalSaveData(tag);
+            head.setOwner(player);
+            var target = helper.spawn(EntityType.VILLAGER, new BlockPos(2, 3, 3));
+            target.setNoAi(true);
+            head.setPos(target.getX(), target.getY() + 1, target.getZ() - 0.8);
+            head.setDeltaMovement(0, 0, 1);
+            helper.getLevel().addFreshEntity(head);
+            head.tick();
+            float damage = (PufferfishItems.hasHeavyCombat(stack) ? 10 : PufferfishItems.hasNetheriteCombat(stack) ? 6 : 1) + 3;
+            helper.assertTrue(head.isShortCast() && !head.hasSwing() && target.getHealth() == 20 - damage,
+                    "Saved short cast lost its mode or applied charged damage");
+            head.discard();
             target.discard();
         }
         helper.succeed();

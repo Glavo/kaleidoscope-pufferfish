@@ -103,7 +103,8 @@ public final class PufferfishFlailFirstPersonClientTest {
                                 var stack = new ItemStack(PufferfishItems.NETHERITE_FLAIL.get());
                                 player.setItemInHand(hand, stack);
                                 var head = new org.glavo.kaleidoscope.pufferfish.entity.PufferfishFlailHead(level, player, hand);
-                                head.setPos(player.getEyePosition().add(player.getLookAngle().scale(3.5)));
+                                if (swing > 0) head.beginShortCast();
+                                head.setPos(player.getEyePosition().add(player.getLookAngle().scale(head.isShortCast() ? 1.8 : 3.5)));
                                 head.setOldPosAndRot();
                                 level.addEntity(head);
                                 if (swing == 0.75F) {
@@ -122,6 +123,7 @@ public final class PufferfishFlailFirstPersonClientTest {
                                     // Include camera motion as well as the native swing and equip transforms.
                                     pose.translate(0.02, -0.015, 0);
                                     var capture = new Capture();
+                                    capture.fixedGrip = head.isShortCast();
                                     renderHand(nativeRender, context.getItemInHandRenderer(), player, 0F, pitch, hand, swing, stack,
                                             swing * 0.5F, pose, capture, LIGHT);
                                     capture.verify(new Matrix4f(handProjection).mul(rotation),
@@ -148,7 +150,7 @@ public final class PufferfishFlailFirstPersonClientTest {
                                                 swing * 0.5F, pose, buffers, LIGHT);
                                         buffers.endBatch();
                                         try (var image = Screenshot.takeScreenshot(target)) {
-                                            image.writeToFile(Path.of("pufferfish-flail-first-person-" + arm.name().toLowerCase(java.util.Locale.ROOT)
+                                            image.writeToFile(Path.of("pufferfish-flail-first-person-" + (head.isShortCast() ? "short-" : "") + arm.name().toLowerCase(java.util.Locale.ROOT)
                                                     + (swing == 0 ? "-idle.png" : "-swing.png")));
                                         }
                                     }
@@ -413,6 +415,8 @@ public final class PufferfishFlailFirstPersonClientTest {
             }
         }
 
+        boolean fixedGrip;
+
         void verifyGrip() {
             var bands = groups.get(groups.size() - 2);
             var chain = groups.getLast();
@@ -459,7 +463,7 @@ public final class PufferfishFlailFirstPersonClientTest {
             var last = new Vector3f();
             for (int i = 0; i < 24; i++) { bottom.add(bands.get(i)); top.add(bands.get(i + 24)); }
             for (int i = 0; i < 96; i++) { first.add(chain.get(i)); last.add(chain.get(chain.size() - 96 + i)); }
-            if (groups.size() == 3 && chain.size() > 96 && top.sub(bottom).normalize().dot(last.sub(first).normalize()) < 0.995F) {
+            if (!fixedGrip && groups.size() == 3 && chain.size() > 96 && top.sub(bottom).normalize().dot(last.sub(first).normalize()) < 0.995F) {
                 throw new IllegalStateException("Grip remained upright instead of following chain tension");
             }
         }
