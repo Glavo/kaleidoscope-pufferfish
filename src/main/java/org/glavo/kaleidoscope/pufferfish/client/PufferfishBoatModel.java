@@ -14,7 +14,6 @@ import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.vehicle.Boat;
 import org.joml.Vector3f;
 
@@ -100,10 +99,10 @@ public final class PufferfishBoatModel extends ListModel<Boat> implements WaterP
     public void setupAnim(Boat boat, float partialTick, float amount, float age, float yaw, float pitch) {
         restPaddle();
         if (boat.getPaddleState(0) || boat.getPaddleState(1)) {
-            float time = boat.getRowingTime(0, partialTick) + boat.getRowingTime(1, partialTick);
-            paddle.setPos(4, -8, 0);
-            paddle.xRot = Mth.sin(time) * 0.55F;
-            paddle.yRot = Mth.cos(time) * 0.3F;
+            var motion = PufferfishRowingAnimation.paddle(boat, partialTick);
+            paddle.setPos(motion.x(), motion.y(), motion.z());
+            paddle.xRot = motion.pitch();
+            paddle.yRot = motion.yaw();
         }
     }
 

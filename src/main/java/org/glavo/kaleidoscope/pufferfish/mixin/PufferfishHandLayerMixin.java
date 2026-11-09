@@ -35,6 +35,10 @@ public abstract class PufferfishHandLayerMixin<T extends LivingEntity, M extends
     @Inject(method = "renderArmWithItem", at = @At("HEAD"), cancellable = true)
     private void kaleidoscope$renderGlove(LivingEntity entity, ItemStack stack, ItemDisplayContext context, HumanoidArm arm,
             PoseStack pose, MultiBufferSource buffers, int light, CallbackInfo callback) {
+        if (entity instanceof Player player && org.glavo.kaleidoscope.pufferfish.client.PufferfishRowingAnimation.isRowing(player)) {
+            callback.cancel();
+            return;
+        }
         if (entity instanceof Player && PufferfishItems.isPufferfish(stack)) {
             if (kaleidoscope$gloveRenderer == null) kaleidoscope$gloveRenderer = new PufferfishGloveRenderer();
             kaleidoscope$gloveRenderer.renderAttached(getParentModel(), entity, stack, arm, pose, buffers, light, entity.tickCount);

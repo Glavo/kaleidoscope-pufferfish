@@ -117,6 +117,7 @@ public final class PufferfishClientSmokeTest {
         PufferfishShieldClientTest.verify(minecraft);
         PufferfishArmorClientTest.verify(minecraft);
         PufferfishBoatClientTest.verify(minecraft);
+        PufferfishRowingClientTest.verify(minecraft);
         PufferfishFlailFirstPersonClientTest.verify(minecraft);
         PufferfishFlailOrbitClientTest.verify(minecraft);
         if (net.neoforged.fml.ModList.get().isLoaded("create")) {

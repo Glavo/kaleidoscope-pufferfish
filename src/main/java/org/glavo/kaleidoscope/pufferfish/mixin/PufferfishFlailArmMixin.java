@@ -22,6 +22,8 @@ public abstract class PufferfishFlailArmMixin {
             float headYaw, float headPitch, CallbackInfo callback) {
         if (entity instanceof Player player) {
             float partial = PufferfishFlailTether.partialTick(Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(false));
+            if (org.glavo.kaleidoscope.pufferfish.client.PufferfishRowingAnimation.poseArms((HumanoidModel<?>) (Object) this, player, partial,
+                    Mth.rotLerp(partial, player.yBodyRotO, player.yBodyRot))) return;
             PufferfishFlailArmAnimation.poseArm((HumanoidModel<?>) (Object) this, player, partial,
                     Mth.rotLerp(partial, player.yBodyRotO, player.yBodyRot));
         }

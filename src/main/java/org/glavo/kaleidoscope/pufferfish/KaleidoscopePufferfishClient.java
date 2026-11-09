@@ -74,6 +74,7 @@ public class KaleidoscopePufferfishClient {
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishHeadRenderer::beforePlayer);
         NeoForge.EVENT_BUS.addListener(PufferfishHeadRenderer::afterPlayer);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishGloveRenderer::renderHand);
+        NeoForge.EVENT_BUS.addListener(EventPriority.HIGH, org.glavo.kaleidoscope.pufferfish.client.PufferfishRowingAnimation::renderHands);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, org.glavo.kaleidoscope.pufferfish.client.PufferfishFlailArmAnimation::renderHand);
         NeoForge.EVENT_BUS.addListener(org.glavo.kaleidoscope.pufferfish.client.PufferfishFlailTether::beginFrame);
         NeoForge.EVENT_BUS.addListener(org.glavo.kaleidoscope.pufferfish.client.PufferfishFlailInput::attack);
