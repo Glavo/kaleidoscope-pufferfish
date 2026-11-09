@@ -58,6 +58,7 @@
   "block.kaleidoscope_pufferfish.heavy_pufferfish_lamp": "沉重河豚灯",
 
   "block.kaleidoscope_pufferfish.placed_pufferfish": "河豚摆件",
+  "block.kaleidoscope_pufferfish.placed_heavy_pufferfish": "沉重河豚摆件",
   "block.kaleidoscope_pufferfish.pufferfish_conduit": "河豚核心",
   "block.kaleidoscope_pufferfish.pufferfish_engine": "河豚引擎",
 
@@ -321,6 +322,8 @@
 
   "death.attack.kaleidoscope_pufferfish.thrown_pufferfish": "%1$s 被河豚砸死了",
   "death.attack.kaleidoscope_pufferfish.thrown_pufferfish.player": "%1$s 被 %2$s 用河豚砸死了",
+  "death.attack.kaleidoscope_pufferfish.pufferfish_prick": "%1$s 被河豚扎死了",
+  "death.attack.kaleidoscope_pufferfish.pufferfish_prick.player": "%1$s 被河豚扎死了",
 
   "gui.kaleidoscope_pufferfish.engine.empty": "请放入一只河豚",
   "gui.kaleidoscope_pufferfish.engine.dry": "需要一桶水",

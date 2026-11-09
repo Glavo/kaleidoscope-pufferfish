@@ -25,6 +25,19 @@ public final class PlacedPufferfishBlockEntity extends BlockEntity {
         fish = PufferfishItems.isPufferfish(stack) ? stack.copyWithCount(1) : ItemStack.EMPTY;
         setChanged();
         if (level != null) level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        scheduleHeavyConversion();
+    }
+
+    @Override
+    public void onLoad() {
+        super.onLoad();
+        scheduleHeavyConversion();
+    }
+
+    private void scheduleHeavyConversion() {
+        if (level != null && !level.isClientSide && getBlockState().is(PufferfishBlocks.PLACED_FISH.get()) && PufferfishItems.isHeavy(fish)) {
+            level.scheduleTick(worldPosition, getBlockState().getBlock(), 1);
+        }
     }
 
     @Override

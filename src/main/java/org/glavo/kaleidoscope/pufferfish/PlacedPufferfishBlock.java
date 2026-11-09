@@ -51,6 +51,16 @@ public class PlacedPufferfishBlock extends BaseEntityBlock implements SimpleWate
     }
 
     @Override
+    protected void tick(BlockState state, net.minecraft.server.level.ServerLevel level, BlockPos pos, net.minecraft.util.RandomSource random) {
+        if (state.is(PufferfishBlocks.PLACED_FISH.get()) && level.getBlockEntity(pos) instanceof PlacedPufferfishBlockEntity entity
+                && PufferfishItems.isHeavy(entity.fish())) {
+            var fish = entity.fish();
+            level.setBlockAndUpdate(pos, PufferfishBlocks.PLACED_HEAVY_FISH.get().withPropertiesOf(state));
+            ((PlacedPufferfishBlockEntity) level.getBlockEntity(pos)).setFish(fish);
+        }
+    }
+
+    @Override
     protected MapCodec<? extends PlacedPufferfishBlock> codec() { return CODEC; }
 
     @Override

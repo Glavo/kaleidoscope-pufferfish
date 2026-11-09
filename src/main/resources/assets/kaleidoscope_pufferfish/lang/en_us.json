@@ -58,6 +58,7 @@
   "block.kaleidoscope_pufferfish.heavy_pufferfish_lamp": "Heavy Pufferfish Lamp",
 
   "block.kaleidoscope_pufferfish.placed_pufferfish": "Pufferfish Display",
+  "block.kaleidoscope_pufferfish.placed_heavy_pufferfish": "Heavy Pufferfish Display",
   "block.kaleidoscope_pufferfish.pufferfish_conduit": "Pufferfish Conduit",
   "block.kaleidoscope_pufferfish.pufferfish_engine": "Pufferfish Engine",
 
@@ -321,6 +322,8 @@
 
   "death.attack.kaleidoscope_pufferfish.thrown_pufferfish": "%1$s was struck down by a pufferfish",
   "death.attack.kaleidoscope_pufferfish.thrown_pufferfish.player": "%1$s was struck down by %2$s with a pufferfish",
+  "death.attack.kaleidoscope_pufferfish.pufferfish_prick": "%1$s was pricked to death by a pufferfish",
+  "death.attack.kaleidoscope_pufferfish.pufferfish_prick.player": "%1$s was pricked to death by a pufferfish",
 
   "gui.kaleidoscope_pufferfish.engine.empty": "Insert a pufferfish",
   "gui.kaleidoscope_pufferfish.engine.dry": "Needs a bucket of water",

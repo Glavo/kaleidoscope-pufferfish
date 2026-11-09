@@ -179,7 +179,7 @@ public final class PufferfishLampGameTests {
         var level = helper.getLevel();
         var pos = helper.absolutePos(new BlockPos(2, 2, 2));
         var lamp = PufferfishLamps.VARIANTS.get("heavy_pufferfish_lamp").block().get();
-        for (var block : List.of(lamp, Blocks.ANVIL)) {
+        for (var block : List.of(lamp, PufferfishBlocks.PLACED_HEAVY_FISH.get(), Blocks.ANVIL)) {
             for (float distance : new float[] {0.5F, 5, 50}) {
                 var falling = FallingBlockEntity.fall(level, pos, block.defaultBlockState());
                 falling.setHurtsEntities(2, 40);
@@ -192,7 +192,7 @@ public final class PufferfishLampGameTests {
                 float damage = distance < 1 ? 0 : distance == 5 ? 8 : 40;
                 helper.assertTrue(target.getHealth() == 100 - damage, "Incorrect falling lamp damage or damage cap");
                 var poison = target.getEffect(MobEffects.POISON);
-                if (block == lamp && damage > 0) {
+                if (block instanceof HeavyPufferfishBlock && damage > 0) {
                     helper.assertTrue(poison != null && poison.getAmplifier() == 1 && poison.getDuration() == 60, "Incorrect impact poison");
                 } else helper.assertTrue(poison == null, "Non-damaging fall or vanilla anvil applied poison");
                 helper.assertTrue(!immune.hasEffect(MobEffects.POISON), "Invulnerable target was poisoned");

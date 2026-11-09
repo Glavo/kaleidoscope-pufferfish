@@ -12,6 +12,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.FallingBlockEntity;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -21,13 +22,23 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.common.damagesource.DamageContainer;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 
-public final class HeavyPufferfishLampBlock extends PlacedPufferfishBlock implements Fallable {
-    public static final MapCodec<HeavyPufferfishLampBlock> CODEC = simpleCodec(HeavyPufferfishLampBlock::new);
+public final class HeavyPufferfishBlock extends PlacedPufferfishBlock implements Fallable {
+    public static final MapCodec<HeavyPufferfishBlock> CODEC = simpleCodec(HeavyPufferfishBlock::new);
 
-    public HeavyPufferfishLampBlock(Properties properties) { super(properties); }
+    public HeavyPufferfishBlock(Properties properties) { super(properties); }
 
     @Override
-    protected MapCodec<HeavyPufferfishLampBlock> codec() { return CODEC; }
+    protected MapCodec<HeavyPufferfishBlock> codec() { return CODEC; }
+
+    @Override
+    public Item asItem() { return PufferfishLamps.isLamp(this) ? super.asItem() : PufferfishItems.HEAVY.get(); }
+
+    @Override
+    public PlacedPufferfishBlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+        var entity = (PlacedPufferfishBlockEntity) super.newBlockEntity(pos, state);
+        entity.setFish(new ItemStack(PufferfishItems.HEAVY.get()));
+        return entity;
+    }
 
     @Override
     protected void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean isMoving) {
@@ -61,7 +72,7 @@ public final class HeavyPufferfishLampBlock extends PlacedPufferfishBlock implem
     public static void poisonOnImpact(LivingDamageEvent.Post event) {
         if (event.getEntity().level().isClientSide || !event.getSource().is(DamageTypes.FALLING_ANVIL)
                 || !(event.getSource().getDirectEntity() instanceof FallingBlockEntity falling)
-                || !(falling.getBlockState().getBlock() instanceof HeavyPufferfishLampBlock)
+                || !(falling.getBlockState().getBlock() instanceof HeavyPufferfishBlock)
                 || event.getNewDamage() + event.getReduction(DamageContainer.Reduction.ABSORPTION) <= 0) return;
         PufferfishCombat.applyPoison(new ItemStack(PufferfishItems.HEAVY.get()), event.getEntity(), falling);
     }

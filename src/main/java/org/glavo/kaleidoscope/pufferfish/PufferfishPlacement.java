@@ -29,7 +29,8 @@ public final class PufferfishPlacement {
         var level = event.getLevel();
         var context = new BlockPlaceContext(player, event.getHand(), stack, event.getHitVec());
         var pos = context.getClickedPos();
-        var state = PufferfishBlocks.PLACED_FISH.get().getStateForPlacement(context);
+        var block = PufferfishItems.isHeavy(stack) ? PufferfishBlocks.PLACED_HEAVY_FISH.get() : PufferfishBlocks.PLACED_FISH.get();
+        var state = block.getStateForPlacement(context);
         if (!context.canPlace() || !level.mayInteract(player, pos) || !player.mayUseItemAt(pos, context.getClickedFace(), stack)
                 || !state.canSurvive(level, pos) || !level.isUnobstructed(state, pos, CollisionContext.of(player))) return;
         if (!level.isClientSide()) {

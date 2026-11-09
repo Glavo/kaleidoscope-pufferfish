@@ -49,7 +49,7 @@ public final class PufferfishLamps {
             default -> 15;
         };
         var block = BLOCKS.<PlacedPufferfishBlock>registerBlock(name,
-                fishName.equals("heavy_pufferfish") ? HeavyPufferfishLampBlock::new : PlacedPufferfishBlock::new,
+                fishName.equals("heavy_pufferfish") ? HeavyPufferfishBlock::new : PlacedPufferfishBlock::new,
                 BlockBehaviour.Properties.of().strength(0.3F).noOcclusion().lightLevel(state -> light).sound(SoundType.LANTERN));
         var properties = new Item.Properties();
         if (fishName.equals("netherite_pufferfish") || fishName.equals("heavy_pufferfish")) properties.fireResistant();
