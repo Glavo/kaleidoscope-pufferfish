@@ -1,0 +1,10 @@
+{
+  "pot": {},
+  "stockpot_cooking": {},
+  "stockpot_finished": {},
+  "millstone": {},
+  "steamer": {
+    "kaleidoscope_pufferfish:pufferfish_baozi": "kaleidoscope_pufferfish:item/pufferfish_baozi_steamer",
+    "kaleidoscope_pufferfish:raw_pufferfish_baozi": "kaleidoscope_pufferfish:item/raw_pufferfish_baozi_steamer"
+  }
+}

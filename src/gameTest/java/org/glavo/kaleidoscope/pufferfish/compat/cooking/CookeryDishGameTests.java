@@ -38,6 +38,69 @@ public final class CookeryDishGameTests {
     /// Prevents construction of the test holder.
     private CookeryDishGameTests() {}
 
+    @GameTest(template = "empty", templateNamespace = "kaleidoscope_pufferfish")
+    public static void baoziUsesVegetableAndDoughTagsWithoutRecipeConflicts(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var vegetables = net.minecraft.tags.TagKey.create(net.minecraft.core.registries.Registries.ITEM,
+                ResourceLocation.parse("c:vegetables"));
+        var dough = net.minecraft.tags.TagKey.create(net.minecraft.core.registries.Registries.ITEM,
+                ResourceLocation.parse("c:dough"));
+        int checked = 0;
+        for (var vegetable : BuiltInRegistries.ITEM.getTagOrEmpty(vegetables)) {
+            for (var flour : BuiltInRegistries.ITEM.getTagOrEmpty(dough)) {
+                var input = CraftingInput.of(3, 1, List.of(new ItemStack(vegetable.value()),
+                        new ItemStack(PufferfishItems.SASHIMI.get()), new ItemStack(flour.value())));
+                var selected = level.getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, level).orElseThrow();
+                var result = selected.value().assemble(input, level.registryAccess());
+                helper.assertTrue(result.is(PufferfishItems.RAW_BAOZI.get()) && result.getCount() == 1,
+                        "Tagged ingredients conflicted with another recipe");
+                checked++;
+            }
+        }
+        helper.assertTrue(checked > 1, "Expected multiple supported vegetable and dough combinations");
+        var raw = new ItemStack(PufferfishItems.RAW_BAOZI.get());
+        helper.assertTrue(!raw.is(dough), "Filled baozi must not match the plain dough tag");
+        var steamer = level.getRecipeManager().getRecipeFor(ModRecipes.STEAMER_RECIPE,
+                new net.minecraft.world.item.crafting.SingleRecipeInput(raw), level).orElseThrow().value();
+        helper.assertTrue(steamer.getCookTick() == 1200 && steamer.getResult().is(PufferfishItems.BAOZI.get()),
+                "Baozi matched the wrong steaming recipe");
+        var original = level.getRecipeManager().getRecipeFor(ModRecipes.STEAMER_RECIPE,
+                new net.minecraft.world.item.crafting.SingleRecipeInput(new ItemStack(ModItems.STUFFED_DOUGH_FOOD.get())), level)
+                .orElseThrow().value();
+        helper.assertTrue(original.getResult().is(ModItems.BAOZI.get()), "Original baozi recipe was changed");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", templateNamespace = "kaleidoscope_pufferfish", timeoutTicks = 1260)
+    public static void steamerCooksAndReturnsFourBaozi(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var pos = new BlockPos(2, 2, 2);
+        helper.setBlock(pos.below(), Blocks.CAMPFIRE);
+        helper.setBlock(pos, ModBlocks.STEAMER.get().defaultBlockState()
+                .setValue(com.github.ysbbbbbb.kaleidoscopecookery.block.kitchen.SteamerBlock.HALF, true));
+        var steamer = (com.github.ysbbbbbb.kaleidoscopecookery.blockentity.kitchen.SteamerBlockEntity)
+                level.getBlockEntity(helper.absolutePos(pos));
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        var input = new ItemStack(PufferfishItems.RAW_BAOZI.get(), 4);
+        helper.assertTrue(steamer.placeFood(level, player, input) && input.isEmpty(), "Steamer did not accept four raw baozi");
+        helper.runAtTickTime(10, () -> {
+            helper.assertTrue(steamer.getItems().getFirst().is(PufferfishItems.RAW_BAOZI.get()), "Uncovered baozi cooked");
+            level.setBlockAndUpdate(helper.absolutePos(pos), steamer.getBlockState()
+                    .setValue(com.github.ysbbbbbb.kaleidoscopecookery.block.kitchen.SteamerBlock.HAS_LID, true));
+        });
+        helper.runAtTickTime(1200, () -> helper.assertTrue(steamer.getItems().getFirst().is(PufferfishItems.RAW_BAOZI.get()),
+                "Baozi cooked before sixty seconds"));
+        helper.runAtTickTime(1230, () -> {
+            for (int i = 0; i < 4; i++) helper.assertTrue(steamer.getItems().get(i).is(PufferfishItems.BAOZI.get())
+                    && steamer.getItems().get(i).getCount() == 1, "Steamer lost or failed to cook a baozi");
+            level.setBlockAndUpdate(helper.absolutePos(pos), steamer.getBlockState()
+                    .setValue(com.github.ysbbbbbb.kaleidoscopecookery.block.kitchen.SteamerBlock.HAS_LID, false));
+            helper.assertTrue(steamer.takeFood(level, player) && player.getInventory().countItem(PufferfishItems.BAOZI.get()) == 4
+                    && steamer.getItems().stream().allMatch(ItemStack::isEmpty), "Steamer did not return exactly four baozi");
+            helper.succeed();
+        });
+    }
+
     /// Verifies sashimi works in strict dishes and in flexible soups mixed with whole fish.
     @GameTest(template = "empty", templateNamespace = "kaleidoscope_pufferfish")
     public static void sashimiWorksInMixedDishes(GameTestHelper helper) {

@@ -34,6 +34,11 @@ public final class PufferfishItems {
     /// Edible pufferfish sashimi with two nutrition points and no status effects.
     public static final DeferredItem<Item> SASHIMI = ITEMS.register("pufferfish_sashimi", () -> new Item(
             new Item.Properties().food(new FoodProperties.Builder().nutrition(2).saturationModifier(0.1F).build())));
+    public static final DeferredItem<Item> RAW_BAOZI = ITEMS.register("raw_pufferfish_baozi", () -> new Item(new Item.Properties()));
+    public static final DeferredItem<Item> BAOZI = ITEMS.register("pufferfish_baozi", () -> new Item(
+            new Item.Properties().food(new FoodProperties.Builder().nutrition(8).saturationModifier(1)
+                    .alwaysEdible().effect(() -> new MobEffectInstance(MobEffects.WATER_BREATHING, 1200), 1)
+                    .build())));
     /// A cooked fish dish restoring nine nutrition points and returning a bowl when eaten.
     public static final DeferredItem<Item> BRAISED = ITEMS.register("braised_pufferfish", () -> new Item(
             new Item.Properties().food(new FoodProperties.Builder().nutrition(9).saturationModifier(0.6F)

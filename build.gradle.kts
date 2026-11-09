@@ -162,7 +162,8 @@ val generateItemModels = tasks.register<Sync>("generateItemModels") {
     val modelNames = dyeColors.flatMap { color ->
         listOf("${color}_pufferfish", "${color}_pufferfish_bucket")
     } + listOf("netherite_pufferfish", "golden_pufferfish", "pufferfish_sashimi", "heavy_pufferfish",
-        "braised_pufferfish", "braised_pufferfish_rice_bowl", "pufferfish_zosui")
+        "braised_pufferfish", "braised_pufferfish_rice_bowl", "pufferfish_zosui",
+        "raw_pufferfish_baozi", "pufferfish_baozi")
     inputs.property("modId", modId)
     inputs.property("modelNames", modelNames)
     filteringCharset = "UTF-8"

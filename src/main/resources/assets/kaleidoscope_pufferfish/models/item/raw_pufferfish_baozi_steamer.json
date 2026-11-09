@@ -1,0 +1,6 @@
+{
+  "parent": "kaleidoscope_pufferfish:item/pufferfish_baozi_steamer",
+  "textures": {
+    "bun": "kaleidoscope_pufferfish:item/raw_pufferfish_baozi"
+  }
+}

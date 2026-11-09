@@ -44,6 +44,12 @@ public final class PufferfishSpriteSource implements SpriteSource {
         addDish(manager, output, false);
         addDish(manager, output, true);
         addZosui(manager, output);
+        for (boolean raw : new boolean[] {true, false}) {
+            var id = KaleidoscopePufferfish.id("item/" + (raw ? "raw_" : "") + "pufferfish_baozi");
+            var replacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(id));
+            if (replacement.isPresent()) output.add(id, replacement.get());
+            else output.add(id, loader -> PufferfishBaoziTexture.create(id, raw));
+        }
         addSkin(manager, output, null);
         addSkin(manager, output, "golden_pufferfish_skin", null);
         addSkin(manager, output, "netherite_pufferfish_skin", null);

@@ -20,6 +20,28 @@ public final class PufferfishDishGameTests {
     /// Prevents construction of the test holder.
     private PufferfishDishGameTests() {}
 
+    @GameTest(template = "empty")
+    public static void baoziProvidesWaterBreathingWithoutContainers(GameTestHelper helper) {
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        helper.assertTrue(PufferfishItems.RAW_BAOZI.get().getDefaultInstance().getFoodProperties(player) == null,
+                "Raw baozi should not be edible");
+        for (int count : new int[] {1, 2}) {
+            player.getFoodData().setFoodLevel(0);
+            var remaining = new ItemStack(PufferfishItems.BAOZI.get(), count).finishUsingItem(helper.getLevel(), player);
+            var breathing = player.getEffect(net.minecraft.world.effect.MobEffects.WATER_BREATHING);
+            helper.assertTrue(player.getFoodData().getFoodLevel() == 8 && breathing != null
+                    && breathing.getDuration() == 1200 && breathing.getAmplifier() == 0
+                    && player.getActiveEffects().size() == 1, "Baozi food or effects are incorrect");
+            helper.assertTrue(remaining.getCount() == count - 1 && player.getInventory().countItem(Items.BOWL) == 0,
+                    "Baozi consumption produced an unexpected remainder");
+        }
+        for (var name : List.of("raw_pufferfish_baozi", "pufferfish_baozi")) {
+            helper.assertTrue(helper.getLevel().getRecipeManager().byKey(KaleidoscopePufferfish.id("compat/cookery/" + name)).isPresent()
+                    == ModList.get().isLoaded("kaleidoscope_cookery"), "Baozi recipe ignored its mod condition");
+        }
+        helper.succeed();
+    }
+
     /// Verifies food recovery and bowl returns for single and stacked meals without applying raw-fish poison.
     @GameTest(template = "empty")
     public static void cookedDishesRestoreFoodAndReturnBowls(GameTestHelper helper) {

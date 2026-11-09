@@ -103,6 +103,8 @@ public class KaleidoscopePufferfishClient {
     }
 
     private void registerModels(ModelEvent.RegisterAdditional event) {
+        event.register(ModelResourceLocation.standalone(KaleidoscopePufferfish.id("item/raw_pufferfish_baozi_steamer")));
+        event.register(ModelResourceLocation.standalone(KaleidoscopePufferfish.id("item/pufferfish_baozi_steamer")));
         for (DyeColor color : DyeColor.values()) {
             event.register(ModelResourceLocation.standalone(PufferfishTextures.item(color, false)));
             event.register(ModelResourceLocation.standalone(PufferfishTextures.item(color, true)));

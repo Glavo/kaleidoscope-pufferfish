@@ -140,8 +140,12 @@ public final class PufferfishClientSmokeTest {
 
     /// Verifies cooked dish models and saves their stitched sprites side by side for visual inspection.
     private static void verifyDishModels(Minecraft minecraft) {
-        try (var preview = new com.mojang.blaze3d.platform.NativeImage(768, 256, true)) {
-            var items = java.util.List.of(PufferfishItems.BRAISED.get(), PufferfishItems.BRAISED_RICE_BOWL.get(), PufferfishItems.ZOSUI.get());
+        if (net.neoforged.fml.ModList.get().isLoaded("kaleidoscope_cookery")) {
+            org.glavo.kaleidoscope.pufferfish.compat.cooking.CookeryBaoziClientTest.preview(minecraft);
+        }
+        try (var preview = new com.mojang.blaze3d.platform.NativeImage(1280, 256, true)) {
+            var items = java.util.List.of(PufferfishItems.BRAISED.get(), PufferfishItems.BRAISED_RICE_BOWL.get(), PufferfishItems.ZOSUI.get(),
+                    PufferfishItems.RAW_BAOZI.get(), PufferfishItems.BAOZI.get());
             for (int index = 0; index < items.size(); index++) {
                 var stack = new ItemStack(items.get(index));
                 var model = minecraft.getItemRenderer().getModel(stack, null, null, 0);
@@ -153,6 +157,19 @@ public final class PufferfishClientSmokeTest {
                     throw new IllegalStateException("Missing cooked dish model, sprite, or translation: " + name);
                 }
                 var sprite = model.getParticleIcon().contents().getOriginalImage();
+                if (name.endsWith("baozi")) {
+                    var steamerModel = minecraft.getModelManager().getModel(ModelResourceLocation.standalone(
+                            KaleidoscopePufferfish.id("item/" + name + "_steamer")));
+                    if (steamerModel == minecraft.getModelManager().getMissingModel()
+                            || steamerModel.getQuads(null, null, RandomSource.create()).size() < 30) {
+                        throw new IllegalStateException("Missing three-dimensional baozi model: " + name);
+                    }
+                    if (net.neoforged.fml.ModList.get().isLoaded("kaleidoscope_cookery")
+                            && com.github.ysbbbbbb.kaleidoscopecookery.client.resources.ItemRenderReplacer.getModel(null, stack,
+                            com.github.ysbbbbbb.kaleidoscopecookery.client.resources.ItemRenderReplacerReloadListener.INSTANCE.steamer()) != steamerModel) {
+                        throw new IllegalStateException("Steamer did not select the custom baozi model: " + name);
+                    }
+                }
                 for (int y = 0; y < 256; y++) {
                     for (int x = 0; x < 256; x++) {
                         preview.setPixelRGBA(index * 256 + x, y, sprite.getPixelRGBA(x * sprite.getWidth() / 256, y * sprite.getHeight() / 256));
