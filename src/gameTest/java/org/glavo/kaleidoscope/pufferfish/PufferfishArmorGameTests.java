@@ -31,6 +31,45 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class PufferfishArmorGameTests {
     @GameTest(template = "empty")
+    public static void everySkinHasACompleteArmorSet(GameTestHelper helper) {
+        int skins = 0;
+        for (var block : BuiltInRegistries.BLOCK) {
+            if (!(block instanceof PufferfishSkinBlock)) continue;
+            var id = BuiltInRegistries.BLOCK.getKey(block);
+            if (!id.getNamespace().equals(KaleidoscopePufferfish.MODID)) continue;
+            for (var type : PufferfishArmor.TYPES) {
+                helper.assertTrue(PufferfishArmor.VARIANTS.containsKey(id.getPath() + "_" + type.getName()),
+                        "Missing armor for skin: " + id);
+            }
+            skins++;
+        }
+        helper.assertTrue(PufferfishArmor.VARIANTS.size() == skins * 4, "Skin and armor variants do not match");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void mixedArmorUsesStrongestUnwaxedPoison(GameTestHelper helper) {
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        var attacker = EntityType.VILLAGER.create(helper.getLevel());
+        player.setItemSlot(EquipmentSlot.CHEST, new ItemStack(PufferfishArmor.VARIANTS.get("waxed_oxidized_copper_pufferfish_skin_chestplate").get()));
+        player.setItemSlot(EquipmentSlot.HEAD, new ItemStack(PufferfishArmor.VARIANTS.get("weathered_copper_pufferfish_skin_helmet").get()));
+        player.setItemSlot(EquipmentSlot.LEGS, new ItemStack(PufferfishArmor.VARIANTS.get("pufferfish_skin_leggings").get()));
+        player.setItemSlot(EquipmentSlot.FEET, new ItemStack(PufferfishArmor.VARIANTS.get("oxidized_copper_pufferfish_skin_boots").get()));
+        player.hurt(player.damageSources().mobAttack(attacker), 2);
+        var poison = attacker.getEffect(MobEffects.POISON);
+        helper.assertTrue(poison != null && poison.getDuration() == 360 && poison.getAmplifier() == 2,
+                "Mixed armor did not use the strongest unwaxed poison");
+        player.setItemSlot(EquipmentSlot.FEET, ItemStack.EMPTY);
+        player.invulnerableTime = 0;
+        attacker.removeAllEffects();
+        player.hurt(player.damageSources().mobAttack(attacker), 2);
+        poison = attacker.getEffect(MobEffects.POISON);
+        helper.assertTrue(poison != null && poison.getDuration() == 240 && poison.getAmplifier() == 1,
+                "Waxed armor suppressed another piece's poison");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void variantsCraftRepairEquipAndAcceptArmorEnchantments(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         var enchantments = helper.getLevel().registryAccess().registryOrThrow(Registries.ENCHANTMENT);
@@ -171,8 +210,13 @@ public final class PufferfishArmorGameTests {
                 armor.setDamageValue(0);
                 player.hurt(player.damageSources().mobAttack(attacker), 2);
                 var poison = attacker.getEffect(MobEffects.POISON);
-                helper.assertTrue(poison != null && poison.getDuration() == 60 && poison.getAmplifier() == 0,
-                        "Skin armor did not inflict three seconds of Poison I");
+                String name = item.getId().getPath();
+                int duration = name.startsWith("oxidized_copper_") ? 360 : name.startsWith("weathered_copper_") ? 240
+                        : name.startsWith("exposed_copper_") ? 120 : 60;
+                int amplifier = name.startsWith("oxidized_copper_") ? 2 : name.startsWith("weathered_copper_") ? 1 : 0;
+                helper.assertTrue(name.startsWith("waxed_") ? poison == null
+                        : poison != null && poison.getDuration() == duration && poison.getAmplifier() == amplifier,
+                        "Skin armor applied the wrong poison effect");
                 float damage = 20 - attacker.getHealth();
                 helper.assertTrue(damage == 0 || damage >= 1 && damage <= 5, "Armor exceeded native Thorns I damage");
                 if (damage > 0) reflected++;

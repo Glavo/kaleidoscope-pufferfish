@@ -287,11 +287,11 @@ val generateArmorResources = tasks.register<Sync>("generateArmorResources") {
         "boots" to listOf("S S", "S S")
     )
     inputs.property("modId", modId)
-    inputs.property("variants", skinVariants)
+    inputs.property("variants", allSkinVariants)
     inputs.property("patterns", patterns)
     filteringCharset = "UTF-8"
     into(layout.buildDirectory.dir("generated/resources/pufferfishArmor"))
-    for (color in skinVariants) {
+    for (color in allSkinVariants) {
         val prefix = if (color.isEmpty()) "" else "${color}_"
         val skinName = "${prefix}pufferfish_skin"
         for ((armorType, pattern) in patterns) {
@@ -312,7 +312,7 @@ val generateArmorResources = tasks.register<Sync>("generateArmorResources") {
     }
     for ((armorType, slot) in mapOf("helmet" to "head", "chestplate" to "chest", "leggings" to "leg", "boots" to "foot")) {
         from("src/main/armorTemplates/tag.json") {
-            expand("values" to JsonOutput.toJson((skinVariants).map { color ->
+            expand("values" to JsonOutput.toJson((allSkinVariants).map { color ->
                 val prefix = if (color.isEmpty()) "" else "${color}_"
                 "$modId:${prefix}pufferfish_skin_$armorType"
             }))

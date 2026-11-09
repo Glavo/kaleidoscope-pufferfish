@@ -24,6 +24,7 @@ import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.ArmorMaterials;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.enchantment.EnchantedItemInUse;
@@ -47,7 +48,10 @@ public final class PufferfishArmor {
         add(variants, "", () -> PufferfishBlocks.skin(null).asItem());
         for (var color : DyeColor.values()) add(variants, color.getName() + "_", () -> PufferfishBlocks.skin(color).asItem());
         add(variants, "golden_", () -> PufferfishBlocks.GOLDEN_SKIN.get().asItem());
-        add(variants, "copper_", () -> PufferfishBlocks.COPPER_SKIN.get().asItem());
+        for (var skin : PufferfishBlocks.COPPER_SKINS) {
+            String prefix = skin.getId().getPath().replace("pufferfish_skin", "");
+            add(variants, prefix, () -> skin.get().asItem());
+        }
         add(variants, "iron_", () -> PufferfishBlocks.IRON_SKIN.get().asItem());
         add(variants, "diamond_", () -> PufferfishBlocks.DIAMOND_SKIN.get().asItem());
         add(variants, "netherite_", () -> PufferfishBlocks.NETHERITE_SKIN.get().asItem());
@@ -103,15 +107,31 @@ public final class PufferfishArmor {
         if (!(wearer.level() instanceof ServerLevel level) || wearer.isSpectator()
                 || source.is(DamageTypes.THORNS) || !(source.getEntity() instanceof LivingEntity attacker)
                 || attacker == wearer || event.getNewDamage() + event.getReduction(DamageContainer.Reduction.ABSORPTION) <= 0) return;
+        MobEffectInstance poison = null;
+        EnchantedItemInUse thornsItem = null;
         for (var slot : List.of(EquipmentSlot.CHEST, EquipmentSlot.HEAD, EquipmentSlot.LEGS, EquipmentSlot.FEET)) {
             var stack = wearer.getItemBySlot(slot);
             if (!(stack.getItem() instanceof ArmorItem armor) || armor.getEquipmentSlot() != slot
                     || VARIANTS.values().stream().noneMatch(item -> stack.is(item.get()))) continue;
-            attacker.addEffect(new MobEffectInstance(MobEffects.POISON, PufferfishCombat.POISON_DURATION_TICKS, 0), wearer);
-            var thorns = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.THORNS);
-            thorns.value().doPostAttack(level, 1, new EnchantedItemInUse(stack, slot, wearer),
-                    EnchantmentTarget.VICTIM, wearer, source);
-            return;
+            var effect = poison(armor);
+            if (effect != null && (poison == null || effect.getAmplifier() > poison.getAmplifier()
+                    || effect.getAmplifier() == poison.getAmplifier() && effect.getDuration() > poison.getDuration())) poison = effect;
+            if (thornsItem == null) thornsItem = new EnchantedItemInUse(stack, slot, wearer);
         }
+        if (poison != null) attacker.addEffect(poison, wearer);
+        if (thornsItem == null) return;
+        var thorns = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.THORNS);
+        thorns.value().doPostAttack(level, 1, thornsItem, EnchantmentTarget.VICTIM, wearer, source);
+    }
+
+    @javax.annotation.Nullable
+    private static MobEffectInstance poison(ArmorItem armor) {
+        for (int stage = 0; stage < PufferfishBlocks.COPPER_SKINS.size(); stage++) {
+            String name = PufferfishBlocks.COPPER_SKINS.get(stage).getId().getPath() + "_" + armor.getType().getName();
+            if (VARIANTS.get(name).get() == armor) {
+                return PufferfishCombat.poison(new ItemStack(PufferfishItems.COPPER_VARIANTS.get(stage).get()));
+            }
+        }
+        return new MobEffectInstance(MobEffects.POISON, PufferfishCombat.POISON_DURATION_TICKS, 0);
     }
 }

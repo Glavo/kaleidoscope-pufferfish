@@ -27,10 +27,14 @@ public final class PufferfishArmorTextures implements ResourceManagerReloadListe
 
     public static void skin(ResourceManager manager, NativeImage mask, String name, boolean worn) {
         String prefix = name.substring(0, name.indexOf("pufferfish_skin"));
+        if (prefix.startsWith("waxed_")) prefix = prefix.substring("waxed_".length());
         int ventral = switch (prefix) {
             case "heavy_" -> 0xCADFE4;
             case "netherite_" -> 0xBAB4B3;
             case "copper_" -> 0xFFD3AC;
+            case "exposed_copper_" -> 0xD5BA8B;
+            case "weathered_copper_" -> 0xADD6B8;
+            case "oxidized_copper_" -> 0x8BD6BC;
             case "iron_" -> 0xEDF1EE;
             case "diamond_" -> 0xBAFFF1;
             default -> 0xF4E4B0;
