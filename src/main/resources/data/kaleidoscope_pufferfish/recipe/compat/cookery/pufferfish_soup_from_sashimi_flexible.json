@@ -8,7 +8,7 @@
   "type": "kaleidoscope_cookery:flex_stockpot",
   "ingredients": [
     {
-      "tag": "c:foods/raw_pufferfish"
+      "item": "kaleidoscope_pufferfish:pufferfish_sashimi"
     },
     {
       "tag": "c:crops/lettuce"

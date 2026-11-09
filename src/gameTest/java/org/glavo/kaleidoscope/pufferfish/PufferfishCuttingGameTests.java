@@ -82,8 +82,8 @@ public final class PufferfishCuttingGameTests {
             helper.assertTrue(!new ItemStack(item).is(pufferfish), "Equipment or special fish entered the raw pufferfish tag");
         }
         var manager = helper.getLevel().getRecipeManager();
-        var soup = ResourceLocation.fromNamespaceAndPath("kaleidoscope_cookery", "stockpot/pufferfish_soup");
-        helper.assertTrue(manager.byKey(soup).isPresent() == ModList.get().isLoaded("kaleidoscope_cookery"), "Soup override ignored its mod condition");
+        var soup = KaleidoscopePufferfish.id("compat/cookery/pufferfish_soup_from_sashimi");
+        helper.assertTrue(manager.byKey(soup).isPresent() == ModList.get().isLoaded("kaleidoscope_cookery"), "Sashimi soup recipe ignored its mod condition");
         for (var name : java.util.List.of("golden_pufferfish", "netherite_pufferfish_skin", "heavy_pufferfish_skin")) {
             helper.assertTrue(manager.byKey(KaleidoscopePufferfish.id("chopping/" + name)).isPresent()
                     == ModList.get().isLoaded("kaleidoscope_cookery"), "Special chopping recipe ignored its mod condition");
