@@ -126,6 +126,7 @@ public class KaleidoscopePufferfish {
         NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::breathe);
         NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::protect);
         NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::retaliate);
+        NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishShields::retaliate);
     }
 
     public static ResourceLocation id(String path) {

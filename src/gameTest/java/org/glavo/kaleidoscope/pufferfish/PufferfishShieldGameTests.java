@@ -28,6 +28,77 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class PufferfishShieldGameTests {
     @GameTest(template = "empty")
+    public static void successfulSkinBlocksPoisonAndRollThornsInEitherHand(GameTestHelper helper) {
+        int reflected = 0;
+        int blocked = 0;
+        for (var item : PufferfishShields.VARIANTS.values()) for (var hand : InteractionHand.values()) {
+            var player = helper.makeMockPlayer(GameType.SURVIVAL);
+            player.setPos(Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(2, 2, 2))));
+            player.setNoGravity(true);
+            player.setYRot(0);
+            player.getRandom().setSeed(1234);
+            var shield = new ItemStack(item.get());
+            player.setItemInHand(hand, shield);
+            shield.use(helper.getLevel(), player, hand);
+            for (int tick = 0; tick < 6; tick++) player.tick();
+            var attacker = helper.spawn(EntityType.VILLAGER, new BlockPos(2, 2, 4));
+            attacker.setNoAi(true);
+            for (int attempt = 0; attempt < 64; attempt++) {
+                attacker.setHealth(20);
+                attacker.invulnerableTime = 0;
+                attacker.setDeltaMovement(Vec3.ZERO);
+                attacker.removeAllEffects();
+                player.invulnerableTime = 0;
+                shield.setDamageValue(0);
+                player.hurt(player.damageSources().mobAttack(attacker), 6);
+                var poison = attacker.getEffect(net.minecraft.world.effect.MobEffects.POISON);
+                helper.assertTrue(poison != null && poison.getDuration() == 60 && poison.getAmplifier() == 0
+                        && player.getHealth() == 20, "Successful block did not poison its attacker for three seconds");
+                float damage = 20 - attacker.getHealth();
+                helper.assertTrue(damage == 0 || damage >= 1 && damage <= 5, "Shield exceeded native Thorns I damage");
+                if (damage > 0) reflected++;
+                blocked++;
+            }
+            attacker.discard();
+        }
+        helper.assertTrue(reflected > 0 && reflected < blocked, "Thorns never triggered or triggered on every block");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void unsuccessfulBlocksAndOrdinaryShieldsDoNotRetaliate(GameTestHelper helper) {
+        for (int scenario = 0; scenario < 5; scenario++) {
+            var player = helper.makeMockPlayer(GameType.SURVIVAL);
+            player.setPos(Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(2, 2, 2))));
+            player.setNoGravity(true);
+            player.setYRot(scenario == 1 ? 180 : 0);
+            var shield = new ItemStack(scenario == 2 ? Items.SHIELD : PufferfishShields.VARIANTS.get("pufferfish_skin_shield").get());
+            player.setItemInHand(InteractionHand.OFF_HAND, shield);
+            if (scenario != 0) shield.use(helper.getLevel(), player, InteractionHand.OFF_HAND);
+            for (int tick = 0; tick < 6; tick++) player.tick();
+            var attacker = helper.spawn(EntityType.VILLAGER, new BlockPos(2, 2, 4));
+            attacker.setNoAi(true);
+            final int mode = scenario;
+            java.util.function.Consumer<net.neoforged.neoforge.event.entity.living.LivingShieldBlockEvent> intercept = event -> {
+                if (event.getEntity() == player) {
+                    if (mode == 3) event.setCanceled(true);
+                    if (mode == 4) event.setBlockedDamage(0);
+                }
+            };
+            net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.HIGH, intercept);
+            try {
+                player.hurt(player.damageSources().mobAttack(attacker), 6);
+                helper.assertTrue(attacker.getHealth() == 20 && !attacker.hasEffect(net.minecraft.world.effect.MobEffects.POISON),
+                        "Invalid shield block retaliated: scenario=" + scenario);
+            } finally {
+                net.neoforged.neoforge.common.NeoForge.EVENT_BUS.unregister(intercept);
+                attacker.discard();
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void coveringShieldsPreservesComponentsAndMatchesEverySkin(GameTestHelper helper) {
         var level = helper.getLevel();
         var unbreaking = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.UNBREAKING);
@@ -76,7 +147,7 @@ public final class PufferfishShieldGameTests {
             var attacker = helper.spawn(EntityType.ZOMBIE, new BlockPos(2, 2, 4));
             attacker.setNoAi(true);
             player.hurt(player.damageSources().mobAttack(attacker), 6);
-            helper.assertTrue(player.getHealth() == player.getMaxHealth() && shield.getDamageValue() == 7,
+            helper.assertTrue(player.getHealth() == player.getMaxHealth() && shield.getDamageValue() >= 7 && shield.getDamageValue() <= 9,
                     "Skin shield failed to block frontal damage or consume durability");
             player.disableShield();
             helper.assertTrue(!player.isBlocking() && player.getCooldowns().isOnCooldown(item.get()),

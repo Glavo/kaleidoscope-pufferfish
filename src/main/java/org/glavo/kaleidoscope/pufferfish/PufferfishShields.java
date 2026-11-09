@@ -5,6 +5,16 @@ package org.glavo.kaleidoscope.pufferfish;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.enchantment.EnchantedItemInUse;
+import net.minecraft.world.item.enchantment.EnchantmentTarget;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.neoforged.neoforge.event.entity.living.LivingShieldBlockEvent;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -37,4 +47,20 @@ public final class PufferfishShields {
     }
 
     public static void register(IEventBus bus) { ITEMS.register(bus); }
+
+    /// Successful blocks poison the attacker and roll vanilla Thorns I using the blocking hand.
+    public static void retaliate(LivingShieldBlockEvent event) {
+        var defender = event.getEntity();
+        var source = event.getDamageSource();
+        var shield = defender.getUseItem();
+        if (!(defender.level() instanceof ServerLevel level) || defender.isSpectator()
+                || !event.getBlocked() || event.getBlockedDamage() <= 0 || source.is(DamageTypes.THORNS)
+                || !(source.getEntity() instanceof LivingEntity attacker) || attacker == defender
+                || VARIANTS.values().stream().noneMatch(item -> shield.is(item.get()))) return;
+        attacker.addEffect(new MobEffectInstance(MobEffects.POISON, 60, 0), defender);
+        var thorns = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.THORNS);
+        thorns.value().doPostAttack(level, 1,
+                new EnchantedItemInUse(shield, LivingEntity.getSlotForHand(defender.getUsedItemHand()), defender),
+                EnchantmentTarget.VICTIM, defender, source);
+    }
 }
