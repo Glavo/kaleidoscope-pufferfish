@@ -102,8 +102,8 @@ public final class PufferfishCombat {
     public static void applyPoison(ItemStack stack, LivingEntity target, Entity source) {
         int copper = CopperPufferfish.index(stack);
         if (copper >= 4) return;
-        int duration = POISON_DURATION_TICKS + Math.max(copper, 0) * 10;
-        int amplifier = copper == 3 || PufferfishItems.hasNetheriteCombat(stack) ? 1 : 0;
+        int duration = copper > 0 ? copper * 120 : POISON_DURATION_TICKS;
+        int amplifier = copper > 0 ? copper - 1 : PufferfishItems.hasNetheriteCombat(stack) ? 1 : 0;
         target.addEffect(new MobEffectInstance(MobEffects.POISON, duration, amplifier), source);
     }
 

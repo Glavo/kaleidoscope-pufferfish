@@ -87,8 +87,10 @@ public final class CopperPufferfishGameTests {
         if (stage >= 4) {
             helper.assertTrue(poison == null, "Waxed copper applied poison");
         } else {
-            helper.assertTrue(poison != null && poison.getDuration() == 60 + stage * 10
-                    && poison.getAmplifier() == (stage == 3 ? 1 : 0), "Incorrect oxidation poison strength");
+            int duration = new int[] {60, 120, 240, 360}[stage];
+            int amplifier = new int[] {0, 0, 1, 2}[stage];
+            helper.assertTrue(poison != null && poison.getDuration() == duration
+                    && poison.getAmplifier() == amplifier, "Incorrect oxidation poison strength");
         }
     }
 
