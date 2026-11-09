@@ -29,6 +29,7 @@ import org.glavo.kaleidoscope.pufferfish.client.PufferfishTextures;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishConduitRenderer;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishFlailHeadRenderer;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishFlailItemRenderer;
+import org.glavo.kaleidoscope.pufferfish.client.PufferfishTooltips;
 
 @Mod(value = KaleidoscopePufferfish.MODID, dist = Dist.CLIENT)
 public class KaleidoscopePufferfishClient {
@@ -55,6 +56,7 @@ public class KaleidoscopePufferfishClient {
         NeoForge.EVENT_BUS.addListener(PufferfishHeadRenderer::afterPlayer);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishGloveRenderer::renderHand);
         NeoForge.EVENT_BUS.addListener(org.glavo.kaleidoscope.pufferfish.client.HeavyPufferfishVisuals::tick);
+        NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishTooltips::hideCreativeCategory);
     }
 
     private void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {

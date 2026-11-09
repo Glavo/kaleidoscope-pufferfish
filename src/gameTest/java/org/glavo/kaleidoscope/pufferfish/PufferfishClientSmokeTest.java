@@ -106,6 +106,7 @@ public final class PufferfishClientSmokeTest {
             throw new IllegalStateException("Could not save golden pufferfish sprite preview", exception);
         }
         verifyCuttingModels(minecraft);
+        PufferfishTooltipClientTest.verify();
         verifyDishModels(minecraft);
         verifyHeavyModel(minecraft);
         verifyWhiteEyes(minecraft);
