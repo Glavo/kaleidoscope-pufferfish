@@ -61,7 +61,7 @@ public final class PufferfishContactDamage {
     @javax.annotation.Nullable
     private static MobEffectInstance poison(Level level, BlockPos pos, BlockState state) {
         if (state.getBlock() instanceof PufferfishSkinBlock) {
-            if (state.is(PufferfishBlocks.GOLDEN_SKIN.get()) || CopperPufferfish.skinIndex(state.getBlock().asItem().getDefaultInstance()) >= 4) return null;
+            if (CopperPufferfish.skinIndex(state.getBlock().asItem().getDefaultInstance()) >= 4) return null;
             return new MobEffectInstance(MobEffects.POISON, 120, 0);
         }
         if (level.getBlockEntity(pos) instanceof PlacedPufferfishBlockEntity placed && !placed.fish().isEmpty()) {

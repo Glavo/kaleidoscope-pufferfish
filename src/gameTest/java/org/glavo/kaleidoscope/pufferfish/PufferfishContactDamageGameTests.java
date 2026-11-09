@@ -52,7 +52,7 @@ public final class PufferfishContactDamageGameTests {
                 for (var facing : Direction.Plane.HORIZONTAL) {
                     var state = skin.defaultBlockState().setValue(PufferfishSkinBlock.FACE, face).setValue(PufferfishSkinBlock.FACING, facing);
                     level.setBlockAndUpdate(pos, state);
-                    assertContact(helper, pos, state, copper >= 4 || skin == PufferfishBlocks.GOLDEN_SKIN.get()
+                    assertContact(helper, pos, state, copper >= 4
                             ? null : new MobEffectInstance(MobEffects.POISON, 120, 0));
                 }
             }
