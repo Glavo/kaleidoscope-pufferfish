@@ -172,8 +172,8 @@ public final class HeavyPufferfishGameTests {
             helper.assertTrue(hit(helper, stack.copy(), 0, false) == 12, "Heavy base multiplier was ignored");
             helper.assertTrue(Math.abs(hit(helper, stack.copy(), 12, false) - (12 + 50 + 16.8) * 1.5) < 0.001,
                     "Heavy fish ignored the shared curve or its Density coefficient");
-            helper.assertTrue(hit(helper, new ItemStack(Items.PUFFERFISH), 0, false) == 1.5F
-                    && hit(helper, new ItemStack(PufferfishItems.NETHERITE.get()), 0, false) == 3,
+            helper.assertTrue(hit(helper, new ItemStack(Items.PUFFERFISH), 0, false) == 1
+                    && hit(helper, new ItemStack(PufferfishItems.NETHERITE.get()), 0, false) == 6,
                     "Heavy settings changed another fish's base damage");
             configure(PufferfishCombatConfig.MAX_SMASH_BONUS, 7.0);
             helper.assertTrue(hit(helper, stack.copy(), 12, false) == 28.5F, "Heavy fish ignored the combined falling damage cap");

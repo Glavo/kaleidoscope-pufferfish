@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/// Adds shared falling smash hooks to all handheld pufferfish.
+/// Adds falling smash hooks to heavy pufferfish.
 @Mixin(Item.class)
 public abstract class PufferfishSmashMixin {
     /// Adds the configured falling bonus before the normal critical-hit and damage pipeline.

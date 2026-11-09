@@ -262,7 +262,7 @@ public final class PufferfishFlailGameTests {
             helper.getLevel().addFreshEntity(head);
             head.tick();
             boolean netherite = PufferfishItems.hasNetheriteCombat(new ItemStack(item));
-            helper.assertTrue(head.isReturning() && target.getHealth() == (netherite ? 5 : 17)
+            helper.assertTrue(head.isReturning() && target.getHealth() == (PufferfishItems.hasHeavyCombat(head.getItem()) ? 5 : netherite ? 11 : 18.5F)
                     && target.hasEffect(MobEffects.POISON), "Flying head did not hit and start returning");
             float health = target.getHealth();
             target.invulnerableTime = 0;
@@ -310,7 +310,7 @@ public final class PufferfishFlailGameTests {
                     restored.setDeltaMovement(0, 0, 3);
                     helper.getLevel().addFreshEntity(restored);
                     restored.tick();
-                    float baseline = (PufferfishItems.hasNetheriteCombat(stack) ? 10 : 2) + (rank == 0 ? 0 : 3);
+                    float baseline = (PufferfishItems.hasHeavyCombat(stack) ? 10 : PufferfishItems.hasNetheriteCombat(stack) ? 6 : 1) + (rank == 0 ? 0 : 3);
                     float expected = baseline * 1.5F * Math.min(1, (float) elapsed / duration);
                     helper.assertTrue(Math.abs(100 - target.getHealth() - expected) < 0.001
                             && restored.isReturning() && target.hasEffect(MobEffects.POISON),

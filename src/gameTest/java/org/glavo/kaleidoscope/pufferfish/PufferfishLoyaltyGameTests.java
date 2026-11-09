@@ -145,7 +145,7 @@ public final class PufferfishLoyaltyGameTests {
             helper.getLevel().addFreshEntity(projectile);
             projectile.tick();
             float health = target.getHealth();
-            helper.assertTrue(health == 20 - (PufferfishItems.isNetherite(stack) ? 10 : 2), "Loyalty changed impact damage");
+            helper.assertTrue(health == 20 - (PufferfishItems.isNetherite(stack) ? 6 : 1), "Loyalty changed impact damage");
             helper.assertTrue(projectile.isReturning() && !projectile.isRemoved(), "Entity hit dropped loyal fish");
             target.invulnerableTime = 0;
             projectile.setPos(target.position().add(0, 0.8, 1));

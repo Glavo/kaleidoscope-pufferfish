@@ -103,7 +103,7 @@ public final class PufferfishExtraEnchantmentGameTests {
                             double expected = (ranged ? PufferfishCombat.damage(stack) : player.getAttributeValue(Attributes.ATTACK_DAMAGE))
                                     + (affected ? 2.5 * rank : 0);
                             if (ranged && PufferfishItems.isFlail(stack)) {
-                                expected = ((PufferfishItems.hasNetheriteCombat(stack) ? 10 : 2) + (affected ? 2.5 * rank : 0)) * 1.5;
+                                expected = ((PufferfishItems.hasHeavyCombat(stack) ? 10 : PufferfishItems.hasNetheriteCombat(stack) ? 6 : 1) + (affected ? 2.5 * rank : 0)) * 1.5;
                             }
                             if (ranged) {
                                 net.minecraft.world.entity.projectile.ThrowableItemProjectile projectile;
@@ -143,7 +143,7 @@ public final class PufferfishExtraEnchantmentGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void windBurstWorksOnEveryFishSmash(GameTestHelper helper) {
+    public static void windBurstRetainsItsFallConditionWithoutOrdinarySmashProtection(GameTestHelper helper) {
         int[] bursts = {0};
         Consumer<ExplosionEvent.Start> capture = event -> { bursts[0]++; event.setCanceled(true); };
         NeoForge.EVENT_BUS.addListener(capture);
@@ -162,8 +162,10 @@ public final class PufferfishExtraEnchantmentGameTests {
                     target.setHealth(100);
                     int before = bursts[0];
                     player.attack(target);
-                    helper.assertTrue(bursts[0] - before == (distance > 0 ? 1 : 0) && player.fallDistance == 0,
-                            "Wind Burst did not follow the fish's successful smash");
+                    helper.assertTrue(bursts[0] - before == (distance > 0 ? 1 : 0)
+                            && player.fallDistance == (PufferfishItems.isHeavy(original) ? 0 : distance),
+                            "Wind Burst changed its fall condition or ordinary fish gained smash protection: bursts="
+                                    + (bursts[0] - before) + ", fall=" + player.fallDistance);
                     target.discard();
                 }
             }

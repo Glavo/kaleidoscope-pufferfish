@@ -166,7 +166,7 @@ public final class PufferfishEnchantmentGameTests {
                 var target = target(helper);
                 float before = target.getHealth();
                 hit(helper, player, target, stack);
-                float expected = (netherite ? 10 : 2) + (rank == 0 ? 0 : 0.5F + 0.5F * rank);
+                float expected = (netherite ? 6 : 1) + (rank == 0 ? 0 : 0.5F + 0.5F * rank);
                 helper.assertTrue(Math.abs(before - target.getHealth() - expected) < 0.0001F, "Incorrect Density damage at level " + rank);
                 clearDrops(helper, target);
             }
@@ -188,7 +188,7 @@ public final class PufferfishEnchantmentGameTests {
                     target.getAttribute(Attributes.ARMOR_TOUGHNESS).setBaseValue(armored ? 8 : 0);
                     float before = target.getHealth();
                     hit(helper, player, target, stack);
-                    float base = netherite ? 10 : 2;
+                    float base = netherite ? 6 : 1;
                     float reduction = armored ? (20 - base / 4) / 25 : 0;
                     float expected = base * (1 - Math.max(0, reduction - rank * 0.15F));
                     helper.assertTrue(Math.abs(before - target.getHealth() - expected) < 0.0001F, "Incorrect Breach armor reduction at level " + rank);

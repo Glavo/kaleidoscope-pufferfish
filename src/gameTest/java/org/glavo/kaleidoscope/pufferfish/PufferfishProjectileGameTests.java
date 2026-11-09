@@ -359,7 +359,7 @@ public class PufferfishProjectileGameTests {
         target.setNoAi(true);
         float health = target.getHealth();
         var projectile = hit(helper, target);
-        helper.assertTrue(target.getHealth() == health - 2.0F, "Impact did not deal exactly two base damage");
+        helper.assertTrue(target.getHealth() == health - 1.0F, "Impact did not deal exactly one base damage");
         var effect = target.getEffect(MobEffects.POISON);
         helper.assertTrue(effect != null && effect.getDuration() == 120 && effect.getAmplifier() == 0,
                 "Impact did not apply Poison I for 120 ticks");

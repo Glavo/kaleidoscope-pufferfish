@@ -68,15 +68,15 @@ public final class PufferfishMeleeGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void everyFishHasScaledMeleeDamagePoisonAndAxeSpeed(GameTestHelper helper) {
+    public static void everyOrdinaryFishHasConfiguredWeaponDamageSpeedAndPoison(GameTestHelper helper) {
         for (var stack : variants()) {
             var player = player(helper, stack.copyWithCount(4));
             var target = target(helper);
             boolean netherite = PufferfishItems.isNetherite(stack);
-            helper.assertTrue(player.getAttributeValue(Attributes.ATTACK_DAMAGE) == (netherite ? 3 : 1.5)
-                    && player.getAttributeValue(Attributes.ATTACK_SPEED) == 1, "Incorrect pufferfish melee attributes");
+            helper.assertTrue(player.getAttributeValue(Attributes.ATTACK_DAMAGE) == (netherite ? 6 : 1)
+                    && player.getAttributeValue(Attributes.ATTACK_SPEED) == (netherite ? 2 : 3), "Incorrect pufferfish melee attributes");
             player.attack(target);
-            helper.assertTrue(target.getHealth() == 20 - (netherite ? 3 : 1.5), "Charged melee damage does not match the mace multiplier");
+            helper.assertTrue(target.getHealth() == 20 - (netherite ? 6 : 1), "Charged melee damage does not match the configured base damage");
             var poison = target.getEffect(MobEffects.POISON);
             helper.assertTrue(poison != null && poison.getDuration() == 120 && poison.getAmplifier() == (netherite ? 1 : 0),
                     "Melee poison differs from throwing");
@@ -87,9 +87,9 @@ public final class PufferfishMeleeGameTests {
         helper.succeed();
     }
 
-    /// Verifies Density does not change grounded hits and Breach still reduces armor protection.
+    /// Verifies flat Density and Breach damage against armor.
     @GameTest(template = "empty")
-    public static void meleeEnchantmentsRespectArmorAndSmashOnlyDensity(GameTestHelper helper) {
+    public static void meleeEnchantmentsRespectArmorAndFlatDensity(GameTestHelper helper) {
         for (boolean netherite : new boolean[] {false, true}) {
             float baseline = 0;
             for (var key : List.of(Enchantments.DENSITY, Enchantments.BREACH)) {
@@ -106,9 +106,11 @@ public final class PufferfishMeleeGameTests {
                     float damage = 20 - melee.getHealth();
                     if (rank == 0) baseline = damage;
                     if (key == Enchantments.DENSITY) {
-                        helper.assertTrue(Math.abs(damage - baseline) < 0.0001, "Density increased grounded melee damage");
+                        float base = (netherite ? 6 : 1) + (rank == 0 ? 0 : 0.5F + 0.5F * rank);
+                        float expected = base * (1 - (20 - base / 4) / 25);
+                        helper.assertTrue(Math.abs(damage - expected) < 0.0001, "Density ignored flat damage or armor");
                     } else if (rank > 0) {
-                        helper.assertTrue(damage > previous && damage <= (netherite ? 3 : 1.5), "Breach did not progressively reduce armor protection");
+                        helper.assertTrue(damage > previous && damage <= (netherite ? 6 : 1), "Breach did not progressively reduce armor protection");
                     }
                     previous = damage;
                     melee.discard();
@@ -119,21 +121,21 @@ public final class PufferfishMeleeGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void cooldownMatchesAxeAndOffhandDoesNotGrantMeleeBonuses(GameTestHelper helper) {
+    public static void cooldownMatchesWeaponSpeedAndOffhandDoesNotGrantMeleeBonuses(GameTestHelper helper) {
         var player = player(helper, new ItemStack(Items.PUFFERFISH));
         float delay = player.getCurrentItemAttackStrengthDelay();
         player.resetAttackStrengthTicker();
-        for (int i = 0; i < 10; i++) player.tick();
+        for (int i = 0; i < 3; i++) player.tick();
         float half = player.getAttackStrengthScale(0);
-        helper.assertTrue(delay == 20 && Math.abs(half - 0.5F) < 0.001, "Pufferfish did not have a one-second attack recharge");
+        helper.assertTrue(Math.abs(delay - 20F / 3) < 0.001 && Math.abs(half - 0.45F) < 0.001, "Normal fish did not recharge at three attacks per second");
         var target = target(helper);
         player.setOnGround(true);
         player.attack(target);
         helper.assertTrue(target.getHealth() > 18 && target.getHealth() < 20, "Uncharged attacks ignored damage scaling");
         target.discard();
-        player.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.DIAMOND_AXE));
+        player.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(PufferfishItems.NETHERITE.get()));
         player.tick();
-        helper.assertTrue(player.getCurrentItemAttackStrengthDelay() == delay, "Pufferfish recharge differs from diamond axe");
+        helper.assertTrue(player.getCurrentItemAttackStrengthDelay() == 10, "Netherite fish did not recharge at two attacks per second");
         player.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
         player.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(PufferfishItems.NETHERITE.get()));
         charge(player);

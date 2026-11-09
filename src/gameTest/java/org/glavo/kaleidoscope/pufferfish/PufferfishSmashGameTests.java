@@ -63,7 +63,7 @@ public final class PufferfishSmashGameTests {
 
     /// Verifies all fish variants and the exact fall threshold and damage-curve boundaries.
     @GameTest(template = "empty")
-    public static void fishSmashDamageFollowsTheConfiguredCurve(GameTestHelper helper) {
+    public static void ordinaryFishUseNormalAttacksAtEveryFallHeight(GameTestHelper helper) {
         var stacks = new ArrayList<ItemStack>();
         stacks.add(new ItemStack(Items.PUFFERFISH, 4));
         stacks.add(new ItemStack(PufferfishItems.NETHERITE.get(), 4));
@@ -73,11 +73,9 @@ public final class PufferfishSmashGameTests {
                 var player = attacker(helper, stack.copy(), distance);
                 var target = target(helper);
                 player.attack(target);
-                float extra = distance <= 1.5F ? 0 : distance <= 3 ? 4 * distance
-                        : distance <= 8 ? 12 + 2 * (distance - 3) : 22 + distance - 8;
-                float expected = (6 + extra) * (PufferfishItems.isNetherite(stack) ? 0.5F : 0.25F) * (distance > 0 ? 1.5F : 1);
-                helper.assertTrue(Math.abs(1000 - target.getHealth() - expected) < 0.001F, "Incorrect smash damage at distance " + distance);
-                helper.assertTrue(player.fallDistance == (distance > 1.5F ? 0 : distance), "Fall distance reset without a successful smash");
+                float expected = (PufferfishItems.isNetherite(stack) ? 6 : 1) * (distance > 0 ? 1.5F : 1);
+                helper.assertTrue(Math.abs(1000 - target.getHealth() - expected) < 0.001F, "Ordinary fish gained falling damage at distance " + distance);
+                helper.assertTrue(player.fallDistance == distance && !PufferfishCombat.canSmash(player, stack), "Fall distance reset without a successful smash");
                 helper.assertTrue(ItemStack.matches(player.getMainHandItem(), stack) && target.hasEffect(MobEffects.POISON),
                         "Smash consumed fish or lost existing poison effects");
                 target.discard();
@@ -105,22 +103,20 @@ public final class PufferfishSmashGameTests {
         return damage;
     }
 
-    /// Compares actual unenchanted fish hits with the vanilla mace at each curve boundary.
+    /// Compares unenchanted heavy fish hits with the vanilla mace at each curve boundary.
     @GameTest(template = "empty")
-    public static void unenchantedFishDealTheirFractionOfMaceDamage(GameTestHelper helper) {
+    public static void onlyHeavyFishMatchUnenchantedMaceDamage(GameTestHelper helper) {
         for (float distance : new float[] {0, 1.5F, 2, 3, 8, 15}) {
             float mace = attackDamage(helper, new ItemStack(Items.MACE), distance);
-            float normal = attackDamage(helper, new ItemStack(Items.PUFFERFISH), distance);
-            float netherite = attackDamage(helper, new ItemStack(PufferfishItems.NETHERITE.get()), distance);
-            helper.assertTrue(Math.abs(normal - mace / 4) < 0.001 && Math.abs(netherite - mace / 2) < 0.001,
-                    "Fish damage does not match the requested fraction of vanilla mace damage");
+            float heavy = attackDamage(helper, new ItemStack(PufferfishItems.HEAVY.get()), distance);
+            helper.assertTrue(Math.abs(heavy - mace) < 0.001, "Heavy fish lost the native mace falling curve");
         }
         helper.succeed();
     }
 
-    /// Verifies every Density level adds damage only during a smash, using the main-hand fish's enchantments.
+    /// Verifies every Density level adds the same flat bonus before normal critical-hit scaling.
     @GameTest(template = "empty")
-    public static void densityScalesWithFallDistanceAndFishType(GameTestHelper helper) {
+    public static void ordinaryDensityAddsFlatDamageAtEveryFallHeight(GameTestHelper helper) {
         for (var original : List.of(new ItemStack(Items.PUFFERFISH), new ItemStack(PufferfishItems.NETHERITE.get()),
                 PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), DyeColor.RED))) {
             boolean netherite = PufferfishItems.isNetherite(original);
@@ -131,12 +127,12 @@ public final class PufferfishSmashGameTests {
                     var player = attacker(helper, stack, distance);
                     var target = target(helper);
                     player.attack(target);
-                    float expectedBonus = distance > 1.5F ? distance * rank * (netherite ? 0.3F : 0.2F) * 1.5F : 0;
+                    float expectedBonus = (0.5F + 0.5F * rank) * (distance > 0 ? 1.5F : 1);
                     helper.assertTrue(Math.abs(1000 - target.getHealth() - baseline - expectedBonus) < 0.001,
-                            "Density did not scale with the fish type, enchantment level, and fall distance");
-                    helper.assertTrue(player.getAttributeValue(Attributes.ATTACK_DAMAGE) == (netherite ? 3 : 1.5),
-                            "Density still added flat main-hand attack damage");
-                    helper.assertTrue(PufferfishCombat.damage(stack) == (netherite ? 10 : 2) + 0.5F + 0.5F * rank,
+                            "Density gained a fall-dependent bonus");
+                    helper.assertTrue(player.getAttributeValue(Attributes.ATTACK_DAMAGE) == ((netherite ? 6 : 1) + 0.5F + 0.5F * rank),
+                            "Density did not add the expected flat main-hand damage");
+                    helper.assertTrue(PufferfishCombat.damage(stack) == (netherite ? 6 : 1) + 0.5F + 0.5F * rank,
                             "Density changes affected projectile damage");
                     target.discard();
                 }
@@ -146,36 +142,39 @@ public final class PufferfishSmashGameTests {
         player.setItemInHand(InteractionHand.OFF_HAND, density(helper, new ItemStack(PufferfishItems.NETHERITE.get()), 5));
         var target = target(helper);
         player.attack(target);
-        helper.assertTrue(Math.abs(1000 - target.getHealth() - 10.5F) < 0.001, "Offhand Density changed main-hand smash damage");
+        helper.assertTrue(Math.abs(1000 - target.getHealth() - 1.5F) < 0.001, "Offhand Density changed main-hand smash damage");
         target.discard();
         helper.succeed();
     }
 
-    /// Verifies independently configured Density coefficients and a cap on the combined falling bonus.
+    /// Verifies configurable ordinary weapon damage and attack speed without restoring smash behavior.
     @GameTest(template = "empty")
-    public static void densityConfigurationAndCombinedCapApplyToSmashes(GameTestHelper helper) {
-        double normal = PufferfishCombatConfig.NORMAL_DENSITY_DAMAGE.get();
-        double netherite = PufferfishCombatConfig.NETHERITE_DENSITY_DAMAGE.get();
-        double cap = PufferfishCombatConfig.MAX_SMASH_BONUS.get();
+    public static void ordinaryWeaponSettingsApplyToMeleeAndThrowing(GameTestHelper helper) {
+        double normal = PufferfishCombatConfig.NORMAL_DAMAGE.get();
+        double netherite = PufferfishCombatConfig.NETHERITE_DAMAGE.get();
+        double normalSpeed = PufferfishCombatConfig.NORMAL_ATTACK_SPEED.get();
+        double netheriteSpeed = PufferfishCombatConfig.NETHERITE_ATTACK_SPEED.get();
         try {
-            configure(PufferfishCombatConfig.NORMAL_DENSITY_DAMAGE, 0.4);
-            configure(PufferfishCombatConfig.NETHERITE_DENSITY_DAMAGE, 0.8);
-            for (double limit : new double[] {0, 2}) {
-                configure(PufferfishCombatConfig.MAX_SMASH_BONUS, limit);
-                for (var item : List.of(Items.PUFFERFISH, PufferfishItems.NETHERITE.get())) {
-                    boolean netheriteFish = item != Items.PUFFERFISH;
-                    var stack = density(helper, new ItemStack(item), 2);
-                    double bonus = (netheriteFish ? 6 : 3) + 3 * 2 * (netheriteFish ? 0.8 : 0.4);
-                    if (limit > 0) bonus = Math.min(bonus, limit);
-                    double expected = ((netheriteFish ? 3 : 1.5) + bonus) * 1.5;
-                    helper.assertTrue(Math.abs(attackDamage(helper, stack, 3) - expected) < 0.001,
-                            "Configured Density coefficient or combined smash cap was ignored");
-                }
+            configure(PufferfishCombatConfig.NORMAL_DAMAGE, 2.5);
+            configure(PufferfishCombatConfig.NETHERITE_DAMAGE, 8.0);
+            configure(PufferfishCombatConfig.NORMAL_ATTACK_SPEED, 4.0);
+            configure(PufferfishCombatConfig.NETHERITE_ATTACK_SPEED, 2.5);
+            for (var item : List.of(Items.PUFFERFISH, PufferfishItems.NETHERITE.get())) {
+                var stack = new ItemStack(item);
+                double expected = item == Items.PUFFERFISH ? 2.5 : 8;
+                var player = attacker(helper, stack, 0);
+                helper.assertTrue(player.getAttributeValue(Attributes.ATTACK_DAMAGE) == expected
+                        && PufferfishCombat.damage(stack) == expected
+                        && player.getAttributeValue(Attributes.ATTACK_SPEED) == (item == Items.PUFFERFISH ? 4 : 2.5),
+                        "Ordinary weapon settings were ignored");
+                helper.assertTrue(Math.abs(attackDamage(helper, stack, 12) - expected * 1.5) < 0.001,
+                        "Configured ordinary weapon acquired smash damage");
             }
         } finally {
-            configure(PufferfishCombatConfig.NORMAL_DENSITY_DAMAGE, normal);
-            configure(PufferfishCombatConfig.NETHERITE_DENSITY_DAMAGE, netherite);
-            configure(PufferfishCombatConfig.MAX_SMASH_BONUS, cap);
+            configure(PufferfishCombatConfig.NORMAL_DAMAGE, normal);
+            configure(PufferfishCombatConfig.NETHERITE_DAMAGE, netherite);
+            configure(PufferfishCombatConfig.NORMAL_ATTACK_SPEED, normalSpeed);
+            configure(PufferfishCombatConfig.NETHERITE_ATTACK_SPEED, netheriteSpeed);
         }
         helper.succeed();
     }
@@ -183,7 +182,7 @@ public final class PufferfishSmashGameTests {
     /// Verifies canceled hits retain fall distance and flight or unrelated items cannot smash.
     @GameTest(template = "empty")
     public static void rejectedHitsAndOtherItemsDoNotGrantSmashProtection(GameTestHelper helper) {
-        var player = attacker(helper, new ItemStack(Items.PUFFERFISH), 6);
+        var player = attacker(helper, new ItemStack(PufferfishItems.HEAVY.get()), 6);
         var target = target(helper);
         Consumer<LivingIncomingDamageEvent> cancel = event -> {
             if (event.getEntity() == target) event.setCanceled(true);
@@ -213,7 +212,7 @@ public final class PufferfishSmashGameTests {
         var player = new FakePlayer(helper.getLevel(), new GameProfile(UUID.randomUUID(), "smash-test-player"));
         var pos = helper.absolutePos(new BlockPos(2, 4, 1));
         player.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
-        var stack = new ItemStack(Items.PUFFERFISH, 3);
+        var stack = new ItemStack(PufferfishItems.HEAVY.get(), 3);
         player.setItemInHand(InteractionHand.MAIN_HAND, stack);
         player.fallDistance = 6;
         player.setDeltaMovement(0, -1, 0);
@@ -239,45 +238,22 @@ public final class PufferfishSmashGameTests {
         setting.clearCache();
     }
 
-    /// Verifies configured melee damage, per-block bonuses, caps, and disabling without changing projectile damage.
+    /// Verifies heavy smash caps include Density and disabling restores normal base damage.
     @GameTest(template = "empty")
-    public static void customSmashSettingsAffectOnlyFishMelee(GameTestHelper helper) {
-        double normal = PufferfishCombatConfig.NORMAL_DAMAGE_MULTIPLIER.get();
-        double netherite = PufferfishCombatConfig.NETHERITE_DAMAGE_MULTIPLIER.get();
-        double first = PufferfishCombatConfig.FIRST_THREE_BLOCKS_DAMAGE.get();
-        double next = PufferfishCombatConfig.NEXT_FIVE_BLOCKS_DAMAGE.get();
-        double remaining = PufferfishCombatConfig.REMAINING_BLOCKS_DAMAGE.get();
+    public static void heavySmashCapIncludesDensity(GameTestHelper helper) {
         double cap = PufferfishCombatConfig.MAX_SMASH_BONUS.get();
         boolean enabled = PufferfishCombatConfig.SMASH_ENABLED.get();
         try {
-            configure(PufferfishCombatConfig.NORMAL_DAMAGE_MULTIPLIER, 1.0);
-            configure(PufferfishCombatConfig.NETHERITE_DAMAGE_MULTIPLIER, 2.0);
-            configure(PufferfishCombatConfig.FIRST_THREE_BLOCKS_DAMAGE, 1.0);
-            configure(PufferfishCombatConfig.NEXT_FIVE_BLOCKS_DAMAGE, 1.0);
-            configure(PufferfishCombatConfig.REMAINING_BLOCKS_DAMAGE, 1.0);
             configure(PufferfishCombatConfig.MAX_SMASH_BONUS, 7.0);
-            for (var item : List.of(Items.PUFFERFISH, PufferfishItems.NETHERITE.get())) {
-                var stack = new ItemStack(item);
-                var player = attacker(helper, stack, 12);
-                var target = target(helper);
-                player.attack(target);
-                float expected = (item == Items.PUFFERFISH ? 6 + 7 : 12 + 7) * 1.5F;
-                helper.assertTrue(Math.abs(1000 - target.getHealth() - expected) < 0.001, "Configured damage or cap was ignored");
-                helper.assertTrue(PufferfishCombat.damage(stack) == (item == Items.PUFFERFISH ? 2 : 10), "Melee configuration changed projectile damage");
-                target.discard();
-            }
+            var stack = density(helper, new ItemStack(PufferfishItems.HEAVY.get()), 5);
+            helper.assertTrue(attackDamage(helper, stack, 12) == (6 + 7) * 1.5F, "Heavy smash cap omitted Density");
             configure(PufferfishCombatConfig.SMASH_ENABLED, false);
-            var player = attacker(helper, density(helper, new ItemStack(Items.PUFFERFISH), 5), 12);
+            var player = attacker(helper, stack, 12);
             var target = target(helper);
             player.attack(target);
-            helper.assertTrue(target.getHealth() == 991.0F && player.fallDistance == 12, "Disabled smash still added damage or reset falling");
+            helper.assertTrue(target.getHealth() == 991.0F && player.fallDistance == 12, "Disabled heavy smash retained Density damage or reset falling");
             target.discard();
         } finally {
-            configure(PufferfishCombatConfig.NORMAL_DAMAGE_MULTIPLIER, normal);
-            configure(PufferfishCombatConfig.NETHERITE_DAMAGE_MULTIPLIER, netherite);
-            configure(PufferfishCombatConfig.FIRST_THREE_BLOCKS_DAMAGE, first);
-            configure(PufferfishCombatConfig.NEXT_FIVE_BLOCKS_DAMAGE, next);
-            configure(PufferfishCombatConfig.REMAINING_BLOCKS_DAMAGE, remaining);
             configure(PufferfishCombatConfig.MAX_SMASH_BONUS, cap);
             configure(PufferfishCombatConfig.SMASH_ENABLED, enabled);
         }

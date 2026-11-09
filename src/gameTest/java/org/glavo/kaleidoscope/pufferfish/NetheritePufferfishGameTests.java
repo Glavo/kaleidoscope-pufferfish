@@ -179,7 +179,7 @@ public final class NetheritePufferfishGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void netheriteThrowsDealTenDamageAndRecover(GameTestHelper helper) {
+    public static void netheriteThrowsDealSixDamageAndRecover(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         var pos = helper.absolutePos(new BlockPos(2, 1, 2));
         player.setPos(pos.getX(), pos.getY(), pos.getZ());
@@ -204,7 +204,7 @@ public final class NetheritePufferfishGameTests {
         projectile.setDeltaMovement(2, 0, 0);
         float health = target.getHealth();
         projectile.tick();
-        helper.assertTrue(target.getHealth() == health - 10, "Netherite projectile did not deal exactly 10 base damage");
+        helper.assertTrue(target.getHealth() == health - 6, "Netherite projectile did not deal exactly 6 base damage");
         var poison = target.getEffect(MobEffects.POISON);
         helper.assertTrue(poison != null && poison.getDuration() == 120 && poison.getAmplifier() == 1, "Netherite projectile did not apply six seconds of Poison II");
         var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, target.getBoundingBox().inflate(3));
