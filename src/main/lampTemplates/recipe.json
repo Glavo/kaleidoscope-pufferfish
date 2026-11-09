@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "building",
+  "group": "${modId}:pufferfish_lamps",
+  "ingredients": [{"item": "minecraft:torch"}, ${ingredient}],
+  "result": {"id": "${modId}:${lampName}", "count": 1}
+}

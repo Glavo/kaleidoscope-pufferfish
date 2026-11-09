@@ -35,6 +35,7 @@ import org.glavo.kaleidoscope.pufferfish.client.PufferfishTooltips;
 public class KaleidoscopePufferfishClient {
     /// The item renderer shared by both flail variants and refreshed with client resources.
     private PufferfishFlailItemRenderer flailRenderer;
+    private org.glavo.kaleidoscope.pufferfish.client.PufferfishLampItemRenderer lampRenderer;
     private org.glavo.kaleidoscope.pufferfish.client.PufferfishShieldRenderer shieldRenderer;
     private org.glavo.kaleidoscope.pufferfish.client.PufferfishBoatItemRenderer boatRenderer;
 
@@ -92,7 +93,14 @@ public class KaleidoscopePufferfishClient {
         event.registerBlockEntityRenderer(PufferfishBlocks.PLACED_FISH_ENTITY.get(), org.glavo.kaleidoscope.pufferfish.client.PlacedPufferfishRenderer::new);
     }
 
+    private org.glavo.kaleidoscope.pufferfish.client.PufferfishLampItemRenderer lampRenderer() {
+        if (lampRenderer == null) lampRenderer = new org.glavo.kaleidoscope.pufferfish.client.PufferfishLampItemRenderer();
+        return lampRenderer;
+    }
+
     private void registerItemExtensions(RegisterClientExtensionsEvent event) {
+        event.registerItem(lampRenderer(), PufferfishLamps.VARIANTS.values().stream()
+                .map(variant -> variant.block().get().asItem()).toArray(net.minecraft.world.item.Item[]::new));
         event.registerItem(boatRenderer(), PufferfishBoats.VARIANTS.values().stream().map(variant -> variant.item().get()).toArray(net.minecraft.world.item.Item[]::new));
         event.registerItem(PufferfishConduitRenderer.itemExtensions(), PufferfishBlocks.CONDUIT.get().asItem());
         event.registerItem(shieldRenderer(), PufferfishShields.VARIANTS.values().stream().map(holder -> holder.get()).toArray(net.minecraft.world.item.Item[]::new));
@@ -118,6 +126,7 @@ public class KaleidoscopePufferfishClient {
         event.registerReloadListener(new org.glavo.kaleidoscope.pufferfish.client.PufferfishBoatTextures());
         event.registerReloadListener(new org.glavo.kaleidoscope.pufferfish.client.PufferfishArmorTextures());
         event.registerReloadListener(flailRenderer());
+        event.registerReloadListener(lampRenderer());
         event.registerReloadListener(shieldRenderer());
         event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener) manager -> PufferfishGloveRenderer.reset());
     }

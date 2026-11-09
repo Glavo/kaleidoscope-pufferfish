@@ -47,7 +47,13 @@ public final class CopperPufferfish {
 
     private static void changePlaced(net.minecraft.world.level.Level level, BlockPos pos, int index) {
         if (level.getBlockEntity(pos) instanceof PlacedPufferfishBlockEntity placed) {
-            placed.setFish(convert(placed.fish(), index));
+            var fish = convert(placed.fish(), index);
+            if (PufferfishLamps.isLamp(level.getBlockState(pos).getBlock())) {
+                var block = ((net.minecraft.world.item.BlockItem) PufferfishLamps.lamp(fish).getItem()).getBlock();
+                level.setBlockAndUpdate(pos, block.withPropertiesOf(level.getBlockState(pos)));
+                placed = (PlacedPufferfishBlockEntity) level.getBlockEntity(pos);
+            }
+            placed.setFish(fish);
         } else {
             level.setBlockAndUpdate(pos, PufferfishBlocks.COPPER_SKINS.get(index).get().withPropertiesOf(level.getBlockState(pos)));
         }

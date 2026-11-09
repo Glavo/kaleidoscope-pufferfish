@@ -54,7 +54,12 @@ public final class PlacedPufferfishBlock extends BaseEntityBlock implements Simp
     protected MapCodec<PlacedPufferfishBlock> codec() { return CODEC; }
 
     @Override
-    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) { return new PlacedPufferfishBlockEntity(pos, state); }
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+        var entity = new PlacedPufferfishBlockEntity(pos, state);
+        var fish = PufferfishLamps.fish(this);
+        if (!fish.isEmpty()) entity.setFish(fish);
+        return entity;
+    }
 
     @Override
     protected RenderShape getRenderShape(BlockState state) { return RenderShape.ENTITYBLOCK_ANIMATED; }
@@ -90,12 +95,14 @@ public final class PlacedPufferfishBlock extends BaseEntityBlock implements Simp
 
     @Override
     protected List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
+        if (PufferfishLamps.isLamp(this)) return List.of(new ItemStack(this));
         return params.getOptionalParameter(LootContextParams.BLOCK_ENTITY) instanceof PlacedPufferfishBlockEntity fish && !fish.fish().isEmpty()
                 ? List.of(fish.fish()) : List.of();
     }
 
     @Override
     public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
+        if (PufferfishLamps.isLamp(this)) return new ItemStack(this);
         return level.getBlockEntity(pos) instanceof PlacedPufferfishBlockEntity fish ? fish.fish() : ItemStack.EMPTY;
     }
 }

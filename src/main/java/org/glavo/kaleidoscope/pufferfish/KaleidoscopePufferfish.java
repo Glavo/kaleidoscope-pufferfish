@@ -76,6 +76,7 @@ public class KaleidoscopePufferfish {
                 .icon(() -> PufferfishColors.dye(new ItemStack(Items.PUFFERFISH_BUCKET), DyeColor.PURPLE))
                 .displayItems((parameters, output) -> {
                     output.accept(PufferfishBlocks.CONDUIT);
+                    PufferfishLamps.VARIANTS.values().forEach(variant -> output.accept(variant.block().get()));
                     if (ModList.get().isLoaded("create")) {
                         output.accept(CreateIntegration.ENGINE_ITEM.get());
                     }
@@ -129,6 +130,7 @@ public class KaleidoscopePufferfish {
         PufferfishShields.register(bus);
         PufferfishArmor.register(bus);
         PufferfishBoats.register(bus);
+        PufferfishLamps.register(bus);
         PufferfishBlocks.register(bus);
         COMPONENTS.register(bus);
         ATTACHMENTS.register(bus);

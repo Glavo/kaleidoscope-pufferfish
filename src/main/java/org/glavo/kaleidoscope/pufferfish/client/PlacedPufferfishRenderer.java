@@ -30,6 +30,7 @@ public final class PlacedPufferfishRenderer implements BlockEntityRenderer<Place
     public void render(PlacedPufferfishBlockEntity blockEntity, float partialTick, PoseStack pose, MultiBufferSource buffers, int light, int overlay) {
         var stack = blockEntity.fish();
         if (stack.isEmpty()) return;
+        if (org.glavo.kaleidoscope.pufferfish.PufferfishLamps.isLamp(blockEntity.getBlockState().getBlock())) light = 15728880;
         var color = PufferfishColors.get(stack);
         var material = PufferfishItems.materialName(stack);
         var texture = PufferfishItems.isHeavy(stack) ? PufferfishTextures.heavyEntity()

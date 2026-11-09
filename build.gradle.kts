@@ -389,6 +389,35 @@ val generatePieModels = tasks.register<Sync>("generatePieModels") {
     }
 }
 
+val generateLampResources = tasks.register<Sync>("generateLampResources") {
+    inputs.property("modId", modId)
+    inputs.property("variants", allSkinVariants)
+    filteringCharset = "UTF-8"
+    into(layout.buildDirectory.dir("generated/resources/pufferfishLamps"))
+    for (variant in allSkinVariants) {
+        val fishName = (if (variant.isEmpty()) "" else "${variant}_") + "pufferfish"
+        val lampName = "${fishName}_lamp"
+        val ingredient = when {
+            variant.isEmpty() -> mapOf("type" to "$modId:pufferfish")
+            variant in dyeColors -> mapOf("type" to "$modId:pufferfish", "color" to variant)
+            else -> mapOf("item" to "$modId:$fishName")
+        }
+        for ((template, target) in mapOf(
+            "recipe" to "data/$modId/recipe/$lampName.json",
+            "advancement" to "data/$modId/advancement/recipes/building_blocks/$lampName.json",
+            "blockstate" to "assets/$modId/blockstates/$lampName.json",
+            "block_model" to "assets/$modId/models/block/$lampName.json",
+            "item_model" to "assets/$modId/models/item/$lampName.json"
+        )) {
+            from("src/main/lampTemplates/$template.json") {
+                expand("modId" to modId, "lampName" to lampName, "ingredient" to JsonOutput.toJson(ingredient),
+                    "fishTexture" to (if (variant.isEmpty()) "minecraft:item/pufferfish" else "$modId:item/${fishName.removePrefix("waxed_")}"))
+                into(target.substringBeforeLast('/'))
+                rename { target.substringAfterLast('/') }
+            }
+        }
+    }
+}
 val generateFlailResources = tasks.register<Sync>("generateFlailResources") {
     val materials = listOf("golden", "copper", "exposed_copper", "weathered_copper", "oxidized_copper",
         "waxed_copper", "waxed_exposed_copper", "waxed_weathered_copper", "waxed_oxidized_copper", "iron", "diamond")
@@ -434,6 +463,7 @@ val generateMaterialFishRecipes = tasks.register<Sync>("generateMaterialFishReci
 }
 
 sourceSets.main {
+    resources.srcDir(generateLampResources)
     resources.srcDir(generateFlailResources)
     resources.srcDir(generateMaterialFishRecipes)
     resources.srcDir(generatePieModels)
@@ -444,6 +474,7 @@ sourceSets.main {
     resources.srcDir(generateItemModels)
     resources.srcDir(generateSkinResources)
 }
+neoForge.ideSyncTask(generateLampResources)
 neoForge.ideSyncTask(generateFlailResources)
 neoForge.ideSyncTask(generateModMetadata)
 neoForge.ideSyncTask(generateItemModels)

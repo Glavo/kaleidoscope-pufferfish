@@ -29,7 +29,10 @@ public final class PufferfishBlocks {
             PlacedPufferfishBlock::new, BlockBehaviour.Properties.of().strength(0.2F).noOcclusion()
                     .sound(SoundType.WET_GRASS).pushReaction(net.minecraft.world.level.material.PushReaction.DESTROY));
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PlacedPufferfishBlockEntity>> PLACED_FISH_ENTITY =
-            BLOCK_ENTITIES.register("placed_pufferfish", () -> BlockEntityType.Builder.of(PlacedPufferfishBlockEntity::new, PLACED_FISH.get()).build(null));
+            BLOCK_ENTITIES.register("placed_pufferfish", () -> BlockEntityType.Builder.of(PlacedPufferfishBlockEntity::new,
+                    java.util.stream.Stream.concat(java.util.stream.Stream.of(PLACED_FISH.get()),
+                            PufferfishLamps.VARIANTS.values().stream().map(variant -> variant.block().get()))
+                            .toArray(net.minecraft.world.level.block.Block[]::new)).build(null));
     public static final DeferredBlock<PufferfishConduitBlock> CONDUIT = BLOCKS.registerBlock("pufferfish_conduit",
             PufferfishConduitBlock::new, BlockBehaviour.Properties.ofFullCopy(Blocks.CONDUIT));
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PufferfishConduitBlockEntity>> CONDUIT_ENTITY =
