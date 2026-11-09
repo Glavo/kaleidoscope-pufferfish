@@ -3,7 +3,6 @@
 
 package org.glavo.kaleidoscope.pufferfish.client;
 
-import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.HumanoidModel;
@@ -60,31 +59,33 @@ public final class PufferfishFlailArmAnimation {
         if (player == null || activeHand(player) != event.getHand() || !PufferfishItems.isFlail(event.getItemStack())) return;
         var pose = event.getPoseStack();
         pose.pushPose();
-        if (!PufferfishFlailTether.transformToWorld(pose)) {
+        if (!PufferfishFlailTether.transformToView(pose)) {
             pose.popPose();
             return;
         }
         float partialTick = PufferfishFlailTether.partialTick(event.getPartialTick());
         var head = PufferfishFlailItem.activeHead(player);
         float yaw = head != null ? head.swingYaw(partialTick) : player.getViewYRot(partialTick);
-        var position = player.getPosition(partialTick);
-        pose.translate(position.x, position.y, position.z);
-        float scale = player.getScale();
-        pose.translate(0, player.isCrouching() ? -0.125 * scale : 0, 0);
-        pose.mulPose(Axis.YP.rotationDegrees(180 - yaw));
-        pose.scale(-0.9375F * scale, -0.9375F * scale, 0.9375F * scale);
-        pose.translate(0, -1.501, 0);
         var renderer = (PlayerRenderer) minecraft.getEntityRenderDispatcher().getRenderer(player);
         var model = renderer.getModel();
         var arm = event.getHand() == InteractionHand.MAIN_HAND ? player.getMainArm() : player.getMainArm().getOpposite();
+        pose.translate(arm == HumanoidArm.RIGHT ? 0.32 : -0.32, -0.28, 0.22);
+        pose.scale(-0.9375F, -0.9375F, 0.9375F);
         var part = arm == HumanoidArm.RIGHT ? model.rightArm : model.leftArm;
         var sleeve = arm == HumanoidArm.RIGHT ? model.rightSleeve : model.leftSleeve;
         var previousArm = part.storePose();
         var previousSleeve = sleeve.storePose();
         try {
             part.loadPose(part.getInitialPose());
-            if (player.isCrouching()) part.y += 3.2F;
-            poseArm(model, player, partialTick, yaw);
+            part.setPos(0, 0, 0);
+            float angle = head != null ? head.armAngle(partialTick)
+                    : (float) PufferfishFlailItem.spinAngle(player.getUseItem(), player.getTicksUsingItem() + partialTick);
+            var rotation = new Quaternionf().rotationX(angle).rotateZ(arm == HumanoidArm.RIGHT ? 0.10F : -0.10F)
+                    .getEulerAnglesZYX(new Vector3f());
+            part.xRot = rotation.x;
+            part.yRot = rotation.y;
+            part.zRot = rotation.z;
+            sleeve.copyFrom(part);
             var buffers = event.getMultiBufferSource();
             int light = event.getPackedLight();
             if (!player.isInvisible()) {

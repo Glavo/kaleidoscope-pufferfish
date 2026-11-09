@@ -32,13 +32,10 @@ public final class PufferfishFlailTether {
 
     public static float partialTick(float fallback) { return worldToClip == null ? fallback : partialTick; }
 
-    /// Allows the visible first-person arm to share the head's world-space motion and projection.
-    public static boolean transformToWorld(PoseStack pose) {
+    /// Places the first-person shoulder behind the camera independently of the player's view pitch.
+    public static boolean transformToView(PoseStack pose) {
         if (worldToClip == null) return false;
-        var transform = new Matrix4f(RenderSystem.getProjectionMatrix()).mul(RenderSystem.getModelViewMatrix())
-                .mul(pose.last().pose()).invert().mul(worldToClip)
-                .translate((float) -cameraPosition.x, (float) -cameraPosition.y, (float) -cameraPosition.z);
-        pose.mulPose(transform);
+        pose.mulPose(new Matrix4f(RenderSystem.getModelViewMatrix()).mul(pose.last().pose()).invert());
         return true;
     }
 

@@ -88,7 +88,7 @@ public final class PufferfishFlailFirstPersonClientTest {
                 player.setMainArm(arm);
                 for (var hand : InteractionHand.values()) {
                     for (int fov : new int[] {40, 70, 110}) {
-                        for (float pitch : new float[] {-35, 0, 60}) {
+                        for (float pitch : new float[] {-85, -35, 0, 60, 85}) {
                             for (float swing : new float[] {0, 0.3F, 0.75F}) {
                                 player.setXRot(pitch);
                                 player.setYRot(60);
@@ -163,7 +163,7 @@ public final class PufferfishFlailFirstPersonClientTest {
                                                 minecraft.levelRenderer, null, rotation, worldProjection, 0, DeltaTracker.ZERO, camera, null));
                                         verifyRelease(minecraft, player, nativeRender, pose, target, renderer, camera, worldProjection, handProjection);
                                     }
-                                    if (fov == 70 && pitch == -35 && hand == InteractionHand.MAIN_HAND && swing == 0) {
+                                    if (fov == 70 && hand == InteractionHand.MAIN_HAND && swing == 0) {
                                         head.discard();
                                         NeoForge.EVENT_BUS.post(new RenderLevelStageEvent(RenderLevelStageEvent.Stage.AFTER_LEVEL,
                                                 minecraft.levelRenderer, null, rotation, worldProjection, 0, DeltaTracker.ZERO, camera, null));
@@ -309,7 +309,7 @@ public final class PufferfishFlailFirstPersonClientTest {
                 for (int ticks = 0; ticks <= duration + 24; ticks++) {
                     remaining.setInt(player, stack.getUseDuration(player) - ticks);
                     var capture = new Capture();
-                    renderHand(nativeRender, minecraft.getEntityRenderDispatcher().getItemInHandRenderer(), player, 0F, -35F,
+                    renderHand(nativeRender, minecraft.getEntityRenderDispatcher().getItemInHandRenderer(), player, 0F, player.getXRot(),
                             InteractionHand.MAIN_HAND, 0F, stack, 0F, pose, capture, LIGHT);
                     var headPose = new PoseStack();
                     var relative = head.getPosition(0).subtract(camera.getPosition());
@@ -341,7 +341,7 @@ public final class PufferfishFlailFirstPersonClientTest {
                         maximum.max(center);
                     }
                     if (arm == HumanoidArm.RIGHT && (ticks == 0 || ticks == duration / 4 || ticks == duration / 2
-                            || ticks >= duration && ticks < duration + 12)) {
+                            || ticks >= duration && ticks < duration + 12 && (ticks - duration) % 3 == 0)) {
                         target.clear(Minecraft.ON_OSX);
                         target.bindWrite(true);
                         var buffers = minecraft.renderBuffers().bufferSource();
@@ -350,12 +350,12 @@ public final class PufferfishFlailFirstPersonClientTest {
                         buffers.endBatch();
                         RenderSystem.clear(256, Minecraft.ON_OSX);
                         RenderSystem.setProjectionMatrix(handProjection, VertexSorting.DISTANCE_TO_ORIGIN);
-                        renderHand(nativeRender, minecraft.getEntityRenderDispatcher().getItemInHandRenderer(), player, 0F, -35F,
+                        renderHand(nativeRender, minecraft.getEntityRenderDispatcher().getItemInHandRenderer(), player, 0F, player.getXRot(),
                                 InteractionHand.MAIN_HAND, 0F, stack, 0F, pose, buffers, LIGHT);
                         buffers.endBatch();
                         try (var image = Screenshot.takeScreenshot(target)) {
                             image.writeToFile(Path.of("pufferfish-flail-charge-" + (item == PufferfishItems.FLAIL.get() ? "normal-"
-                                    : item == PufferfishItems.HEAVY_FLAIL.get() ? "heavy-" : "netherite-") + ticks + ".png"));
+                                    : item == PufferfishItems.HEAVY_FLAIL.get() ? "heavy-" : "netherite-") + ticks + "-pitch-" + (int) player.getXRot() + ".png"));
                         }
                     }
                 }
@@ -440,6 +440,18 @@ public final class PufferfishFlailFirstPersonClientTest {
                     distance = Math.min(distance, closest.distance(grip));
                 }
                 if (distance > 0.035F) throw new IllegalStateException("Flail handle detached from the visible palm: " + distance);
+                int shoulderFace = 0;
+                float farthest = -1;
+                for (int face = 0; face < 24; face += 4) {
+                    var center = new Vector3f();
+                    for (int i = 0; i < 4; i++) center.add(palm.get(face + i));
+                    float separation = center.div(4).distanceSquared(grip);
+                    if (separation > farthest) { farthest = separation; shoulderFace = face; }
+                }
+                for (int i = 0; i < 4; i++) {
+                    var vertex = RenderSystem.getModelViewMatrix().transformPosition(new Vector3f(palm.get(shoulderFace + i)));
+                    if (vertex.z < -0.045F) throw new IllegalStateException("First-person shoulder entered the camera frustum: " + vertex);
+                }
             }
             var bottom = new Vector3f();
             var top = new Vector3f();
