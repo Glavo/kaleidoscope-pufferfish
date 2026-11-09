@@ -22,6 +22,9 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -124,7 +127,10 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
         float age = entityData.get(RELEASE_AGE);
         float yaw = entityData.get(AIM_YAW);
         setPos(PufferfishFlailMotion.orbit(player, getHand(), getItem(), age, yaw, 1));
-        setDeltaMovement(PufferfishFlailMotion.tangent(getItem(), age, yaw).scale(1.2));
+        var direction = PufferfishFlailMotion.tangent(getItem(), age, yaw);
+        var aim = aimPoint(player, direction);
+        setDeltaMovement(aim.subtract(position()).normalize().scale(1.2));
+        hasImpulse = true;
         entityData.set(FLIGHT_TIME, level().getGameTime());
         entityData.set(PHASE, 0);
         flightStartTick = tickCount;
@@ -135,6 +141,18 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
             player.awardStat(Stats.ITEM_USED.get(getItem().getItem()));
             level().playSound(null, position().x, position().y, position().z, SoundEvents.CHAIN_HIT, SoundSource.PLAYERS, 0.8F, 1);
         }
+    }
+
+    /// Converges on the sight-line hit while preserving the actual orbital release position.
+    private Vec3 aimPoint(Player player, Vec3 direction) {
+        var eye = player.getEyePosition();
+        var end = eye.add(direction.scale(REACH));
+        var block = level().clip(new ClipContext(eye, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
+        if (block.getType() != HitResult.Type.MISS) end = block.getLocation();
+        var entity = ProjectileUtil.getEntityHitResult(player, eye, end, new AABB(eye, end).inflate(1),
+                candidate -> candidate.isAlive() && candidate.isPickable() && !candidate.isSpectator()
+                        && !candidate.isPassengerOfSameVehicle(player), eye.distanceToSqr(end));
+        return entity != null ? entity.getLocation() : end;
     }
 
     /// Creates a head for entity loading or network spawning.
@@ -251,7 +269,7 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
                 ? PufferfishFlailMotion.grip(player, getHand(), player.getYRot(), 1) : owner.getEyePosition();
         long flightAge = level().isClientSide() && entityData.get(FLIGHT_TIME) >= 0
                 ? Math.max(0, level().getGameTime() - entityData.get(FLIGHT_TIME)) : tickCount - flightStartTick;
-        if (!isReturning() && (flightAge >= 8 || position().add(getDeltaMovement()).distanceTo(owner.getEyePosition()) >= REACH)) {
+        if (!isReturning() && (flightAge >= 8 || position().distanceToSqr(owner.getEyePosition()) >= REACH * REACH)) {
             beginReturn();
         }
         if (isReturning()) {
@@ -265,8 +283,24 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
             setPos(position().add(getDeltaMovement()));
             updateRotation();
         } else {
+            boolean atLimit = clipToReach(owner.getEyePosition());
             super.tick();
+            if (atLimit && !isReturning() && !isRemoved()) beginReturn();
         }
+    }
+
+    /// Keeps the last outward segment inside the tether sphere without skipping its collision test.
+    private boolean clipToReach(Vec3 eye) {
+        var movement = getDeltaMovement();
+        if (position().add(movement).distanceToSqr(eye) <= REACH * REACH) return false;
+        var relative = position().subtract(eye);
+        double a = movement.lengthSqr();
+        if (a < 1.0e-12) return false;
+        double b = relative.dot(movement);
+        double c = relative.lengthSqr() - REACH * REACH;
+        double fraction = Mth.clamp((-b + Math.sqrt(Math.max(0, b * b - a * c))) / a, 0, 1);
+        setDeltaMovement(movement.scale(fraction));
+        return true;
     }
 
     /// Switches to a collision-free return flight.
@@ -306,6 +340,13 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
     @Override
     protected void onHit(HitResult result) {
         if (isSpinning() || isReturning() || isRemoved()) return;
+        Vec3 impact = result.getLocation();
+        if (result instanceof EntityHitResult entityHit) {
+            var bounds = entityHit.getEntity().getBoundingBox().inflate(0.3);
+            impact = bounds.contains(position()) ? position()
+                    : bounds.clip(position(), position().add(getDeltaMovement())).orElse(position());
+        }
+        setPos(impact);
         super.onHit(result);
         beginReturn();
     }

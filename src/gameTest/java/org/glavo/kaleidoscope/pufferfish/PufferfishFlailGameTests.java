@@ -363,7 +363,7 @@ public final class PufferfishFlailGameTests {
                     head.tick();
                     range = Math.max(range, head.position().distanceTo(player.getEyePosition()));
                 }
-                helper.assertTrue(head.isRemoved() && range > 4 && range <= PufferfishFlailHead.REACH,
+                helper.assertTrue(head.isRemoved() && range > 4 && range <= PufferfishFlailHead.REACH + 1.0e-6,
                         "Charged flail exceeded its tether or failed to return: range=" + range + ", removed=" + head.isRemoved()
                                 + ", initial=" + initialVelocity + ", velocity=" + head.getDeltaMovement() + ", player=" + player.position());
                 if (referenceRange < 0) referenceRange = range;
@@ -425,8 +425,11 @@ public final class PufferfishFlailGameTests {
                     player.setXRot(0);
                     launch(helper, head);
                     var expected = PufferfishFlailMotion.orbit(player, hand, stack, gate, 47, 1);
+                    var aim = player.getEyePosition().add(tangent.scale(PufferfishFlailHead.REACH));
+                    var expectedVelocity = aim.subtract(expected).normalize().scale(1.2);
                     helper.assertTrue(head.position().distanceTo(expected) < 0.0001
-                            && head.getDeltaMovement().distanceTo(tangent.scale(1.2)) < 0.0001, "Launch jumped away from the release point");
+                            && head.getDeltaMovement().distanceTo(expectedVelocity) < 0.0001,
+                            "Launch left the release point or failed to converge on the sight line");
                     head.addAdditionalSaveData(saved);
                     helper.assertTrue(Math.abs(saved.getFloat("Charge") - PufferfishFlailItem.charge(stack, age)) < 0.0001,
                             "Waiting for release increased damage");
@@ -461,6 +464,108 @@ public final class PufferfishFlailGameTests {
         restored.tick();
         helper.assertTrue(restored.isRemoved() && !player.getCooldowns().isOnCooldown(stack.getItem()),
                 "Unequipping a queued flail did not cancel safely");
+        helper.succeed();
+    }
+
+    /// Uses real charging and release rather than teleporting a projectile in front of the target.
+    @GameTest(template = "empty")
+    public static void chargedFlailsHitAimedTargetsFromBothSides(GameTestHelper helper) {
+        for (var item : List.of(PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get())) {
+            for (var arm : net.minecraft.world.entity.HumanoidArm.values()) for (var hand : InteractionHand.values()) {
+                for (double distance : new double[] {1.5, 3, 5.9}) for (float pitch : new float[] {-35, 0, 45})
+                        for (var type : List.of(EntityType.VILLAGER, EntityType.CHICKEN)) {
+                    var stack = new ItemStack(item);
+                    var player = player(helper, ItemStack.EMPTY);
+                    player.setMainArm(arm);
+                    player.setItemInHand(hand, stack);
+                    player.setPos(player.position().add(0, 12, 0));
+                    var target = helper.spawn(type, new BlockPos(2, 3, 3));
+                    target.setNoAi(true);
+                    target.setNoGravity(true);
+                    target.getAttribute(Attributes.MAX_HEALTH).setBaseValue(100);
+                    target.setHealth(100);
+                    player.setXRot(pitch);
+                    var aim = player.getEyePosition().add(player.getLookAngle().normalize().scale(distance));
+                    target.setPos(aim.x, aim.y - target.getBbHeight() / 2, aim.z);
+                    stack.use(helper.getLevel(), player, hand);
+                    var head = PufferfishFlailItem.activeHead(player);
+                    for (int tick = 0; tick < PufferfishFlailItem.chargeTicks(stack); tick++) player.tick();
+                    player.releaseUsingItem();
+                    launch(helper, head);
+                    for (int tick = 0; tick < 10 && !head.isReturning(); tick++) {
+                        head.tickCount++;
+                        head.tick();
+                    }
+                    float expectedDamage = PufferfishItems.hasHeavyCombat(stack) ? 15 : PufferfishItems.hasNetheriteCombat(stack) ? 9 : 1.5F;
+                    helper.assertTrue(Math.abs(100 - target.getHealth() - expectedDamage) < 0.001
+                            && target.hasEffect(MobEffects.POISON), "Aimed flail missed: distance=" + distance + ", pitch=" + pitch + ", arm=" + arm + ", hand=" + hand + ", target=" + type);
+                    helper.assertTrue(head.isReturning() && target.getBoundingBox().inflate(0.301).contains(head.position()),
+                            "Head started returning before reaching the visible impact point");
+                    target.invulnerableTime = 0;
+                    float health = target.getHealth();
+                    head.tick();
+                    helper.assertTrue(target.getHealth() == health, "Return flight damaged the aimed target twice");
+                    head.discard();
+                    target.discard();
+                }
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void lastTetherSegmentHitsWithoutExtendingReach(GameTestHelper helper) {
+        for (double distance : new double[] {6.1, 6.7}) {
+            var player = player(helper, new ItemStack(PufferfishItems.FLAIL.get()));
+            player.setPos(player.position().add(0, 12, 0));
+            var target = helper.spawn(EntityType.VILLAGER, new BlockPos(2, 3, 3));
+            target.setNoAi(true);
+            target.setNoGravity(true);
+            target.setPos(player.getX(), player.getEyeY() - 0.8, player.getZ() + distance);
+            var head = new PufferfishFlailHead(helper.getLevel(), player, InteractionHand.MAIN_HAND);
+            head.setPos(player.getEyePosition().add(0, 0, 5.4));
+            head.setDeltaMovement(0, 0, 1.2);
+            helper.getLevel().addFreshEntity(head);
+            head.tick();
+            helper.assertTrue(head.isReturning() && head.position().distanceTo(player.getEyePosition()) <= PufferfishFlailHead.REACH + 0.00001,
+                    "Last outward segment exceeded the tether limit");
+            helper.assertTrue(target.getHealth() == (distance < 6.5 ? 18.5F : 20), "Last segment missed a reachable hit or damaged beyond reach");
+            head.discard();
+            target.discard();
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void aimedFlailStopsAtInterveningBlocks(GameTestHelper helper) {
+        var stack = new ItemStack(PufferfishItems.FLAIL.get());
+        var player = player(helper, stack);
+        player.setPos(player.position().add(0, 12, 0));
+        var target = helper.spawn(EntityType.VILLAGER, new BlockPos(2, 3, 3));
+        target.setNoAi(true);
+        target.setNoGravity(true);
+        target.setPos(player.getX(), player.getEyeY() - 0.8, player.getZ() + 4);
+        var blocks = new ArrayList<BlockPos>();
+        try {
+            var wall = BlockPos.containing(player.getEyePosition().add(0, 0, 2));
+            for (int x = -2; x <= 2; x++) for (int y = -1; y <= 2; y++) {
+                var pos = wall.offset(x, y, 0);
+                blocks.add(pos);
+                helper.getLevel().setBlockAndUpdate(pos, net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
+            }
+            stack.use(helper.getLevel(), player, InteractionHand.MAIN_HAND);
+            for (int tick = 0; tick < PufferfishFlailItem.chargeTicks(stack); tick++) player.tick();
+            player.releaseUsingItem();
+            var head = PufferfishFlailItem.activeHead(player);
+            launch(helper, head);
+            for (int tick = 0; tick < 8 && !head.isReturning(); tick++) { head.tickCount++; head.tick(); }
+            helper.assertTrue(head.isReturning() && target.getHealth() == 20 && head.getZ() <= wall.getZ() + 0.001,
+                    "Aimed flail passed through a wall or damaged the hidden target");
+            head.discard();
+        } finally {
+            target.discard();
+            for (var pos : blocks) helper.getLevel().setBlockAndUpdate(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+        }
         helper.succeed();
     }
 
