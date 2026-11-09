@@ -45,13 +45,16 @@ public final class PufferfishFlailItemRenderer extends BlockEntityWithoutLevelRe
         boolean held = context.firstPerson() || context == ItemDisplayContext.THIRD_PERSON_LEFT_HAND
                 || context == ItemDisplayContext.THIRD_PERSON_RIGHT_HAND;
         pose.translate(held ? 0.5 : 0.28, held ? 0.5 : 0.70, 0.5);
-        boolean flying = isFlying(stack, context);
+        var flying = flyingHead(stack, context);
         model.renderGrip(stack, pose, buffers, light, overlay);
+        if (flying != null && context.firstPerson()) {
+            PufferfishFlailTether.render(model, flying, pose, buffers, light);
+        }
         float age = held && Minecraft.getInstance().level != null
                 ? Minecraft.getInstance().level.getGameTime() + Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(false) : 0;
         double sway = held ? Mth.sin(age * 0.09F) * 0.035 : 0;
         var head = new Vec3(0.47 + sway, -0.24, 0.02);
-        if (!flying) {
+        if (flying == null) {
             pose.translate(0, 0.23, 0);
             model.renderChain(stack, head.add(0, -0.23 + 0.19, 0), 0.12, pose, buffers, light);
             pose.translate(head.x, head.y - 0.23, head.z);
@@ -81,20 +84,20 @@ public final class PufferfishFlailItemRenderer extends BlockEntityWithoutLevelRe
         pose.popPose();
     }
 
-    /// Returns whether this exact held stack owns a visible head in the client world.
-    private static boolean isFlying(ItemStack stack, ItemDisplayContext context) {
+    /// Finds the head belonging to this exact held stack.
+    private static PufferfishFlailHead flyingHead(ItemStack stack, ItemDisplayContext context) {
         if (context != ItemDisplayContext.FIRST_PERSON_LEFT_HAND && context != ItemDisplayContext.FIRST_PERSON_RIGHT_HAND
-                && context != ItemDisplayContext.THIRD_PERSON_LEFT_HAND && context != ItemDisplayContext.THIRD_PERSON_RIGHT_HAND) return false;
+                && context != ItemDisplayContext.THIRD_PERSON_LEFT_HAND && context != ItemDisplayContext.THIRD_PERSON_RIGHT_HAND) return null;
         var level = Minecraft.getInstance().level;
-        if (level == null) return false;
+        if (level == null) return null;
         for (var player : level.players()) {
             for (var hand : InteractionHand.values()) {
                 if (player.getItemInHand(hand) == stack) {
-                    return !level.getEntitiesOfClass(PufferfishFlailHead.class, player.getBoundingBox().inflate(16),
-                            head -> head.getOwner() == player && head.getHand() == hand).isEmpty();
+                    return level.getEntitiesOfClass(PufferfishFlailHead.class, player.getBoundingBox().inflate(16),
+                            head -> head.getOwner() == player && head.getHand() == hand).stream().findFirst().orElse(null);
                 }
             }
         }
-        return false;
+        return null;
     }
 }

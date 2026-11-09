@@ -5,7 +5,6 @@ package org.glavo.kaleidoscope.pufferfish.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -38,7 +37,7 @@ public final class PufferfishFlailHeadRenderer extends EntityRenderer<Pufferfish
         var position = head.getPosition(partialTick);
         Vec3 hand = null;
         Vec3 correction = Vec3.ZERO;
-        if (head.getOwner() instanceof Player player) {
+        if (head.getOwner() instanceof Player player && !PufferfishFlailTether.usesHandPass(head)) {
             hand = handPosition(player, head.getHand(), partialTick);
             var origin = player.getEyePosition(partialTick).add(0, -0.3, 0);
             double blend = Math.max(0, 1 - position.distanceTo(origin) / 1.25);
@@ -68,16 +67,10 @@ public final class PufferfishFlailHeadRenderer extends EntityRenderer<Pufferfish
         super.render(head, yaw, partialTick, pose, buffers, light);
     }
 
-    /// Returns the world-space chain attachment, accounting for handedness and camera mode.
+    /// Returns the third-person chain attachment, accounting for handedness and posture.
     private Vec3 handPosition(Player player, InteractionHand hand, float partialTick) {
         var arm = hand == InteractionHand.MAIN_HAND ? player.getMainArm() : player.getMainArm().getOpposite();
         int side = arm == HumanoidArm.RIGHT ? 1 : -1;
-        if (player == Minecraft.getInstance().player && entityRenderDispatcher.options.getCameraType().isFirstPerson()) {
-            float swing = player.swingingArm == hand ? Mth.sin(Mth.sqrt(player.getAttackAnim(partialTick)) * Mth.PI) : 0;
-            var offset = entityRenderDispatcher.camera.getNearPlane().getPointOnPlane(side * 0.525F, -0.1F)
-                    .scale(960.0 / entityRenderDispatcher.options.fov().get()).yRot(side * swing * 0.5F).xRot(-swing * 0.7F);
-            return player.getEyePosition(partialTick).add(offset);
-        }
         float yaw = Mth.lerp(partialTick, player.yBodyRotO, player.yBodyRot) * Mth.DEG_TO_RAD;
         double scale = player.getScale();
         return player.getEyePosition(partialTick).add(
