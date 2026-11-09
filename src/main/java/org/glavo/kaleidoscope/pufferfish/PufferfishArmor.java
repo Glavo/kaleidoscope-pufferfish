@@ -60,12 +60,13 @@ public final class PufferfishArmor {
             };
             return new ArmorMaterial(protection.value().defense(), 15,
                     SoundEvents.ARMOR_EQUIP_LEATHER, () -> Ingredient.of(skin.get()),
-                    List.of(new ArmorMaterial.Layer(KaleidoscopePufferfish.id(name))), 0, 0);
+                    List.of(new ArmorMaterial.Layer(KaleidoscopePufferfish.id(name))), protection.value().toughness(), 0);
         });
         for (var type : TYPES) {
             String itemName = name + "_" + type.getName();
             variants.put(itemName, ITEMS.register(itemName, () -> {
-                var properties = new Item.Properties().durability(type.getDurability(5));
+                int durability = prefix.equals("heavy_") ? (type.getDurability(37) * 3 + 1) / 2 : type.getDurability(5);
+                var properties = new Item.Properties().durability(durability);
                 if (prefix.equals("netherite_") || prefix.equals("heavy_")) properties.fireResistant();
                 return new ArmorItem(material, type, properties);
             }));
