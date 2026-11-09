@@ -15,12 +15,16 @@ import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.ArmorMaterials;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.enchantment.EnchantedItemInUse;
 import net.minecraft.world.item.enchantment.EnchantmentTarget;
@@ -60,7 +64,8 @@ public final class PufferfishArmor {
             };
             return new ArmorMaterial(protection.value().defense(), 15,
                     SoundEvents.ARMOR_EQUIP_LEATHER, () -> Ingredient.of(skin.get()),
-                    List.of(new ArmorMaterial.Layer(KaleidoscopePufferfish.id(name))), protection.value().toughness(), 0);
+                    List.of(new ArmorMaterial.Layer(KaleidoscopePufferfish.id(name))), protection.value().toughness(),
+                    prefix.equals("heavy_") ? 0.15F : 0);
         });
         for (var type : TYPES) {
             String itemName = name + "_" + type.getName();
@@ -68,6 +73,14 @@ public final class PufferfishArmor {
                 int durability = prefix.equals("heavy_") ? (type.getDurability(37) * 3 + 1) / 2 : type.getDurability(5);
                 var properties = new Item.Properties().durability(durability);
                 if (prefix.equals("netherite_") || prefix.equals("heavy_")) properties.fireResistant();
+                if (prefix.equals("heavy_")) return new ArmorItem(material, type, properties) {
+                    private final ItemAttributeModifiers modifiers = super.getDefaultAttributeModifiers().withModifierAdded(
+                            Attributes.MOVEMENT_SPEED, new AttributeModifier(KaleidoscopePufferfish.id(itemName + "_weight"),
+                                    -0.10, AttributeModifier.Operation.ADD_MULTIPLIED_BASE), EquipmentSlotGroup.bySlot(type.getSlot()));
+
+                    @Override
+                    public ItemAttributeModifiers getDefaultAttributeModifiers() { return modifiers; }
+                };
                 return new ArmorItem(material, type, properties);
             }));
         }

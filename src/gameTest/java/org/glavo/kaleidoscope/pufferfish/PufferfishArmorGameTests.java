@@ -114,6 +114,38 @@ public final class PufferfishArmorGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void heavyArmorWeightAndKnockbackResistanceStackOnlyWhenWorn(GameTestHelper helper) {
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        double speed = player.getAttributeValue(Attributes.MOVEMENT_SPEED);
+        for (int count = 1; count <= 4; count++) {
+            var type = PufferfishArmor.TYPES.get(count - 1);
+            player.setItemSlot(type.getSlot(), new ItemStack(PufferfishArmor.VARIANTS.get("heavy_pufferfish_skin_" + type.getName()).get()));
+            player.tick();
+            helper.assertTrue(Math.abs(player.getAttributeValue(Attributes.MOVEMENT_SPEED) - speed * (1 - 0.1 * count)) < 1.0E-6,
+                    "Heavy armor speed penalty did not stack additively per piece");
+            helper.assertTrue(Math.abs(player.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE) - 0.15 * count) < 1.0E-6,
+                    "Heavy armor knockback resistance did not stack per piece");
+        }
+        for (int count = 3; count >= 0; count--) {
+            var type = PufferfishArmor.TYPES.get(count);
+            player.setItemSlot(type.getSlot(), new ItemStack(PufferfishArmor.VARIANTS.get("netherite_pufferfish_skin_" + type.getName()).get()));
+            player.tick();
+            helper.assertTrue(Math.abs(player.getAttributeValue(Attributes.MOVEMENT_SPEED) - speed * (1 - 0.1 * count)) < 1.0E-6
+                            && Math.abs(player.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE) - 0.15 * count) < 1.0E-6,
+                    "Replacing heavy armor retained its weight or knockback resistance");
+        }
+        for (var type : PufferfishArmor.TYPES) for (var hand : List.of(EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND)) {
+            player.setItemSlot(hand, new ItemStack(PufferfishArmor.VARIANTS.get("heavy_pufferfish_skin_" + type.getName()).get()));
+            player.tick();
+            helper.assertTrue(Math.abs(player.getAttributeValue(Attributes.MOVEMENT_SPEED) - speed) < 1.0E-6
+                            && player.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE) == 0,
+                    "Held heavy armor applied worn attributes");
+            player.setItemSlot(hand, ItemStack.EMPTY);
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void wornArmorPoisonsAndRollsThornsButHeldArmorDoesNot(GameTestHelper helper) {
         int reflected = 0;
         int attempts = 0;
