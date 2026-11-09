@@ -4,8 +4,10 @@
 package org.glavo.kaleidoscope.pufferfish.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -26,11 +28,41 @@ public final class PufferfishFlailHeadRenderer extends EntityRenderer<Pufferfish
     public PufferfishFlailHeadRenderer(EntityRendererProvider.Context context) { super(context); }
 
     @Override
+    public boolean shouldRender(PufferfishFlailHead head, Frustum frustum, double x, double y, double z) {
+        return super.shouldRender(head, frustum, x, y, z) || head.getOwner() instanceof Player player
+                && frustum.isVisible(head.getBoundingBox().minmax(player.getBoundingBox()));
+    }
+
+    @Override
     public void render(PufferfishFlailHead head, float yaw, float partialTick, PoseStack pose, MultiBufferSource buffers, int light) {
-        model.renderHead(head.getItem(), pose, buffers, light, OverlayTexture.NO_OVERLAY, head.tickCount + partialTick);
+        var position = head.getPosition(partialTick);
+        Vec3 hand = null;
+        Vec3 correction = Vec3.ZERO;
         if (head.getOwner() instanceof Player player) {
-            model.renderChain(handPosition(player, head.getHand(), partialTick).subtract(head.getPosition(partialTick)), pose, buffers, light);
+            hand = handPosition(player, head.getHand(), partialTick);
+            var origin = player.getEyePosition(partialTick).add(0, -0.3, 0);
+            double blend = Math.max(0, 1 - position.distanceTo(origin) / 1.25);
+            correction = hand.subtract(origin).scale(blend * blend);
         }
+        // Blend the eye-based projectile path into the visible grip near launch and recovery.
+        pose.pushPose();
+        pose.translate(correction.x, correction.y, correction.z);
+        pose.pushPose();
+        pose.mulPose(Axis.YP.rotationDegrees(Mth.rotLerp(partialTick, head.yRotO, head.getYRot())));
+        pose.mulPose(Axis.XP.rotationDegrees(-Mth.lerp(partialTick, head.xRotO, head.getXRot())));
+        model.renderHead(head.getItem(), pose, buffers, light, OverlayTexture.NO_OVERLAY, head.tickCount + partialTick);
+        pose.popPose();
+        if (hand != null) {
+            var offset = hand.subtract(position.add(correction));
+            double distance = offset.length();
+            var attachment = offset.normalize().scale(Math.min(0.20, distance * 0.5));
+            double sag = Math.min(0.35, distance * 0.12) * (head.isReturning() ? 1 : Math.max(0.1, 1 - distance / PufferfishFlailHead.REACH));
+            pose.pushPose();
+            pose.translate(attachment.x, attachment.y, attachment.z);
+            model.renderChain(head.getItem(), offset.subtract(attachment), sag, pose, buffers, light);
+            pose.popPose();
+        }
+        pose.popPose();
         super.render(head, yaw, partialTick, pose, buffers, light);
     }
 
@@ -39,8 +71,9 @@ public final class PufferfishFlailHeadRenderer extends EntityRenderer<Pufferfish
         var arm = hand == InteractionHand.MAIN_HAND ? player.getMainArm() : player.getMainArm().getOpposite();
         int side = arm == HumanoidArm.RIGHT ? 1 : -1;
         if (player == Minecraft.getInstance().player && entityRenderDispatcher.options.getCameraType().isFirstPerson()) {
+            float swing = player.swingingArm == hand ? Mth.sin(Mth.sqrt(player.getAttackAnim(partialTick)) * Mth.PI) : 0;
             var offset = entityRenderDispatcher.camera.getNearPlane().getPointOnPlane(side * 0.525F, -0.1F)
-                    .scale(960.0 / entityRenderDispatcher.options.fov().get());
+                    .scale(960.0 / entityRenderDispatcher.options.fov().get()).yRot(side * swing * 0.5F).xRot(-swing * 0.7F);
             return player.getEyePosition(partialTick).add(offset);
         }
         float yaw = Mth.lerp(partialTick, player.yBodyRotO, player.yBodyRot) * Mth.DEG_TO_RAD;

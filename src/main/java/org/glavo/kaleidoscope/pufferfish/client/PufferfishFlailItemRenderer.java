@@ -4,6 +4,7 @@
 package org.glavo.kaleidoscope.pufferfish.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -12,6 +13,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.util.Mth;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import org.glavo.kaleidoscope.pufferfish.entity.PufferfishFlailHead;
 
@@ -36,12 +38,22 @@ public final class PufferfishFlailItemRenderer extends BlockEntityWithoutLevelRe
     public void renderByItem(ItemStack stack, ItemDisplayContext context, PoseStack pose, MultiBufferSource buffers, int light, int overlay) {
         if (model == null) model = new PufferfishFlailModel();
         pose.pushPose();
-        pose.translate(0.5, 0.1, 0.5);
+        boolean held = context.firstPerson() || context == ItemDisplayContext.THIRD_PERSON_LEFT_HAND
+                || context == ItemDisplayContext.THIRD_PERSON_RIGHT_HAND;
+        pose.translate(held ? 0.5 : 0.28, held ? 0.5 : 0.70, 0.5);
         boolean flying = isFlying(stack, context);
-        model.renderChain(new Vec3(0, flying ? 0.2 : 0.7, 0), pose, buffers, light);
+        model.renderGrip(stack, pose, buffers, light, overlay);
+        float age = held && Minecraft.getInstance().level != null
+                ? Minecraft.getInstance().level.getGameTime() + Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(false) : 0;
+        double sway = held ? Mth.sin(age * 0.09F) * 0.035 : 0;
+        var head = new Vec3(0.47 + sway, -0.24, 0.02);
+        pose.translate(0, 0.23, 0);
+        model.renderChain(stack, flying ? new Vec3(0, 0.09, 0) : head.add(0, -0.23 + 0.19, 0),
+                flying ? 0 : 0.12, pose, buffers, light);
         if (!flying) {
-            pose.translate(0, 0.8, 0);
-            model.renderHead(stack, pose, buffers, light, overlay, 0);
+            pose.translate(head.x, head.y - 0.23, head.z);
+            pose.mulPose(Axis.ZP.rotationDegrees(held ? (float) (-8 + sway * 100) : -8));
+            model.renderHead(stack, pose, buffers, light, overlay, age);
         }
         pose.popPose();
     }
