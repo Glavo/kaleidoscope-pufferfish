@@ -77,6 +77,11 @@ public final class PufferfishBoatClientTest {
                     for (var boat : new Boat[] {vanilla, kayak}) {
                         status.set(boat, Boat.Status.IN_WATER);
                         oldStatus.set(boat, Boat.Status.IN_WATER);
+                        if (boat == kayak && kayak.isHeavy()) status.set(boat, switch (input % 3) {
+                            case 1 -> Boat.Status.UNDER_WATER;
+                            case 2 -> Boat.Status.UNDER_FLOWING_WATER;
+                            default -> Boat.Status.IN_WATER;
+                        });
                         var player = new net.minecraft.client.player.RemotePlayer(level,
                                 new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "kayak-speed-test"));
                         player.startRiding(boat, true);
@@ -92,7 +97,9 @@ public final class PufferfishBoatClientTest {
                         control.invoke(vanilla);
                         control.invoke(kayak);
                         var expected = vanilla.getDeltaMovement().multiply(1.25, 1, 1.25);
-                        if (kayak.getDeltaMovement().distanceTo(expected) > 1.0E-7 || kayak.getYRot() != vanilla.getYRot()) {
+                        var difference = kayak.getDeltaMovement().subtract(expected);
+                        if (difference.horizontalDistance() > 1.0E-7 || (!kayak.isHeavy() && Math.abs(difference.y) > 1.0E-7)
+                                || kayak.getYRot() != vanilla.getYRot() || kayak.isHeavy() && kayak.getDeltaMovement().y >= 0) {
                             throw new IllegalStateException("Kayak speed or steering differed from the expected boat ratio");
                         }
                         if (input == 0 && tick == 99 && Math.abs(kayak.getDeltaMovement().horizontalDistance() - 0.5) > 0.0001) {
@@ -107,7 +114,8 @@ public final class PufferfishBoatClientTest {
                     drift.invoke(kayak);
                     control.invoke(vanilla);
                     control.invoke(kayak);
-                    if (kayak.getDeltaMovement().distanceTo(vanilla.getDeltaMovement()) > 1.0E-7) {
+                    var difference = kayak.getDeltaMovement().subtract(vanilla.getDeltaMovement());
+                    if (difference.horizontalDistance() > 1.0E-7 || (!kayak.isHeavy() && Math.abs(difference.y) > 1.0E-7)) {
                         throw new IllegalStateException("Unoccupied kayak amplified external movement");
                     }
                 }

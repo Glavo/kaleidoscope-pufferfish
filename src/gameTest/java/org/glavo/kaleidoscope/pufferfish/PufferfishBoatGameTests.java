@@ -33,6 +33,37 @@ import org.glavo.kaleidoscope.pufferfish.entity.PufferfishBoat;
 @GameTestHolder(KaleidoscopePufferfish.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishBoatGameTests {
+    @GameTest(template = "empty", timeoutTicks = 160)
+    public static void heavyKayakSinksToTheFloorAndRetainsPassengers(GameTestHelper helper) {
+        for (var pos : BlockPos.betweenClosed(0, 0, 0, 6, 5, 6)) {
+            helper.setBlock(pos, pos.getY() == 0 || pos.getX() == 0 || pos.getX() == 6 || pos.getZ() == 0 || pos.getZ() == 6
+                    ? Blocks.STONE : Blocks.WATER);
+        }
+        var origin = helper.absolutePos(BlockPos.ZERO);
+        var heavy = PufferfishBoats.VARIANTS.get("heavy_pufferfish_skin_boat").entity().get().create(helper.getLevel());
+        var ordinary = PufferfishBoats.VARIANTS.get("pufferfish_skin_boat").entity().get().create(helper.getLevel());
+        heavy.setPos(origin.getX() + 2.25, origin.getY() + 6.2, origin.getZ() + 3.5);
+        ordinary.setPos(origin.getX() + 4.75, origin.getY() + 5.6, origin.getZ() + 3.5);
+        helper.getLevel().addFreshEntity(heavy);
+        helper.getLevel().addFreshEntity(ordinary);
+        var passenger = helper.spawn(EntityType.VILLAGER, new BlockPos(2, 6, 3));
+        passenger.setNoAi(true);
+        passenger.startRiding(heavy, true);
+        helper.runAtTickTime(30, () -> helper.assertTrue(heavy.getY() < origin.getY() + 3,
+                "Heavy kayak did not sink after entering water"));
+        helper.runAtTickTime(120, () -> {
+            helper.assertTrue(!heavy.isRemoved() && Math.abs(heavy.getY() - origin.getY() - 1) < 0.05,
+                    "Heavy kayak did not settle on the underwater floor");
+            helper.assertTrue(passenger.getVehicle() == heavy, "Submerged heavy kayak ejected its passenger");
+            helper.assertTrue(ordinary.getY() > origin.getY() + 5, "Ordinary kayak lost its buoyancy: " + ordinary.position()
+                    + ", water=" + helper.getLevel().getFluidState(origin.offset(4, 5, 3)) + ", heavy=" + ordinary.isHeavy());
+            var player = helper.makeMockPlayer(GameType.SURVIVAL);
+            helper.assertTrue(heavy.interact(player, InteractionHand.MAIN_HAND).consumesAction() && player.getVehicle() == heavy,
+                    "Heavy kayak could not be boarded underwater");
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty")
     public static void variantsCraftSaveCarryPassengersAndDropMatchingBoats(GameTestHelper helper) {
         var level = helper.getLevel();

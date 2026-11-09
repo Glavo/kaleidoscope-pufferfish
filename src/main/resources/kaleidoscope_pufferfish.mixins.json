@@ -3,6 +3,7 @@
   "package": "org.glavo.kaleidoscope.pufferfish.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "PufferfishBoatBuoyancyMixin",
     "LegacyPufferfishDataMixin",
     "ChoppingBoardMixin",
     "AbstractFishMixin",

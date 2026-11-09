@@ -25,6 +25,17 @@ public final class PufferfishBoat extends Boat {
 
     public String skinBoatName() { return skinBoatName; }
 
+    public boolean isHeavy() { return skinBoatName.equals("heavy_pufferfish_skin_boat"); }
+
+    public void sinkInWater() {
+        setDeltaMovement(getDeltaMovement().add(0, -getGravity(), 0).multiply(0.9F, 0.9F, 0.9F));
+    }
+
+    @Override
+    protected boolean canAddPassenger(Entity passenger) {
+        return isHeavy() ? getPassengers().size() < getMaxPassengers() : super.canAddPassenger(passenger);
+    }
+
     @Override
     public Item getDropItem() { return PufferfishBoats.VARIANTS.get(skinBoatName).item().get(); }
 
