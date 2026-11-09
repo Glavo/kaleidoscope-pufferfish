@@ -35,16 +35,13 @@ public final class PufferfishSpriteSource implements SpriteSource {
         addDish(manager, output, false);
         addDish(manager, output, true);
         addZosui(manager, output);
-        addBlock(manager, output, null);
         addSkin(manager, output, null);
         for (DyeColor color : DyeColor.values()) {
-            addBlock(manager, output, color);
             addSkin(manager, output, color);
         }
         addItem(manager, output, "netherite_pufferfish", PufferfishTextures.NETHERITE_COLOR);
         addItem(manager, output, "golden_pufferfish", 0);
         addItem(manager, output, "heavy_pufferfish", 0);
-        addBlock(manager, output, "netherite_pufferfish_block", PufferfishTextures.NETHERITE_COLOR);
     }
 
     /// Adds a resource-pack cooked dish sprite or the built-in bowl sprite.
@@ -90,23 +87,6 @@ public final class PufferfishSpriteSource implements SpriteSource {
                         return new SpriteContents(name, size, image, metadata);
                     })));
         }
-    }
-
-    private static void addBlock(ResourceManager manager, Output output, DyeColor color) {
-        addBlock(manager, output, PufferfishBlocks.name(color), color == null ? null : color.getTextureDiffuseColor());
-    }
-
-    private static void addBlock(ResourceManager manager, Output output, String blockName, Integer color) {
-        var id = KaleidoscopePufferfish.id("block/" + blockName);
-        var replacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(id));
-        if (replacement.isPresent()) {
-            output.add(id, replacement.get());
-            return;
-        }
-        var source = ResourceLocation.withDefaultNamespace("item/pufferfish");
-        manager.getResource(TEXTURE_ID_CONVERTER.idToFile(source)).ifPresent(resource ->
-                output.add(id, loader -> loader.loadSprite(id, resource, (name, size, image, metadata) ->
-                        PufferfishBlockTexture.create(name, size, image, metadata, color))));
     }
 
     /// Adds a skin sprite from a resource-pack replacement or the entity's unfolded skin.

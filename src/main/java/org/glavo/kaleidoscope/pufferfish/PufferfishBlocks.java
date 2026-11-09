@@ -8,8 +8,6 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.DyeColor;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -28,10 +26,6 @@ public final class PufferfishBlocks {
             PufferfishConduitBlock::new, BlockBehaviour.Properties.ofFullCopy(Blocks.CONDUIT));
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PufferfishConduitBlockEntity>> CONDUIT_ENTITY =
             BLOCK_ENTITIES.register("pufferfish_conduit", () -> BlockEntityType.Builder.of(PufferfishConduitBlockEntity::new, CONDUIT.get()).build(null));
-    public static final DeferredBlock<Block> NETHERITE = BLOCKS.registerSimpleBlock("netherite_pufferfish_block",
-            BlockBehaviour.Properties.ofFullCopy(Blocks.NETHERITE_BLOCK));
-    private static final DeferredBlock<Block> PLAIN = registerBlock(null);
-    private static final Map<DyeColor, DeferredBlock<Block>> COLORED = new EnumMap<>(DyeColor.class);
     /// The placeable skin obtained from undyed pufferfish.
     private static final DeferredBlock<PufferfishSkinBlock> PLAIN_SKIN = registerSkin(null);
     /// Placeable skins indexed by the dye color of their ingredient fish.
@@ -39,30 +33,12 @@ public final class PufferfishBlocks {
 
     static {
         ITEMS.registerSimpleBlockItem(CONDUIT);
-        ITEMS.registerSimpleBlockItem(NETHERITE, new Item.Properties().fireResistant());
         for (DyeColor color : DyeColor.values()) {
-            COLORED.put(color, registerBlock(color));
             COLORED_SKINS.put(color, registerSkin(color));
         }
     }
 
     private PufferfishBlocks() {}
-
-    public static String name(@Nullable DyeColor color) {
-        return color == null ? "pufferfish_block" : color.getName() + "_pufferfish_block";
-    }
-
-    public static Block get(@Nullable DyeColor color) {
-        return (color == null ? PLAIN : COLORED.get(color)).get();
-    }
-
-    private static DeferredBlock<Block> registerBlock(@Nullable DyeColor color) {
-        var block = BLOCKS.registerSimpleBlock(name(color), BlockBehaviour.Properties.of()
-                .mapColor(color == null ? MapColor.COLOR_YELLOW : color.getMapColor())
-                .strength(0.5F).sound(SoundType.WET_GRASS));
-        ITEMS.registerSimpleBlockItem(block);
-        return block;
-    }
 
     /// Returns the registry path for the given skin color, or the undyed skin if null.
     public static String skinName(@Nullable DyeColor color) {

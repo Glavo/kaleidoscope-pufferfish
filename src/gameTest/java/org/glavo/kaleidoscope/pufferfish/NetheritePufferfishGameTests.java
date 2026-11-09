@@ -6,7 +6,6 @@ package org.glavo.kaleidoscope.pufferfish;
 import io.netty.buffer.Unpooled;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
@@ -25,11 +24,9 @@ import net.minecraft.world.inventory.SmithingMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.DyeColor;
-import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SmithingRecipeInput;
 import net.minecraft.world.level.GameType;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.living.LivingBreatheEvent;
@@ -105,27 +102,7 @@ public final class NetheritePufferfishGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "empty")
-    public static void netheriteBlocksPackUnpackAndDropCorrectly(GameTestHelper helper) {
-        var level = helper.getLevel();
-        var input = CraftingInput.of(3, 3, Collections.nCopies(9, netherite()));
-        var compressed = level.getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, level).orElseThrow().value().assemble(input, level.registryAccess());
-        helper.assertTrue(compressed.is(PufferfishBlocks.NETHERITE.get().asItem()) && compressed.getCount() == 1, "Netherite compression failed");
-        var unpackInput = CraftingInput.of(1, 1, List.of(compressed));
-        var unpacked = level.getRecipeManager().getRecipeFor(RecipeType.CRAFTING, unpackInput, level).orElseThrow().value().assemble(unpackInput, level.registryAccess());
-        helper.assertTrue(unpacked.getCount() == 9 && ItemStack.isSameItemSameComponents(unpacked, netherite()), "Unpacking lost netherite attributes");
-        var state = PufferfishBlocks.NETHERITE.get().defaultBlockState();
-        var pos = helper.absolutePos(new BlockPos(1, 1, 1));
-        level.setBlockAndUpdate(pos, state);
-        var player = helper.makeMockPlayer(GameType.SURVIVAL);
-        helper.assertTrue(!player.hasCorrectToolForDrops(state), "Netherite block did not require a tool");
-        player.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.DIAMOND_PICKAXE));
-        helper.assertTrue(player.hasCorrectToolForDrops(state), "Diamond pickaxe could not harvest the block");
-        var drops = Block.getDrops(state, level, pos, null, player, player.getMainHandItem());
-        helper.assertTrue(drops.size() == 1 && ItemStack.isSameItemSameComponents(drops.getFirst(), compressed), "Block used the wrong loot table");
-        helper.assertTrue(netherite().has(DataComponents.FIRE_RESISTANT) && compressed.has(DataComponents.FIRE_RESISTANT), "Netherite items were not fire resistant");
-        helper.succeed();
-    }
+
 
     @GameTest(template = "empty")
     public static void netheriteHeadgearAddsAndRemovesArmor(GameTestHelper helper) {

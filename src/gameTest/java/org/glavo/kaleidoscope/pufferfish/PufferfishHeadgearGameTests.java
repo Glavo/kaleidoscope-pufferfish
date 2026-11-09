@@ -69,7 +69,6 @@ public final class PufferfishHeadgearGameTests {
             helper.assertTrue(PufferfishHeadgear.isWearing(player), "Equipped fish was not recognized");
         }
         helper.assertTrue(!player.inventoryMenu.getSlot(5).mayPlace(new ItemStack(Items.PUFFERFISH_BUCKET)), "Bucket became headgear");
-        helper.assertTrue(!player.inventoryMenu.getSlot(5).mayPlace(new ItemStack(PufferfishBlocks.get(null))), "Storage block became headgear");
         player.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
         player.setItemSlot(EquipmentSlot.MAINHAND, fish(DyeColor.RED));
         helper.assertTrue(!PufferfishHeadgear.isWearing(player), "Held fish granted equipment effects");

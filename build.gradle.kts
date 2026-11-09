@@ -175,60 +175,6 @@ val generateItemModels = tasks.register<Sync>("generateItemModels") {
     }
 }
 
-val generateBlockResources = tasks.register<Sync>("generateBlockResources") {
-    inputs.property("modId", modId)
-    inputs.property("colors", dyeColors)
-    filteringCharset = "UTF-8"
-    into(layout.buildDirectory.dir("generated/resources/pufferfishBlocks"))
-    for (color in listOf("") + dyeColors + "netherite") {
-        val netherite = color == "netherite"
-        val blockName = if (color.isEmpty()) "pufferfish_block" else "${color}_pufferfish_block"
-        val blockId = "$modId:$blockName"
-        val fishId = if (netherite) "$modId:netherite_pufferfish" else "minecraft:pufferfish"
-        val components = if (color.isEmpty() || netherite) "{}" else JsonOutput.toJson(mapOf(
-            "$modId:color" to color,
-            "minecraft:item_name" to JsonOutput.toJson(mapOf(
-                "translate" to "item.$modId.dyed_pufferfish",
-                "with" to listOf(mapOf("translate" to "color.minecraft.$color"))
-            ))
-        ))
-        val properties = mapOf(
-            "modId" to modId,
-            "blockName" to blockName,
-            "blockId" to blockId,
-            "fishId" to fishId,
-            "ingredient" to JsonOutput.toJson(when {
-                netherite -> mapOf("item" to fishId)
-                color.isEmpty() -> mapOf("type" to "$modId:pufferfish")
-                else -> mapOf("type" to "$modId:pufferfish", "color" to color)
-            }),
-            "components" to components
-        )
-        inputs.property(blockName, properties)
-        for ((template, target) in mapOf(
-            "blockstate" to "assets/$modId/blockstates/$blockName.json",
-            "block_model" to "assets/$modId/models/block/$blockName.json",
-            "item_model" to "assets/$modId/models/item/$blockName.json",
-            "loot" to "data/$modId/loot_table/blocks/$blockName.json",
-            "compress" to "data/$modId/recipe/$blockName.json",
-            "decompress" to "data/$modId/recipe/${blockName}_unpacking.json"
-        )) {
-            from("src/main/blockTemplates/$template.json") {
-                expand(properties)
-                into(target.substringBeforeLast('/'))
-                rename { target.substringAfterLast('/') }
-            }
-        }
-        for ((recipe, ingredient) in mapOf(blockName to fishId, "${blockName}_unpacking" to blockId)) {
-            from("src/main/blockTemplates/advancement.json") {
-                expand("recipe" to "$modId:$recipe", "ingredient" to ingredient)
-                into("data/$modId/advancement/recipes/misc")
-                rename { "$recipe.json" }
-            }
-        }
-    }
-}
-
 val generateSkinResources = tasks.register<Sync>("generateSkinResources") {
     inputs.property("modId", modId)
     inputs.property("colors", dyeColors)
@@ -249,8 +195,8 @@ val generateSkinResources = tasks.register<Sync>("generateSkinResources") {
         inputs.property(skinName, properties)
         for ((template, target) in mapOf(
             "skinTemplates/blockstate" to "assets/$modId/blockstates/$skinName.json",
-            "blockTemplates/item_model" to "assets/$modId/models/item/$skinName.json",
-            "blockTemplates/loot" to "data/$modId/loot_table/blocks/$skinName.json",
+            "skinTemplates/item_model" to "assets/$modId/models/item/$skinName.json",
+            "skinTemplates/loot" to "data/$modId/loot_table/blocks/$skinName.json",
             "skinTemplates/block_model" to "assets/$modId/models/block/$skinName.json",
             "skinTemplates/cutting" to "data/$modId/recipe/cutting/$skinName.json",
             "skinTemplates/chopping" to "data/$modId/recipe/chopping/$skinName.json",
@@ -284,12 +230,10 @@ val generateSkinResources = tasks.register<Sync>("generateSkinResources") {
 sourceSets.main {
     resources.srcDir(generateModMetadata)
     resources.srcDir(generateItemModels)
-    resources.srcDir(generateBlockResources)
     resources.srcDir(generateSkinResources)
 }
 neoForge.ideSyncTask(generateModMetadata)
 neoForge.ideSyncTask(generateItemModels)
-neoForge.ideSyncTask(generateBlockResources)
 neoForge.ideSyncTask(generateSkinResources)
 
 publishing {

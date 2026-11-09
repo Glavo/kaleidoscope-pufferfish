@@ -71,14 +71,11 @@ public final class PufferfishClientSmokeTest {
                 throw new IllegalStateException("Missing dyed pufferfish entity texture: " + color);
             }
         }
-        verifyBlock(minecraft, null);
         verifySkin(minecraft, null);
         for (DyeColor color : DyeColor.values()) {
-            verifyBlock(minecraft, color);
             verifySkin(minecraft, color);
         }
         PufferfishSkinClientPreview.save(minecraft);
-        verifyBlock(minecraft, PufferfishBlocks.NETHERITE.get(), "netherite_pufferfish_block");
         var netheriteModel = minecraft.getItemRenderer().getModel(new ItemStack(PufferfishItems.NETHERITE.get()), null, null, 0);
         if (netheriteModel == minecraft.getModelManager().getMissingModel()
                 || netheriteModel.getQuads(null, null, RandomSource.create()).isEmpty()
@@ -129,7 +126,7 @@ public final class PufferfishClientSmokeTest {
             projectileRendererChecked = false;
             minecraft.reloadResourcePacks();
         } else {
-            LogUtils.getLogger().info("Pufferfish client smoke test passed: 40 item models, 18 blocks, 17 skins, cutting models, headgear, gloves, flails and conduit rendering, projectile renderers, model override delegation, and resource reload");
+            LogUtils.getLogger().info("Pufferfish client smoke test passed: 40 item models, 17 skins, cutting models, headgear, gloves, flails and conduit rendering, projectile renderers, model override delegation, and resource reload");
             minecraft.stop();
         }
     }
@@ -199,9 +196,6 @@ public final class PufferfishClientSmokeTest {
             }
             if (entity.getPixelRGBA(24, 7) != 0xFF12140D) throw new IllegalStateException("Small pufferfish eye socket was overwritten");
         }
-        var block = minecraft.getBlockRenderer().getBlockModel(PufferfishBlocks.NETHERITE.get().defaultBlockState())
-                .getParticleIcon().contents().getOriginalImage();
-        if (block.getPixelRGBA(4, 6) != 0xFFD1DEE5) throw new IllegalStateException("Netherite block retained a dark pupil");
     }
 
     /// Verifies cutting models across resource reloads and saves an enlarged sashimi sprite for visual inspection.
@@ -242,39 +236,9 @@ public final class PufferfishClientSmokeTest {
         }
     }
 
-    private static void verifyBlock(Minecraft minecraft, DyeColor color) {
-        verifyBlock(minecraft, PufferfishBlocks.get(color), PufferfishBlocks.name(color));
-    }
 
-    private static void verifyBlock(Minecraft minecraft, net.minecraft.world.level.block.Block block, String name) {
-        var state = block.defaultBlockState();
-        var stack = new ItemStack(block);
-        var blockModel = minecraft.getBlockRenderer().getBlockModel(state);
-        var itemModel = minecraft.getItemRenderer().getModel(stack, null, null, 0);
-        var texture = KaleidoscopePufferfish.id("block/" + name);
-        for (var model : new BakedModel[] {blockModel, itemModel}) {
-            if (model == minecraft.getModelManager().getMissingModel()
-                    || !model.getParticleIcon().contents().name().equals(texture)) {
-                throw new IllegalStateException("Missing pufferfish block model or texture: " + name);
-            }
-            for (var direction : Direction.values()) {
-                if (model.getQuads(state, direction, RandomSource.create()).isEmpty()) {
-                    throw new IllegalStateException("Missing pufferfish block face: " + name + ", " + direction);
-                }
-            }
-            var image = model.getParticleIcon().contents().getOriginalImage();
-            for (int y = 0; y < image.getHeight(); y++) {
-                for (int x = 0; x < image.getWidth(); x++) {
-                    if (image.getPixelRGBA(x, y) >>> 24 != 255) {
-                        throw new IllegalStateException("Pufferfish block texture is not opaque: " + name);
-                    }
-                }
-            }
-        }
-        if (stack.getHoverName().getString().startsWith("block.")) {
-            throw new IllegalStateException("Missing pufferfish block translation: " + name);
-        }
-    }
+
+
 
     /// Checks that each skin's block and item models use the matching skin texture and a thin top face.
     private static void verifySkin(Minecraft minecraft, DyeColor color) {

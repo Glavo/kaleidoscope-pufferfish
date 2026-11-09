@@ -45,15 +45,12 @@ public final class PufferfishSurfacePoisonGameTests {
         return entity;
     }
 
-    /// Verifies all eighteen blocks and seventeen skins poison grounded entities through the event bus.
+    /// Verifies all seventeen skins poison grounded entities through the event bus.
     @GameTest(template = "empty")
     public static void everyPufferfishSurfacePoisonsStandingEntities(GameTestHelper helper) {
         var states = new ArrayList<BlockState>();
-        states.add(PufferfishBlocks.get(null).defaultBlockState());
-        states.add(PufferfishBlocks.NETHERITE.get().defaultBlockState());
         states.add(PufferfishBlocks.skin(null).defaultBlockState());
         for (var color : DyeColor.values()) {
-            states.add(PufferfishBlocks.get(color).defaultBlockState());
             states.add(PufferfishBlocks.skin(color).defaultBlockState());
         }
         for (var state : states) {
@@ -87,7 +84,7 @@ public final class PufferfishSurfacePoisonGameTests {
             helper.assertTrue(!entity.hasEffect(MobEffects.POISON), "A wall or ceiling skin applied standing poison");
         }
         entity.discard();
-        level.setBlockAndUpdate(pos, PufferfishBlocks.get(null).defaultBlockState());
+        level.setBlockAndUpdate(pos, PufferfishBlocks.skin(null).defaultBlockState());
         var zombie = helper.spawn(EntityType.ZOMBIE, new BlockPos(2, 3, 2));
         zombie.setNoAi(true);
         zombie.move(MoverType.SELF, new Vec3(0, -0.1, 0));
@@ -100,7 +97,7 @@ public final class PufferfishSurfacePoisonGameTests {
     /// Verifies existing stronger or infinite poison is retained and short Poison I is refreshed.
     @GameTest(template = "empty")
     public static void poisonRefreshPreservesStrongerEffects(GameTestHelper helper) {
-        var entity = stand(helper, PufferfishBlocks.get(null).defaultBlockState());
+        var entity = stand(helper, PufferfishBlocks.skin(null).defaultBlockState());
         for (var effect : new MobEffectInstance[] {
                 new MobEffectInstance(MobEffects.POISON, 20, 1), new MobEffectInstance(MobEffects.POISON, -1, 0)}) {
             entity.addEffect(effect);
