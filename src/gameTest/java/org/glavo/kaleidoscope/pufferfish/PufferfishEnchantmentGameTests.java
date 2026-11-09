@@ -111,6 +111,10 @@ public final class PufferfishEnchantmentGameTests {
                     menu.getSlot(0).set(input);
                     menu.getSlot(1).set(enchant(helper, new ItemStack(Items.ENCHANTED_BOOK), key, Math.max(1, rank - 1)));
                     menu.setItemName("Enchanted keepsake");
+                    if (key == Enchantments.WIND_BURST && !PufferfishItems.isHeavy(original)) {
+                        helper.assertTrue(!menu.getSlot(2).hasItem(), "Non-heavy fish accepted or upgraded Wind Burst");
+                        continue;
+                    }
                     helper.assertTrue(menu.getSlot(2).hasItem() && menu.getSlot(2).mayPickup(player), "Supported book was rejected: " + key);
                     var result = menu.getSlot(2).remove(1);
                     int cost = menu.getCost();
@@ -142,13 +146,14 @@ public final class PufferfishEnchantmentGameTests {
             enchant(helper, book, Enchantments.AQUA_AFFINITY, 1);
             enchant(helper, book, Enchantments.SHARPNESS, 5);
             enchant(helper, book, Enchantments.RESPIRATION, 3);
+            enchant(helper, book, Enchantments.WIND_BURST, 3);
             menu.createResult();
             var result = menu.getSlot(2).getItem();
             helper.assertTrue(!result.isEmpty() && level(helper, result, first) == 1 && level(helper, result, second) == 0,
                     "Mixed book replaced an existing incompatible enchantment");
             helper.assertTrue(level(helper, result, Enchantments.PUNCH) == 2 && level(helper, result, Enchantments.LOYALTY) == 3
                     && level(helper, result, Enchantments.AQUA_AFFINITY) == 1 && level(helper, result, Enchantments.SHARPNESS) == 0
-                    && level(helper, result, Enchantments.RESPIRATION) == 0,
+                    && level(helper, result, Enchantments.RESPIRATION) == 0 && level(helper, result, Enchantments.WIND_BURST) == 0,
                     "Mixed book lost supported enchantments or enabled Sharpness");
         }
         helper.succeed();

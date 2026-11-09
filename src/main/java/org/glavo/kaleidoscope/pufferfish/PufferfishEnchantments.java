@@ -37,6 +37,7 @@ public final class PufferfishEnchantments {
         var stored = book.getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY);
         // Sort registry IDs so conflicting mixed books have a stable result.
         List<Holder<Enchantment>> supported = stored.keySet().stream().filter(PufferfishEnchantments::supports)
+                .filter(enchantment -> !enchantment.is(Enchantments.WIND_BURST) || PufferfishItems.isHeavy(fish))
                 .filter(enchantment -> !PufferfishItems.isFlail(fish)
                         || !enchantment.is(Enchantments.AQUA_AFFINITY) && !enchantment.is(Enchantments.LOYALTY)
                             && !enchantment.is(Enchantments.WIND_BURST) && !enchantment.is(Enchantments.BINDING_CURSE))
