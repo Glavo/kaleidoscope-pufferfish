@@ -1,0 +1,17 @@
+{
+  "type": "${modId}:pufferfish_skin_shield",
+  "category": "equipment",
+  "group": "${modId}:pufferfish_skin_shields",
+  "ingredients": [
+    {
+      "item": "minecraft:shield"
+    },
+    {
+      "item": "${modId}:${skinName}"
+    }
+  ],
+  "result": {
+    "id": "${modId}:${shieldName}",
+    "count": 1
+  }
+}

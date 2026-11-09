@@ -52,6 +52,8 @@ public class KaleidoscopePufferfish {
             () -> EntityType.Builder.<PufferfishFlailHead>of(PufferfishFlailHead::new, MobCategory.MISC)
                     .sized(0.4F, 0.4F).clientTrackingRange(8).updateInterval(1).noSave()
                     .build(id("pufferfish_flail_head").toString()));
+    public static final DeferredHolder<RecipeSerializer<?>, PufferfishShieldRecipe.Serializer> SHIELD_RECIPE =
+            RECIPES.register("pufferfish_skin_shield", PufferfishShieldRecipe.Serializer::new);
     /// The shaped flail recipe serializer, which retains the ingredient fish's component changes.
     public static final DeferredHolder<RecipeSerializer<?>, PufferfishFlailRecipe.Serializer> FLAIL_RECIPE =
             RECIPES.register("pufferfish_flail", PufferfishFlailRecipe.Serializer::new);
@@ -88,6 +90,7 @@ public class KaleidoscopePufferfish {
                     output.accept(PufferfishItems.HEAVY_FLAIL);
                     output.accept(PufferfishBlocks.skin(null));
                     output.accept(PufferfishBlocks.GOLDEN_SKIN);
+                    PufferfishShields.VARIANTS.values().forEach(output::accept);
                     for (DyeColor color : DyeColor.values()) {
                         output.accept(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
                         output.accept(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH_BUCKET), color));
@@ -103,6 +106,7 @@ public class KaleidoscopePufferfish {
             CreateIntegration.register(bus, container);
         }
         PufferfishItems.register(bus);
+        PufferfishShields.register(bus);
         PufferfishBlocks.register(bus);
         COMPONENTS.register(bus);
         ATTACHMENTS.register(bus);

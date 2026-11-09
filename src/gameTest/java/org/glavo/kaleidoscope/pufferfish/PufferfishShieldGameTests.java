@@ -1,0 +1,89 @@
+// Copyright (c) 2026 Glavo
+// SPDX-License-Identifier: MPL-2.0
+
+package org.glavo.kaleidoscope.pufferfish;
+
+import java.util.List;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.CraftingInput;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+
+@GameTestHolder(KaleidoscopePufferfish.MODID)
+@PrefixGameTestTemplate(false)
+public final class PufferfishShieldGameTests {
+    @GameTest(template = "empty")
+    public static void coveringShieldsPreservesComponentsAndMatchesEverySkin(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var unbreaking = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.UNBREAKING);
+        for (var entry : PufferfishShields.VARIANTS.entrySet()) {
+            var skinId = KaleidoscopePufferfish.id(entry.getKey().replace("_shield", ""));
+            var skin = new ItemStack(BuiltInRegistries.ITEM.get(skinId));
+            for (boolean reversed : new boolean[] {false, true}) {
+                var shield = new ItemStack(Items.SHIELD);
+                shield.setDamageValue(87);
+                shield.set(DataComponents.CUSTOM_NAME, Component.literal("Keepsake"));
+                EnchantmentHelper.updateEnchantments(shield, values -> values.set(unbreaking, 3));
+                var input = CraftingInput.of(2, 2, reversed ? List.of(skin, ItemStack.EMPTY, ItemStack.EMPTY, shield)
+                        : List.of(shield, ItemStack.EMPTY, ItemStack.EMPTY, skin));
+                var recipe = level.getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, level).orElseThrow().value();
+                var output = recipe.assemble(input, level.registryAccess());
+                helper.assertTrue(output.is(entry.getValue().get()) && output.getCount() == 1 && output.getMaxDamage() == 336
+                        && output.getDamageValue() == 87 && output.getHoverName().equals(shield.getHoverName())
+                        && output.getEnchantments().getLevel(unbreaking) == 3, "Skin covering lost shield properties or selected the wrong variant");
+                helper.assertTrue(shield.getDamageValue() == 87 && skin.getCount() == 1
+                        && recipe.getRemainingItems(input).stream().allMatch(ItemStack::isEmpty), "Recipe mutated inputs or duplicated materials");
+                helper.assertTrue(unbreaking.value().isSupportedItem(output), "Covered shield lost Unbreaking support");
+            }
+            for (var invalid : List.of(
+                    CraftingInput.of(2, 1, List.of(skin, new ItemStack(Items.STICK))),
+                    CraftingInput.of(3, 1, List.of(new ItemStack(Items.SHIELD), skin, new ItemStack(Items.DIRT))),
+                    CraftingInput.of(2, 1, List.of(new ItemStack(entry.getValue().get()), skin)))) {
+                helper.assertTrue(level.getRecipeManager().getRecipeFor(RecipeType.CRAFTING, invalid, level).isEmpty(),
+                        "Skin shield recipe accepted invalid ingredients");
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void skinShieldsBlockDamageWearOutAndCanBeDisabled(GameTestHelper helper) {
+        for (var item : PufferfishShields.VARIANTS.values()) for (var hand : InteractionHand.values()) {
+            var player = helper.makeMockPlayer(GameType.SURVIVAL);
+            player.setPos(Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(2, 2, 2))));
+            player.setNoGravity(true);
+            player.setYRot(0);
+            var shield = new ItemStack(item.get());
+            player.setItemInHand(hand, shield);
+            shield.use(helper.getLevel(), player, hand);
+            for (int tick = 0; tick < 6; tick++) player.tick();
+            helper.assertTrue(player.isBlocking(), "Skin shield failed to enter blocking state");
+            var attacker = helper.spawn(EntityType.ZOMBIE, new BlockPos(2, 2, 4));
+            attacker.setNoAi(true);
+            player.hurt(player.damageSources().mobAttack(attacker), 6);
+            helper.assertTrue(player.getHealth() == player.getMaxHealth() && shield.getDamageValue() == 7,
+                    "Skin shield failed to block frontal damage or consume durability");
+            player.disableShield();
+            helper.assertTrue(!player.isBlocking() && player.getCooldowns().isOnCooldown(item.get()),
+                    "Shield disable did not affect the skin shield");
+            helper.assertTrue(item.get().isValidRepairItem(shield, new ItemStack(Items.OAK_PLANKS)), "Skin shield lost plank repair");
+            attacker.discard();
+        }
+        helper.succeed();
+    }
+}

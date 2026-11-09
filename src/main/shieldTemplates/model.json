@@ -1,0 +1,14 @@
+{
+  "parent": "minecraft:item/shield",
+  "textures": {
+    "particle": "${modId}:block/${skinName}"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "blocking": 1
+      },
+      "model": "${modId}:item/${shieldName}_blocking"
+    }
+  ]
+}

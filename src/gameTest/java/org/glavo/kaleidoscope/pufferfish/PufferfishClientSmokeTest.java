@@ -114,6 +114,7 @@ public final class PufferfishClientSmokeTest {
         PufferfishGloveClientTest.verify(minecraft);
         PufferfishConduitClientTest.verify(minecraft);
         PufferfishFlailClientTest.verify(minecraft);
+        PufferfishShieldClientTest.verify(minecraft);
         PufferfishFlailFirstPersonClientTest.verify(minecraft);
         PufferfishFlailOrbitClientTest.verify(minecraft);
         if (net.neoforged.fml.ModList.get().isLoaded("create")) {
@@ -127,7 +128,7 @@ public final class PufferfishClientSmokeTest {
             projectileRendererChecked = false;
             minecraft.reloadResourcePacks();
         } else {
-            LogUtils.getLogger().info("Pufferfish client smoke test passed: 40 item models, 18 skins, cutting models, headgear, gloves, flails and conduit rendering, projectile renderers, model override delegation, and resource reload");
+            LogUtils.getLogger().info("Pufferfish client smoke test passed: 40 item models, 18 skins, cutting models, headgear, gloves, flails, shields and conduit rendering, projectile renderers, model override delegation, and resource reload");
             minecraft.stop();
         }
     }
