@@ -8,13 +8,16 @@ import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexSorting;
 import com.mojang.math.Axis;
 import java.nio.file.Path;
 import java.util.UUID;
+import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.model.PlayerModel;
+import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.player.RemotePlayer;
 import net.minecraft.client.renderer.RenderType;
@@ -24,6 +27,7 @@ import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.phys.Vec3;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishBoatRenderer;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishRowingAnimation;
+import org.glavo.kaleidoscope.pufferfish.entity.PufferfishBoat;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -62,6 +66,7 @@ public final class PufferfishRowingClientTest {
                             for (int frame = 0; frame < 16; frame++) {
                                 phases[0] = phases[1] = frame * (float) Math.PI / 16;
                                 model.setupAnim(player, 0, 0, frame, 0, 0);
+                                if (frame == 0) verifySeating(minecraft, model, player, boat, yaw);
                                 if (!PufferfishRowingAnimation.poseArms(model, player, 1, yaw)) throw new IllegalStateException("Driver did not pose rowing arms");
                                 for (var arm : HumanoidArm.values()) {
                                     var part = arm == HumanoidArm.RIGHT ? model.rightArm : model.leftArm;
@@ -77,19 +82,142 @@ public final class PufferfishRowingClientTest {
                                 }
                             }
                         }
+                        if (tandem) {
+                            boat.positionRider(passenger);
+                            passenger.setOldPosAndRot();
+                            passenger.yBodyRot = passenger.yBodyRotO = yaw;
+                            model.setupAnim(passenger, 0, 0, 0, 0, 0);
+                            verifySeating(minecraft, model, passenger, boat, yaw);
+                        }
                     }
                     if (PufferfishRowingAnimation.isRowing(passenger)) throw new IllegalStateException("Rear passenger was rowing");
                     passenger.stopRiding();
                 }
                 boat.setPaddleState(false, false);
                 if (PufferfishRowingAnimation.poseArms(model, player, 1, 0)) throw new IllegalStateException("Idle boat retained rowing arms");
+                model.setupAnim(player, 0, 0, 0, 0, 0);
+                verifySeating(minecraft, model, player, boat, boat.getYRot());
+                player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BOW));
+                player.startUsingItem(net.minecraft.world.InteractionHand.MAIN_HAND);
+                model.setupAnim(player, 0, 0, 0, 0, 0);
+                verifySeating(minecraft, model, player, boat, boat.getYRot());
+                player.stopUsingItem();
+                player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, net.minecraft.world.item.ItemStack.EMPTY);
             }
             preview(minecraft, boat, player, phases);
+            seatingPreview(minecraft, boat, player, passenger);
             firstPerson(minecraft);
             player.stopRiding();
             if (PufferfishRowingAnimation.isRowing(player)) throw new IllegalStateException("Dismounted player retained rowing pose");
+            var model = new PlayerModel<RemotePlayer>(minecraft.getEntityModels().bakeLayer(ModelLayers.PLAYER), false);
+            model.setupAnim(player, 0, 0, 0, 0, 0);
+            if (Math.abs(model.leftLeg.xRot) > 0.01) throw new IllegalStateException("Dismounted player retained kayak legs");
+            player.startRiding(new Boat(level, 0, 0, 0), true);
+            model.riding = true;
+            model.setupAnim(player, 0, 0, 0, 0, 0);
+            if (model.leftLeg.yRot >= -0.3F) throw new IllegalStateException("Kayak pose changed vanilla boats");
+            player.stopRiding();
         } catch (ReflectiveOperationException exception) {
             throw new IllegalStateException("Could not exercise paddle phases", exception);
+        }
+    }
+
+    private static void verifySeating(Minecraft minecraft, PlayerModel<RemotePlayer> model, RemotePlayer player,
+            PufferfishBoat boat, float yaw) {
+        var offset = player.position().subtract(boat.position());
+        var pose = new PoseStack();
+        pose.mulPose(Axis.YP.rotationDegrees(yaw));
+        pose.translate(offset.x, offset.y, offset.z);
+        pose.mulPose(PufferfishRowingAnimation.playerTransform(player, yaw));
+        var vertices = new Vertices(point -> {
+            if (point.y < 0.25F - 0.001F || Math.abs(point.x) > 5F / 16 || point.z > 1
+                    || (point.z > 10F / 16 && point.y > 0.6125F + 0.001F)) {
+                throw new IllegalStateException("Kayak passenger leg escaped the footwell: " + point);
+            }
+            if (boat.getControllingPassenger() != player && point.z > 0.7F / 16) {
+                throw new IllegalStateException("Rear passenger foot intersected the front backrest: " + point);
+            }
+        });
+        for (var part : new net.minecraft.client.model.geom.ModelPart[] {model.leftLeg, model.rightLeg, model.leftPants, model.rightPants}) {
+            part.render(pose, vertices, 15728880, OverlayTexture.NO_OVERLAY);
+        }
+        var armor = new HumanoidModel<RemotePlayer>(minecraft.getEntityModels().bakeLayer(ModelLayers.PLAYER_OUTER_ARMOR));
+        model.copyPropertiesTo(armor);
+        armor.leftLeg.render(pose, vertices, 15728880, OverlayTexture.NO_OVERLAY);
+        armor.rightLeg.render(pose, vertices, 15728880, OverlayTexture.NO_OVERLAY);
+    }
+
+    private record Vertices(Consumer<Vector3f> check) implements VertexConsumer {
+        @Override public VertexConsumer addVertex(float x, float y, float z) { check.accept(new Vector3f(x, y, z)); return this; }
+        @Override public VertexConsumer setColor(int r, int g, int b, int a) { return this; }
+        @Override public VertexConsumer setUv(float u, float v) { return this; }
+        @Override public VertexConsumer setUv1(int u, int v) { return this; }
+        @Override public VertexConsumer setUv2(int u, int v) { return this; }
+        @Override public VertexConsumer setNormal(float x, float y, float z) { return this; }
+    }
+
+    private static void seatingPreview(Minecraft minecraft, PufferfishBoat boat, RemotePlayer player, RemotePlayer passenger) {
+        boat.setPos(Vec3.ZERO);
+        boat.setYRot(0);
+        boat.setOldPosAndRot();
+        boat.setPaddleState(false, false);
+        var model = new PlayerModel<RemotePlayer>(minecraft.getEntityModels().bakeLayer(ModelLayers.PLAYER), false);
+        model.riding = true;
+        model.young = false;
+        var armor = new HumanoidModel<RemotePlayer>(minecraft.getEntityModels().bakeLayer(ModelLayers.PLAYER_OUTER_ARMOR));
+        var target = new TextureTarget(1200, 660, true, Minecraft.ON_OSX);
+        target.setClearColor(0.16F, 0.18F, 0.21F, 1);
+        target.clear(Minecraft.ON_OSX);
+        target.bindWrite(true);
+        RenderSystem.backupProjectionMatrix();
+        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 1200, 660, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
+        var view = RenderSystem.getModelViewStack();
+        view.pushMatrix().identity();
+        RenderSystem.applyModelViewMatrix();
+        Lighting.setupForFlatItems();
+        try {
+            for (int row = 0; row < 2; row++) {
+                if (row == 1) passenger.startRiding(boat, true);
+                for (int column = 0; column < 3; column++) {
+                    var pose = new PoseStack();
+                    pose.translate(200 + column * 400, 265 + row * 330, 0);
+                    pose.scale(105, -105, 105);
+                    pose.mulPose(Axis.XP.rotationDegrees(column == 0 ? 0 : 20));
+                    pose.mulPose(Axis.YP.rotationDegrees(column == 0 ? -90 : column == 1 ? -35 : 145));
+                    var buffers = minecraft.renderBuffers().bufferSource();
+                    ((PufferfishBoatRenderer) minecraft.getEntityRenderDispatcher().getRenderer(boat)).render(boat, 0, 1, pose, buffers, 15728880);
+                    for (var rider : boat.getPassengers()) {
+                        var seated = (RemotePlayer) rider;
+                        boat.positionRider(seated);
+                        seated.setOldPosAndRot();
+                        seated.yBodyRot = seated.yBodyRotO = 0;
+                        model.setupAnim(seated, 0, 0, 0, 0, 0);
+                        pose.pushPose();
+                        pose.translate(seated.getX(), seated.getY(), seated.getZ());
+                        pose.mulPose(PufferfishRowingAnimation.playerTransform(seated, 0));
+                        model.renderToBuffer(pose, buffers.getBuffer(RenderType.entityCutoutNoCull(seated.getSkin().texture())), 15728880, OverlayTexture.NO_OVERLAY);
+                        if (column == 2) {
+                            model.copyPropertiesTo(armor);
+                            armor.setAllVisible(false);
+                            armor.leftLeg.visible = armor.rightLeg.visible = true;
+                            armor.renderToBuffer(pose, buffers.getBuffer(RenderType.armorCutoutNoCull(
+                                    net.minecraft.resources.ResourceLocation.withDefaultNamespace("textures/models/armor/iron_layer_1.png"))), 15728880, OverlayTexture.NO_OVERLAY);
+                        }
+                        pose.popPose();
+                    }
+                    buffers.endBatch();
+                }
+            }
+            try (var image = Screenshot.takeScreenshot(target)) { image.writeToFile(Path.of("pufferfish-kayak-seating.png")); }
+        } catch (java.io.IOException exception) {
+            throw new IllegalStateException("Could not save kayak seating preview", exception);
+        } finally {
+            passenger.stopRiding();
+            view.popMatrix();
+            RenderSystem.applyModelViewMatrix();
+            RenderSystem.restoreProjectionMatrix();
+            target.destroyBuffers();
+            minecraft.getMainRenderTarget().bindWrite(true);
         }
     }
 

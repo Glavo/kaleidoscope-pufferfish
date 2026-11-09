@@ -38,8 +38,8 @@ public final class PufferfishRowingAnimation {
     public static PaddlePose paddle(Boat boat, float partialTick) {
         if (!boat.getPaddleState(0) && !boat.getPaddleState(1)) return new PaddlePose(0, -5.4F, 4.5F, 0, Mth.HALF_PI);
         float time = boat.getRowingTime(0, partialTick) + boat.getRowingTime(1, partialTick);
-        float seat = boat.getPassengers().size() > 1 ? 3.2F : 0;
-        return new PaddlePose(seat + 8, -5, 0, Mth.sin(time) * 0.25F, Mth.cos(time) * 0.16F);
+        float seat = PufferfishBoat.FRONT_SEAT * 16;
+        return new PaddlePose(seat + 8, -6.4F, 0, Mth.sin(time) * 0.25F, Mth.cos(time) * 0.16F);
     }
 
     public static Vec3 grip(PufferfishBoat boat, HumanoidArm arm, float partialTick) {
@@ -66,6 +66,18 @@ public final class PufferfishRowingAnimation {
         float scale = player.getScale() * 0.9375F;
         return new Matrix4f().rotationY((180 - bodyYaw) * Mth.DEG_TO_RAD)
                 .scale(-scale, -scale, scale).translate(0, -1.501F, 0);
+    }
+
+    /// Keeps both passengers' legs parallel to the narrow kayak, including while idle or using items.
+    public static void poseLegs(HumanoidModel<?> model, Player player) {
+        if (!model.riding || !(player.getVehicle() instanceof PufferfishBoat)) return;
+        model.rightLeg.xRot = model.leftLeg.xRot = -Mth.HALF_PI;
+        model.rightLeg.yRot = model.leftLeg.yRot = 0;
+        model.rightLeg.zRot = model.leftLeg.zRot = 0;
+        if (model instanceof PlayerModel<?> playerModel) {
+            playerModel.rightPants.copyFrom(model.rightLeg);
+            playerModel.leftPants.copyFrom(model.leftLeg);
+        }
     }
 
     public static boolean poseArms(HumanoidModel<?> model, Player player, float partialTick, float bodyYaw) {

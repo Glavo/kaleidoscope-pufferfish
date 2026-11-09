@@ -10,6 +10,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishFlailArmAnimation;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishFlailTether;
+import org.glavo.kaleidoscope.pufferfish.client.PufferfishRowingAnimation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -21,8 +22,9 @@ public abstract class PufferfishFlailArmMixin {
     private void kaleidoscope$flailArm(LivingEntity entity, float limbSwing, float limbAmount, float age,
             float headYaw, float headPitch, CallbackInfo callback) {
         if (entity instanceof Player player) {
+            PufferfishRowingAnimation.poseLegs((HumanoidModel<?>) (Object) this, player);
             float partial = PufferfishFlailTether.partialTick(Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(false));
-            if (org.glavo.kaleidoscope.pufferfish.client.PufferfishRowingAnimation.poseArms((HumanoidModel<?>) (Object) this, player, partial,
+            if (PufferfishRowingAnimation.poseArms((HumanoidModel<?>) (Object) this, player, partial,
                     Mth.rotLerp(partial, player.yBodyRotO, player.yBodyRot))) return;
             PufferfishFlailArmAnimation.poseArm((HumanoidModel<?>) (Object) this, player, partial,
                     Mth.rotLerp(partial, player.yBodyRotO, player.yBodyRot));

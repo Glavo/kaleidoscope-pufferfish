@@ -15,6 +15,7 @@ import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.world.entity.vehicle.Boat;
+import org.glavo.kaleidoscope.pufferfish.entity.PufferfishBoat;
 import org.joml.Vector3f;
 
 /// A decked tandem skin kayak with a faceted hull and a double-bladed paddle.
@@ -31,39 +32,39 @@ public final class PufferfishBoatModel extends ListModel<Boat> implements WaterP
                 .addBox(-0.45F, -0.45F, -15, 0.9F, 0.9F, 30)
                 .texOffs(80, 36).addBox(-1.8F, -0.4F, -22, 3.6F, 0.8F, 8)
                 .addBox(-1.8F, -0.4F, 14, 3.6F, 0.8F, 8), PartPose.ZERO);
-        root.addOrReplaceChild("water", CubeListBuilder.create().addBox(-12, -3, -4, 22, 0, 8), PartPose.ZERO);
+        root.addOrReplaceChild("water", CubeListBuilder.create().addBox(-15, -3, -5, 25, 0, 10), PartPose.ZERO);
         var baked = LayerDefinition.create(mesh, 160, 64).bakeRoot();
         paddle = baked.getChild("paddle");
         water = baked.getChild("water");
-        float[][] sections = {{-26, 0.15F, -2, 0}, {-21, 2.5F, -2.5F, 2}, {-14, 5.5F, -3, 4},
-                {-12, 6, -3, 4}, {10, 6, -3, 4}, {16, 4.5F, -3, 3}, {22, 2, -2, 1}, {26, 0.15F, -1, 0}};
+        float[][] sections = {{-26, 0.15F, -2, 0}, {-21, 2.5F, -2.5F, 2}, {-15, 6, -3, 4},
+                {10, 6, -3, 4}, {16, 5.5F, -3, 3}, {22, 2, -2, 1}, {26, 0.15F, -1, 0}};
         for (int i = 0; i < sections.length - 1; i++) {
             var a = sections[i];
             var b = sections[i + 1];
             for (int side : new int[] {-1, 1}) {
                 face(0, v(a[0], a[2], side * a[1]), v(b[0], b[2], side * b[1]),
-                        v(b[0], b[3] - 1, side * b[1] * 0.7F), v(a[0], a[3] - 1, side * a[1] * 0.7F));
-                face(1, v(a[0], a[3] - 1, side * a[1] * 0.7F), v(b[0], b[3] - 1, side * b[1] * 0.7F),
+                        v(b[0], b[3] - 1, side * b[1] * 0.85F), v(a[0], a[3] - 1, side * a[1] * 0.85F));
+                face(1, v(a[0], a[3] - 1, side * a[1] * 0.85F), v(b[0], b[3] - 1, side * b[1] * 0.85F),
                         v(b[0], b[3], 0), v(a[0], a[3], 0));
-                if (a[0] == -12 && b[0] == 10) {
+                if (a[0] == -15 && b[0] == 10) {
                     face(0, v(a[0], a[2], side * a[1]), v(b[0], b[2], side * b[1]),
-                            v(b[0], -4, side * 4), v(a[0], -4, side * 4));
+                            v(b[0], -4, side * 5), v(a[0], -4, side * 5));
                 } else {
                     face(0, v(a[0], a[2], side * a[1]), v(b[0], b[2], side * b[1]),
                             v(b[0], b[2] - 0.8F, 0), v(a[0], a[2] - 0.8F, 0));
                 }
             }
         }
-        box(-12, 2, -4, 22, 0.6F, 8, 4);
+        box(-15, 2, -5, 25, 0.6F, 10, 4);
         for (int side : new int[] {-1, 1}) {
-            box(-12.4F, -4.4F, side * 4 - 0.35F, 22.8F, 0.8F, 0.7F, 3);
-            face(2, v(-12, -4, side * 4), v(10, -4, side * 4), v(10, 2, side * 4), v(-12, 2, side * 4));
+            box(-15.4F, -4.4F, side * 5 - 0.35F, 25.8F, 0.8F, 0.7F, 3);
+            face(2, v(-15, -4, side * 5), v(10, -4, side * 5), v(10, 2, side * 5), v(-15, 2, side * 5));
         }
-        box(-12.4F, -4.4F, -4, 0.8F, 0.8F, 8, 3);
-        box(9.6F, -4.4F, -4, 0.8F, 0.8F, 8, 3);
-        for (float seat : new float[] {-8, 4}) {
-            box(seat - 2, 0.8F, -3.4F, 4, 1, 6.8F, 2);
-            box(seat - 2.5F, -4.5F, -3.4F, 0.8F, 5.3F, 6.8F, 2);
+        box(-15.4F, -4.4F, -5, 0.8F, 0.8F, 10, 3);
+        box(9.6F, -4.6F, -5, 0.8F, 0.8F, 10, 3);
+        for (float seat : new float[] {PufferfishBoat.REAR_SEAT * 16, PufferfishBoat.FRONT_SEAT * 16}) {
+            box(seat - 2, 0.8F, -4.4F, 4, 1, 8.8F, 2);
+            box(seat - 2.5F, -4.5F, -4.4F, 0.8F, 5.3F, 8.8F, 2);
         }
         // Short deck lashings stay readable without obscuring the skin pattern.
         for (float x : new float[] {-18, 17}) box(x, -3.5F, -2.7F, 0.35F, 0.35F, 5.4F, 3);
