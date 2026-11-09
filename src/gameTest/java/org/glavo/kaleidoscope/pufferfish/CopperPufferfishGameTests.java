@@ -33,6 +33,64 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class CopperPufferfishGameTests {
     @GameTest(template = "empty")
+    public static void copperSkinsPreserveStagesAndWaxInCrafting(GameTestHelper helper) {
+        for (int i = 0; i < 8; i++) {
+            var skin = PufferfishBlocks.COPPER_SKINS.get(i).get();
+            var fish = new ItemStack(PufferfishItems.COPPER_VARIANTS.get(i).get());
+            helper.assertTrue(PufferfishBlocks.skinForFish(fish) == skin, "Processing lost the copper stage");
+            helper.assertTrue(skin.defaultBlockState().isRandomlyTicking() == (i < 3), "Incorrect skin random ticking");
+            var stack = new ItemStack(skin);
+            stack.set(DataComponents.CUSTOM_NAME, Component.literal("Skin test"));
+            var input = CraftingInput.of(2, 1, List.of(stack, new ItemStack(Items.HONEYCOMB)));
+            var recipe = helper.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel());
+            helper.assertTrue(recipe.isPresent() == (i < 4), "Unexpected skin waxing recipe");
+            if (i < 4) {
+                var result = recipe.orElseThrow().value().assemble(input, helper.getLevel().registryAccess());
+                helper.assertTrue(CopperPufferfish.skinIndex(result) == i + 4
+                        && result.get(DataComponents.CUSTOM_NAME).equals(stack.get(DataComponents.CUSTOM_NAME)), "Waxing lost skin data");
+            }
+            var drops = net.minecraft.world.level.block.Block.getDrops(skin.defaultBlockState(), helper.getLevel(),
+                    helper.absolutePos(new BlockPos(1, 2, 1)), null);
+            helper.assertTrue(drops.size() == 1 && drops.getFirst().is(skin.asItem()), "Skin dropped a different copper stage");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void copperSkinWeatheringPreservesAttachment(GameTestHelper helper) {
+        var relative = new BlockPos(1, 2, 1);
+        var pos = helper.absolutePos(relative);
+        for (var direction : Direction.values()) helper.setBlock(relative.relative(direction), net.minecraft.world.level.block.Blocks.STONE);
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        var random = RandomSource.create(42);
+        for (var face : net.minecraft.world.level.block.state.properties.AttachFace.values()) {
+            for (var facing : Direction.Plane.HORIZONTAL) {
+                var initial = PufferfishBlocks.COPPER_SKIN.get().defaultBlockState()
+                        .setValue(PufferfishSkinBlock.FACE, face).setValue(PufferfishSkinBlock.FACING, facing);
+                helper.getLevel().setBlockAndUpdate(pos, initial);
+                for (int i = 0; i < 10000; i++) CopperPufferfish.randomTick(helper.getLevel(), pos, random);
+                helper.assertTrue(helper.getLevel().getBlockState(pos).is(PufferfishBlocks.COPPER_SKINS.get(3).get()), "Skin did not oxidize");
+                for (int stage = 3; stage >= 0; stage--) {
+                    player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.HONEYCOMB, 2));
+                    use(player, pos);
+                    for (int i = 0; i < 100; i++) CopperPufferfish.randomTick(helper.getLevel(), pos, random);
+                    var state = helper.getLevel().getBlockState(pos);
+                    helper.assertTrue(state.is(PufferfishBlocks.COPPER_SKINS.get(stage + 4).get())
+                            && player.getMainHandItem().getCount() == 1, "Wax did not protect the skin");
+                    helper.assertTrue(state.getValue(PufferfishSkinBlock.FACE) == face
+                            && state.getValue(PufferfishSkinBlock.FACING) == facing, "Skin orientation changed");
+                    player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_AXE));
+                    use(player, pos);
+                    helper.assertTrue(helper.getLevel().getBlockState(pos).is(PufferfishBlocks.COPPER_SKINS.get(stage).get()), "Skin wax removal failed");
+                    use(player, pos);
+                    helper.assertTrue(helper.getLevel().getBlockState(pos).is(PufferfishBlocks.COPPER_SKINS.get(Math.max(0, stage - 1)).get()), "Skin scraping failed");
+                }
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void oxidationStrengthensAttackAndRetaliationPoison(GameTestHelper helper) {
         for (int stage = 0; stage < 8; stage++) {
             var fish = new ItemStack(PufferfishItems.COPPER_VARIANTS.get(stage).get());

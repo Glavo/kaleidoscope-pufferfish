@@ -33,6 +33,26 @@ public final class CopperPufferfish {
         };
     }
 
+    public static int skinIndex(ItemStack stack) {
+        for (int i = 0; i < PufferfishBlocks.COPPER_SKINS.size(); i++) {
+            if (stack.is(PufferfishBlocks.COPPER_SKINS.get(i).get().asItem())) return i;
+        }
+        return -1;
+    }
+
+    private static int placedIndex(net.minecraft.world.level.Level level, BlockPos pos) {
+        return level.getBlockEntity(pos) instanceof PlacedPufferfishBlockEntity placed ? index(placed.fish())
+                : skinIndex(level.getBlockState(pos).getBlock().asItem().getDefaultInstance());
+    }
+
+    private static void changePlaced(net.minecraft.world.level.Level level, BlockPos pos, int index) {
+        if (level.getBlockEntity(pos) instanceof PlacedPufferfishBlockEntity placed) {
+            placed.setFish(convert(placed.fish(), index));
+        } else {
+            level.setBlockAndUpdate(pos, PufferfishBlocks.COPPER_SKINS.get(index).get().withPropertiesOf(level.getBlockState(pos)));
+        }
+    }
+
     public static ItemStack convert(ItemStack stack, int index) {
         return stack.transmuteCopy(PufferfishItems.COPPER_VARIANTS.get(index).get());
     }
@@ -41,10 +61,8 @@ public final class CopperPufferfish {
         var level = event.getLevel();
         var player = event.getEntity();
         if (player.isSpectator() || !player.mayBuild() || !level.mayInteract(player, event.getPos())
-                || event.getUseItem() == net.neoforged.neoforge.common.util.TriState.FALSE
-                || !(level.getBlockEntity(event.getPos()) instanceof PlacedPufferfishBlockEntity placed)) return;
-        var fish = placed.fish();
-        int index = index(fish);
+                || event.getUseItem() == net.neoforged.neoforge.common.util.TriState.FALSE) return;
+        int index = placedIndex(level, event.getPos());
         if (index < 0) return;
         var tool = event.getItemStack();
         boolean wax = tool.is(Items.HONEYCOMB) && index < 4;
@@ -52,7 +70,7 @@ public final class CopperPufferfish {
                 || tool.canPerformAction(ItemAbilities.AXE_SCRAPE) && index > 0 && index < 4;
         if (!wax && !scrape) return;
         if (!level.isClientSide()) {
-            placed.setFish(convert(fish, wax ? index + 4 : index >= 4 ? index - 4 : index - 1));
+            changePlaced(level, event.getPos(), wax ? index + 4 : index >= 4 ? index - 4 : index - 1);
             level.levelEvent(player, wax ? 3003 : index >= 4 ? 3004 : 3005, event.getPos(), 0);
             level.playSound(null, event.getPos(), wax ? net.minecraft.sounds.SoundEvents.HONEYCOMB_WAX_ON
                     : index >= 4 ? net.minecraft.sounds.SoundEvents.AXE_WAX_OFF : net.minecraft.sounds.SoundEvents.AXE_SCRAPE,
@@ -65,20 +83,16 @@ public final class CopperPufferfish {
     }
 
     public static void randomTick(ServerLevel level, BlockPos pos, RandomSource random) {
-        if (!(level.getBlockEntity(pos) instanceof PlacedPufferfishBlockEntity placed)) return;
-        var fish = placed.fish();
-        int age = index(fish);
+        int age = placedIndex(level, pos);
         if (age < 0 || age >= 3 || random.nextFloat() >= 0.05688889F) return;
         int same = 0;
         int older = 0;
         for (var neighbor : BlockPos.withinManhattan(pos, 4, 4, 4)) {
             if (neighbor.distManhattan(pos) > 4) break;
             if (neighbor.equals(pos)) continue;
-            int other = -1;
-            if (level.getBlockEntity(neighbor) instanceof PlacedPufferfishBlockEntity otherFish) {
-                int value = index(otherFish.fish());
-                if (value >= 0 && value < 4) other = value;
-            } else if (level.getBlockState(neighbor).getBlock() instanceof WeatheringCopper copper) {
+            int other = placedIndex(level, neighbor);
+            if (other >= 4) other = -1;
+            if (other < 0 && level.getBlockState(neighbor).getBlock() instanceof WeatheringCopper copper) {
                 other = copper.getAge().ordinal();
             }
             if (other < 0) continue;
@@ -88,7 +102,7 @@ public final class CopperPufferfish {
         }
         float chance = (float) (older + 1) / (older + same + 1);
         if (random.nextFloat() < chance * chance * (age == 0 ? 0.75F : 1)) {
-            placed.setFish(convert(fish, age + 1));
+            changePlaced(level, pos, age + 1);
         }
     }
 }

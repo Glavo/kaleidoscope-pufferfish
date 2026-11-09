@@ -181,21 +181,24 @@ val generateItemModels = tasks.register<Sync>("generateItemModels") {
 
 val generateSkinResources = tasks.register<Sync>("generateSkinResources") {
     inputs.property("modId", modId)
-    inputs.property("variants", skinVariants)
+    val variants = skinVariants + listOf("exposed_copper", "weathered_copper", "oxidized_copper",
+        "waxed_copper", "waxed_exposed_copper", "waxed_weathered_copper", "waxed_oxidized_copper")
+    inputs.property("variants", variants)
     filteringCharset = "UTF-8"
     into(layout.buildDirectory.dir("generated/resources/pufferfishSkins"))
-    for (color in skinVariants.filter { it != "golden" }) {
+    for (color in variants.filter { it != "golden" }) {
         val prefix = if (color.isEmpty()) "" else "${color}_"
         val skinName = "${prefix}pufferfish_skin"
         val properties = mapOf(
             "modId" to modId,
             "blockName" to skinName,
-            "fishTexture" to (if (color.isEmpty()) "minecraft:item/pufferfish" else "$modId:item/${color}_pufferfish"),
+            "fishTexture" to (if (color.isEmpty()) "minecraft:item/pufferfish" else "$modId:item/${color.removePrefix("waxed_")}_pufferfish"),
             "sashimiTexture" to "$modId:item/pufferfish_sashimi",
             "blockId" to "$modId:$skinName",
             "ingredient" to JsonOutput.toJson(when (color) {
                 "" -> mapOf("type" to "$modId:pufferfish")
-                "netherite", "heavy", "copper", "iron", "diamond" -> mapOf("item" to "$modId:${color}_pufferfish")
+                "netherite", "heavy", "copper", "iron", "diamond", "exposed_copper", "weathered_copper", "oxidized_copper",
+                "waxed_copper", "waxed_exposed_copper", "waxed_weathered_copper", "waxed_oxidized_copper" -> mapOf("item" to "$modId:${color}_pufferfish")
                 else -> mapOf("type" to "$modId:pufferfish", "color" to color)
             })
         )

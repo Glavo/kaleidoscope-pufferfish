@@ -99,7 +99,7 @@ public class KaleidoscopePufferfish {
                     output.accept(PufferfishItems.HEAVY_FLAIL);
                     output.accept(PufferfishBlocks.skin(null));
                     output.accept(PufferfishBlocks.GOLDEN_SKIN);
-                    output.accept(PufferfishBlocks.COPPER_SKIN);
+                    PufferfishBlocks.COPPER_SKINS.forEach(output::accept);
                     output.accept(PufferfishBlocks.IRON_SKIN);
                     output.accept(PufferfishBlocks.DIAMOND_SKIN);
                     output.accept(PufferfishBlocks.NETHERITE_SKIN);

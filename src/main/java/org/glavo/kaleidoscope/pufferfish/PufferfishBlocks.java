@@ -40,6 +40,14 @@ public final class PufferfishBlocks {
     public static final DeferredBlock<PufferfishSkinBlock> NETHERITE_SKIN = registerMetalSkin("netherite", MapColor.COLOR_BLACK);
     public static final DeferredBlock<PufferfishSkinBlock> HEAVY_SKIN = registerMetalSkin("heavy", MapColor.COLOR_LIGHT_BLUE);
     public static final DeferredBlock<PufferfishSkinBlock> COPPER_SKIN = registerCraftedSkin("copper", MapColor.COLOR_ORANGE);
+    public static final java.util.List<DeferredBlock<PufferfishSkinBlock>> COPPER_SKINS = java.util.List.of(
+            COPPER_SKIN, registerCraftedSkin("exposed_copper", MapColor.TERRACOTTA_LIGHT_GRAY),
+            registerCraftedSkin("weathered_copper", MapColor.WARPED_STEM),
+            registerCraftedSkin("oxidized_copper", MapColor.WARPED_NYLIUM),
+            registerCraftedSkin("waxed_copper", MapColor.COLOR_ORANGE),
+            registerCraftedSkin("waxed_exposed_copper", MapColor.TERRACOTTA_LIGHT_GRAY),
+            registerCraftedSkin("waxed_weathered_copper", MapColor.WARPED_STEM),
+            registerCraftedSkin("waxed_oxidized_copper", MapColor.WARPED_NYLIUM));
     public static final DeferredBlock<PufferfishSkinBlock> IRON_SKIN = registerCraftedSkin("iron", MapColor.METAL);
     public static final DeferredBlock<PufferfishSkinBlock> DIAMOND_SKIN = registerCraftedSkin("diamond", MapColor.DIAMOND);
     /// The placeable skin obtained from undyed pufferfish.
@@ -70,7 +78,8 @@ public final class PufferfishBlocks {
     /// Returns the skin produced by processing a whole fish, or null for unsupported items.
     @Nullable
     public static PufferfishSkinBlock skinForFish(ItemStack stack) {
-        if (CopperPufferfish.index(stack) >= 0) return COPPER_SKIN.get();
+        int copper = CopperPufferfish.index(stack);
+        if (copper >= 0) return COPPER_SKINS.get(copper).get();
         if (stack.is(PufferfishItems.IRON.get())) return IRON_SKIN.get();
         if (stack.is(PufferfishItems.DIAMOND.get())) return DIAMOND_SKIN.get();
         if (stack.is(PufferfishItems.GOLDEN.get())) return GOLDEN_SKIN.get();
@@ -87,8 +96,9 @@ public final class PufferfishBlocks {
     }
 
     private static DeferredBlock<PufferfishSkinBlock> registerCraftedSkin(String name, MapColor color) {
-        var block = BLOCKS.registerBlock(name + "_pufferfish_skin", PufferfishSkinBlock::new,
-                BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CARPET).mapColor(color).sound(SoundType.WET_GRASS));
+        var properties = BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CARPET).mapColor(color).sound(SoundType.WET_GRASS);
+        if (name.equals("copper") || name.equals("exposed_copper") || name.equals("weathered_copper")) properties.randomTicks();
+        var block = BLOCKS.registerBlock(name + "_pufferfish_skin", PufferfishSkinBlock::new, properties);
         ITEMS.registerSimpleBlockItem(block);
         return block;
     }

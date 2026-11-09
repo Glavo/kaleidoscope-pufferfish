@@ -27,11 +27,14 @@ public final class CopperPufferfishWaxRecipe extends CustomRecipe {
         for (var stack : input.items()) {
             if (stack.isEmpty()) continue;
             int index = CopperPufferfish.index(stack);
+            if (index < 0) index = CopperPufferfish.skinIndex(stack);
             if (index >= 0 && index < 4 && fish.isEmpty()) fish = stack;
             else if (stack.is(Items.HONEYCOMB) && !honeycomb) honeycomb = true;
             else return ItemStack.EMPTY;
         }
-        return fish.isEmpty() || !honeycomb ? ItemStack.EMPTY
+        if (fish.isEmpty() || !honeycomb) return ItemStack.EMPTY;
+        int skin = CopperPufferfish.skinIndex(fish);
+        return skin >= 0 ? fish.copyWithCount(1).transmuteCopy(PufferfishBlocks.COPPER_SKINS.get(skin + 4).get().asItem())
                 : CopperPufferfish.convert(fish.copyWithCount(1), CopperPufferfish.index(fish) + 4);
     }
 

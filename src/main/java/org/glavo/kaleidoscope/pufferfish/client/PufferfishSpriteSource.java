@@ -55,10 +55,13 @@ public final class PufferfishSpriteSource implements SpriteSource {
             else output.add(id, loader -> PufferfishBaoziTexture.create(id, raw));
         }
         addSkin(manager, output, null);
+        for (var skin : PufferfishBlocks.COPPER_SKINS) {
+            addSkin(manager, output, skin.getId().getPath(), null);
+        }
         addSkin(manager, output, "golden_pufferfish_skin", null);
         addSkin(manager, output, "netherite_pufferfish_skin", null);
         addSkin(manager, output, "heavy_pufferfish_skin", null);
-        for (var material : new String[] {"copper", "iron", "diamond"}) {
+        for (var material : new String[] {"iron", "diamond"}) {
             addSkin(manager, output, material + "_pufferfish_skin", null);
         }
         for (DyeColor color : DyeColor.values()) {
@@ -67,10 +70,11 @@ public final class PufferfishSpriteSource implements SpriteSource {
         for (var material : new String[] {"exposed_copper", "weathered_copper", "oxidized_copper"}) {
             addItem(manager, output, material + "_pufferfish", 0);
         }
+        addItem(manager, output, "copper_pufferfish", 0);
         addItem(manager, output, "netherite_pufferfish", PufferfishTextures.NETHERITE_COLOR);
         addItem(manager, output, "golden_pufferfish", 0);
         addItem(manager, output, "heavy_pufferfish", 0);
-        for (var material : new String[] {"copper", "iron", "diamond"}) {
+        for (var material : new String[] {"iron", "diamond"}) {
             addItem(manager, output, material + "_pufferfish", 0);
         }
     }

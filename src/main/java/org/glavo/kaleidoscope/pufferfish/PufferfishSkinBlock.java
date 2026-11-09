@@ -44,6 +44,11 @@ public final class PufferfishSkinBlock extends FaceAttachedHorizontalDirectional
         return CODEC;
     }
 
+    @Override
+    protected void randomTick(BlockState state, net.minecraft.server.level.ServerLevel level, BlockPos pos, net.minecraft.util.RandomSource random) {
+        CopperPufferfish.randomTick(level, pos, random);
+    }
+
     /// Attaches to the clicked face, using the player's horizontal facing on floors and ceilings.
     /// Returns null when that surface cannot support the skin.
     @Nullable
