@@ -89,6 +89,7 @@ public final class PufferfishWindBurstGameTests {
         try {
             for (var original : fish()) {
                 double previous = 0;
+                double baseSpeed = 0;
                 for (int rank = 0; rank <= 3; rank++) {
                     var stack = original.copy();
                     if (rank > 0) enchant(helper, stack, Enchantments.WIND_BURST, rank);
@@ -108,6 +109,9 @@ public final class PufferfishWindBurstGameTests {
                     double speed = nearby.getDeltaMovement().length();
                     helper.assertTrue(rank == 0 ? speed == 0 : speed > previous,
                             "Wind Burst levels did not progressively increase knockback");
+                    if (rank == 1) baseSpeed = speed;
+                    if (rank > 1) helper.assertTrue(Math.abs(speed / baseSpeed - (rank == 2 ? 1.22 : 1.40)) < 0.0001,
+                            "Wind Burst knockback did not match the configured level strength");
                     helper.assertTrue(distant.getDeltaMovement().lengthSqr() == 0, "Higher gust levels enlarged the range");
                     previous = speed;
                     var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, target.getBoundingBox().inflate(4));

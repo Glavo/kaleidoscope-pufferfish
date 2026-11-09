@@ -26,9 +26,9 @@ public final class PufferfishWindBurst {
         int rank = EnchantmentHelper.getItemEnchantmentLevel(enchantment, fish.getItem());
         if (rank <= 0) return;
         float strength = switch (rank) {
-            case 1 -> 1.22F;
-            case 2 -> 1.40F;
-            default -> 1.60F;
+            case 1 -> 1.00F;
+            case 2 -> 1.22F;
+            default -> 1.40F;
         };
         var calculator = new SimpleExplosionDamageCalculator(false, false, Optional.of(strength), Optional.empty());
         var explosion = level.explode(fish, null, calculator, position.x, position.y, position.z, 1.2F, false,
