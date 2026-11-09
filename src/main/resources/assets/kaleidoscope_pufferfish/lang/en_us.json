@@ -165,5 +165,21 @@
   "item.kaleidoscope_pufferfish.black_pufferfish_skin_boat": "Black Pufferfish Skin Rowboat",
   "entity.kaleidoscope_pufferfish.black_pufferfish_skin_boat": "Black Pufferfish Skin Rowboat",
   "item.kaleidoscope_pufferfish.golden_pufferfish_skin_boat": "Golden Pufferfish Skin Rowboat",
-  "entity.kaleidoscope_pufferfish.golden_pufferfish_skin_boat": "Golden Pufferfish Skin Rowboat"
+  "entity.kaleidoscope_pufferfish.golden_pufferfish_skin_boat": "Golden Pufferfish Skin Rowboat",
+  "block.kaleidoscope_pufferfish.netherite_pufferfish_skin": "Netherite Pufferfish Skin",
+  "item.kaleidoscope_pufferfish.netherite_pufferfish_skin_shield": "Netherite Pufferfish Skin Shield",
+  "item.kaleidoscope_pufferfish.netherite_pufferfish_skin_chestplate": "Netherite Pufferfish Skin Tunic",
+  "item.kaleidoscope_pufferfish.netherite_pufferfish_skin_helmet": "Netherite Pufferfish Skin Cap",
+  "item.kaleidoscope_pufferfish.netherite_pufferfish_skin_leggings": "Netherite Pufferfish Skin Pants",
+  "item.kaleidoscope_pufferfish.netherite_pufferfish_skin_boots": "Netherite Pufferfish Skin Boots",
+  "item.kaleidoscope_pufferfish.netherite_pufferfish_skin_boat": "Netherite Pufferfish Skin Rowboat",
+  "entity.kaleidoscope_pufferfish.netherite_pufferfish_skin_boat": "Netherite Pufferfish Skin Rowboat",
+  "block.kaleidoscope_pufferfish.heavy_pufferfish_skin": "Heavy Pufferfish Skin",
+  "item.kaleidoscope_pufferfish.heavy_pufferfish_skin_shield": "Heavy Pufferfish Skin Shield",
+  "item.kaleidoscope_pufferfish.heavy_pufferfish_skin_chestplate": "Heavy Pufferfish Skin Tunic",
+  "item.kaleidoscope_pufferfish.heavy_pufferfish_skin_helmet": "Heavy Pufferfish Skin Cap",
+  "item.kaleidoscope_pufferfish.heavy_pufferfish_skin_leggings": "Heavy Pufferfish Skin Pants",
+  "item.kaleidoscope_pufferfish.heavy_pufferfish_skin_boots": "Heavy Pufferfish Skin Boots",
+  "item.kaleidoscope_pufferfish.heavy_pufferfish_skin_boat": "Heavy Pufferfish Skin Rowboat",
+  "entity.kaleidoscope_pufferfish.heavy_pufferfish_skin_boat": "Heavy Pufferfish Skin Rowboat"
 }

@@ -6,10 +6,8 @@ package org.glavo.kaleidoscope.pufferfish.mixin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import org.glavo.kaleidoscope.pufferfish.PufferfishBlocks;
-import org.glavo.kaleidoscope.pufferfish.PufferfishColors;
 import org.glavo.kaleidoscope.pufferfish.PufferfishItems;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -28,9 +26,10 @@ public abstract class ChoppingBoardMixin {
     @ModifyArg(method = "onCutItem", index = 2, at = @At(value = "INVOKE", target =
             "Lcom/github/ysbbbbbb/kaleidoscopecookery/blockentity/kitchen/ChoppingBoardBlockEntity;popResource(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/item/ItemStack;)V"))
     private ItemStack kaleidoscope$releaseSkin(Level level, BlockPos pos, ItemStack result) {
-        boolean golden = currentCutStack.is(PufferfishItems.GOLDEN.get());
-        if (!level.isClientSide && result.is(PufferfishItems.SASHIMI.get()) && (golden || currentCutStack.is(Items.PUFFERFISH))) {
-            var skin = new ItemStack(golden ? PufferfishBlocks.GOLDEN_SKIN.get() : PufferfishBlocks.skin(PufferfishColors.get(currentCutStack)));
+        if (!level.isClientSide && result.is(PufferfishItems.SASHIMI.get())) {
+            var block = PufferfishBlocks.skinForFish(currentCutStack);
+            if (block == null) return result;
+            var skin = new ItemStack(block);
             var entity = new ItemEntity(level, pos.getX() + 0.5, pos.getY() + 0.25, pos.getZ() + 0.5, skin, 0, 0, 0);
             entity.setDefaultPickUpDelay();
             level.addFreshEntity(entity);

@@ -46,6 +46,8 @@ public final class PufferfishSpriteSource implements SpriteSource {
         addZosui(manager, output);
         addSkin(manager, output, null);
         addSkin(manager, output, "golden_pufferfish_skin", null);
+        addSkin(manager, output, "netherite_pufferfish_skin", null);
+        addSkin(manager, output, "heavy_pufferfish_skin", null);
         for (DyeColor color : DyeColor.values()) {
             addSkin(manager, output, color);
         }

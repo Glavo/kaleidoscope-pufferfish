@@ -120,6 +120,8 @@ public final class PufferfishShieldGameTests {
                 helper.assertTrue(shield.getDamageValue() == 87 && skin.getCount() == 1
                         && recipe.getRemainingItems(input).stream().allMatch(ItemStack::isEmpty), "Recipe mutated inputs or duplicated materials");
                 helper.assertTrue(unbreaking.value().isSupportedItem(output), "Covered shield lost Unbreaking support");
+                boolean metal = entry.getKey().startsWith("netherite_") || entry.getKey().startsWith("heavy_");
+                helper.assertTrue(output.has(DataComponents.FIRE_RESISTANT) == metal, "Skin covering lost its material's fire resistance");
             }
             for (var invalid : List.of(
                     CraftingInput.of(2, 1, List.of(skin, new ItemStack(Items.STICK))),

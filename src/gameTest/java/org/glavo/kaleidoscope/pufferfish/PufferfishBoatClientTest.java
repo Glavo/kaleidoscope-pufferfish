@@ -57,12 +57,12 @@ public final class PufferfishBoatClientTest {
     }
 
     private static void preview(Minecraft minecraft) {
-        var target = new TextureTarget(900, 540, true, Minecraft.ON_OSX);
+        var target = new TextureTarget(900, 720, true, Minecraft.ON_OSX);
         target.setClearColor(0.16F, 0.18F, 0.21F, 1);
         target.clear(Minecraft.ON_OSX);
         target.bindWrite(true);
         RenderSystem.backupProjectionMatrix();
-        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 900, 540, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
+        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 900, 720, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
         var view = RenderSystem.getModelViewStack();
         view.pushMatrix();
         view.identity();
@@ -118,7 +118,7 @@ public final class PufferfishBoatClientTest {
         var level = PufferfishHeadgearClientTest.level(minecraft);
         try {
             int index = 0;
-            for (var name : java.util.List.of("pufferfish_skin_boat", "red_pufferfish_skin_boat", "black_pufferfish_skin_boat", "golden_pufferfish_skin_boat")) {
+            for (var name : java.util.List.of("pufferfish_skin_boat", "netherite_pufferfish_skin_boat", "heavy_pufferfish_skin_boat", "golden_pufferfish_skin_boat")) {
                 var item = PufferfishBoats.VARIANTS.get(name);
                 var buffers = minecraft.renderBuffers().bufferSource();
                 for (int size : new int[] {16, 32, 64}) {

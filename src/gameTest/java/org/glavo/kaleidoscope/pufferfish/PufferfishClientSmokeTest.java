@@ -73,6 +73,8 @@ public final class PufferfishClientSmokeTest {
         }
         verifySkin(minecraft, null);
         verifySkin(minecraft, PufferfishBlocks.GOLDEN_SKIN.get(), "golden_pufferfish_skin");
+        verifySkin(minecraft, PufferfishBlocks.NETHERITE_SKIN.get(), "netherite_pufferfish_skin");
+        verifySkin(minecraft, PufferfishBlocks.HEAVY_SKIN.get(), "heavy_pufferfish_skin");
         for (DyeColor color : DyeColor.values()) {
             verifySkin(minecraft, color);
         }
@@ -131,7 +133,7 @@ public final class PufferfishClientSmokeTest {
             projectileRendererChecked = false;
             minecraft.reloadResourcePacks();
         } else {
-            LogUtils.getLogger().info("Pufferfish client smoke test passed: 40 item models, 18 skins, cutting models, headgear, gloves, flails, shields and conduit rendering, projectile renderers, model override delegation, and resource reload");
+            LogUtils.getLogger().info("Pufferfish client smoke test passed: fish models, 20 skins, cutting models, headgear, gloves, flails, shields, armor, boats and conduit rendering, projectile renderers, model override delegation, and resource reload");
             minecraft.stop();
         }
     }
@@ -225,8 +227,11 @@ public final class PufferfishClientSmokeTest {
             throw new IllegalStateException("Could not save sashimi sprite preview", exception);
         }
         if (net.neoforged.fml.ModList.get().isLoaded("kaleidoscope_cookery")) {
-            for (int color = -1; color < 17; color++) {
-                var name = color == 16 ? "golden_pufferfish" : PufferfishBlocks.skinName(color < 0 ? null : DyeColor.byId(color));
+            var names = new java.util.ArrayList<String>();
+            names.add("pufferfish_skin");
+            for (var color : DyeColor.values()) names.add(PufferfishBlocks.skinName(color));
+            names.addAll(java.util.List.of("golden_pufferfish", "netherite_pufferfish_skin", "heavy_pufferfish_skin"));
+            for (var name : names) {
                 for (int stage = 0; stage <= 3; stage++) {
                     var id = KaleidoscopePufferfish.id("chopping_board/" + name + "/" + stage);
                     var cuttingModel = minecraft.getModelManager().getModel(ModelResourceLocation.standalone(id));
@@ -237,7 +242,7 @@ public final class PufferfishClientSmokeTest {
                     if (stage == 3) {
                         var textures = cuttingModel.getQuads(null, null, RandomSource.create()).stream()
                                 .map(quad -> quad.getSprite().contents().name()).toList();
-                        var skin = color == 16 ? "golden_pufferfish_skin" : name;
+                        var skin = name.equals("golden_pufferfish") ? "golden_pufferfish_skin" : name;
                         if (!textures.contains(KaleidoscopePufferfish.id("item/pufferfish_sashimi"))
                                 || !textures.contains(KaleidoscopePufferfish.id("block/" + skin))) {
                             throw new IllegalStateException("Chopping board outputs use incorrect textures: " + id);

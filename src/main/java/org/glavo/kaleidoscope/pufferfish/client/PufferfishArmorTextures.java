@@ -30,6 +30,7 @@ public final class PufferfishArmorTextures implements ResourceManagerReloadListe
         try (var overlayStream = manager.open(ResourceLocation.withDefaultNamespace(overlayPath));
                 var overlay = NativeImage.read(overlayStream);
                 var stream = manager.open(FISH); var fish = NativeImage.read(stream)) {
+            PufferfishSkinTexture.recolorSource(fish, name);
             for (int y = 0; y < mask.getHeight(); y++) for (int x = 0; x < mask.getWidth(); x++) {
                 mask.blendPixel(x, y, overlay.getPixelRGBA(x * overlay.getWidth() / mask.getWidth(), y * overlay.getHeight() / mask.getHeight()));
                 int original = mask.getPixelRGBA(x, y);

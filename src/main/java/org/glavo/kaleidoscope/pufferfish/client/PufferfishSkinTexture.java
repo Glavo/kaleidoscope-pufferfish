@@ -15,6 +15,12 @@ public final class PufferfishSkinTexture {
     /// Prevents construction of this texture utility.
     private PufferfishSkinTexture() {}
 
+    /// Applies the matching metal fish pattern before sampling a skin or equipment texture.
+    public static void recolorSource(NativeImage image, String name) {
+        if (name.startsWith("netherite_")) PufferfishTextures.recolor(image, PufferfishTextures.NETHERITE_COLOR);
+        else if (name.startsWith("heavy_")) HeavyPufferfishVisuals.recolor(image, true);
+    }
+
     /// Creates a skin sprite with a dorsal center and pale belly edges, excluding eyes and fins.
     /// Each frame has identical opposing edge pixels: the lengthwise pattern is mirrored,
     /// and both belly edges sample the same flank in opposite directions.
@@ -31,6 +37,7 @@ public final class PufferfishSkinTexture {
     public static SpriteContents create(ResourceLocation id, FrameSize size, NativeImage source,
             ResourceMetadata metadata, @Nullable Integer color) {
         try (source) {
+            recolorSource(source, id.getPath().substring(id.getPath().lastIndexOf('/') + 1));
             int width = Math.max(1, size.width() / 2);
             int height = Math.max(1, size.height() / 2);
             var image = new NativeImage(source.getWidth() / size.width() * width,

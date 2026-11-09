@@ -14,10 +14,9 @@ import java.nio.file.Path;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.world.item.DyeColor;
 import org.joml.Matrix4f;
 
-/// Saves an in-engine preview of tiled original, red, and blue skins.
+/// Saves an in-engine preview of tiled ordinary, netherite, and heavy skins.
 public final class PufferfishSkinClientPreview {
     /// Prevents construction of this preview utility.
     private PufferfishSkinClientPreview() {}
@@ -36,8 +35,8 @@ public final class PufferfishSkinClientPreview {
         Lighting.setupFor3DItems();
         RenderSystem.setShaderColor(1, 1, 1, 1);
         try {
-            var colors = new DyeColor[] {null, DyeColor.RED, DyeColor.BLUE};
-            for (int i = 0; i < colors.length; i++) {
+            var skins = new PufferfishSkinBlock[] {PufferfishBlocks.skin(null), PufferfishBlocks.NETHERITE_SKIN.get(), PufferfishBlocks.HEAVY_SKIN.get()};
+            for (int i = 0; i < skins.length; i++) {
                 var pose = new PoseStack();
                 pose.translate(150 + i * 300, 180, 0);
                 pose.scale(72, -72, 72);
@@ -49,7 +48,7 @@ public final class PufferfishSkinClientPreview {
                     for (int x = 0; x < 3; x++) {
                         pose.pushPose();
                         pose.translate(x, 0, z);
-                        minecraft.getBlockRenderer().renderSingleBlock(PufferfishBlocks.skin(colors[i]).defaultBlockState(),
+                        minecraft.getBlockRenderer().renderSingleBlock(skins[i].defaultBlockState(),
                                 pose, buffers, 15728880, OverlayTexture.NO_OVERLAY);
                         pose.popPose();
                     }

@@ -30,6 +30,8 @@ public final class PufferfishBoats {
         add(variants, "");
         for (var color : DyeColor.values()) add(variants, color.getName() + "_");
         add(variants, "golden_");
+        add(variants, "netherite_");
+        add(variants, "heavy_");
         VARIANTS = Collections.unmodifiableMap(variants);
     }
 
@@ -41,7 +43,11 @@ public final class PufferfishBoats {
                 (type, level) -> new PufferfishBoat(type, level, name), MobCategory.MISC)
                 .sized(1.375F, 0.5625F).eyeHeight(0.5625F).clientTrackingRange(10)
                 .build(KaleidoscopePufferfish.id(name).toString()));
-        var item = ITEMS.register(name, () -> new PufferfishBoatItem(entity, new Item.Properties().stacksTo(1)));
+        var item = ITEMS.register(name, () -> {
+            var properties = new Item.Properties().stacksTo(1);
+            if (prefix.equals("netherite_") || prefix.equals("heavy_")) properties.fireResistant();
+            return new PufferfishBoatItem(entity, properties);
+        });
         variants.put(name, new Variant(entity, item));
     }
 

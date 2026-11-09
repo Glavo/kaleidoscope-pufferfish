@@ -84,10 +84,12 @@ public final class PufferfishCuttingGameTests {
         var manager = helper.getLevel().getRecipeManager();
         var soup = ResourceLocation.fromNamespaceAndPath("kaleidoscope_cookery", "stockpot/pufferfish_soup");
         helper.assertTrue(manager.byKey(soup).isPresent() == ModList.get().isLoaded("kaleidoscope_cookery"), "Soup override ignored its mod condition");
-        helper.assertTrue(manager.byKey(KaleidoscopePufferfish.id("chopping/golden_pufferfish")).isPresent()
-                == ModList.get().isLoaded("kaleidoscope_cookery"), "Golden chopping recipe ignored its mod condition");
-        helper.assertTrue(manager.byKey(KaleidoscopePufferfish.id("cutting/golden_pufferfish")).isPresent()
-                == ModList.get().isLoaded("farmersdelight"), "Golden cutting recipe ignored its mod condition");
+        for (var name : java.util.List.of("golden_pufferfish", "netherite_pufferfish_skin", "heavy_pufferfish_skin")) {
+            helper.assertTrue(manager.byKey(KaleidoscopePufferfish.id("chopping/" + name)).isPresent()
+                    == ModList.get().isLoaded("kaleidoscope_cookery"), "Special chopping recipe ignored its mod condition");
+            helper.assertTrue(manager.byKey(KaleidoscopePufferfish.id("cutting/" + name)).isPresent()
+                    == ModList.get().isLoaded("farmersdelight"), "Special cutting recipe ignored its mod condition");
+        }
         if (ModList.get().isLoaded("farmersdelight")) {
             var stew = manager.byKey(ResourceLocation.fromNamespaceAndPath("farmersdelight", "cooking/fish_stew")).orElseThrow().value();
             helper.assertTrue(stew.getIngredients().getFirst().test(sashimi)

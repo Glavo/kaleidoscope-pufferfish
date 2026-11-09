@@ -53,16 +53,20 @@ public final class FarmersDelightCuttingGameTests {
             helper.assertTrue(board.processStoredItemUsingTool(kitchenKnife, player), "Cookery knife could not cut on Farmer's Delight board");
             PufferfishCuttingGameTests.verifyDrops(helper, pos, PufferfishBlocks.skin(null));
         }
-        var golden = new ItemStack(PufferfishItems.GOLDEN.get(), 2);
-        helper.assertTrue(board.addItem(golden).isEmpty(), "Board rejected golden fish");
-        helper.assertTrue(!board.processStoredItemUsingTool(new ItemStack(Items.STICK), player), "Stick cut a golden fish");
-        for (int remaining = 1; remaining >= 0; remaining--) {
-            helper.assertTrue(board.processStoredItemUsingTool(knife, player) && board.getStoredItem().getCount() == remaining,
-                    "Golden cutting did not consume exactly one fish");
-            PufferfishCuttingGameTests.verifyDrops(helper, pos, PufferfishBlocks.GOLDEN_SKIN.get());
+        for (var entry : java.util.Map.of(PufferfishItems.GOLDEN.get(), PufferfishBlocks.GOLDEN_SKIN.get(),
+                PufferfishItems.NETHERITE.get(), PufferfishBlocks.NETHERITE_SKIN.get(),
+                PufferfishItems.HEAVY.get(), PufferfishBlocks.HEAVY_SKIN.get()).entrySet()) {
+            var special = new ItemStack(entry.getKey(), 2);
+            helper.assertTrue(board.addItem(special).isEmpty(), "Board rejected special fish");
+            helper.assertTrue(!board.processStoredItemUsingTool(new ItemStack(Items.STICK), player), "Stick cut a special fish");
+            for (int remaining = 1; remaining >= 0; remaining--) {
+                helper.assertTrue(board.processStoredItemUsingTool(knife, player) && board.getStoredItem().getCount() == remaining,
+                        "Special cutting did not consume exactly one fish");
+                PufferfishCuttingGameTests.verifyDrops(helper, pos, entry.getValue());
+            }
+            helper.assertTrue(!board.processStoredItemUsingTool(knife, player), "Special fish produced repeated output");
         }
-        helper.assertTrue(!board.processStoredItemUsingTool(knife, player), "Golden fish produced repeated output");
-        for (var item : new net.minecraft.world.item.Item[] {PufferfishItems.SASHIMI.get(), PufferfishItems.NETHERITE.get(), PufferfishItems.HEAVY.get()}) {
+        for (var item : new net.minecraft.world.item.Item[] {PufferfishItems.SASHIMI.get(), PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get()}) {
             board.addItem(new ItemStack(item));
             helper.assertTrue(!board.processStoredItemUsingTool(knife, player), "Special fish was accepted for cutting");
             board.removeItem();

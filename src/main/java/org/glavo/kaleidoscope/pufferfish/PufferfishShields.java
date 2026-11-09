@@ -33,6 +33,8 @@ public final class PufferfishShields {
         register(variants, "");
         for (var color : DyeColor.values()) register(variants, color.getName() + "_");
         register(variants, "golden_");
+        register(variants, "netherite_");
+        register(variants, "heavy_");
         VARIANTS = java.util.Collections.unmodifiableMap(variants);
     }
 
@@ -40,9 +42,13 @@ public final class PufferfishShields {
 
     private static void register(Map<String, DeferredItem<ShieldItem>> variants, String prefix) {
         variants.put(prefix + "pufferfish_skin_shield", ITEMS.register(prefix + "pufferfish_skin_shield",
-                () -> new ShieldItem(new Item.Properties().durability(336)) {
-                    @Override
-                    public String getDescriptionId(ItemStack stack) { return getDescriptionId(); }
+                () -> {
+                    var properties = new Item.Properties().durability(336);
+                    if (prefix.equals("netherite_") || prefix.equals("heavy_")) properties.fireResistant();
+                    return new ShieldItem(properties) {
+                        @Override
+                        public String getDescriptionId(ItemStack stack) { return getDescriptionId(); }
+                    };
                 }));
     }
 

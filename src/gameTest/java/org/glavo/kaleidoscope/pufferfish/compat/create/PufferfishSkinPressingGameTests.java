@@ -29,7 +29,7 @@ public final class PufferfishSkinPressingGameTests {
     /// Prevents construction of the test holder.
     private PufferfishSkinPressingGameTests() {}
 
-    /// Verifies recipe lookup, simulation, and actual world-item processing for all eighteen variants.
+    /// Verifies recipe lookup, simulation, and actual world-item processing for all skin variants.
     @GameTest(template = "empty", templateNamespace = KaleidoscopePufferfish.MODID)
     public static void pressingOneFishProducesOneMatchingSkin(GameTestHelper helper) {
         var pos = new BlockPos(1, 3, 1);
@@ -39,13 +39,19 @@ public final class PufferfishSkinPressingGameTests {
         colors.add(null);
         colors.addAll(Arrays.asList(DyeColor.values()));
         var itemPos = Vec3.atCenterOf(helper.absolutePos(pos.below(2)));
-        for (int index = 0; index <= colors.size(); index++) {
-            boolean golden = index == colors.size();
-            var color = golden ? null : colors.get(index);
-            var skin = golden ? PufferfishBlocks.GOLDEN_SKIN.get() : PufferfishBlocks.skin(color);
-            var skinName = golden ? "golden_pufferfish_skin" : PufferfishBlocks.skinName(color);
-            var fish = new ItemStack(golden ? PufferfishItems.GOLDEN.get() : Items.PUFFERFISH);
+        var variants = new java.util.LinkedHashMap<ItemStack, org.glavo.kaleidoscope.pufferfish.PufferfishSkinBlock>();
+        for (var color : colors) {
+            var fish = new ItemStack(Items.PUFFERFISH);
             if (color != null) PufferfishColors.dye(fish, color);
+            variants.put(fish, PufferfishBlocks.skin(color));
+        }
+        variants.put(new ItemStack(PufferfishItems.GOLDEN.get()), PufferfishBlocks.GOLDEN_SKIN.get());
+        variants.put(new ItemStack(PufferfishItems.NETHERITE.get()), PufferfishBlocks.NETHERITE_SKIN.get());
+        variants.put(new ItemStack(PufferfishItems.HEAVY.get()), PufferfishBlocks.HEAVY_SKIN.get());
+        for (var entry : variants.entrySet()) {
+            var fish = entry.getKey();
+            var skin = entry.getValue();
+            var skinName = BuiltInRegistries.BLOCK.getKey(skin).getPath();
             var recipe = press.getRecipe(fish).orElseThrow();
             helper.assertTrue(recipe.id().equals(KaleidoscopePufferfish.id("pressing/" + skinName)),
                     "Press selected the wrong skin color");
@@ -59,7 +65,7 @@ public final class PufferfishSkinPressingGameTests {
                     && items.getFirst().getItem().getCount() == 1, "Press produced the wrong skin or quantity");
             items.forEach(ItemEntity::discard);
         }
-        for (var item : List.of(Items.COD, Items.PUFFERFISH_BUCKET, PufferfishItems.NETHERITE.get())) {
+        for (var item : List.of(Items.COD, Items.PUFFERFISH_BUCKET, PufferfishItems.SASHIMI.get())) {
             helper.assertTrue(press.getRecipe(new ItemStack(item)).isEmpty(), "Press accepted an unsupported fish item");
         }
         helper.succeed();

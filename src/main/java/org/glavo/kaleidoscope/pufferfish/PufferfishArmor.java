@@ -42,6 +42,8 @@ public final class PufferfishArmor {
         add(variants, "", () -> PufferfishBlocks.skin(null).asItem());
         for (var color : DyeColor.values()) add(variants, color.getName() + "_", () -> PufferfishBlocks.skin(color).asItem());
         add(variants, "golden_", () -> PufferfishBlocks.GOLDEN_SKIN.get().asItem());
+        add(variants, "netherite_", () -> PufferfishBlocks.NETHERITE_SKIN.get().asItem());
+        add(variants, "heavy_", () -> PufferfishBlocks.HEAVY_SKIN.get().asItem());
         VARIANTS = Collections.unmodifiableMap(variants);
     }
 
@@ -55,8 +57,11 @@ public final class PufferfishArmor {
                 List.of(new ArmorMaterial.Layer(KaleidoscopePufferfish.id(name))), 0, 0));
         for (var type : TYPES) {
             String itemName = name + "_" + type.getName();
-            variants.put(itemName, ITEMS.register(itemName, () -> new ArmorItem(material, type,
-                    new Item.Properties().durability(type.getDurability(5)))));
+            variants.put(itemName, ITEMS.register(itemName, () -> {
+                var properties = new Item.Properties().durability(type.getDurability(5));
+                if (prefix.equals("netherite_") || prefix.equals("heavy_")) properties.fireResistant();
+                return new ArmorItem(material, type, properties);
+            }));
         }
     }
 

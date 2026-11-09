@@ -48,6 +48,7 @@ public final class PufferfishBoatTextures implements ResourceManagerReloadListen
     private static NativeImage hull(ResourceManager manager, String name) throws IOException {
         var image = new NativeImage(160, 64, false);
         try (var fish = fish(manager)) {
+            PufferfishSkinTexture.recolorSource(fish, name);
             for (int y = 0; y < 64; y++) for (int x = 0; x < 160; x++) {
                 int pixel;
                 if (x >= 80) pixel = rgba(x % 5 == 0 ? 0x6E492F : 0xBC915F, 255);

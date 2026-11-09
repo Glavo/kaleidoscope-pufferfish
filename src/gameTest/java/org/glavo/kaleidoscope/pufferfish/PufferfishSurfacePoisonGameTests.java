@@ -50,6 +50,8 @@ public final class PufferfishSurfacePoisonGameTests {
     public static void everyPufferfishSurfacePoisonsStandingEntities(GameTestHelper helper) {
         var states = new ArrayList<BlockState>();
         states.add(PufferfishBlocks.skin(null).defaultBlockState());
+        states.add(PufferfishBlocks.NETHERITE_SKIN.get().defaultBlockState());
+        states.add(PufferfishBlocks.HEAVY_SKIN.get().defaultBlockState());
         for (var color : DyeColor.values()) {
             states.add(PufferfishBlocks.skin(color).defaultBlockState());
         }

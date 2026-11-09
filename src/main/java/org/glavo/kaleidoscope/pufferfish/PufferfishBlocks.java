@@ -8,6 +8,9 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -29,6 +32,8 @@ public final class PufferfishBlocks {
     public static final DeferredBlock<PufferfishSkinBlock> GOLDEN_SKIN = BLOCKS.registerBlock("golden_pufferfish_skin",
             PufferfishSkinBlock::new, BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CARPET)
                     .mapColor(MapColor.GOLD).sound(SoundType.WET_GRASS));
+    public static final DeferredBlock<PufferfishSkinBlock> NETHERITE_SKIN = registerMetalSkin("netherite", MapColor.COLOR_BLACK);
+    public static final DeferredBlock<PufferfishSkinBlock> HEAVY_SKIN = registerMetalSkin("heavy", MapColor.COLOR_LIGHT_BLUE);
     /// The placeable skin obtained from undyed pufferfish.
     private static final DeferredBlock<PufferfishSkinBlock> PLAIN_SKIN = registerSkin(null);
     /// Placeable skins indexed by the dye color of their ingredient fish.
@@ -52,6 +57,22 @@ public final class PufferfishBlocks {
     /// Returns the registered skin for the given color, or the undyed skin if null.
     public static PufferfishSkinBlock skin(@Nullable DyeColor color) {
         return (color == null ? PLAIN_SKIN : COLORED_SKINS.get(color)).get();
+    }
+
+    /// Returns the skin produced by processing a whole fish, or null for unsupported items.
+    @Nullable
+    public static PufferfishSkinBlock skinForFish(ItemStack stack) {
+        if (stack.is(PufferfishItems.GOLDEN.get())) return GOLDEN_SKIN.get();
+        if (stack.is(PufferfishItems.NETHERITE.get())) return NETHERITE_SKIN.get();
+        if (stack.is(PufferfishItems.HEAVY.get())) return HEAVY_SKIN.get();
+        return stack.is(Items.PUFFERFISH) ? skin(PufferfishColors.get(stack)) : null;
+    }
+
+    private static DeferredBlock<PufferfishSkinBlock> registerMetalSkin(String name, MapColor color) {
+        var block = BLOCKS.registerBlock(name + "_pufferfish_skin", PufferfishSkinBlock::new,
+                BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CARPET).mapColor(color).sound(SoundType.WET_GRASS));
+        ITEMS.registerSimpleBlockItem(block, new Item.Properties().fireResistant());
+        return block;
     }
 
     /// Registers a skin block and its item under the same identifier.
