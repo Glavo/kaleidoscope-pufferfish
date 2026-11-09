@@ -49,7 +49,7 @@ public final class PufferfishFlailItemRenderer extends BlockEntityWithoutLevelRe
 
     /// Invalidates the baked fish geometry after a resource reload.
     @Override
-    public void onResourceManagerReload(ResourceManager manager) { model = null; }
+    public void onResourceManagerReload(ResourceManager manager) { model = null; PufferfishFlailArmAnimation.reset(); }
 
     @Override
     public void renderByItem(ItemStack stack, ItemDisplayContext context, PoseStack pose, MultiBufferSource buffers, int light, int overlay) {
@@ -72,7 +72,14 @@ public final class PufferfishFlailItemRenderer extends BlockEntityWithoutLevelRe
                     player.getTicksUsingItem() + partialTick, player.getViewYRot(partialTick), partialTick);
             target = PufferfishFlailTether.localPosition(world, pose);
         }
-        if (target != null) {
+        boolean armSwing = player != null && PufferfishFlailArmAnimation.activeHand(player) != null;
+        if (target != null && armSwing && !context.firstPerson()) {
+            pose.mulPose(Axis.ZP.rotationDegrees(-90));
+            var world = flying != null ? flying.renderPosition(partialTick)
+                    : PufferfishFlailMotion.orbit(player, player.getUsedItemHand(), stack,
+                    player.getTicksUsingItem() + partialTick, player.getViewYRot(partialTick), partialTick);
+            renderFixedGrip(model, stack, world, flying == null, pose, buffers, light, overlay, player.tickCount + partialTick);
+        } else if (target != null) {
             var direction = target.normalize();
             pose.pushPose();
             pose.mulPose(new Quaternionf().rotationTo(new Vector3f(0, 1, 0), direction.toVector3f()));
@@ -98,6 +105,23 @@ public final class PufferfishFlailItemRenderer extends BlockEntityWithoutLevelRe
                 pose.mulPose(Axis.ZP.rotationDegrees((float) (-8 + sway * 100)));
                 model.renderHead(stack, pose, buffers, light, overlay, age);
             }
+        }
+        pose.popPose();
+    }
+
+    /// Keeps the handle fixed in the palm while the tether follows the world head.
+    public static void renderFixedGrip(PufferfishFlailModel model, ItemStack stack, Vec3 worldHead, boolean drawHead,
+            PoseStack pose, MultiBufferSource buffers, int light, int overlay, float age) {
+        model.renderGrip(stack, pose, buffers, light, overlay);
+        var target = PufferfishFlailTether.localPosition(worldHead, pose);
+        if (target == null) return;
+        var offset = target.subtract(0, 0.20, 0);
+        pose.pushPose();
+        pose.translate(0, 0.20, 0);
+        model.renderChain(stack, offset.subtract(offset.normalize().scale(Math.min(0.20, offset.length()))), 0, pose, buffers, light);
+        if (drawHead) {
+            pose.translate(offset.x, offset.y, offset.z);
+            model.renderHead(stack, pose, buffers, light, overlay, age);
         }
         pose.popPose();
     }

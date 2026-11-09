@@ -68,6 +68,7 @@ public final class PufferfishFlailOrbitClientTest {
                 minecraft.getBlockRenderer(), minecraft.getEntityRenderDispatcher().getItemInHandRenderer(),
                 minecraft.getResourceManager(), minecraft.getEntityModels(), minecraft.font);
         var headRenderer = new PufferfishFlailHeadRenderer(context);
+        var armor = new HumanoidModel<LivingEntity>(minecraft.getEntityModels().bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER_INNER_ARMOR));
         RenderSystem.backupProjectionMatrix();
         RenderSystem.setProjectionMatrix(new Matrix4f(), VertexSorting.ORTHOGRAPHIC_Z);
         var view = RenderSystem.getModelViewStack();
@@ -100,6 +101,8 @@ public final class PufferfishFlailOrbitClientTest {
                             model.crouching = crouching;
                             var min = new Vector3f(Float.POSITIVE_INFINITY);
                             var max = new Vector3f(Float.NEGATIVE_INFINITY);
+                            var wristMin = new Vector3f(Float.POSITIVE_INFINITY);
+                            var wristMax = new Vector3f(Float.NEGATIVE_INFINITY);
                             int duration = PufferfishFlailItem.chargeTicks(stack);
                             for (int ticks = 4; ticks <= duration + 24; ticks++) {
                                 remaining.setInt(player, stack.getUseDuration(player) - ticks);
@@ -109,7 +112,24 @@ public final class PufferfishFlailOrbitClientTest {
                                 layer.render(pose, capture, LIGHT, player, 0, 0, 0, ticks, 0, 0);
                                 var worldPose = new PoseStack();
                                 renderHead(headRenderer, head, worldPose, capture);
-                                capture.verifyTether(head.renderPosition(0));
+                                var armPose = bodyPose(player);
+                                var part = usedArm == HumanoidArm.RIGHT ? model.rightArm : model.leftArm;
+                                model.translateToHand(usedArm, armPose);
+                                var wrist = armPose.last().pose().transformPosition(new Vector3f(usedArm == HumanoidArm.RIGHT ? -0.0625F : 0.0625F, 0.625F, -0.125F));
+                                var direction = armPose.last().pose().transformDirection(new Vector3f(0, 1, 0)).normalize();
+                                capture.verifyTether(head.renderPosition(0), wrist, direction);
+                                wristMin.min(wrist);
+                                wristMax.max(wrist);
+                                armor.crouching = crouching;
+                                armor.setupAnim(player, 1.2F, 0.6F, ticks, 35, 45);
+                                var armorArm = usedArm == HumanoidArm.RIGHT ? armor.rightArm : armor.leftArm;
+                                if (armorArm.xRot != part.xRot || armorArm.yRot != part.yRot || armorArm.zRot != part.zRot) {
+                                    throw new IllegalStateException("Armor did not follow the flail arm");
+                                }
+                                var sleeve = usedArm == HumanoidArm.RIGHT ? model.rightSleeve : model.leftSleeve;
+                                if (sleeve.xRot != part.xRot || sleeve.yRot != part.yRot || sleeve.zRot != part.zRot) {
+                                    throw new IllegalStateException("Flail sleeve did not follow the rotating arm");
+                                }
                                 if (capture.head.isEmpty() || !worldPose.clear()) throw new IllegalStateException("Missing third-person charging head");
                                 var center = new Vector3f();
                                 for (var vertex : capture.head) {
@@ -123,6 +143,9 @@ public final class PufferfishFlailOrbitClientTest {
                                         && ticks >= duration && ticks < duration + 12 && (ticks - duration) % 3 == 0) {
                                     preview(minecraft, player, model, layer, ticks - duration, headRenderer, head);
                                 }
+                            }
+                            if (wristMax.y - wristMin.y < 0.90F || wristMax.z - wristMin.z < 0.90F) {
+                                throw new IllegalStateException("Flail grip rotated in place instead of orbiting the shoulder");
                             }
                             if (max.x - min.x > 0.03F || max.y - min.y < 1.0F || max.z - min.z < 1.0F) {
                                 throw new IllegalStateException("Third-person flail did not orbit vertically beside the body");
@@ -230,7 +253,7 @@ public final class PufferfishFlailOrbitClientTest {
             return this;
         }
 
-        void verifyTether(Vec3 position) {
+        void verifyTether(Vec3 position, Vector3f wrist, Vector3f direction) {
             if (groups.size() != 4) throw new IllegalStateException("Third-person swing lost its grip, tether, or head");
             var bands = groups.get(1);
             var chain = groups.get(2);
@@ -245,8 +268,11 @@ public final class PufferfishFlailOrbitClientTest {
             if (last.distance(position.toVector3f()) > 0.30F || top.div(24).distance(first) > 0.13F) {
                 throw new IllegalStateException("Third-person chain detached from the grip or world head: head=" + position + ", end=" + last + ", grip=" + top + ", start=" + first + ", groups=" + groups.stream().map(List::size).toList());
             }
-            if (top.sub(bottom.div(24)).normalize().dot(last.sub(first).normalize()) < 0.995F) {
-                throw new IllegalStateException("Third-person grip ignored chain tension");
+            var center = new Vector3f();
+            for (var vertex : groups.getFirst()) center.add(vertex);
+            center.div(groups.getFirst().size());
+            if (center.distance(wrist) > 0.04F || top.sub(bottom.div(24)).normalize().dot(direction) < 0.995F) {
+                throw new IllegalStateException("Grip moved relative to the palm: center=" + center + ", wrist=" + wrist + ", axis=" + top + ", arm=" + direction);
             }
         }
         @Override

@@ -15,24 +15,24 @@ public final class PufferfishFlailMotion {
     private PufferfishFlailMotion() {}
 
     public static Vec3 grip(Player player, InteractionHand hand, float yaw, float partialTick) {
-        return center(player, hand, yaw, partialTick, 0.45);
+        return center(player, hand, yaw, partialTick, 0.45, 0.35, -0.65);
     }
 
-    private static Vec3 center(Player player, InteractionHand hand, float yaw, float partialTick, double lateral) {
+    private static Vec3 center(Player player, InteractionHand hand, float yaw, float partialTick, double lateral, double forward, double vertical) {
         var arm = hand == InteractionHand.MAIN_HAND ? player.getMainArm() : player.getMainArm().getOpposite();
         double side = arm == HumanoidArm.RIGHT ? -lateral : lateral;
         double radians = yaw * Mth.DEG_TO_RAD;
         double scale = player.getScale();
-        return player.getEyePosition(partialTick).add((side * Math.cos(radians) - 0.35 * Math.sin(radians)) * scale,
-                -0.65 * scale, (side * Math.sin(radians) + 0.35 * Math.cos(radians)) * scale);
+        return player.getEyePosition(partialTick).add((side * Math.cos(radians) - forward * Math.sin(radians)) * scale,
+                vertical * scale, (side * Math.sin(radians) + forward * Math.cos(radians)) * scale);
     }
 
     public static Vec3 orbit(Player player, InteractionHand hand, ItemStack stack, double age, float yaw, float partialTick) {
         double angle = PufferfishFlailItem.spinAngle(stack, (float) age);
-        double forward = -0.65 * Math.sin(angle) * player.getScale();
+        double forward = -1.10 * Math.sin(angle) * player.getScale();
         double radians = yaw * Mth.DEG_TO_RAD;
-        return center(player, hand, yaw, partialTick, 0.95).add(-forward * Math.sin(radians),
-                -0.65 * Math.cos(angle) * player.getScale(), forward * Math.cos(radians));
+        return center(player, hand, yaw, partialTick, 0.95, 0, -0.35).add(-forward * Math.sin(radians),
+                -1.10 * Math.cos(angle) * player.getScale(), forward * Math.cos(radians));
     }
 
     /// Finds the next point whose forward tangent matches the requested pitch.

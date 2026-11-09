@@ -32,6 +32,7 @@ import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.event.RenderFrameEvent;
+import net.neoforged.neoforge.client.event.RenderHandEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishFlailHeadRenderer;
@@ -121,7 +122,7 @@ public final class PufferfishFlailFirstPersonClientTest {
                                     // Include camera motion as well as the native swing and equip transforms.
                                     pose.translate(0.02, -0.015, 0);
                                     var capture = new Capture();
-                                    nativeRender.invoke(context.getItemInHandRenderer(), player, 0F, pitch, hand, swing, stack,
+                                    renderHand(nativeRender, context.getItemInHandRenderer(), player, 0F, pitch, hand, swing, stack,
                                             swing * 0.5F, pose, capture, LIGHT);
                                     capture.verify(new Matrix4f(handProjection).mul(rotation),
                                             new Matrix4f(worldProjection).mul(rotation).transformProject(
@@ -143,7 +144,7 @@ public final class PufferfishFlailFirstPersonClientTest {
                                         buffers.endBatch();
                                         RenderSystem.clear(256, Minecraft.ON_OSX);
                                         RenderSystem.setProjectionMatrix(handProjection, VertexSorting.DISTANCE_TO_ORIGIN);
-                                        nativeRender.invoke(context.getItemInHandRenderer(), player, 0F, pitch, hand, swing, stack,
+                                        renderHand(nativeRender, context.getItemInHandRenderer(), player, 0F, pitch, hand, swing, stack,
                                                 swing * 0.5F, pose, buffers, LIGHT);
                                         buffers.endBatch();
                                         try (var image = Screenshot.takeScreenshot(target)) {
@@ -153,7 +154,7 @@ public final class PufferfishFlailFirstPersonClientTest {
                                     }
                                     NeoForge.EVENT_BUS.post(new RenderFrameEvent.Pre(DeltaTracker.ZERO));
                                     var stale = new Capture();
-                                    nativeRender.invoke(context.getItemInHandRenderer(), player, 0F, pitch, hand, swing, stack,
+                                    renderHand(nativeRender, context.getItemInHandRenderer(), player, 0F, pitch, hand, swing, stack,
                                             swing * 0.5F, pose, stale, LIGHT);
                                     if (stale.groups.size() != 2) throw new IllegalStateException("Flail reused a previous frame's camera transform");
                                     if (fov == 70 && pitch == 0 && hand == InteractionHand.MAIN_HAND && swing == 0) {
@@ -192,6 +193,14 @@ public final class PufferfishFlailFirstPersonClientTest {
             if (target != null) target.destroyBuffers();
             minecraft.getMainRenderTarget().bindWrite(true);
         }
+    }
+
+    private static void renderHand(java.lang.reflect.Method nativeRender, ItemInHandRenderer renderer, AbstractClientPlayer player,
+            float partial, float pitch, InteractionHand hand, float swing, ItemStack stack, float equip,
+            PoseStack pose, MultiBufferSource buffers, int light) throws ReflectiveOperationException {
+        var event = new RenderHandEvent(hand, pose, buffers, light, partial, pitch, swing, equip, stack);
+        NeoForge.EVENT_BUS.post(event);
+        if (!event.isCanceled()) nativeRender.invoke(renderer, player, partial, pitch, hand, swing, stack, equip, pose, buffers, light);
     }
 
     private static void verifyRelease(Minecraft minecraft, LocalPlayer player, java.lang.reflect.Method nativeRender,
@@ -240,9 +249,9 @@ public final class PufferfishFlailFirstPersonClientTest {
                     }
                 }
                 var capture = new Capture();
-                nativeRender.invoke(minecraft.getEntityRenderDispatcher().getItemInHandRenderer(), player, 0F, 0F,
+                renderHand(nativeRender, minecraft.getEntityRenderDispatcher().getItemInHandRenderer(), player, 0F, 0F,
                         InteractionHand.MAIN_HAND, 0F, stack, 0F, pose, capture, LIGHT);
-                if (capture.groups.size() != 3) throw new IllegalStateException("Release lost its grip or tether");
+                if (capture.groups.size() != 4) throw new IllegalStateException("Release lost its arm, grip, or tether");
                 capture.verifyGrip();
                 if (player.getMainArm() == HumanoidArm.RIGHT) {
                     target.clear(Minecraft.ON_OSX);
@@ -256,7 +265,7 @@ public final class PufferfishFlailFirstPersonClientTest {
                     buffers.endBatch();
                     RenderSystem.clear(256, Minecraft.ON_OSX);
                     RenderSystem.setProjectionMatrix(handProjection, VertexSorting.DISTANCE_TO_ORIGIN);
-                    nativeRender.invoke(minecraft.getEntityRenderDispatcher().getItemInHandRenderer(), player, 0F, 0F,
+                    renderHand(nativeRender, minecraft.getEntityRenderDispatcher().getItemInHandRenderer(), player, 0F, 0F,
                             InteractionHand.MAIN_HAND, 0F, stack, 0F, pose, buffers, LIGHT);
                     buffers.endBatch();
                     try (var image = Screenshot.takeScreenshot(target)) {
@@ -294,21 +303,29 @@ public final class PufferfishFlailFirstPersonClientTest {
             List<Vector3f> previous = null;
             var minimum = new Vector3f(Float.POSITIVE_INFINITY);
             var maximum = new Vector3f(Float.NEGATIVE_INFINITY);
+            var wristMin = new Vector3f(Float.POSITIVE_INFINITY);
+            var wristMax = new Vector3f(Float.NEGATIVE_INFINITY);
             try {
                 for (int ticks = 0; ticks <= duration + 24; ticks++) {
                     remaining.setInt(player, stack.getUseDuration(player) - ticks);
                     var capture = new Capture();
-                    nativeRender.invoke(minecraft.getEntityRenderDispatcher().getItemInHandRenderer(), player, 0F, -35F,
+                    renderHand(nativeRender, minecraft.getEntityRenderDispatcher().getItemInHandRenderer(), player, 0F, -35F,
                             InteractionHand.MAIN_HAND, 0F, stack, 0F, pose, capture, LIGHT);
                     var headPose = new PoseStack();
                     var relative = head.getPosition(0).subtract(camera.getPosition());
                     headPose.translate(relative.x, relative.y, relative.z);
                     var world = new Capture();
                     renderer.render(head, 0, 0, headPose, world, LIGHT);
-                    if (capture.groups.size() != 3 || world.groups.size() != 1 || world.groups.getFirst().equals(previous)) {
+                    if (capture.groups.size() != 4 || world.groups.size() != 1 || world.groups.getFirst().equals(previous)) {
                         throw new IllegalStateException("Charging flail did not render a moving head");
                     }
                     capture.verifyGrip();
+                    var wrist = new Vector3f();
+                    for (var vertex : capture.groups.get(1)) wrist.add(vertex);
+                    wrist.div(capture.groups.get(1).size());
+                    RenderSystem.getModelViewMatrix().transformPosition(wrist);
+                    wristMin.min(wrist);
+                    wristMax.max(wrist);
                     previous = world.groups.getFirst();
                     if (ticks >= 4) {
                         var center = new Vector3f();
@@ -333,7 +350,7 @@ public final class PufferfishFlailFirstPersonClientTest {
                         buffers.endBatch();
                         RenderSystem.clear(256, Minecraft.ON_OSX);
                         RenderSystem.setProjectionMatrix(handProjection, VertexSorting.DISTANCE_TO_ORIGIN);
-                        nativeRender.invoke(minecraft.getEntityRenderDispatcher().getItemInHandRenderer(), player, 0F, -35F,
+                        renderHand(nativeRender, minecraft.getEntityRenderDispatcher().getItemInHandRenderer(), player, 0F, -35F,
                                 InteractionHand.MAIN_HAND, 0F, stack, 0F, pose, buffers, LIGHT);
                         buffers.endBatch();
                         try (var image = Screenshot.takeScreenshot(target)) {
@@ -341,6 +358,9 @@ public final class PufferfishFlailFirstPersonClientTest {
                                     : item == PufferfishItems.HEAVY_FLAIL.get() ? "heavy-" : "netherite-") + ticks + ".png"));
                         }
                     }
+                }
+                if (wristMax.y - wristMin.y < 0.85F || wristMax.z - wristMin.z < 0.85F) {
+                    throw new IllegalStateException("First-person hand did not make a full shoulder swing");
                 }
                 if (maximum.x - minimum.x > 0.03F || maximum.y - minimum.y < 1.0F || maximum.z - minimum.z < 1.0F) {
                     throw new IllegalStateException("First-person flail did not rotate in a vertical plane beside the body");
@@ -394,8 +414,8 @@ public final class PufferfishFlailFirstPersonClientTest {
         }
 
         void verifyGrip() {
-            var bands = groups.get(1);
-            var chain = groups.get(2);
+            var bands = groups.get(groups.size() - 2);
+            var chain = groups.getLast();
             float gap = Float.POSITIVE_INFINITY;
             var closest = new Vector3f();
             for (int face = 24; face < 48; face += 4) {
@@ -408,13 +428,26 @@ public final class PufferfishFlailFirstPersonClientTest {
                 }
             }
             if (gap > 0.015F) throw new IllegalStateException("First-person chain detached from the grip: " + gap);
+            if (groups.size() == 4) {
+                var palm = groups.getFirst();
+                var grip = new Vector3f();
+                for (var vertex : groups.get(1)) grip.add(vertex);
+                grip.div(groups.get(1).size());
+                float distance = Float.POSITIVE_INFINITY;
+                for (int face = 0; face < 24; face += 4) for (int triangle = 1; triangle <= 2; triangle++) {
+                    org.joml.Intersectionf.findClosestPointOnTriangle(palm.get(face), palm.get(face + triangle),
+                            palm.get(face + triangle + 1), grip, closest);
+                    distance = Math.min(distance, closest.distance(grip));
+                }
+                if (distance > 0.035F) throw new IllegalStateException("Flail handle detached from the visible palm: " + distance);
+            }
             var bottom = new Vector3f();
             var top = new Vector3f();
             var first = new Vector3f();
             var last = new Vector3f();
             for (int i = 0; i < 24; i++) { bottom.add(bands.get(i)); top.add(bands.get(i + 24)); }
             for (int i = 0; i < 96; i++) { first.add(chain.get(i)); last.add(chain.get(chain.size() - 96 + i)); }
-            if (chain.size() > 96 && top.sub(bottom).normalize().dot(last.sub(first).normalize()) < 0.995F) {
+            if (groups.size() == 3 && chain.size() > 96 && top.sub(bottom).normalize().dot(last.sub(first).normalize()) < 0.995F) {
                 throw new IllegalStateException("Grip remained upright instead of following chain tension");
             }
         }

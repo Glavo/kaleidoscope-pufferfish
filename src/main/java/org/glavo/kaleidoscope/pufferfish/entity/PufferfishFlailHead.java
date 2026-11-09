@@ -101,6 +101,25 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
         return getPosition(partialTick);
     }
 
+    public boolean hasSwing() { return isSpinning() || entityData.get(FLIGHT_TIME) >= 0; }
+
+    public float swingYaw(float partialTick) {
+        return isCharging() && getOwner() instanceof Player player ? player.getViewYRot(partialTick) : entityData.get(AIM_YAW);
+    }
+
+    public float armAngle(float partialTick) {
+        if (isSpinning()) return (float) PufferfishFlailItem.spinAngle(getItem(), orbitAge(partialTick));
+        double release = PufferfishFlailItem.spinAngle(getItem(), entityData.get(RELEASE_AGE));
+        double turn = Math.floor(release / (Math.PI * 2)) * Math.PI * 2;
+        double forward = Math.max(release, turn + Math.PI * 1.5);
+        float elapsed = (level().isClientSide() ? level().getGameTime() - entityData.get(FLIGHT_TIME)
+                : tickCount - flightStartTick) + partialTick;
+        float follow = Mth.clamp(elapsed / 6, 0, 1);
+        float recover = Mth.clamp((elapsed - 8) / 10, 0, 1);
+        return (float) (release + (forward - release) * follow * follow * (3 - 2 * follow)
+                + (turn + Math.PI * 2 - forward) * recover * recover * (3 - 2 * recover));
+    }
+
     private void launch(Player player) {
         float age = entityData.get(RELEASE_AGE);
         float yaw = entityData.get(AIM_YAW);
