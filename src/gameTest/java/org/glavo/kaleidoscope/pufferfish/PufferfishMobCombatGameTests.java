@@ -215,6 +215,9 @@ public final class PufferfishMobCombatGameTests {
                 case HEAVY -> new double[]{80, 12, 16};
                 case RADIANT -> new double[]{60, 8, 8};
             };
+            double resistance = fish.kind() == PufferfishMobConfig.Kind.HEAVY ? 0.75 : 0;
+            helper.assertTrue(fish.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE) == resistance,
+                    "Incorrect living fish knockback resistance: " + variant.fish().getId());
             helper.assertTrue(fish.getMaxHealth() == expected[0] && fish.getHealth() == expected[0]
                     && fish.getAttributeValue(Attributes.ATTACK_DAMAGE) == expected[1]
                     && fish.getArmorValue() == expected[2], "Incorrect living fish profile: " + variant.fish().getId());
@@ -228,7 +231,39 @@ public final class PufferfishMobCombatGameTests {
             var restored = variant.entity().get().create(helper.getLevel());
             restored.load(data);
             helper.assertTrue(restored.getMaxHealth() == expected[0] && restored.getHealth() == 7
-                    && restored.getArmorValue() == expected[2], "Reloading changed mob balance or healed the fish");
+                    && restored.getArmorValue() == expected[2]
+                    && restored.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE) == resistance, "Reloading changed mob balance or healed the fish");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void knockbackResistanceFollowsInflationAndSurvivesReload(GameTestHelper helper) {
+        for (var variant : PufferfishMobs.VARIANTS.values()) {
+            var fish = variant.entity().get().create(helper.getLevel());
+            double inflated = switch (fish.kind()) {
+                case COPPER, IRON, GOLDEN -> 0.3;
+                case DIAMOND, RADIANT -> 0.5;
+                case NETHERITE -> 0.75;
+                case HEAVY -> 1.0;
+            };
+            for (int state : new int[]{0, 1, 2, 1, 0}) {
+                fish.setPuffState(state);
+                double expected = state > 0 ? inflated : fish.kind() == PufferfishMobConfig.Kind.HEAVY ? 0.75 : 0;
+                helper.assertTrue(fish.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE) == expected,
+                        "Incorrect resistance after puff state transition: " + variant.fish().getId() + " / " + state);
+                fish.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
+                fish.knockback(1, 1, 0);
+                helper.assertTrue(Math.abs(fish.getDeltaMovement().horizontalDistance() - (1 - expected)) < 0.0001,
+                        "Inflation did not reduce actual knockback by the expected amount");
+                var data = new net.minecraft.nbt.CompoundTag();
+                fish.saveWithoutId(data);
+                var restored = variant.entity().get().create(helper.getLevel());
+                restored.load(data);
+                helper.assertTrue(restored.getPuffState() == state
+                        && restored.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE) == expected,
+                        "Reloading lost inflation-dependent resistance");
+            }
         }
         helper.succeed();
     }
@@ -329,12 +364,12 @@ public final class PufferfishMobCombatGameTests {
             fish.setNoAi(true);
             fish.setPuffState(2);
             fish.tick();
-            helper.assertTrue(Math.abs(fish.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE) - 0.65) < 0.0001,
-                    "Inflated iron fish did not gain defensive knockback resistance");
+            helper.assertTrue(Math.abs(fish.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE) - 0.3) < 0.0001,
+                    "Inflated iron fish did not gain 30 percent knockback resistance");
             fish.setPuffState(0);
             fish.tick();
-            helper.assertTrue(Math.abs(fish.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE) - 0.15) < 0.0001,
-                    "Iron fish retained its inflated defense after shrinking");
+            helper.assertTrue(fish.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE) == 0,
+                    "Deflated iron fish retained knockback resistance");
         } finally { player.discard(); fish.discard(); }
         helper.succeed();
     }

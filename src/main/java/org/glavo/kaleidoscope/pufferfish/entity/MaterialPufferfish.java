@@ -48,7 +48,6 @@ public final class MaterialPufferfish extends Pufferfish {
     private static final EntityDataAccessor<ItemStack> FISH = SynchedEntityData.defineId(MaterialPufferfish.class, EntityDataSerializers.ITEM_STACK);
     private static final EntityDataAccessor<Integer> ATTACK_PHASE = SynchedEntityData.defineId(MaterialPufferfish.class, EntityDataSerializers.INT);
     public static final int IDLE = 0, WINDUP = 1, RUSH = 2, RECOVERY = 3, PULSE = 4, COMBO_GAP = 5, REST = 6;
-    private static final net.minecraft.resources.ResourceLocation GUARD = KaleidoscopePufferfish.id("fish_guard");
     private static final net.minecraft.resources.ResourceLocation EXPOSED = KaleidoscopePufferfish.id("fish_exposed");
     private int attackCooldown;
     private UUID provokerId;
@@ -102,7 +101,7 @@ public final class MaterialPufferfish extends Pufferfish {
         getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(PufferfishMobConfig.value(config.damage()));
         getAttribute(Attributes.ARMOR).setBaseValue(PufferfishMobConfig.value(config.armor()));
         getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(PufferfishMobConfig.value(config.speed()));
-        getAttribute(Attributes.KNOCKBACK_RESISTANCE).setBaseValue(PufferfishMobConfig.value(config.resistance()));
+        updateDefense();
         if (getHealth() > getMaxHealth()) setHealth(getMaxHealth());
     }
 
@@ -217,13 +216,18 @@ public final class MaterialPufferfish extends Pufferfish {
         }
     }
 
+    @Override
+    public void setPuffState(int state) {
+        super.setPuffState(state);
+        updateDefense();
+    }
+
     private void updateDefense() {
         if (level().isClientSide || fish().isEmpty()) return;
-        var resistance = getAttribute(Attributes.KNOCKBACK_RESISTANCE);
+        var config = settings();
+        getAttribute(Attributes.KNOCKBACK_RESISTANCE).setBaseValue(PufferfishMobConfig.value(
+                getPuffState() > 0 ? config.inflatedResistance() : config.resistance()));
         var armor = getAttribute(Attributes.ARMOR);
-        boolean guard = kind() == PufferfishMobConfig.Kind.IRON && getPuffState() == 2;
-        if (guard && !resistance.hasModifier(GUARD)) resistance.addTransientModifier(new AttributeModifier(GUARD, 0.5, AttributeModifier.Operation.ADD_VALUE));
-        if (!guard) resistance.removeModifier(GUARD);
         boolean exposed = kind() == PufferfishMobConfig.Kind.HEAVY && attackPhase() == RECOVERY;
         if (exposed && !armor.hasModifier(EXPOSED)) armor.addTransientModifier(new AttributeModifier(EXPOSED, -0.5, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
         if (!exposed) armor.removeModifier(EXPOSED);
