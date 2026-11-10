@@ -111,7 +111,7 @@ public final class PufferfishHeadgearGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void livePufferfishCannotStingWearers(GameTestHelper helper) {
+    public static void inflatedPufferfishStillStingWearers(GameTestHelper helper) {
         var player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(),
                 new GameProfile(UUID.randomUUID(), "headgear-test-player"), ClientInformation.createDefault());
         player.connection = new ServerGamePacketListenerImpl(helper.getLevel().getServer(), new Connection(PacketFlow.SERVERBOUND),
@@ -132,10 +132,14 @@ public final class PufferfishHeadgearGameTests {
             player.setHealth(player.getMaxHealth());
             player.removeEffect(MobEffects.POISON);
             for (var color : colors()) {
+                fish = EntityType.PUFFERFISH.create(helper.getLevel());
+                fish.setPuffState(2);
+                player.setHealth(player.getMaxHealth());
+                player.removeEffect(MobEffects.POISON);
                 player.setItemSlot(EquipmentSlot.HEAD, fish(color));
                 player.invulnerableTime = 0;
                 fish.playerTouch(player);
-                helper.assertTrue(player.getHealth() == player.getMaxHealth() && !player.hasEffect(MobEffects.POISON), "Pufferfish sting bypassed headgear");
+                helper.assertTrue(player.getHealth() < player.getMaxHealth() && player.hasEffect(MobEffects.POISON), "Headgear prevented an inflated fish from stinging");
             }
             player.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
             player.invulnerableTime = 0;

@@ -8,6 +8,7 @@
     "ChoppingBoardMixin",
     "AbstractFishMixin",
     "MaterialPufferfishMixin",
+    "PufferfishPuffGoalMixin",
     "EntityTypeMixin",
     "PufferfishEquipmentMixin",
     "PufferfishSmashMixin"

@@ -19,6 +19,12 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.animal.Pufferfish;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.monster.Creeper;
+import net.minecraft.world.entity.monster.Drowned;
+import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -73,7 +79,8 @@ public final class MaterialPufferfish extends Pufferfish {
 
     public PufferfishMobConfig.Kind kind() { return PufferfishMobConfig.kind(fish()); }
     public PufferfishMobConfig.Settings settings() { return PufferfishMobConfig.settings(fish()); }
-    public boolean hasActiveAttacks() { return kind() != PufferfishMobConfig.Kind.COPPER && kind() != PufferfishMobConfig.Kind.GOLDEN; }
+    public boolean hasActiveAttacks() { return kind() != PufferfishMobConfig.Kind.GOLDEN; }
+    public boolean isHostileToPlayers() { return hasActiveAttacks() && kind() != PufferfishMobConfig.Kind.COPPER; }
     public int attackPhase() { return entityData.get(ATTACK_PHASE); }
     public void setAttackPhase(int phase) {
         entityData.set(ATTACK_PHASE, phase);
@@ -82,6 +89,12 @@ public final class MaterialPufferfish extends Pufferfish {
     public boolean canCapture() { return getHealth() <= getMaxHealth() * PufferfishMobConfig.value(settings().capture()); }
     public boolean readyToAttack() { return attackCooldown == 0; }
     public int attackInterval() { return PufferfishMobConfig.value(settings().cooldown()); }
+
+    @Override
+    public boolean canBeAffected(MobEffectInstance effect) {
+        return !effect.is(MobEffects.POISON) && !(effect.is(MobEffects.WITHER) && kind() == PufferfishMobConfig.Kind.RADIANT)
+                && super.canBeAffected(effect);
+    }
 
     private void applyProfile() {
         var config = settings();
@@ -105,22 +118,30 @@ public final class MaterialPufferfish extends Pufferfish {
 
     public boolean canFight(LivingEntity entity) {
         return entity != null && entity != this && entity.isAlive() && !entity.isSpectator() && !isAlliedTo(entity)
-                && !(entity instanceof Pufferfish) && !(entity instanceof Player player && (player.isCreative() || level().getDifficulty() == Difficulty.PEACEFUL))
-                && !isDisguisedFrom(entity);
+                && !(entity instanceof Pufferfish) && !(entity instanceof Player player && (player.isCreative() || level().getDifficulty() == Difficulty.PEACEFUL));
+    }
+
+    private static boolean isHuntedHostile(LivingEntity entity) {
+        return !(entity instanceof Creeper) && !(entity instanceof Drowned)
+                && (entity instanceof Enemy || entity.getType().getCategory() == MobCategory.MONSTER);
     }
 
     public LivingEntity findCombatTarget() {
+        if (!hasActiveAttacks()) return null;
         if (angerTicks > 0 && level() instanceof ServerLevel server) {
             if (provoker == null && server.getEntity(provokerId) instanceof LivingEntity living) provoker = living;
             if (validTarget(provoker)) return provoker;
         }
-        return level().getEntitiesOfClass(Player.class, getBoundingBox().inflate(getAttributeValue(Attributes.FOLLOW_RANGE)), this::validTarget)
+        return level().getEntitiesOfClass(LivingEntity.class, getBoundingBox().inflate(getAttributeValue(Attributes.FOLLOW_RANGE)),
+                        target -> validTarget(target) && (isHuntedHostile(target) || isHostileToPlayers() && target instanceof Player))
                 .stream().min(java.util.Comparator.comparingDouble(this::distanceToSqr)).orElse(null);
     }
 
     public boolean validTarget(LivingEntity target) {
         double range = getAttributeValue(Attributes.FOLLOW_RANGE);
-        return canFight(target) && target.level() == level() && target.isInWater() && distanceToSqr(target) <= range * range && hasLineOfSight(target);
+        return hasActiveAttacks() && canFight(target) && !isDisguisedFrom(target)
+                && (kind() != PufferfishMobConfig.Kind.COPPER || isHuntedHostile(target))
+                && target.level() == level() && target.isInWater() && distanceToSqr(target) <= range * range && hasLineOfSight(target);
     }
 
     @Override

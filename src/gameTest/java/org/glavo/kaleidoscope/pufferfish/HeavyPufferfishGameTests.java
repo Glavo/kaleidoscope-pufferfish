@@ -212,7 +212,7 @@ public final class HeavyPufferfishGameTests {
         NeoForge.EVENT_BUS.post(breathe);
         helper.assertTrue(!breathe.canBreathe(), "Heavy headgear granted unlimited underwater breathing");
         var fish = EntityType.PUFFERFISH.create(helper.getLevel());
-        helper.assertTrue(!player.hurt(player.damageSources().mobAttack(fish), 3), "Heavy headgear lost sting protection");
+        helper.assertTrue(player.hurt(player.damageSources().mobAttack(fish), 3), "Heavy headgear still granted sting immunity");
         player.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(PufferfishItems.HEAVY.get()));
         player.tick();

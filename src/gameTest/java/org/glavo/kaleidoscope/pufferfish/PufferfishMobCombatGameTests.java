@@ -17,6 +17,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.MobBucketItem;
@@ -44,6 +45,120 @@ public final class PufferfishMobCombatGameTests {
         var pos = helper.absolutePos(new BlockPos(5, 3, 7));
         fish.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
         return fish;
+    }
+
+    @GameTest(template = "empty")
+    public static void materialFishRejectPoisonAndRadiantRejectsWither(GameTestHelper helper) {
+        for (var variant : PufferfishMobs.VARIANTS.values()) {
+            var fish = variant.entity().get().create(helper.getLevel());
+            helper.assertTrue(!fish.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 1))
+                    && !fish.hasEffect(MobEffects.POISON), "Material fish accepted poison: " + variant.fish().getId());
+            boolean wither = fish.addEffect(new MobEffectInstance(MobEffects.WITHER, 200, 1));
+            helper.assertTrue(wither == (fish.kind() != PufferfishMobConfig.Kind.RADIANT), "Incorrect wither immunity");
+            helper.assertTrue(fish.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 200)), "Immunity blocked a beneficial effect");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "combat_pool")
+    public static void headgearSuppressesProximityInflationOnly(GameTestHelper helper) {
+        pool(helper);
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        var fishPos = helper.absolutePos(new BlockPos(5, 3, 7)).getCenter();
+        player.setPos(fishPos.add(1.5, 0, 0));
+        player.setNoGravity(true);
+        player.tick();
+        helper.getLevel().addFreshEntity(player);
+        var fishes = new java.util.ArrayList<net.minecraft.world.entity.animal.Pufferfish>();
+        fishes.add(EntityType.PUFFERFISH.create(helper.getLevel()));
+        for (var color : net.minecraft.world.item.DyeColor.values()) {
+            var fish = EntityType.PUFFERFISH.create(helper.getLevel());
+            PufferfishColors.set(fish, color);
+            fishes.add(fish);
+        }
+        for (var variant : PufferfishMobs.VARIANTS.values()) fishes.add(variant.entity().get().create(helper.getLevel()));
+        try {
+            for (var fish : fishes) {
+                var headgear = fish instanceof MaterialPufferfish material ? material.fish().copy() : new ItemStack(Items.PUFFERFISH);
+                if (PufferfishColors.get(fish) != null) PufferfishColors.dye(headgear, PufferfishColors.get(fish));
+                player.setItemSlot(EquipmentSlot.HEAD, headgear);
+                fish.setNoGravity(true);
+                for (int tick = 0; tick < 60; tick++) {
+                    fish.setPos(fishPos);
+                    fish.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
+                    fish.tick();
+                    helper.assertTrue(fish.getPuffState() == 0, "Headgear wearer triggered inflation: " + fish.getType());
+                }
+                player.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
+                boolean inflated = false;
+                for (int tick = 0; tick < 60; tick++) {
+                    fish.setPos(fishPos);
+                    fish.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
+                    fish.tick();
+                    inflated |= fish.getPuffState() > 0;
+                }
+                helper.assertTrue(inflated, "Removing headgear did not restore inflation: " + fish.getType());
+                fish.discard();
+            }
+        } finally { player.discard(); fishes.forEach(net.minecraft.world.entity.Entity::discard); }
+        helper.succeed();
+    }
+
+    @GameTest(template = "combat_pool")
+    public static void materialFishHuntHostilesExceptCreepersAndDrowned(GameTestHelper helper) {
+        pool(helper);
+        var creeper = helper.spawn(EntityType.CREEPER, new BlockPos(6, 3, 7));
+        var drowned = helper.spawn(EntityType.DROWNED, new BlockPos(6, 3, 8));
+        for (var mob : java.util.List.of(creeper, drowned)) { mob.setNoAi(true); mob.setNoGravity(true); mob.tick(); }
+        try {
+            for (var type : java.util.List.of(EntityType.ZOMBIE, EntityType.SKELETON, EntityType.SPIDER, EntityType.SLIME)) {
+                var target = helper.spawn(type, new BlockPos(9, 3, 7));
+                target.setNoAi(true);
+                target.setNoGravity(true);
+                target.tick();
+                try {
+                    for (var variant : PufferfishMobs.VARIANTS.values()) {
+                        var fish = variant.entity().get().create(helper.getLevel());
+                        fish.setPos(helper.absolutePos(new BlockPos(5, 3, 7)).getCenter());
+                        helper.assertTrue(fish.findCombatTarget() == (fish.kind() == PufferfishMobConfig.Kind.GOLDEN ? null : target),
+                                "Incorrect hostile target: " + variant.fish().getId() + " / " + type);
+                    }
+                } finally { target.discard(); }
+            }
+            for (var variant : PufferfishMobs.VARIANTS.values()) {
+                var fish = variant.entity().get().create(helper.getLevel());
+                fish.setPos(helper.absolutePos(new BlockPos(5, 3, 7)).getCenter());
+                helper.assertTrue(fish.findCombatTarget() == null, "Fish proactively targeted a creeper or drowned");
+            }
+        } finally { creeper.discard(); drowned.discard(); }
+        helper.succeed();
+    }
+
+    @GameTest(template = "combat_pool")
+    public static void copperRushesHostilesButDoesNotHuntPlayers(GameTestHelper helper) {
+        pool(helper);
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setPos(helper.absolutePos(new BlockPos(7, 3, 7)).getCenter());
+        player.setNoGravity(true);
+        player.tick();
+        helper.getLevel().addFreshEntity(player);
+        var fish = fish(helper, "copper");
+        var target = helper.spawn(EntityType.ZOMBIE, new BlockPos(9, 3, 7));
+        target.setNoAi(true);
+        target.setNoGravity(true);
+        target.tick();
+        try {
+            helper.assertTrue(!fish.validTarget(player) && fish.findCombatTarget() == target, "Copper fish hunted a nearby player");
+            player.discard();
+            boolean windup = false, rush = false;
+            for (int tick = 0; tick < 130; tick++) {
+                fish.tick();
+                windup |= fish.attackPhase() == MaterialPufferfish.WINDUP;
+                rush |= fish.attackPhase() == MaterialPufferfish.RUSH;
+            }
+            helper.assertTrue(windup && rush && target.getHealth() < target.getMaxHealth(), "Copper fish did not attack a hostile mob");
+        } finally { player.discard(); fish.discard(); target.discard(); }
+        helper.succeed();
     }
 
     @GameTest(template = "empty")
@@ -135,7 +250,7 @@ public final class PufferfishMobCombatGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void disguiseStopsUnprovokedStingsButAllowsRetaliation(GameTestHelper helper) {
+    public static void disguiseDoesNotPreventStingsOrRetaliation(GameTestHelper helper) {
         var level = helper.getLevel();
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         player.setNoGravity(true);
@@ -144,13 +259,11 @@ public final class PufferfishMobCombatGameTests {
         var fish = fish(helper, "diamond");
         fish.setPos(player.position());
         fish.setPuffState(2);
+        helper.assertTrue(fish.isDisguisedFrom(player), "Headgear was not recognized before contact");
         fish.sting(player);
-        helper.assertTrue(fish.isDisguisedFrom(player) && player.getHealth() == player.getMaxHealth(), "Disguise did not stop an unprovoked sting");
+        helper.assertTrue(player.getHealth() < player.getMaxHealth(), "Headgear prevented contact damage from an inflated material fish");
         fish.hurt(level.damageSources().playerAttack(player), 1);
         helper.assertTrue(!fish.isDisguisedFrom(player) && fish.isAngryAt(player), "Attacking did not break disguise");
-        player.invulnerableTime = 0;
-        fish.sting(player);
-        helper.assertTrue(player.getHealth() < player.getMaxHealth(), "Headgear still granted complete immunity against an angry material fish");
         player.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
         helper.succeed();
     }
@@ -206,10 +319,10 @@ public final class PufferfishMobCombatGameTests {
                 closest = Math.min(closest, fish.distanceToSqr(target));
                 target.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
                 target.invulnerableTime = 0;
-                if (!fish.hasActiveAttacks()) helper.assertTrue(fish.getTarget() == null && fish.attackPhase() == MaterialPufferfish.IDLE,
+                if (!fish.isHostileToPlayers()) helper.assertTrue(fish.getTarget() == null && fish.attackPhase() == MaterialPufferfish.IDLE,
                         "Neutral fish pursued its attacker: " + kind);
             }
-            if (fish.hasActiveAttacks()) helper.assertTrue(phases.contains(MaterialPufferfish.WINDUP) && phases.contains(MaterialPufferfish.RUSH)
+            if (fish.isHostileToPlayers()) helper.assertTrue(phases.contains(MaterialPufferfish.WINDUP) && phases.contains(MaterialPufferfish.RUSH)
                     && (phases.contains(MaterialPufferfish.REST) || phases.contains(MaterialPufferfish.RECOVERY)) && closest < 9,
                     "Active fish did not pursue, telegraph, rush and recover: " + kind + " " + phases);
             if (kind.equals("radiant")) helper.assertTrue(phases.contains(MaterialPufferfish.PULSE), "Radiant fish never telegraphed its pulse");

@@ -74,9 +74,9 @@ public final class MaterialPufferfishCombatGoal extends Goal {
                     fish.setAttackPhase(MaterialPufferfish.PULSE);
                     remaining = 20;
                     fish.playSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1, 1.5F);
-                } else if (fish.distanceToSqr(target) <= (fish.kind() == Kind.IRON ? 6.25 : 25)) {
+                } else if (fish.distanceToSqr(target) <= (fish.kind() == Kind.IRON || fish.kind() == Kind.COPPER ? 6.25 : 25)) {
                     comboRemaining = fish.kind() == Kind.NETHERITE && fish.getRandom().nextInt(3) == 0 ? 1 : 0;
-                    windup(switch (fish.kind()) { case IRON -> 8; case HEAVY -> 20; case NETHERITE -> 10; default -> 12; });
+                    windup(switch (fish.kind()) { case COPPER, IRON -> 8; case HEAVY -> 20; case NETHERITE -> 10; default -> 12; });
                 }
             }
             case MaterialPufferfish.WINDUP -> {
@@ -85,7 +85,7 @@ public final class MaterialPufferfishCombatGoal extends Goal {
                 if (--remaining <= 0) {
                     rushDirection = target.getBoundingBox().getCenter().subtract(fish.getBoundingBox().getCenter()).normalize();
                     fish.setAttackPhase(MaterialPufferfish.RUSH);
-                    remaining = fish.kind() == Kind.IRON ? 6 : 10;
+                    remaining = fish.kind() == Kind.IRON || fish.kind() == Kind.COPPER ? 6 : 10;
                     fish.playSound(SoundEvents.PLAYER_ATTACK_SWEEP, 0.8F, fish.kind() == Kind.HEAVY ? 0.6F : 1.2F);
                 }
             }
@@ -131,7 +131,7 @@ public final class MaterialPufferfishCombatGoal extends Goal {
     }
 
     private void rush() {
-        double speed = switch (fish.kind()) { case IRON -> 0.45; case DIAMOND -> 0.85; case HEAVY -> 0.65; default -> 0.7; };
+        double speed = switch (fish.kind()) { case COPPER, IRON -> 0.45; case DIAMOND -> 0.85; case HEAVY -> 0.65; default -> 0.7; };
         var motion = rushDirection.scale(speed);
         var start = fish.getBoundingBox().getCenter();
         var end = start.add(motion);
@@ -141,7 +141,7 @@ public final class MaterialPufferfishCombatGoal extends Goal {
             var bounds = target.getBoundingBox().inflate(fish.getBbWidth() / 2 + 0.1);
             var contact = bounds.contains(start) ? java.util.Optional.of(start) : bounds.clip(start, end);
             if (contact.isPresent() && start.distanceToSqr(contact.get()) <= wallDistance
-                    && fish.strike(target, fish.kind() == Kind.IRON ? 0.3 : fish.kind() == Kind.HEAVY ? 1.4 : 1,
+                    && fish.strike(target, fish.kind() == Kind.IRON || fish.kind() == Kind.COPPER ? 0.3 : fish.kind() == Kind.HEAVY ? 1.4 : 1,
                             comboRemaining > 0 ? 6 : fish.attackInterval())) {
                 finishRush(true);
                 return;
