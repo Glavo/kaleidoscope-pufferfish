@@ -262,8 +262,11 @@ val generateSkinResources = tasks.register<Sync>("generateSkinResources") {
 }
 
 val generateMobResources = tasks.register("generateMobResources") {
-    inputs.property("modId", modId)
-    inputs.property("variants", materialFishVariants)
+    // Capture values instead of the build script in the configuration-cached task action.
+    val namespace = modId
+    val variants = materialFishVariants.toList()
+    inputs.property("modId", namespace)
+    inputs.property("variants", variants)
     val destination = layout.buildDirectory.dir("generated/resources/mobs")
     outputs.dir(destination)
     doLast {
@@ -272,22 +275,22 @@ val generateMobResources = tasks.register("generateMobResources") {
             file.parentFile.mkdirs()
             file.writeText(JsonOutput.prettyPrint(JsonOutput.toJson(value)) + "\n")
         }
-        for (variant in materialFishVariants) {
+        for (variant in variants) {
             val name = "${variant}_pufferfish"
-            write("assets/$modId/models/item/${name}_bucket.json", mapOf("parent" to "minecraft:item/generated",
-                "textures" to mapOf("layer0" to "$modId:item/${name}_bucket")))
-            write("assets/$modId/models/item/${name}_spawn_egg.json", mapOf("parent" to "minecraft:item/template_spawn_egg"))
-            write("data/$modId/loot_table/entities/$name.json", mapOf("type" to "minecraft:entity",
-                "pools" to listOf(mapOf("rolls" to 1, "entries" to listOf(mapOf("type" to "minecraft:item", "name" to "$modId:$name"))))))
+            write("assets/$namespace/models/item/${name}_bucket.json", mapOf("parent" to "minecraft:item/generated",
+                "textures" to mapOf("layer0" to "$namespace:item/${name}_bucket")))
+            write("assets/$namespace/models/item/${name}_spawn_egg.json", mapOf("parent" to "minecraft:item/template_spawn_egg"))
+            write("data/$namespace/loot_table/entities/$name.json", mapOf("type" to "minecraft:entity",
+                "pools" to listOf(mapOf("rolls" to 1, "entries" to listOf(mapOf("type" to "minecraft:item", "name" to "$namespace:$name"))))))
         }
-        write("data/$modId/neoforge/biome_modifier/material_pufferfish.json", mapOf("type" to "neoforge:add_spawns",
+        write("data/$namespace/neoforge/biome_modifier/material_pufferfish.json", mapOf("type" to "neoforge:add_spawns",
             "biomes" to listOf("minecraft:warm_ocean", "minecraft:lukewarm_ocean", "minecraft:deep_lukewarm_ocean"),
-            "spawners" to materialFishVariants.filter { !it.startsWith("waxed_") }.map {
-                mapOf("type" to "$modId:${it}_pufferfish", "weight" to 1, "minCount" to 1, "maxCount" to 2)
+            "spawners" to variants.filter { !it.startsWith("waxed_") }.map {
+                mapOf("type" to "$namespace:${it}_pufferfish", "weight" to 1, "minCount" to 1, "maxCount" to 2)
             }))
         for (tag in listOf("not_scary_for_pufferfish", "sensitive_to_impaling", "aquatic")) {
             write("data/minecraft/tags/entity_type/$tag.json", mapOf("replace" to false,
-                "values" to materialFishVariants.map { "$modId:${it}_pufferfish" }))
+                "values" to variants.map { "$namespace:${it}_pufferfish" }))
         }
     }
 }
