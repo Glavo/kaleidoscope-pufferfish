@@ -58,7 +58,7 @@ public final class PufferfishShields {
 
     public static void register(IEventBus bus) { ITEMS.register(bus); }
 
-    /// Successful blocks poison the attacker and roll vanilla Thorns I using the blocking hand.
+    /// Successful blocks apply the skin effect and roll vanilla Thorns I using the blocking hand.
     public static void retaliate(LivingShieldBlockEvent event) {
         var defender = event.getEntity();
         var source = event.getDamageSource();
@@ -67,7 +67,8 @@ public final class PufferfishShields {
                 || !event.getBlocked() || event.getBlockedDamage() <= 0 || source.is(DamageTypes.THORNS)
                 || !(source.getEntity() instanceof LivingEntity attacker) || attacker == defender
                 || VARIANTS.values().stream().noneMatch(item -> shield.is(item.get()))) return;
-        attacker.addEffect(new MobEffectInstance(MobEffects.POISON, PufferfishCombat.POISON_DURATION_TICKS, 0), defender);
+        attacker.addEffect(new MobEffectInstance(PufferfishItems.isRadiant(shield) ? MobEffects.WITHER : MobEffects.POISON,
+                PufferfishCombat.POISON_DURATION_TICKS, PufferfishItems.isRadiant(shield) ? 1 : 0), defender);
         var thorns = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.THORNS);
         thorns.value().doPostAttack(level, 1,
                 new EnchantedItemInUse(shield, LivingEntity.getSlotForHand(defender.getUsedItemHand()), defender),

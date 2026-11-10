@@ -61,6 +61,7 @@ public final class PufferfishGloveRenderer {
         model.setupAnim(player, 0, 0, age, 0, 0);
         model.renderToBuffer(pose, ItemRenderer.getFoilBufferDirect(buffers, RenderType.entityCutoutNoCull(texture),
                 false, stack.hasFoil()), light, OverlayTexture.NO_OVERLAY);
+        RadiantPufferfishVisuals.render(stack, pose, buffers, OverlayTexture.NO_OVERLAY);
         pose.popPose();
     }
 

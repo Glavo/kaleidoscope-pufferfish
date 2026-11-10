@@ -22,14 +22,14 @@ public final class PufferfishContactDamage {
 
     private PufferfishContactDamage() {}
 
-    /// Applies contact damage and poison once per second, including walls and ceilings.
+    /// Applies contact damage and status effects once per second, including walls and ceilings.
     public static void tick(EntityTickEvent.Post event) {
         var entity = event.getEntity();
         if (entity.level().isClientSide || !entity.isAlive() || entity.isSpectator() || entity.tickCount % 20 != 0) return;
         var level = entity.level();
         var bounds = entity.getBoundingBox().inflate(0.001);
         boolean touching = false;
-        MobEffectInstance poison = null;
+        var effects = new java.util.HashMap<net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect>, MobEffectInstance>();
         for (var pos : BlockPos.betweenClosed(BlockPos.containing(bounds.minX, bounds.minY, bounds.minZ),
                 BlockPos.containing(bounds.maxX, bounds.maxY, bounds.maxZ))) {
             var state = level.getBlockState(pos);
@@ -39,8 +39,9 @@ public final class PufferfishContactDamage {
                     touching = true;
                     if (entity instanceof LivingEntity) {
                         var effect = poison(level, pos, state);
+                        var poison = effect == null ? null : effects.get(effect.getEffect());
                         if (effect != null && (poison == null || effect.getAmplifier() > poison.getAmplifier()
-                                || effect.getAmplifier() == poison.getAmplifier() && effect.getDuration() > poison.getDuration())) poison = effect;
+                                || effect.getAmplifier() == poison.getAmplifier() && effect.getDuration() > poison.getDuration())) effects.put(effect.getEffect(), effect);
                     }
                     break;
                 }
@@ -49,11 +50,13 @@ public final class PufferfishContactDamage {
         if (!touching) return;
         var source = new DamageSource(level.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(DAMAGE_TYPE));
         entity.hurt(source, 1);
-        if (poison != null && entity instanceof LivingEntity living && living.isAlive() && !living.isInvulnerableTo(source)) {
-            var current = living.getEffect(MobEffects.POISON);
-            if (current == null || !current.isInfiniteDuration() && (current.getAmplifier() < poison.getAmplifier()
-                    || current.getAmplifier() == poison.getAmplifier() && current.getDuration() <= poison.getDuration() / 2)) {
-                living.addEffect(poison);
+        if (entity instanceof LivingEntity living && living.isAlive() && !living.isInvulnerableTo(source)) {
+            for (var effect : effects.values()) {
+                var current = living.getEffect(effect.getEffect());
+                if (current == null || !current.isInfiniteDuration() && (current.getAmplifier() < effect.getAmplifier()
+                        || current.getAmplifier() == effect.getAmplifier() && current.getDuration() <= effect.getDuration() / 2)) {
+                    living.addEffect(effect);
+                }
             }
         }
     }
@@ -62,10 +65,11 @@ public final class PufferfishContactDamage {
     private static MobEffectInstance poison(Level level, BlockPos pos, BlockState state) {
         if (state.getBlock() instanceof PufferfishSkinBlock) {
             if (CopperPufferfish.skinIndex(state.getBlock().asItem().getDefaultInstance()) >= 4) return null;
-            return new MobEffectInstance(MobEffects.POISON, 120, 0);
+            boolean radiant = state.is(PufferfishBlocks.RADIANT_SKIN.get());
+            return new MobEffectInstance(radiant ? MobEffects.WITHER : MobEffects.POISON, 120, radiant ? 1 : 0);
         }
         if (level.getBlockEntity(pos) instanceof PlacedPufferfishBlockEntity placed && !placed.fish().isEmpty()) {
-            return PufferfishCombat.poison(placed.fish());
+            return PufferfishCombat.passiveEffect(placed.fish());
         }
         return null;
     }

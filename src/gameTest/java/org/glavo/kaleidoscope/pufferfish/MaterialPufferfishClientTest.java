@@ -29,12 +29,12 @@ public final class MaterialPufferfishClientTest {
     private MaterialPufferfishClientTest() {}
 
     public static void verify(Minecraft minecraft) {
-        var target = new TextureTarget(1280, 280, true, Minecraft.ON_OSX);
+        var target = new TextureTarget(1280, 320, true, Minecraft.ON_OSX);
         target.setClearColor(0.16F, 0.18F, 0.21F, 1);
         target.clear(Minecraft.ON_OSX);
         target.bindWrite(true);
         RenderSystem.backupProjectionMatrix();
-        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 1280, 280, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
+        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 1280, 320, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
         var view = RenderSystem.getModelViewStack();
         view.pushMatrix();
         view.identity();
@@ -70,6 +70,7 @@ public final class MaterialPufferfishClientTest {
                 pose.mulPose(Axis.YP.rotationDegrees(155));
                 pose.translate(0, -18.0 / 16, 0);
                 fish.renderToBuffer(pose, buffers.getBuffer(RenderType.entityCutoutNoCull(texture)), 15728880, OverlayTexture.NO_OVERLAY, -1);
+                org.glavo.kaleidoscope.pufferfish.client.RadiantPufferfishVisuals.render(stack, pose, buffers, OverlayTexture.NO_OVERLAY);
                 buffers.endBatch();
             }
             try (var image = Screenshot.takeScreenshot(target)) {

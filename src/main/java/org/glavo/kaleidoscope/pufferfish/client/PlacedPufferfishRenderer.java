@@ -57,6 +57,7 @@ public final class PlacedPufferfishRenderer implements BlockEntityRenderer<Place
         pose.scale(1, -1, -1);
         pose.translate(0, -23.0 / 16, 0);
         model.renderToBuffer(pose, buffers.getBuffer(RenderType.entityCutoutNoCull(texture)), light, overlay);
+        RadiantPufferfishVisuals.render(stack, pose, buffers, overlay);
         pose.popPose();
     }
 }

@@ -60,6 +60,7 @@ public final class PufferfishHeadRenderer {
         model.setupAnim(wearer, 0.0F, 0.0F, ageInTicks, 0.0F, 0.0F);
         model.renderToBuffer(pose, buffers.getBuffer(RenderType.entityCutoutNoCull(texture)), light,
                 LivingEntityRenderer.getOverlayCoords(wearer, 0.0F));
+        RadiantPufferfishVisuals.render(stack, pose, buffers, LivingEntityRenderer.getOverlayCoords(wearer, 0.0F));
         pose.popPose();
     }
 

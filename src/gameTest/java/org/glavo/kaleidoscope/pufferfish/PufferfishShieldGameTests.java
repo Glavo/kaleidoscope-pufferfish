@@ -51,8 +51,8 @@ public final class PufferfishShieldGameTests {
                 player.invulnerableTime = 0;
                 shield.setDamageValue(0);
                 player.hurt(player.damageSources().mobAttack(attacker), 6);
-                var poison = attacker.getEffect(net.minecraft.world.effect.MobEffects.POISON);
-                helper.assertTrue(poison != null && poison.getDuration() == 60 && poison.getAmplifier() == 0
+                var poison = attacker.getEffect(PufferfishItems.isRadiant(shield) ? net.minecraft.world.effect.MobEffects.WITHER : net.minecraft.world.effect.MobEffects.POISON);
+                helper.assertTrue(poison != null && poison.getDuration() == 60 && poison.getAmplifier() == (PufferfishItems.isRadiant(shield) ? 1 : 0)
                         && player.getHealth() == 20, "Successful block did not poison its attacker for three seconds");
                 float damage = 20 - attacker.getHealth();
                 helper.assertTrue(damage == 0 || damage >= 1 && damage <= 5, "Shield exceeded native Thorns I damage");

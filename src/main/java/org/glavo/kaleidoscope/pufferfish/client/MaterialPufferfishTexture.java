@@ -23,7 +23,7 @@ public final class MaterialPufferfishTexture {
             case "iron" -> IRON;
             case "diamond" -> DIAMOND;
             case "golden" -> GOLDEN;
-            case "radiant" -> new int[] {0x656080, 0x9A92AE, 0xC8BDD3, 0xE7DAE7, 0xFFF1D5, 0xFFFFFF};
+            case "radiant" -> new int[] {0x8D703A, 0xBAA370, 0xDDCEAA, 0xF5EAD1, 0xFFF7E6, 0xFFFFFF};
             default -> throw new IllegalArgumentException("Unknown pufferfish material: " + material);
         };
         int size = entity ? 32 : 16;

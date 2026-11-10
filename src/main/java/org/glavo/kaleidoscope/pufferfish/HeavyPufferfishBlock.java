@@ -83,6 +83,6 @@ public final class HeavyPufferfishBlock extends PlacedPufferfishBlock implements
                 || !(event.getSource().getDirectEntity() instanceof FallingBlockEntity falling)
                 || !(falling.getBlockState().getBlock() instanceof HeavyPufferfishBlock)
                 || event.getNewDamage() + event.getReduction(DamageContainer.Reduction.ABSORPTION) <= 0) return;
-        PufferfishCombat.applyPoison(new ItemStack(PufferfishItems.HEAVY.get()), event.getEntity(), falling);
+        PufferfishCombat.applyPassiveEffect(new ItemStack(PufferfishItems.HEAVY.get()), event.getEntity(), falling);
     }
 }

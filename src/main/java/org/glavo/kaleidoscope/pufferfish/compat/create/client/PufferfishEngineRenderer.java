@@ -78,6 +78,7 @@ public final class PufferfishEngineRenderer implements BlockEntityRenderer<Puffe
             pose.translate(0, -18.0F / 16, 0);
             fishModel.setupAnim(null, 0, 0, angle / 6, 0, 0);
             fishModel.renderToBuffer(pose, buffers.getBuffer(RenderType.entityCutoutNoCull(texture)), light, OverlayTexture.NO_OVERLAY);
+            org.glavo.kaleidoscope.pufferfish.client.RadiantPufferfishVisuals.render(fish, pose, buffers, OverlayTexture.NO_OVERLAY);
             pose.popPose();
         }
         if (engine.hasWater()) {

@@ -90,6 +90,7 @@ public final class PufferfishFlailModel {
         fish.setupAnim(null, 0, 0, age, 0, 0);
         fish.renderToBuffer(pose, ItemRenderer.getFoilBufferDirect(buffers, RenderType.entityCutoutNoCull(texture),
                 false, stack.hasFoil()), light, overlay);
+        RadiantPufferfishVisuals.render(stack, pose, buffers, overlay);
         pose.popPose();
     }
 

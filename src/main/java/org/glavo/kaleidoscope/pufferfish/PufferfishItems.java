@@ -101,9 +101,6 @@ public final class PufferfishItems {
                             3, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD)
                     .build())) {
         @Override
-        public boolean isFoil(ItemStack stack) { return true; }
-
-        @Override
         public EquipmentSlot getEquipmentSlot(ItemStack stack) {
             return EquipmentSlot.HEAD;
         }
@@ -167,6 +164,11 @@ public final class PufferfishItems {
         if (stack.is(GOLDEN.get())) return "golden";
         if (stack.is(RADIANT.get())) return "radiant";
         return null;
+    }
+
+    public static boolean isRadiant(ItemStack stack) {
+        var id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem());
+        return id.getNamespace().equals(KaleidoscopePufferfish.MODID) && id.getPath().startsWith("radiant_pufferfish");
     }
 
     public static boolean isNetherite(ItemStack stack) {

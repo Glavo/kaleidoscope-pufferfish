@@ -114,6 +114,11 @@ public final class PufferfishArmor {
             var stack = wearer.getItemBySlot(slot);
             if (!(stack.getItem() instanceof ArmorItem armor) || armor.getEquipmentSlot() != slot
                     || VARIANTS.values().stream().noneMatch(item -> stack.is(item.get()))) continue;
+            if (PufferfishItems.isRadiant(stack)) {
+                attacker.addEffect(new MobEffectInstance(MobEffects.WITHER, PufferfishCombat.POISON_DURATION_TICKS, 1), wearer);
+                if (thornsItem == null) thornsItem = new EnchantedItemInUse(stack, slot, wearer);
+                continue;
+            }
             var effect = poison(armor);
             if (effect != null && (poison == null || effect.getAmplifier() > poison.getAmplifier()
                     || effect.getAmplifier() == poison.getAmplifier() && effect.getDuration() > poison.getDuration())) poison = effect;
@@ -130,7 +135,7 @@ public final class PufferfishArmor {
         for (int stage = 0; stage < PufferfishBlocks.COPPER_SKINS.size(); stage++) {
             String name = PufferfishBlocks.COPPER_SKINS.get(stage).getId().getPath() + "_" + armor.getType().getName();
             if (VARIANTS.get(name).get() == armor) {
-                return PufferfishCombat.poison(new ItemStack(PufferfishItems.COPPER_VARIANTS.get(stage).get()));
+                return PufferfishCombat.passiveEffect(new ItemStack(PufferfishItems.COPPER_VARIANTS.get(stage).get()));
             }
         }
         return new MobEffectInstance(MobEffects.POISON, PufferfishCombat.POISON_DURATION_TICKS, 0);

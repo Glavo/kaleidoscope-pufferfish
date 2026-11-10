@@ -87,9 +87,15 @@ public final class PufferfishCombat {
         }
     }
 
-    /// Applies the fish's poison and Punch knockback, respecting immunity and knockback resistance.
+    /// Applies the fish's active status effect and Punch knockback, respecting immunity and knockback resistance.
     public static void hitEffects(ItemStack stack, LivingEntity target, Entity source, Vec3 direction) {
-        applyPoison(stack, target, source);
+        if (PufferfishItems.isRadiant(stack)) {
+            var current = target.getEffect(MobEffects.WITHER);
+            int amplifier = current == null ? 0 : Math.min(9, current.getAmplifier() + 1);
+            target.addEffect(new MobEffectInstance(MobEffects.WITHER, POISON_DURATION_TICKS, amplifier), source);
+        } else {
+            applyPassiveEffect(stack, target, source);
+        }
         int punch = enchantmentLevel(stack, Enchantments.PUNCH);
         if (punch > 0) {
             double resistance = Math.max(0, 1 - target.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE));
@@ -98,15 +104,16 @@ public final class PufferfishCombat {
         }
     }
 
-    /// Oxidation strengthens copper poison; wax prevents it without removing existing effects.
-    public static void applyPoison(ItemStack stack, LivingEntity target, Entity source) {
-        var poison = poison(stack);
+    /// Applies fixed passive effects without escalating existing wither.
+    public static void applyPassiveEffect(ItemStack stack, LivingEntity target, Entity source) {
+        var poison = passiveEffect(stack);
         if (poison != null) target.addEffect(poison, source);
     }
 
     @javax.annotation.Nullable
-    public static MobEffectInstance poison(ItemStack stack) {
+    public static MobEffectInstance passiveEffect(ItemStack stack) {
         stack = PufferfishItems.flailFish(stack);
+        if (PufferfishItems.isRadiant(stack)) return new MobEffectInstance(MobEffects.WITHER, POISON_DURATION_TICKS, 1);
         int copper = CopperPufferfish.index(stack);
         if (copper >= 4) return null;
         int duration = copper > 0 ? copper * 120 : POISON_DURATION_TICKS;
