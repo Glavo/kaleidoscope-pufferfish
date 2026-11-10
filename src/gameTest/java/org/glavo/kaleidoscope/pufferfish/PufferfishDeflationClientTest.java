@@ -22,7 +22,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.glavo.kaleidoscope.pufferfish.client.DeflatingPufferfishModel;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishFlailModel;
-import org.glavo.kaleidoscope.pufferfish.client.PufferfishPumpRenderer;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishTextures;
 import org.joml.Matrix4f;
 
@@ -58,10 +57,8 @@ public final class PufferfishDeflationClientTest {
         }
         var pump = PufferfishItems.PUMP.toStack();
         if (!minecraft.getItemRenderer().getModel(pump, null, null, 0).isCustomRenderer()
-                || pump.getHoverName().getString().startsWith("item.")
-                || PufferfishPumpRenderer.pistonOffset(10) <= PufferfishPumpRenderer.pistonOffset(0)
-                || Math.abs(PufferfishPumpRenderer.pistonOffset(20)) > 0.001) {
-            throw new IllegalStateException("Pump model, translation, or piston animation is missing");
+                || pump.getHoverName().getString().startsWith("block.")) {
+            throw new IllegalStateException("Pump model or translation is missing");
         }
         preview(minecraft, geometry);
     }

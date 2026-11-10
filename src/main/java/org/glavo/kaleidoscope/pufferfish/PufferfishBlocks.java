@@ -25,6 +25,11 @@ public final class PufferfishBlocks {
     private static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(KaleidoscopePufferfish.MODID);
     private static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(KaleidoscopePufferfish.MODID);
     private static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, KaleidoscopePufferfish.MODID);
+    public static final DeferredBlock<PufferfishPumpBlock> PUMP = BLOCKS.registerBlock("pufferfish_pump",
+            PufferfishPumpBlock::new, BlockBehaviour.Properties.of().strength(1.5F).noOcclusion().sound(SoundType.COPPER)
+                    .pushReaction(net.minecraft.world.level.material.PushReaction.BLOCK));
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PufferfishPumpBlockEntity>> PUMP_ENTITY =
+            BLOCK_ENTITIES.register("pufferfish_pump", () -> BlockEntityType.Builder.of(PufferfishPumpBlockEntity::new, PUMP.get()).build(null));
     public static final DeferredBlock<PlacedPufferfishBlock> PLACED_FISH = BLOCKS.registerBlock("placed_pufferfish",
             PlacedPufferfishBlock::new, BlockBehaviour.Properties.of().strength(0.2F).noOcclusion().lightLevel(state -> state.getValue(PlacedPufferfishBlock.LIT) ? 15 : 0)
                     .sound(SoundType.WET_GRASS).pushReaction(net.minecraft.world.level.material.PushReaction.DESTROY));
