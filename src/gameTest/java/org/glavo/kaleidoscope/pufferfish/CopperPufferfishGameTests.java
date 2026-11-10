@@ -107,8 +107,12 @@ public final class CopperPufferfishGameTests {
             target.removeEffect(MobEffects.POISON);
             player.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
             player.setItemSlot(EquipmentSlot.HEAD, fish);
-            helper.assertTrue(player.hurt(player.damageSources().mobAttack(target), 1), "Retaliation damage failed");
-            assertPoison(helper, target, stage);
+            target.invulnerableTime = 0;
+            helper.assertTrue(target.hurt(target.damageSources().thorns(player), 1), "Thorns damage failed");
+            var poison = target.getEffect(MobEffects.POISON);
+            helper.assertTrue(stage >= 4 ? poison == null
+                    : poison != null && poison.getAmplifier() == 0 && poison.getDuration() == new int[] {60, 120, 240, 360}[stage],
+                    "Copper headgear did not apply Poison I with its oxidation duration");
         }
         helper.succeed();
     }

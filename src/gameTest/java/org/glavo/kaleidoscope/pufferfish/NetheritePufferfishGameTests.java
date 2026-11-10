@@ -145,7 +145,7 @@ public final class NetheritePufferfishGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void netheriteRetaliationUsesStrongerThornsAndPoison(GameTestHelper helper) {
+    public static void netheriteRetaliationUsesStrongerThornsWithConditionalPoisonOne(GameTestHelper helper) {
         var wearer = helper.makeMockPlayer(GameType.SURVIVAL);
         var attacker = EntityType.PIG.create(helper.getLevel());
         int[] reflected = new int[2];
@@ -163,8 +163,9 @@ public final class NetheritePufferfishGameTests {
                 attacker.removeEffect(MobEffects.POISON);
                 wearer.hurt(wearer.damageSources().mobAttack(attacker), 1);
                 var poison = attacker.getEffect(MobEffects.POISON);
-                helper.assertTrue(poison != null && poison.getDuration() == 60
-                        && poison.getAmplifier() == tier, "Retaliation used the wrong poison tier");
+                helper.assertTrue(attacker.getHealth() < attacker.getMaxHealth()
+                        ? poison != null && poison.getDuration() == 60 && poison.getAmplifier() == 0 : poison == null,
+                        "Retaliation did not condition Poison I on successful thorns");
                 if (attacker.getHealth() < attacker.getMaxHealth()) reflected[tier]++;
             }
         }

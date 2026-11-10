@@ -112,10 +112,23 @@ public final class PufferfishZombieHeadgearGameTests {
         zombie.setItemSlot(EquipmentSlot.HEAD, fish);
         var attacker = EntityType.PIG.create(helper.getLevel());
         helper.assertTrue(PufferfishHeadgear.isWearing(zombie), "Zombie headgear was not recognized");
-        helper.assertTrue(zombie.hurt(zombie.damageSources().mobAttack(attacker), 1), "Attack did not hit zombie");
-        helper.assertTrue(attacker.hasEffect(MobEffects.POISON) && attacker.getEffect(MobEffects.POISON).getDuration() == 60,
-                "Zombie headgear did not retaliate with three seconds of poison");
-        helper.assertTrue(fish.getDamageValue() >= 1, "Zombie headgear did not lose durability");
+        int reflected = 0;
+        for (int i = 0; i < 32; i++) {
+            zombie.setHealth(zombie.getMaxHealth());
+            zombie.invulnerableTime = 0;
+            fish.setDamageValue(0);
+            attacker.setHealth(attacker.getMaxHealth());
+            attacker.invulnerableTime = 0;
+            attacker.removeAllEffects();
+            helper.assertTrue(zombie.hurt(zombie.damageSources().mobAttack(attacker), 1), "Attack did not hit zombie");
+            var poison = attacker.getEffect(MobEffects.POISON);
+            if (attacker.getHealth() < attacker.getMaxHealth()) reflected++;
+            helper.assertTrue(attacker.getHealth() < attacker.getMaxHealth()
+                    ? poison != null && poison.getDuration() == 60 && poison.getAmplifier() == 0 : poison == null,
+                    "Zombie headgear poison did not follow successful thorns");
+            helper.assertTrue(fish.getDamageValue() >= 1, "Zombie headgear did not lose durability");
+        }
+        helper.assertTrue(reflected > 0 && reflected < 32, "Zombie headgear did not roll thorns");
         helper.succeed();
     }
 }

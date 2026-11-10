@@ -48,23 +48,24 @@ public final class PufferfishArmorGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void mixedArmorUsesStrongestUnwaxedPoison(GameTestHelper helper) {
+    public static void mixedArmorUsesLongestUnwaxedPoisonAfterThorns(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         var attacker = EntityType.VILLAGER.create(helper.getLevel());
         player.setItemSlot(EquipmentSlot.CHEST, new ItemStack(PufferfishArmor.VARIANTS.get("waxed_oxidized_copper_pufferfish_skin_chestplate").get()));
         player.setItemSlot(EquipmentSlot.HEAD, new ItemStack(PufferfishArmor.VARIANTS.get("weathered_copper_pufferfish_skin_helmet").get()));
         player.setItemSlot(EquipmentSlot.LEGS, new ItemStack(PufferfishArmor.VARIANTS.get("pufferfish_skin_leggings").get()));
         player.setItemSlot(EquipmentSlot.FEET, new ItemStack(PufferfishArmor.VARIANTS.get("oxidized_copper_pufferfish_skin_boots").get()));
-        player.hurt(player.damageSources().mobAttack(attacker), 2);
+        attacker.hurt(attacker.damageSources().thorns(player), 1);
         var poison = attacker.getEffect(MobEffects.POISON);
-        helper.assertTrue(poison != null && poison.getDuration() == 360 && poison.getAmplifier() == 2,
-                "Mixed armor did not use the strongest unwaxed poison");
+        helper.assertTrue(poison != null && poison.getDuration() == 360 && poison.getAmplifier() == 0,
+                "Mixed armor did not use the longest unwaxed Poison I");
         player.setItemSlot(EquipmentSlot.FEET, ItemStack.EMPTY);
         player.invulnerableTime = 0;
         attacker.removeAllEffects();
-        player.hurt(player.damageSources().mobAttack(attacker), 2);
+        attacker.invulnerableTime = 0;
+        attacker.hurt(attacker.damageSources().thorns(player), 1);
         poison = attacker.getEffect(MobEffects.POISON);
-        helper.assertTrue(poison != null && poison.getDuration() == 240 && poison.getAmplifier() == 1,
+        helper.assertTrue(poison != null && poison.getDuration() == 240 && poison.getAmplifier() == 0,
                 "Waxed armor suppressed another piece's poison");
         helper.succeed();
     }
@@ -213,8 +214,8 @@ public final class PufferfishArmorGameTests {
                 String name = item.getId().getPath();
                 int duration = PufferfishItems.isRadiant(armor) ? 100 : name.startsWith("oxidized_copper_") ? 360 : name.startsWith("weathered_copper_") ? 240
                         : name.startsWith("exposed_copper_") ? 120 : 60;
-                int amplifier = PufferfishItems.isRadiant(armor) ? 1 : name.startsWith("oxidized_copper_") ? 2 : name.startsWith("weathered_copper_") ? 1 : 0;
-                helper.assertTrue(name.startsWith("waxed_") ? poison == null
+                int amplifier = PufferfishItems.isRadiant(armor) ? 1 : 0;
+                helper.assertTrue(name.startsWith("waxed_") || !PufferfishItems.isRadiant(armor) && attacker.getHealth() == 20 ? poison == null
                         : poison != null && poison.getDuration() == duration && poison.getAmplifier() == amplifier,
                         "Skin armor applied the wrong poison effect");
                 float damage = 20 - attacker.getHealth();

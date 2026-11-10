@@ -108,7 +108,6 @@ public final class PufferfishArmor {
         if (!(wearer.level() instanceof ServerLevel level) || wearer.isSpectator()
                 || source.is(DamageTypes.THORNS) || !(source.getEntity() instanceof LivingEntity attacker)
                 || attacker == wearer || event.getNewDamage() + event.getReduction(DamageContainer.Reduction.ABSORPTION) <= 0) return;
-        MobEffectInstance poison = null;
         EnchantedItemInUse thornsItem = null;
         for (var slot : List.of(EquipmentSlot.CHEST, EquipmentSlot.HEAD, EquipmentSlot.LEGS, EquipmentSlot.FEET)) {
             var stack = wearer.getItemBySlot(slot);
@@ -119,15 +118,24 @@ public final class PufferfishArmor {
                 if (thornsItem == null) thornsItem = new EnchantedItemInUse(stack, slot, wearer);
                 continue;
             }
-            var effect = poison(armor);
-            if (effect != null && (poison == null || effect.getAmplifier() > poison.getAmplifier()
-                    || effect.getAmplifier() == poison.getAmplifier() && effect.getDuration() > poison.getDuration())) poison = effect;
             if (thornsItem == null) thornsItem = new EnchantedItemInUse(stack, slot, wearer);
         }
-        if (poison != null) attacker.addEffect(poison, wearer);
         if (thornsItem == null) return;
         var thorns = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.THORNS);
         thorns.value().doPostAttack(level, 1, thornsItem, EnchantmentTarget.VICTIM, wearer, source);
+    }
+
+    @javax.annotation.Nullable
+    public static MobEffectInstance poison(LivingEntity wearer) {
+        MobEffectInstance poison = null;
+        for (var type : TYPES) {
+            var stack = wearer.getItemBySlot(type.getSlot());
+            if (!(stack.getItem() instanceof ArmorItem armor) || armor.getType() != type || PufferfishItems.isRadiant(stack)
+                    || VARIANTS.values().stream().noneMatch(item -> stack.is(item.get()))) continue;
+            var effect = poison(armor);
+            if (effect != null && (poison == null || effect.getDuration() > poison.getDuration())) poison = effect;
+        }
+        return poison;
     }
 
     @javax.annotation.Nullable

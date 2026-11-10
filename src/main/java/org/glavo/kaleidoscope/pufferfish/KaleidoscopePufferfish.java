@@ -192,6 +192,7 @@ public class KaleidoscopePufferfish {
         NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::breatheZombie);
         NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::retaliate);
         NeoForge.EVENT_BUS.addListener(PufferfishArmor::retaliate);
+        NeoForge.EVENT_BUS.addListener(PufferfishRetaliation::poisonOnThorns);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishShields::retaliate);
         NeoForge.EVENT_BUS.addListener(PufferfishDurability::afterDamage);
         NeoForge.EVENT_BUS.addListener(PufferfishDurability::tick);
