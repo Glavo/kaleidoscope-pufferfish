@@ -80,6 +80,7 @@
   "item.kaleidoscope_pufferfish.iron_pufferfish_flail": "铁河豚流星锤",
   "item.kaleidoscope_pufferfish.diamond_pufferfish_flail": "钻石河豚流星锤",
   "item.kaleidoscope_pufferfish.netherite_pufferfish_flail": "下界合金河豚流星锤",
+  "item.kaleidoscope_pufferfish.radiant_pufferfish_flail": "璀璨河豚流星锤",
   "item.kaleidoscope_pufferfish.heavy_pufferfish_flail": "沉重河豚流星锤",
 
   "block.kaleidoscope_pufferfish.pufferfish_skin": "河豚皮",
@@ -111,6 +112,7 @@
   "block.kaleidoscope_pufferfish.iron_pufferfish_skin": "铁河豚皮",
   "block.kaleidoscope_pufferfish.diamond_pufferfish_skin": "钻石河豚皮",
   "block.kaleidoscope_pufferfish.netherite_pufferfish_skin": "下界合金河豚皮",
+  "block.kaleidoscope_pufferfish.radiant_pufferfish_skin": "璀璨河豚皮",
   "block.kaleidoscope_pufferfish.heavy_pufferfish_skin": "沉重河豚皮",
 
   "item.kaleidoscope_pufferfish.pufferfish_skin_shield": "河豚皮盾",
@@ -135,6 +137,7 @@
   "item.kaleidoscope_pufferfish.iron_pufferfish_skin_shield": "铁河豚皮盾",
   "item.kaleidoscope_pufferfish.diamond_pufferfish_skin_shield": "钻石河豚皮盾",
   "item.kaleidoscope_pufferfish.netherite_pufferfish_skin_shield": "下界合金河豚皮盾",
+  "item.kaleidoscope_pufferfish.radiant_pufferfish_skin_shield": "璀璨河豚皮盾",
   "item.kaleidoscope_pufferfish.heavy_pufferfish_skin_shield": "沉重河豚皮盾",
 
   "item.kaleidoscope_pufferfish.pufferfish_skin_helmet": "河豚皮头盔",
@@ -166,6 +169,7 @@
   "item.kaleidoscope_pufferfish.iron_pufferfish_skin_helmet": "铁河豚皮帽子",
   "item.kaleidoscope_pufferfish.diamond_pufferfish_skin_helmet": "钻石河豚皮帽子",
   "item.kaleidoscope_pufferfish.netherite_pufferfish_skin_helmet": "下界合金河豚皮头盔",
+  "item.kaleidoscope_pufferfish.radiant_pufferfish_skin_helmet": "璀璨河豚皮头盔",
   "item.kaleidoscope_pufferfish.heavy_pufferfish_skin_helmet": "沉重河豚皮头盔",
 
   "item.kaleidoscope_pufferfish.pufferfish_skin_chestplate": "河豚皮甲",
@@ -197,6 +201,7 @@
   "item.kaleidoscope_pufferfish.iron_pufferfish_skin_chestplate": "铁河豚皮上衣",
   "item.kaleidoscope_pufferfish.diamond_pufferfish_skin_chestplate": "钻石河豚皮上衣",
   "item.kaleidoscope_pufferfish.netherite_pufferfish_skin_chestplate": "下界合金河豚皮甲",
+  "item.kaleidoscope_pufferfish.radiant_pufferfish_skin_chestplate": "璀璨河豚皮甲",
   "item.kaleidoscope_pufferfish.heavy_pufferfish_skin_chestplate": "沉重河豚皮甲",
 
   "item.kaleidoscope_pufferfish.pufferfish_skin_leggings": "河豚皮裤子",
@@ -228,6 +233,7 @@
   "item.kaleidoscope_pufferfish.iron_pufferfish_skin_leggings": "铁河豚皮裤子",
   "item.kaleidoscope_pufferfish.diamond_pufferfish_skin_leggings": "钻石河豚皮裤子",
   "item.kaleidoscope_pufferfish.netherite_pufferfish_skin_leggings": "下界合金河豚皮裤子",
+  "item.kaleidoscope_pufferfish.radiant_pufferfish_skin_leggings": "璀璨河豚皮裤子",
   "item.kaleidoscope_pufferfish.heavy_pufferfish_skin_leggings": "沉重河豚皮裤子",
 
   "item.kaleidoscope_pufferfish.pufferfish_skin_boots": "河豚皮靴子",
@@ -259,6 +265,7 @@
   "item.kaleidoscope_pufferfish.iron_pufferfish_skin_boots": "铁河豚皮靴子",
   "item.kaleidoscope_pufferfish.diamond_pufferfish_skin_boots": "钻石河豚皮靴子",
   "item.kaleidoscope_pufferfish.netherite_pufferfish_skin_boots": "下界合金河豚皮靴子",
+  "item.kaleidoscope_pufferfish.radiant_pufferfish_skin_boots": "璀璨河豚皮靴子",
   "item.kaleidoscope_pufferfish.heavy_pufferfish_skin_boots": "沉重河豚皮靴子",
 
   "item.kaleidoscope_pufferfish.pufferfish_skin_boat": "河豚皮划艇",
@@ -318,7 +325,9 @@
   "item.kaleidoscope_pufferfish.diamond_pufferfish_skin_boat": "钻石河豚皮划艇",
   "entity.kaleidoscope_pufferfish.diamond_pufferfish_skin_boat": "钻石河豚皮划艇",
   "item.kaleidoscope_pufferfish.netherite_pufferfish_skin_boat": "下界合金河豚皮划艇",
+  "item.kaleidoscope_pufferfish.radiant_pufferfish_skin_boat": "璀璨河豚皮划艇",
   "entity.kaleidoscope_pufferfish.netherite_pufferfish_skin_boat": "下界合金河豚皮划艇",
+  "entity.kaleidoscope_pufferfish.radiant_pufferfish_skin_boat": "璀璨河豚皮划艇",
   "item.kaleidoscope_pufferfish.heavy_pufferfish_skin_boat": "沉重河豚皮划艇",
   "entity.kaleidoscope_pufferfish.heavy_pufferfish_skin_boat": "沉重河豚皮划艇",
 

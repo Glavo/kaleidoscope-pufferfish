@@ -31,6 +31,9 @@ public final class PufferfishHeadgear {
 
     public static void breathe(PlayerTickEvent.Post event) {
         var player = event.getEntity();
+        if (!player.level().isClientSide() && isWearing(player) && player.getItemBySlot(EquipmentSlot.HEAD).is(PufferfishItems.RADIANT.get())) {
+            player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 300, 0, false, false, true));
+        }
         if (!player.level().isClientSide() && isWearing(player) && !player.isEyeInFluid(FluidTags.WATER)) {
             player.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 200, 0, false, false, true));
         }

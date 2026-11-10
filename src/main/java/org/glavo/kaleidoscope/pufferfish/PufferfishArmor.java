@@ -55,6 +55,7 @@ public final class PufferfishArmor {
         add(variants, "iron_", () -> PufferfishBlocks.IRON_SKIN.get().asItem());
         add(variants, "diamond_", () -> PufferfishBlocks.DIAMOND_SKIN.get().asItem());
         add(variants, "netherite_", () -> PufferfishBlocks.NETHERITE_SKIN.get().asItem());
+        add(variants, "radiant_", () -> PufferfishBlocks.RADIANT_SKIN.get().asItem());
         add(variants, "heavy_", () -> PufferfishBlocks.HEAVY_SKIN.get().asItem());
         VARIANTS = Collections.unmodifiableMap(variants);
     }
@@ -68,7 +69,7 @@ public final class PufferfishArmor {
                 case "golden_" -> ArmorMaterials.GOLD;
                 case "iron_" -> ArmorMaterials.IRON;
                 case "diamond_" -> ArmorMaterials.DIAMOND;
-                case "netherite_", "heavy_" -> ArmorMaterials.NETHERITE;
+                case "netherite_", "radiant_", "heavy_" -> ArmorMaterials.NETHERITE;
                 default -> ArmorMaterials.LEATHER;
             };
             return new ArmorMaterial(protection.value().defense(), 15,
@@ -81,7 +82,7 @@ public final class PufferfishArmor {
             variants.put(itemName, ITEMS.register(itemName, () -> {
                 int durability = prefix.equals("heavy_") ? (type.getDurability(37) * 3 + 1) / 2 : type.getDurability(5);
                 var properties = new Item.Properties().durability(durability);
-                if (prefix.equals("netherite_") || prefix.equals("heavy_")) properties.fireResistant();
+                if (prefix.equals("netherite_") || prefix.equals("radiant_") || prefix.equals("heavy_")) properties.fireResistant();
                 if (prefix.equals("heavy_")) return new ArmorItem(material, type, properties) {
                     private final ItemAttributeModifiers modifiers = super.getDefaultAttributeModifiers().withModifierAdded(
                             Attributes.MOVEMENT_SPEED, new AttributeModifier(KaleidoscopePufferfish.id(itemName + "_weight"),

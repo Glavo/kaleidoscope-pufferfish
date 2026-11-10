@@ -110,6 +110,7 @@ public class KaleidoscopePufferfish {
                     output.accept(PufferfishBlocks.IRON_SKIN);
                     output.accept(PufferfishBlocks.DIAMOND_SKIN);
                     output.accept(PufferfishBlocks.NETHERITE_SKIN);
+                    output.accept(PufferfishBlocks.RADIANT_SKIN);
                     output.accept(PufferfishBlocks.HEAVY_SKIN);
                     PufferfishShields.VARIANTS.values().forEach(output::accept);
                     PufferfishArmor.VARIANTS.values().forEach(output::accept);

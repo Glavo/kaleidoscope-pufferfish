@@ -26,7 +26,7 @@ public final class PufferfishBlocks {
     private static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(KaleidoscopePufferfish.MODID);
     private static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, KaleidoscopePufferfish.MODID);
     public static final DeferredBlock<PlacedPufferfishBlock> PLACED_FISH = BLOCKS.registerBlock("placed_pufferfish",
-            PlacedPufferfishBlock::new, BlockBehaviour.Properties.of().strength(0.2F).noOcclusion()
+            PlacedPufferfishBlock::new, BlockBehaviour.Properties.of().strength(0.2F).noOcclusion().lightLevel(state -> state.getValue(PlacedPufferfishBlock.LIT) ? 15 : 0)
                     .sound(SoundType.WET_GRASS).pushReaction(net.minecraft.world.level.material.PushReaction.DESTROY));
     public static final DeferredBlock<HeavyPufferfishBlock> PLACED_HEAVY_FISH = BLOCKS.registerBlock("placed_heavy_pufferfish",
             HeavyPufferfishBlock::new, BlockBehaviour.Properties.of().strength(0.2F).noOcclusion()
@@ -44,6 +44,7 @@ public final class PufferfishBlocks {
             PufferfishSkinBlock::new, BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CARPET)
                     .mapColor(MapColor.GOLD).sound(SoundType.WET_GRASS));
     public static final DeferredBlock<PufferfishSkinBlock> NETHERITE_SKIN = registerMetalSkin("netherite", MapColor.COLOR_BLACK);
+    public static final DeferredBlock<PufferfishSkinBlock> RADIANT_SKIN = registerMetalSkin("radiant", MapColor.QUARTZ);
     public static final DeferredBlock<PufferfishSkinBlock> HEAVY_SKIN = registerMetalSkin("heavy", MapColor.COLOR_LIGHT_BLUE);
     public static final DeferredBlock<PufferfishSkinBlock> COPPER_SKIN = registerCraftedSkin("copper", MapColor.COLOR_ORANGE);
     public static final java.util.List<DeferredBlock<PufferfishSkinBlock>> COPPER_SKINS = java.util.List.of(
@@ -91,6 +92,7 @@ public final class PufferfishBlocks {
         if (stack.is(PufferfishItems.GOLDEN.get())) return GOLDEN_SKIN.get();
         if (stack.is(PufferfishItems.NETHERITE.get())) return NETHERITE_SKIN.get();
         if (stack.is(PufferfishItems.HEAVY.get())) return HEAVY_SKIN.get();
+        if (stack.is(PufferfishItems.RADIANT.get())) return RADIANT_SKIN.get();
         return stack.is(Items.PUFFERFISH) ? skin(PufferfishColors.get(stack)) : null;
     }
 

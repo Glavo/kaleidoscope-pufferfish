@@ -124,7 +124,7 @@ public final class PufferfishArmorGameTests {
             player.setItemSlot(slot, armor);
             player.tick();
             boolean golden = entry.getKey().startsWith("golden_");
-            boolean netherite = entry.getKey().startsWith("netherite_") || heavy;
+            boolean netherite = entry.getKey().startsWith("netherite_") || entry.getKey().startsWith("radiant_") || heavy;
             boolean diamond = entry.getKey().startsWith("diamond_");
             boolean iron = entry.getKey().startsWith("iron_");
             int defense = switch (type) {
@@ -141,13 +141,13 @@ public final class PufferfishArmorGameTests {
             grid.set(0, new ItemStack(Items.LEATHER));
             helper.assertTrue(!recipe.matches(CraftingInput.of(3, pattern.size(), grid), helper.getLevel()), "Armor accepted an incorrect ingredient");
         }
-        for (String prefix : List.of("golden_", "netherite_", "heavy_", "copper_", "iron_", "diamond_")) {
+        for (String prefix : List.of("golden_", "netherite_", "radiant_", "heavy_", "copper_", "iron_", "diamond_")) {
             for (var type : PufferfishArmor.TYPES) {
                 player.setItemSlot(type.getSlot(), new ItemStack(PufferfishArmor.VARIANTS.get(prefix + "pufferfish_skin_" + type.getName()).get()));
             }
             player.tick();
             int protection = switch (prefix) { case "golden_" -> 11; case "copper_" -> 7; case "iron_" -> 15; default -> 20; };
-            int toughness = switch (prefix) { case "netherite_", "heavy_" -> 12; case "diamond_" -> 8; default -> 0; };
+            int toughness = switch (prefix) { case "netherite_", "radiant_", "heavy_" -> 12; case "diamond_" -> 8; default -> 0; };
             helper.assertTrue(player.getArmorValue() == protection,
                     "Metal skin armor set had incorrect total protection");
             helper.assertTrue(player.getAttributeValue(Attributes.ARMOR_TOUGHNESS) == toughness,

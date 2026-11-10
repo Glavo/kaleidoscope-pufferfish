@@ -34,6 +34,7 @@ public final class PufferfishBoats {
             add(variants, material + "_");
         }
         add(variants, "netherite_");
+        add(variants, "radiant_");
         add(variants, "heavy_");
         VARIANTS = Collections.unmodifiableMap(variants);
     }
@@ -48,7 +49,7 @@ public final class PufferfishBoats {
                 .build(KaleidoscopePufferfish.id(name).toString()));
         var item = ITEMS.register(name, () -> {
             var properties = new Item.Properties().stacksTo(1);
-            if (prefix.equals("netherite_") || prefix.equals("heavy_")) properties.fireResistant();
+            if (prefix.equals("netherite_") || prefix.equals("radiant_") || prefix.equals("heavy_")) properties.fireResistant();
             return new PufferfishBoatItem(entity, properties);
         });
         variants.put(name, new Variant(entity, item));

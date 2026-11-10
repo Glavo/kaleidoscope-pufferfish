@@ -76,6 +76,8 @@ public final class PufferfishItems {
     /// The fire-resistant flail crafted from a netherite pufferfish and two chains.
     public static final DeferredItem<PufferfishFlailItem> NETHERITE_FLAIL = ITEMS.register("netherite_pufferfish_flail",
             () -> new PufferfishFlailItem(new Item.Properties().stacksTo(1).fireResistant(), () -> PufferfishItems.NETHERITE.get()));
+    public static final DeferredItem<PufferfishFlailItem> RADIANT_FLAIL = ITEMS.register("radiant_pufferfish_flail",
+            () -> new PufferfishFlailItem(new Item.Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant(), () -> PufferfishItems.RADIANT.get()));
     public static final DeferredItem<PufferfishFlailItem> HEAVY_FLAIL = ITEMS.register("heavy_pufferfish_flail",
             () -> new PufferfishFlailItem(new Item.Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant(), () -> PufferfishItems.HEAVY.get()));
     public static final java.util.List<DeferredItem<PufferfishFlailItem>> FLAIL_VARIANTS = registerFlails();
@@ -139,6 +141,7 @@ public final class PufferfishItems {
                     () -> new PufferfishFlailItem(new Item.Properties().stacksTo(1), head)));
         }
         flails.add(NETHERITE_FLAIL);
+        flails.add(RADIANT_FLAIL);
         flails.add(HEAVY_FLAIL);
         return java.util.List.copyOf(flails);
     }
@@ -189,7 +192,7 @@ public final class PufferfishItems {
 
     /// Returns whether the stack is a fish or flail with netherite combat properties.
     public static boolean hasNetheriteCombat(ItemStack stack) {
-        return isNetherite(stack) || stack.is(RADIANT.get()) || hasHeavyCombat(stack) || stack.is(NETHERITE_FLAIL.get());
+        return isNetherite(stack) || stack.is(RADIANT.get()) || hasHeavyCombat(stack) || stack.is(NETHERITE_FLAIL.get()) || stack.is(RADIANT_FLAIL.get());
     }
 
     /// Returns whether the stack supports pufferfish melee damage and poison.

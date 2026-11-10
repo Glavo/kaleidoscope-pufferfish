@@ -20,7 +20,7 @@ public final class PufferfishSkinTexture {
         if (name.startsWith("waxed_")) name = name.substring("waxed_".length());
         if (name.startsWith("netherite_")) PufferfishTextures.recolor(image, PufferfishTextures.NETHERITE_COLOR);
         else if (name.startsWith("heavy_")) HeavyPufferfishVisuals.recolor(image, true);
-        else if (name.contains("copper_pufferfish") || name.startsWith("iron_") || name.startsWith("diamond_")) {
+        else if (name.contains("copper_pufferfish") || name.startsWith("iron_") || name.startsWith("diamond_") || name.startsWith("radiant_")) {
             MaterialPufferfishTexture.recolor(image, name.substring(0, name.indexOf("_pufferfish")), true);
         }
     }

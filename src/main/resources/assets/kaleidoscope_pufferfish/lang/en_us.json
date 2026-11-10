@@ -80,6 +80,7 @@
   "item.kaleidoscope_pufferfish.iron_pufferfish_flail": "Iron Pufferfish Flail",
   "item.kaleidoscope_pufferfish.diamond_pufferfish_flail": "Diamond Pufferfish Flail",
   "item.kaleidoscope_pufferfish.netherite_pufferfish_flail": "Netherite Pufferfish Flail",
+  "item.kaleidoscope_pufferfish.radiant_pufferfish_flail": "Radiant Pufferfish Flail",
   "item.kaleidoscope_pufferfish.heavy_pufferfish_flail": "Heavy Pufferfish Flail",
 
   "block.kaleidoscope_pufferfish.pufferfish_skin": "Pufferfish Skin",
@@ -111,6 +112,7 @@
   "block.kaleidoscope_pufferfish.iron_pufferfish_skin": "Iron Pufferfish Skin",
   "block.kaleidoscope_pufferfish.diamond_pufferfish_skin": "Diamond Pufferfish Skin",
   "block.kaleidoscope_pufferfish.netherite_pufferfish_skin": "Netherite Pufferfish Skin",
+  "block.kaleidoscope_pufferfish.radiant_pufferfish_skin": "Radiant Pufferfish Skin",
   "block.kaleidoscope_pufferfish.heavy_pufferfish_skin": "Heavy Pufferfish Skin",
 
   "item.kaleidoscope_pufferfish.pufferfish_skin_shield": "Pufferfish Skin Shield",
@@ -135,6 +137,7 @@
   "item.kaleidoscope_pufferfish.iron_pufferfish_skin_shield": "Iron Pufferfish Skin Shield",
   "item.kaleidoscope_pufferfish.diamond_pufferfish_skin_shield": "Diamond Pufferfish Skin Shield",
   "item.kaleidoscope_pufferfish.netherite_pufferfish_skin_shield": "Netherite Pufferfish Skin Shield",
+  "item.kaleidoscope_pufferfish.radiant_pufferfish_skin_shield": "Radiant Pufferfish Skin Shield",
   "item.kaleidoscope_pufferfish.heavy_pufferfish_skin_shield": "Heavy Pufferfish Skin Shield",
 
   "item.kaleidoscope_pufferfish.pufferfish_skin_helmet": "Pufferfish Skin Cap",
@@ -166,6 +169,7 @@
   "item.kaleidoscope_pufferfish.iron_pufferfish_skin_helmet": "Iron Pufferfish Skin Cap",
   "item.kaleidoscope_pufferfish.diamond_pufferfish_skin_helmet": "Diamond Pufferfish Skin Cap",
   "item.kaleidoscope_pufferfish.netherite_pufferfish_skin_helmet": "Netherite Pufferfish Skin Cap",
+  "item.kaleidoscope_pufferfish.radiant_pufferfish_skin_helmet": "Radiant Pufferfish Skin Cap",
   "item.kaleidoscope_pufferfish.heavy_pufferfish_skin_helmet": "Heavy Pufferfish Skin Cap",
 
   "item.kaleidoscope_pufferfish.pufferfish_skin_chestplate": "Pufferfish Skin Tunic",
@@ -197,6 +201,7 @@
   "item.kaleidoscope_pufferfish.iron_pufferfish_skin_chestplate": "Iron Pufferfish Skin Tunic",
   "item.kaleidoscope_pufferfish.diamond_pufferfish_skin_chestplate": "Diamond Pufferfish Skin Tunic",
   "item.kaleidoscope_pufferfish.netherite_pufferfish_skin_chestplate": "Netherite Pufferfish Skin Tunic",
+  "item.kaleidoscope_pufferfish.radiant_pufferfish_skin_chestplate": "Radiant Pufferfish Skin Tunic",
   "item.kaleidoscope_pufferfish.heavy_pufferfish_skin_chestplate": "Heavy Pufferfish Skin Tunic",
 
   "item.kaleidoscope_pufferfish.pufferfish_skin_leggings": "Pufferfish Skin Pants",
@@ -228,6 +233,7 @@
   "item.kaleidoscope_pufferfish.iron_pufferfish_skin_leggings": "Iron Pufferfish Skin Pants",
   "item.kaleidoscope_pufferfish.diamond_pufferfish_skin_leggings": "Diamond Pufferfish Skin Pants",
   "item.kaleidoscope_pufferfish.netherite_pufferfish_skin_leggings": "Netherite Pufferfish Skin Pants",
+  "item.kaleidoscope_pufferfish.radiant_pufferfish_skin_leggings": "Radiant Pufferfish Skin Pants",
   "item.kaleidoscope_pufferfish.heavy_pufferfish_skin_leggings": "Heavy Pufferfish Skin Pants",
 
   "item.kaleidoscope_pufferfish.pufferfish_skin_boots": "Pufferfish Skin Boots",
@@ -259,6 +265,7 @@
   "item.kaleidoscope_pufferfish.iron_pufferfish_skin_boots": "Iron Pufferfish Skin Boots",
   "item.kaleidoscope_pufferfish.diamond_pufferfish_skin_boots": "Diamond Pufferfish Skin Boots",
   "item.kaleidoscope_pufferfish.netherite_pufferfish_skin_boots": "Netherite Pufferfish Skin Boots",
+  "item.kaleidoscope_pufferfish.radiant_pufferfish_skin_boots": "Radiant Pufferfish Skin Boots",
   "item.kaleidoscope_pufferfish.heavy_pufferfish_skin_boots": "Heavy Pufferfish Skin Boots",
 
   "item.kaleidoscope_pufferfish.pufferfish_skin_boat": "Pufferfish Skin Rowboat",
@@ -318,7 +325,9 @@
   "item.kaleidoscope_pufferfish.diamond_pufferfish_skin_boat": "Diamond Pufferfish Skin Rowboat",
   "entity.kaleidoscope_pufferfish.diamond_pufferfish_skin_boat": "Diamond Pufferfish Skin Rowboat",
   "item.kaleidoscope_pufferfish.netherite_pufferfish_skin_boat": "Netherite Pufferfish Skin Rowboat",
+  "item.kaleidoscope_pufferfish.radiant_pufferfish_skin_boat": "Radiant Pufferfish Skin Rowboat",
   "entity.kaleidoscope_pufferfish.netherite_pufferfish_skin_boat": "Netherite Pufferfish Skin Rowboat",
+  "entity.kaleidoscope_pufferfish.radiant_pufferfish_skin_boat": "Radiant Pufferfish Skin Rowboat",
   "item.kaleidoscope_pufferfish.heavy_pufferfish_skin_boat": "Heavy Pufferfish Skin Rowboat",
   "entity.kaleidoscope_pufferfish.heavy_pufferfish_skin_boat": "Heavy Pufferfish Skin Rowboat",
 

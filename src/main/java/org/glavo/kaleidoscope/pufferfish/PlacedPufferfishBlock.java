@@ -34,12 +34,13 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 public class PlacedPufferfishBlock extends BaseEntityBlock implements SimpleWaterloggedBlock {
     public static final MapCodec<PlacedPufferfishBlock> CODEC = simpleCodec(PlacedPufferfishBlock::new);
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+    public static final BooleanProperty LIT = BlockStateProperties.LIT;
     public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
     private static final VoxelShape SHAPE = Block.box(3, 0, 3, 13, 10, 13);
 
     public PlacedPufferfishBlock(Properties properties) {
         super(properties);
-        registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(WATERLOGGED, false));
+        registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(WATERLOGGED, false).setValue(LIT, false));
     }
 
     @Override
@@ -78,7 +79,7 @@ public class PlacedPufferfishBlock extends BaseEntityBlock implements SimpleWate
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) { return SHAPE; }
 
     @Override
-    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) { builder.add(FACING, WATERLOGGED); }
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) { builder.add(FACING, WATERLOGGED, LIT); }
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {

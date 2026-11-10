@@ -13,7 +13,7 @@ val dyeColors = listOf(
     "white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray",
     "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"
 )
-val skinVariants = listOf("") + dyeColors + listOf("golden", "copper", "iron", "diamond", "netherite", "heavy")
+val skinVariants = listOf("") + dyeColors + listOf("golden", "copper", "iron", "diamond", "netherite", "radiant", "heavy")
 val allSkinVariants = skinVariants + listOf("exposed_copper", "weathered_copper", "oxidized_copper",
     "waxed_copper", "waxed_exposed_copper", "waxed_weathered_copper", "waxed_oxidized_copper")
 
@@ -199,7 +199,7 @@ val generateSkinResources = tasks.register<Sync>("generateSkinResources") {
             "blockId" to "$modId:$skinName",
             "ingredient" to JsonOutput.toJson(when (color) {
                 "" -> mapOf("type" to "$modId:pufferfish")
-                "netherite", "heavy", "copper", "iron", "diamond", "exposed_copper", "weathered_copper", "oxidized_copper",
+                "netherite", "radiant", "heavy", "copper", "iron", "diamond", "exposed_copper", "weathered_copper", "oxidized_copper",
                 "waxed_copper", "waxed_exposed_copper", "waxed_weathered_copper", "waxed_oxidized_copper" -> mapOf("item" to "$modId:${color}_pufferfish")
                 else -> mapOf("type" to "$modId:pufferfish", "color" to color)
             })
@@ -435,7 +435,7 @@ val generateLampResources = tasks.register<Sync>("generateLampResources") {
     inputs.property("variants", allSkinVariants)
     filteringCharset = "UTF-8"
     into(layout.buildDirectory.dir("generated/resources/pufferfishLamps"))
-    for (variant in allSkinVariants) {
+    for (variant in allSkinVariants.filter { it != "radiant" }) {
         val fishName = (if (variant.isEmpty()) "" else "${variant}_") + "pufferfish"
         val lampName = "${fishName}_lamp"
         val ingredient = when {
@@ -461,7 +461,7 @@ val generateLampResources = tasks.register<Sync>("generateLampResources") {
 }
 val generateFlailResources = tasks.register<Sync>("generateFlailResources") {
     val materials = listOf("golden", "copper", "exposed_copper", "weathered_copper", "oxidized_copper",
-        "waxed_copper", "waxed_exposed_copper", "waxed_weathered_copper", "waxed_oxidized_copper", "iron", "diamond")
+        "waxed_copper", "waxed_exposed_copper", "waxed_weathered_copper", "waxed_oxidized_copper", "iron", "diamond", "radiant")
     inputs.property("modId", modId)
     inputs.property("materials", materials)
     filteringCharset = "UTF-8"

@@ -75,6 +75,7 @@ public final class PufferfishClientSmokeTest {
         MaterialPufferfishClientTest.verify(minecraft);
         verifySkin(minecraft, PufferfishBlocks.GOLDEN_SKIN.get(), "golden_pufferfish_skin");
         verifySkin(minecraft, PufferfishBlocks.NETHERITE_SKIN.get(), "netherite_pufferfish_skin");
+        verifySkin(minecraft, PufferfishBlocks.RADIANT_SKIN.get(), "radiant_pufferfish_skin");
         verifySkin(minecraft, PufferfishBlocks.HEAVY_SKIN.get(), "heavy_pufferfish_skin");
         verifySkin(minecraft, PufferfishBlocks.COPPER_SKIN.get(), "copper_pufferfish_skin");
         verifySkin(minecraft, PufferfishBlocks.IRON_SKIN.get(), "iron_pufferfish_skin");
@@ -254,7 +255,7 @@ public final class PufferfishClientSmokeTest {
             var names = new java.util.ArrayList<String>();
             names.add("pufferfish_skin");
             for (var color : DyeColor.values()) names.add(PufferfishBlocks.skinName(color));
-            names.addAll(java.util.List.of("golden_pufferfish", "netherite_pufferfish_skin", "heavy_pufferfish_skin"));
+            names.addAll(java.util.List.of("golden_pufferfish", "netherite_pufferfish_skin", "radiant_pufferfish_skin", "heavy_pufferfish_skin"));
             for (var name : names) {
                 for (int stage = 0; stage <= 3; stage++) {
                     var id = KaleidoscopePufferfish.id("chopping_board/" + name + "/" + stage);

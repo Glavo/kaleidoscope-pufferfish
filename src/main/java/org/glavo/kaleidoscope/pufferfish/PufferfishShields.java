@@ -37,6 +37,7 @@ public final class PufferfishShields {
         register(variants, "iron_");
         register(variants, "diamond_");
         register(variants, "netherite_");
+        register(variants, "radiant_");
         register(variants, "heavy_");
         VARIANTS = java.util.Collections.unmodifiableMap(variants);
     }
@@ -47,7 +48,7 @@ public final class PufferfishShields {
         variants.put(prefix + "pufferfish_skin_shield", ITEMS.register(prefix + "pufferfish_skin_shield",
                 () -> {
                     var properties = new Item.Properties().durability(336);
-                    if (prefix.equals("netherite_") || prefix.equals("heavy_")) properties.fireResistant();
+                    if (prefix.equals("netherite_") || prefix.equals("radiant_") || prefix.equals("heavy_")) properties.fireResistant();
                     return new ShieldItem(properties) {
                         @Override
                         public String getDescriptionId(ItemStack stack) { return getDescriptionId(); }

@@ -57,7 +57,7 @@ public final class PufferfishFlailClientTest {
                 var pose = new PoseStack();
                 var capture = new Capture();
                 IClientItemExtensions.of(stack).getCustomRenderer().renderByItem(stack, context, pose, capture, LIGHT, OverlayTexture.NO_OVERLAY);
-                if (capture.vertices < 300 || capture.types.size() != 3 || !pose.clear()) {
+                if (capture.vertices < 300 || capture.types.size() != (item == PufferfishItems.RADIANT_FLAIL.get() ? 4 : 3) || !pose.clear()) {
                     throw new IllegalStateException("Flail head, grip, or chain failed to render: " + context);
                 }
                 if (item == PufferfishItems.HEAVY_FLAIL.get() && !capture.types.contains(RenderType.entityCutoutNoCull(
@@ -258,7 +258,27 @@ public final class PufferfishFlailClientTest {
         private Capture() {}
 
         @Override
-        public VertexConsumer getBuffer(RenderType type) { types.add(type); currentType = type; return this; }
+        public VertexConsumer getBuffer(RenderType type) {
+            types.add(type);
+            return new VertexConsumer() {
+                @Override
+                public VertexConsumer addVertex(float x, float y, float z) {
+                    currentType = type;
+                    Capture.this.addVertex(x, y, z);
+                    return this;
+                }
+                @Override
+                public VertexConsumer setColor(int red, int green, int blue, int alpha) { return this; }
+                @Override
+                public VertexConsumer setUv(float u, float v) { return this; }
+                @Override
+                public VertexConsumer setUv1(int u, int v) { return this; }
+                @Override
+                public VertexConsumer setUv2(int u, int v) { return this; }
+                @Override
+                public VertexConsumer setNormal(float x, float y, float z) { return this; }
+            };
+        }
         @Override
         public VertexConsumer addVertex(float x, float y, float z) {
             if (!Float.isFinite(x) || !Float.isFinite(y) || !Float.isFinite(z)) {
