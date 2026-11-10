@@ -263,11 +263,30 @@ public final class MaterialPufferfish extends Pufferfish {
         if (getPuffState() > 0 && attackPhase() == IDLE) strike(target, 0, attackInterval());
     }
 
+    private DamageSource attackDamageSource() {
+        var source = damageSources().mobAttack(this);
+        String message = switch (kind()) {
+            case COPPER, IRON -> "tetanus";
+            case DIAMOND -> "diamond_pufferfish";
+            case NETHERITE -> "netherite_pufferfish";
+            case RADIANT -> "radiant_pufferfish";
+            case HEAVY -> "heavy_pufferfish";
+            case GOLDEN -> null;
+        };
+        if (message == null) return source;
+        return new DamageSource(source.typeHolder(), this) {
+            @Override
+            public Component getLocalizedDeathMessage(LivingEntity victim) {
+                return Component.translatable("death.attack.kaleidoscope_pufferfish." + message, victim.getDisplayName());
+            }
+        };
+    }
+
     /// Contact and deliberate attacks share one damage cooldown and fixed mob effects.
     public boolean strike(LivingEntity target, double knockback, int cooldown) {
         if (level().isClientSide || !isAlive() || !readyToAttack() || !canFight(target) || !hasLineOfSight(target)) return false;
         attackCooldown = cooldown;
-        if (target.hurt(damageSources().mobAttack(this), (float) getAttributeValue(Attributes.ATTACK_DAMAGE))) {
+        if (target.hurt(attackDamageSource(), (float) getAttributeValue(Attributes.ATTACK_DAMAGE))) {
             PufferfishCombat.applyPassiveEffect(fish(), target, this);
             if (knockback > 0) target.knockback(knockback, getX() - target.getX(), getZ() - target.getZ());
             playSound(SoundEvents.PUFFER_FISH_STING, 1, 1);
@@ -285,7 +304,7 @@ public final class MaterialPufferfish extends Pufferfish {
         playSound(SoundEvents.AMETHYST_BLOCK_RESONATE, 1.2F, 0.7F);
         for (var target : level().getEntitiesOfClass(LivingEntity.class, getBoundingBox().inflate(3), this::canFight)) {
             if (distanceToSqr(target) <= 9 && hasLineOfSight(target)
-                    && target.hurt(damageSources().mobAttack(this), (float) getAttributeValue(Attributes.ATTACK_DAMAGE))) {
+                    && target.hurt(attackDamageSource(), (float) getAttributeValue(Attributes.ATTACK_DAMAGE))) {
                 PufferfishCombat.applyPassiveEffect(fish(), target, this);
                 target.knockback(0.6, getX() - target.getX(), getZ() - target.getZ());
             }

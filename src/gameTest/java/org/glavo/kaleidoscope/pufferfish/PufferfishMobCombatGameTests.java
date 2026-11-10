@@ -48,6 +48,47 @@ public final class PufferfishMobCombatGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void livingFishUseVariantDeathMessagesAndRetainDamageAttribution(GameTestHelper helper) {
+        for (var variant : PufferfishMobs.VARIANTS.values()) {
+            for (boolean contact : new boolean[]{false, true}) {
+                var fish = variant.entity().get().create(helper.getLevel());
+                Component[] deathMessage = new Component[1];
+                var victim = new net.minecraft.world.entity.animal.Cow(EntityType.COW, helper.getLevel()) {
+                    @Override
+                    public void die(net.minecraft.world.damagesource.DamageSource source) {
+                        deathMessage[0] = getCombatTracker().getDeathMessage();
+                        super.die(source);
+                    }
+                };
+                victim.setPos(helper.absolutePos(new BlockPos(2, 2, 2)).getCenter());
+                fish.setPos(victim.position());
+                victim.setCustomName(Component.literal("Test victim"));
+                victim.setHealth(1);
+                if (contact) {
+                    fish.setPuffState(2);
+                    fish.sting(victim);
+                } else fish.strike(victim, 0, fish.attackInterval());
+                helper.assertTrue(victim.isDeadOrDying(), "Fish attack did not kill the victim");
+                var source = victim.getLastDamageSource();
+                helper.assertTrue(source != null && source.is(net.minecraft.world.damagesource.DamageTypes.MOB_ATTACK)
+                        && source.getEntity() == fish && source.getDirectEntity() == fish, "Custom death message changed damage attribution");
+                String key = switch (fish.kind()) {
+                    case COPPER, IRON -> "tetanus";
+                    case DIAMOND -> "diamond_pufferfish";
+                    case NETHERITE -> "netherite_pufferfish";
+                    case RADIANT -> "radiant_pufferfish";
+                    case HEAVY -> "heavy_pufferfish";
+                    case GOLDEN -> null;
+                };
+                var message = (net.minecraft.network.chat.contents.TranslatableContents) deathMessage[0].getContents();
+                helper.assertTrue(message.getKey().equals(key == null ? "death.attack.mob" : "death.attack.kaleidoscope_pufferfish." + key)
+                        && message.getArgs()[0].equals(victim.getDisplayName()), "Incorrect variant death message or victim name");
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void materialFishRejectPoisonAndRadiantRejectsWither(GameTestHelper helper) {
         for (var variant : PufferfishMobs.VARIANTS.values()) {
             var fish = variant.entity().get().create(helper.getLevel());
@@ -388,6 +429,10 @@ public final class PufferfishMobCombatGameTests {
         for (var target : java.util.List.of(near, far, covered)) { target.setNoAi(true); target.setNoGravity(true); }
         for (int x = 4; x <= 6; x++) for (int y = 2; y <= 5; y++) helper.setBlock(new BlockPos(x, y, 8), Blocks.STONE);
         fish.pulse();
+        helper.assertTrue(near.getLastDamageSource().getLocalizedDeathMessage(near).getContents()
+                        instanceof net.minecraft.network.chat.contents.TranslatableContents message
+                        && message.getKey().equals("death.attack.kaleidoscope_pufferfish.radiant_pufferfish"),
+                "Radiant pulse did not use its variant death message");
         helper.assertTrue(near.getHealth() < near.getMaxHealth() && near.hasEffect(MobEffects.GLOWING)
                 && near.getEffect(MobEffects.WITHER).getAmplifier() == 1 && near.getEffect(MobEffects.WITHER).getDuration() == 100,
                 "Radiant pulse did not apply fixed Wither II and glowing");

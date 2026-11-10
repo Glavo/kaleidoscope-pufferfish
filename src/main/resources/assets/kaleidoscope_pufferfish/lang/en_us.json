@@ -379,6 +379,11 @@
   "entity.kaleidoscope_pufferfish.pufferfish_flail_head": "Pufferfish Flail Head",
 
   "death.attack.kaleidoscope_pufferfish.thrown_pufferfish": "%1$s was struck down by a pufferfish",
+  "death.attack.kaleidoscope_pufferfish.tetanus": "%1$s contracted tetanus",
+  "death.attack.kaleidoscope_pufferfish.diamond_pufferfish": "%1$s felt the hardness of diamond",
+  "death.attack.kaleidoscope_pufferfish.netherite_pufferfish": "%1$s discovered that diamond wasn't the only tough material",
+  "death.attack.kaleidoscope_pufferfish.radiant_pufferfish": "%1$s melted in the radiant light",
+  "death.attack.kaleidoscope_pufferfish.heavy_pufferfish": "%1$s bore the unbearable weight of being",
   "death.attack.kaleidoscope_pufferfish.thrown_pufferfish.player": "%1$s was struck down by %2$s with a pufferfish",
   "death.attack.kaleidoscope_pufferfish.falling_pufferfish": "%1$s was squashed by a falling pufferfish",
   "death.attack.kaleidoscope_pufferfish.pufferfish_prick": "%1$s discovered the floor was made of pufferfish",

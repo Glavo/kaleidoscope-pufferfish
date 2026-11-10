@@ -379,6 +379,11 @@
   "entity.kaleidoscope_pufferfish.pufferfish_flail_head": "河豚流星锤锤头",
 
   "death.attack.kaleidoscope_pufferfish.thrown_pufferfish": "%1$s 被河豚砸死了",
+  "death.attack.kaleidoscope_pufferfish.tetanus": "%1$s 感染了破伤风",
+  "death.attack.kaleidoscope_pufferfish.diamond_pufferfish": "%1$s 感受到了钻石的坚硬",
+  "death.attack.kaleidoscope_pufferfish.netherite_pufferfish": "%1$s 发现不只有钻石才够硬",
+  "death.attack.kaleidoscope_pufferfish.radiant_pufferfish": "%1$s 在璀璨的光芒下融化了",
+  "death.attack.kaleidoscope_pufferfish.heavy_pufferfish": "%1$s 承受了生命不能承受之重",
   "death.attack.kaleidoscope_pufferfish.thrown_pufferfish.player": "%1$s 被 %2$s 用河豚砸死了",
   "death.attack.kaleidoscope_pufferfish.falling_pufferfish": "%1$s 被下落的河豚压扁了",
   "death.attack.kaleidoscope_pufferfish.pufferfish_prick": "%1$s发现地板是河豚做的",
