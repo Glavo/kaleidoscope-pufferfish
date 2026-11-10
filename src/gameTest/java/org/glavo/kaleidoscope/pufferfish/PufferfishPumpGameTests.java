@@ -217,14 +217,20 @@ public final class PufferfishPumpGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void pumpRecipeUsesCopperStickAndPufferfishSkin(GameTestHelper helper) {
+    public static void pumpRecipeUsesWoodenSlabsSkinNeedleAndCopperBase(GameTestHelper helper) {
         var empty = ItemStack.EMPTY;
         var copper = new ItemStack(Items.COPPER_INGOT);
-        var input = CraftingInput.of(3, 3, java.util.List.of(empty, new ItemStack(Items.STICK), empty,
-                copper, new ItemStack(PufferfishBlocks.skin(null)), copper, empty, copper, empty));
-        var recipe = helper.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel()).orElseThrow();
-        var output = recipe.value().assemble(input, helper.getLevel().registryAccess());
-        helper.assertTrue(output.is(PufferfishItems.PUMP.get()) && !output.isDamageableItem() && !output.isBarVisible() && output.getMaxStackSize() == 1 && output.getCount() == 1, "Wrong pump recipe output");
+        var slabs = net.minecraft.core.registries.BuiltInRegistries.ITEM.stream()
+                .filter(item -> item.getDefaultInstance().is(net.minecraft.tags.ItemTags.WOODEN_SLABS)).toList();
+        helper.assertTrue(!slabs.isEmpty(), "Wooden slab tag is empty");
+        for (var slab : slabs) {
+            var input = CraftingInput.of(3, 3, java.util.List.of(empty, new ItemStack(slab), empty,
+                    empty, new ItemStack(PufferfishBlocks.skin(null)), new ItemStack(Items.IRON_NUGGET), copper, copper, copper));
+            var recipe = helper.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel()).orElseThrow();
+            var output = recipe.value().assemble(input, helper.getLevel().registryAccess());
+            helper.assertTrue(output.is(PufferfishItems.PUMP.get()) && !output.isDamageableItem() && !output.isBarVisible()
+                    && output.getMaxStackSize() == 1 && output.getCount() == 1, "Wrong pump recipe output");
+        }
         helper.succeed();
     }
 }

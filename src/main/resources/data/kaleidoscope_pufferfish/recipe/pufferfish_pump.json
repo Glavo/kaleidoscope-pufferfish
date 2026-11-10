@@ -1,11 +1,12 @@
 {
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
-  "pattern": [" S ", "CPC", " C "],
+  "pattern": [" S ", " PI", "CCC"],
   "key": {
-    "S": { "item": "minecraft:stick" },
+    "S": { "tag": "minecraft:wooden_slabs" },
     "C": { "item": "minecraft:copper_ingot" },
-    "P": { "item": "kaleidoscope_pufferfish:pufferfish_skin" }
+    "P": { "item": "kaleidoscope_pufferfish:pufferfish_skin" },
+    "I": { "item": "minecraft:iron_nugget" }
   },
   "result": { "id": "kaleidoscope_pufferfish:pufferfish_pump", "count": 1 }
 }
