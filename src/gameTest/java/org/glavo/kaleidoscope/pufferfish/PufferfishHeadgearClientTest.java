@@ -92,6 +92,7 @@ public final class PufferfishHeadgearClientTest {
                 minecraft.getBlockRenderer(), minecraft.getEntityRenderDispatcher().getItemInHandRenderer(),
                 minecraft.getResourceManager(), minecraft.getEntityModels(), minecraft.font);
         verifyZombie(minecraft, context);
+        verifyArmorStand(minecraft, context);
         for (boolean slim : new boolean[] {false, true}) {
             var renderer = new PlayerRenderer(context, slim);
             var model = renderer.getModel();
@@ -191,7 +192,66 @@ public final class PufferfishHeadgearClientTest {
         }
     }
 
+    private static void verifyArmorStand(Minecraft minecraft, EntityRendererProvider.Context context) {
+        var renderer = new net.minecraft.client.renderer.entity.ArmorStandRenderer(context);
+        var model = renderer.getModel();
+        var layer = new CustomHeadLayer<>(renderer, minecraft.getEntityModels(), context.getItemInHandRenderer());
+        for (boolean small : new boolean[] {false, true}) {
+            var stand = net.minecraft.world.entity.EntityType.ARMOR_STAND.create(level(minecraft));
+            var data = new net.minecraft.nbt.CompoundTag();
+            data.putBoolean("Small", small);
+            stand.readAdditionalSaveData(data);
+            model.young = small;
+            for (var variant : PufferfishVariant.ALL) {
+                for (int damage : new int[] {0, 3}) {
+                    var stack = variant.fish();
+                    if (damage > 0) {
+                        PufferfishDurability.activate(stack);
+                        stack.setDamageValue((stack.getMaxDamage() * damage + 3) / 4);
+                    }
+                    stand.setItemSlot(EquipmentSlot.HEAD, stack);
+                    if (PufferfishHeadgear.isWearing(stand)) {
+                        throw new IllegalStateException("Armor stand display enabled living headgear effects");
+                    }
+                    for (var rotation : List.of(new net.minecraft.core.Rotations(0, 0, 0), new net.minecraft.core.Rotations(25, 40, -15))) {
+                        stand.setHeadPose(rotation);
+                        var pose = new PoseStack();
+                        var capture = new CapturedVertices();
+                        NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.client.event.RenderLivingEvent.Pre<>(stand, renderer, 0, pose, capture, 15728880));
+                        model.setupAnim(stand, 0, 0, 0, 0, 0);
+                        if (model.head.visible || model.hat.visible) throw new IllegalStateException("Armor stand head was not hidden");
+                        layer.render(pose, capture, 15728880, stand, 0, 0, 0, 0, 0, 0);
+                        var texture = switch (variant.material()) {
+                            case NORMAL -> variant.color() == null ? ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png")
+                                    : PufferfishTextures.entity(variant.color());
+                            case NETHERITE -> PufferfishTextures.netheriteEntity();
+                            case HEAVY -> PufferfishTextures.heavyEntity();
+                            default -> PufferfishTextures.materialEntity(PufferfishItems.materialName(stack));
+                        };
+                        if (capture.vertices < 100 || !capture.types.contains(RenderType.entityCutoutNoCull(texture))
+                                || !Float.isFinite(capture.minY) || capture.minY < -1 || capture.maxY > 1.5F) {
+                            throw new IllegalStateException("Incorrect armor stand fish model, texture or head transform: " + variant.fishName());
+                        }
+                        NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.client.event.RenderLivingEvent.Post<>(stand, renderer, 0, pose, capture, 15728880));
+                        if (!model.head.visible || model.hat.visible) throw new IllegalStateException("Armor stand head visibility was not restored");
+                    }
+                }
+            }
+            stand.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
+            stand.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.PUFFERFISH));
+            var pose = new PoseStack();
+            var capture = new CapturedVertices();
+            NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.client.event.RenderLivingEvent.Pre<>(stand, renderer, 0, pose, capture, 15728880));
+            layer.render(pose, capture, 15728880, stand, 0, 0, 0, 0, 0, 0);
+            NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.client.event.RenderLivingEvent.Post<>(stand, renderer, 0, pose, capture, 15728880));
+            if (capture.vertices != 0 || !model.head.visible || model.hat.visible) {
+                throw new IllegalStateException("Armor stand hand item incorrectly replaced its head");
+            }
+        }
+    }
+
     private static final class CapturedVertices implements MultiBufferSource, VertexConsumer {
+        private final List<RenderType> types = new ArrayList<>();
         private RenderType type;
         private int vertices;
         private float minY = Float.POSITIVE_INFINITY;
@@ -199,6 +259,7 @@ public final class PufferfishHeadgearClientTest {
 
         @Override
         public VertexConsumer getBuffer(RenderType type) {
+            types.add(type);
             this.type = type;
             return this;
         }

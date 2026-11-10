@@ -11,7 +11,6 @@ import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.CustomHeadLayer;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.world.entity.LivingEntity;
-import org.glavo.kaleidoscope.pufferfish.PufferfishHeadgear;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishHeadRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -32,7 +31,7 @@ public abstract class PufferfishHeadLayerMixin<T extends LivingEntity, M extends
             at = @At("HEAD"), cancellable = true)
     private void kaleidoscope$renderPufferfish(PoseStack pose, MultiBufferSource buffers, int light, T entity,
             float limbSwing, float limbSwingAmount, float partialTick, float age, float yaw, float pitch, CallbackInfo callback) {
-        if (PufferfishHeadgear.isWearing(entity)) {
+        if (PufferfishHeadRenderer.shouldRender(entity)) {
             if (kaleidoscope$headRenderer == null) {
                 kaleidoscope$headRenderer = new PufferfishHeadRenderer();
             }

@@ -15,6 +15,7 @@ import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.neoforged.neoforge.client.event.RenderPlayerEvent;
 import net.neoforged.neoforge.client.event.RenderLivingEvent;
 import org.glavo.kaleidoscope.pufferfish.PufferfishColors;
@@ -27,8 +28,13 @@ public final class PufferfishHeadRenderer {
     private final DeflatingPufferfishModel<LivingEntity> model = new DeflatingPufferfishModel<>(
             Minecraft.getInstance().getEntityModels());
 
+    public static boolean shouldRender(LivingEntity entity) {
+        return PufferfishHeadgear.isWearing(entity) || entity instanceof ArmorStand
+                && PufferfishItems.isPufferfish(entity.getItemBySlot(EquipmentSlot.HEAD));
+    }
+
     public static void beforePlayer(RenderPlayerEvent.Pre event) {
-        if (PufferfishHeadgear.isWearing(event.getEntity())) {
+        if (shouldRender(event.getEntity())) {
             hide(event.getRenderer().getModel());
         }
     }
@@ -39,7 +45,7 @@ public final class PufferfishHeadRenderer {
 
     public static void beforeLiving(RenderLivingEvent.Pre<?, ?> event) {
         if (!(event.getEntity() instanceof net.minecraft.world.entity.player.Player)
-                && PufferfishHeadgear.isWearing(event.getEntity())
+                && shouldRender(event.getEntity())
                 && event.getRenderer().getModel() instanceof HumanoidModel<?> model) hide(model);
     }
 
