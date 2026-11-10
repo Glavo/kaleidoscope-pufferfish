@@ -42,7 +42,9 @@ public final class RadiantPufferfishEffectsGameTests {
         for (int hit = 0; hit < 12; hit++) {
             target.invulnerableTime = 0;
             for (int tick = 0; tick < 25; tick++) player.tick();
+            float health = target.getHealth();
             player.attack(target);
+            helper.assertTrue(health - target.getHealth() == 8, "Radiant melee should deal eight base damage");
             assertGlowing(helper, target);
             var effect = target.getEffect(MobEffects.WITHER);
             helper.assertTrue(effect != null && effect.getAmplifier() == Math.min(hit, 9) && effect.getDuration() == 100
@@ -55,7 +57,9 @@ public final class RadiantPufferfishEffectsGameTests {
         projectile.setItem(fish);
         projectile.setPos(target.getX() - 1, target.getY() + 0.5, target.getZ());
         projectile.setDeltaMovement(2, 0, 0);
+        float health = target.getHealth();
         projectile.tick();
+        helper.assertTrue(health - target.getHealth() == 8, "Radiant throws should deal eight base damage");
         assertGlowing(helper, target);
         helper.assertTrue(target.getEffect(MobEffects.WITHER).getAmplifier() == 2
                 && target.getEffect(MobEffects.WITHER).getDuration() == 100, "Thrown fish did not escalate existing wither");

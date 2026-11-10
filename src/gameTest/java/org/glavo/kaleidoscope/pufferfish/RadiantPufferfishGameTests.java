@@ -84,7 +84,7 @@ public final class RadiantPufferfishGameTests {
         player.tick();
         helper.assertTrue(player.getAttributeValue(Attributes.ARMOR) == 3
                 && player.getAttributeValue(Attributes.ARMOR_TOUGHNESS) == 3, "Radiant headgear lost netherite protection");
-        helper.assertTrue(PufferfishCombat.damage(output) == PufferfishCombat.damage(base), "Radiant fish lost netherite attack damage");
+        helper.assertTrue(PufferfishCombat.damage(output) == 11, "Radiant fish should deal eight base damage plus three from Density V");
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(PufferfishItems.RADIANT.get(), 2));
         NeoForge.EVENT_BUS.post(new PlayerInteractEvent.RightClickItem(player, InteractionHand.MAIN_HAND));
         helper.assertTrue(player.getMainHandItem().getCount() == 1

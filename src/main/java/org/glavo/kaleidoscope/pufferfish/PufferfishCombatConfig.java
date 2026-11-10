@@ -13,6 +13,7 @@ public final class PufferfishCombatConfig {
     public static final ModConfigSpec.DoubleValue NORMAL_DAMAGE;
     /// Base damage shared by netherite fish melee attacks and projectiles.
     public static final ModConfigSpec.DoubleValue NETHERITE_DAMAGE;
+    public static final ModConfigSpec.DoubleValue RADIANT_DAMAGE;
     public static final ModConfigSpec.DoubleValue COPPER_DAMAGE;
     public static final ModConfigSpec.DoubleValue IRON_DAMAGE;
     public static final ModConfigSpec.DoubleValue DIAMOND_DAMAGE;
@@ -51,12 +52,14 @@ public final class PufferfishCombatConfig {
     static {
         var builder = new ModConfigSpec.Builder();
         builder.comment("Pufferfish weapon settings. One damage point is half a heart.",
-                "Normal and netherite base damage also applies to thrown fish and corresponding flail projectiles.",
+                "Fish base damage also applies to thrown fish and corresponding flail projectiles.",
                 "Reload the world/server after editing.").push("melee");
         NORMAL_DAMAGE = builder.comment("Normal and dyed pufferfish base melee and throwing damage, before enchantments.")
                 .worldRestart().defineInRange("normalDamage", 1.0, 0.0, 1024.0);
         NETHERITE_DAMAGE = builder.comment("Netherite pufferfish base melee and throwing damage, before enchantments.")
                 .worldRestart().defineInRange("netheriteDamage", 6.0, 0.0, 1024.0);
+        RADIANT_DAMAGE = builder.comment("Radiant pufferfish base melee and throwing damage, also used by its flail before charge scaling.")
+                .worldRestart().defineInRange("radiantDamage", 8.0, 0.0, 1024.0);
         COPPER_DAMAGE = builder.comment("Copper pufferfish melee and throwing damage; defaults to stone pickaxe damage.")
                 .worldRestart().defineInRange("copperDamage", 3.0, 0.0, 1024.0);
         IRON_DAMAGE = builder.comment("Iron pufferfish melee and throwing damage; defaults to iron pickaxe damage.")

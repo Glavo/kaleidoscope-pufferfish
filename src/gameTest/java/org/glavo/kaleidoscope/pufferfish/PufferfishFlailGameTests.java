@@ -123,6 +123,7 @@ public final class PufferfishFlailGameTests {
             target.setNoAi(true);
 
             float damage = PufferfishCombat.damage(PufferfishItems.flailFish(stack));
+            if (PufferfishItems.isRadiant(stack)) helper.assertTrue(damage == 8, "Radiant flail should use eight base damage");
             helper.assertTrue(player.getAttributeValue(Attributes.ATTACK_DAMAGE) == damage
                     && Math.abs(player.getAttributeValue(Attributes.ATTACK_SPEED) - 1) < 0.000001,
                     "Incorrect short cast attributes");
