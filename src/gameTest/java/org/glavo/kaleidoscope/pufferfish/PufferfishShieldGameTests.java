@@ -52,8 +52,13 @@ public final class PufferfishShieldGameTests {
                 shield.setDamageValue(0);
                 player.hurt(player.damageSources().mobAttack(attacker), 6);
                 var poison = attacker.getEffect(PufferfishItems.isRadiant(shield) ? net.minecraft.world.effect.MobEffects.WITHER : net.minecraft.world.effect.MobEffects.POISON);
-                helper.assertTrue(PufferfishItems.isRadiant(shield) && attacker.getHealth() == 20 ? poison == null
-                        : poison != null && poison.getDuration() == (PufferfishItems.isRadiant(shield) ? 100 : 60) && poison.getAmplifier() == 0,
+                String name = item.getId().getPath();
+                int duration = PufferfishItems.isRadiant(shield) ? 120 : name.startsWith("oxidized_copper_") ? 360
+                        : name.startsWith("weathered_copper_") ? 240 : name.startsWith("exposed_copper_") ? 120
+                        : name.startsWith("netherite_") || name.startsWith("heavy_") ? 100 : 60;
+                int amplifier = name.startsWith("oxidized_copper_") ? 2 : name.startsWith("weathered_copper_") ? 1 : 0;
+                helper.assertTrue(name.startsWith("waxed_") || PufferfishItems.isRadiant(shield) && attacker.getHealth() == 20 ? poison == null
+                        : poison != null && poison.getDuration() == duration && poison.getAmplifier() == amplifier,
                         "Shield applied an incorrect effect or radiant effects without thorns damage");
                 helper.assertTrue(player.getHealth() == 20, "Shield did not block incoming damage");
                 float damage = 20 - attacker.getHealth();

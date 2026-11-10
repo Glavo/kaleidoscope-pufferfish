@@ -65,7 +65,10 @@ public final class PufferfishShields {
                 || !event.getBlocked() || event.getBlockedDamage() <= 0 || source.is(DamageTypes.THORNS)
                 || !(source.getEntity() instanceof LivingEntity attacker) || attacker == defender
                 || VARIANTS.values().stream().noneMatch(item -> shield.is(item.get()))) return;
-        if (!PufferfishItems.isRadiant(shield)) PufferfishCombat.applyPassiveEffect(shield, attacker, defender);
+        if (!PufferfishItems.isRadiant(shield)) {
+            var effect = PufferfishRetaliation.effect(shield);
+            if (effect != null) attacker.addEffect(effect, defender);
+        }
         var thorns = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.THORNS);
         thorns.value().doPostAttack(level, 1,
                 new EnchantedItemInUse(shield, LivingEntity.getSlotForHand(defender.getUsedItemHand()), defender),

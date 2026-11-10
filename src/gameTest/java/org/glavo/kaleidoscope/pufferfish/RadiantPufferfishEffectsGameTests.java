@@ -144,8 +144,8 @@ public final class RadiantPufferfishEffectsGameTests {
                     reflected++;
                     assertGlowing(helper, attacker);
                     var wither = attacker.getEffect(MobEffects.WITHER);
-                    helper.assertTrue(wither != null && wither.getAmplifier() == 0 && wither.getDuration() == 100,
-                            "Successful radiant thorns did not apply five seconds of Wither I: " + variant);
+                    helper.assertTrue(wither != null && wither.getAmplifier() == 0 && wither.getDuration() == 120,
+                            "Successful radiant thorns did not apply six seconds of Wither I: " + variant);
                 } else {
                     helper.assertTrue(!attacker.hasEffect(MobEffects.WITHER) && !attacker.hasEffect(MobEffects.GLOWING),
                             "Radiant effects triggered without thorns damage: " + variant);

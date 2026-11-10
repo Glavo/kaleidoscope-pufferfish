@@ -48,7 +48,7 @@ public final class PufferfishArmorGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void mixedArmorUsesLongestUnwaxedPoisonAfterThorns(GameTestHelper helper) {
+    public static void mixedArmorUsesStrongestUnwaxedPoisonAfterThorns(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         var attacker = EntityType.VILLAGER.create(helper.getLevel());
         player.setItemSlot(EquipmentSlot.CHEST, new ItemStack(PufferfishArmor.VARIANTS.get("waxed_oxidized_copper_pufferfish_skin_chestplate").get()));
@@ -57,15 +57,15 @@ public final class PufferfishArmorGameTests {
         player.setItemSlot(EquipmentSlot.FEET, new ItemStack(PufferfishArmor.VARIANTS.get("oxidized_copper_pufferfish_skin_boots").get()));
         attacker.hurt(attacker.damageSources().thorns(player), 1);
         var poison = attacker.getEffect(MobEffects.POISON);
-        helper.assertTrue(poison != null && poison.getDuration() == 360 && poison.getAmplifier() == 0,
-                "Mixed armor did not use the longest unwaxed Poison I");
+        helper.assertTrue(poison != null && poison.getDuration() == 360 && poison.getAmplifier() == 2,
+                "Mixed armor did not use the strongest unwaxed poison");
         player.setItemSlot(EquipmentSlot.FEET, ItemStack.EMPTY);
         player.invulnerableTime = 0;
         attacker.removeAllEffects();
         attacker.invulnerableTime = 0;
         attacker.hurt(attacker.damageSources().thorns(player), 1);
         poison = attacker.getEffect(MobEffects.POISON);
-        helper.assertTrue(poison != null && poison.getDuration() == 240 && poison.getAmplifier() == 0,
+        helper.assertTrue(poison != null && poison.getDuration() == 240 && poison.getAmplifier() == 1,
                 "Waxed armor suppressed another piece's poison");
         helper.succeed();
     }
@@ -212,9 +212,9 @@ public final class PufferfishArmorGameTests {
                 player.hurt(player.damageSources().mobAttack(attacker), 2);
                 var poison = attacker.getEffect(PufferfishItems.isRadiant(armor) ? MobEffects.WITHER : MobEffects.POISON);
                 String name = item.getId().getPath();
-                int duration = PufferfishItems.isRadiant(armor) ? 100 : name.startsWith("oxidized_copper_") ? 360 : name.startsWith("weathered_copper_") ? 240
-                        : name.startsWith("exposed_copper_") ? 120 : 60;
-                int amplifier = 0;
+                int duration = PufferfishItems.isRadiant(armor) ? 120 : name.startsWith("oxidized_copper_") ? 360 : name.startsWith("weathered_copper_") ? 240
+                        : name.startsWith("exposed_copper_") ? 120 : name.startsWith("netherite_") || name.startsWith("heavy_") ? 100 : 60;
+                int amplifier = name.startsWith("oxidized_copper_") ? 2 : name.startsWith("weathered_copper_") ? 1 : 0;
                 helper.assertTrue(name.startsWith("waxed_") || attacker.getHealth() == 20 ? poison == null
                         : poison != null && poison.getDuration() == duration && poison.getAmplifier() == amplifier,
                         "Skin armor applied the wrong poison effect");

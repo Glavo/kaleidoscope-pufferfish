@@ -164,7 +164,7 @@ public final class NetheritePufferfishGameTests {
                 wearer.hurt(wearer.damageSources().mobAttack(attacker), 1);
                 var poison = attacker.getEffect(MobEffects.POISON);
                 helper.assertTrue(attacker.getHealth() < attacker.getMaxHealth()
-                        ? poison != null && poison.getDuration() == 60 && poison.getAmplifier() == 0 : poison == null,
+                        ? poison != null && poison.getDuration() == (tier == 0 ? 60 : 100) && poison.getAmplifier() == 0 : poison == null,
                         "Retaliation did not condition Poison I on successful thorns");
                 if (attacker.getHealth() < attacker.getMaxHealth()) reflected[tier]++;
             }

@@ -13,7 +13,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.LivingEntity;
@@ -127,8 +126,7 @@ public final class PufferfishArmor {
             var stack = wearer.getItemBySlot(type.getSlot());
             if (!(stack.getItem() instanceof ArmorItem armor) || armor.getType() != type || PufferfishItems.isRadiant(stack)
                     || VARIANTS.values().stream().noneMatch(item -> stack.is(item.get()))) continue;
-            var effect = poison(armor);
-            if (effect != null && (poison == null || effect.getDuration() > poison.getDuration())) poison = effect;
+            poison = PufferfishRetaliation.strongestPoison(poison, PufferfishRetaliation.effect(stack));
         }
         return poison;
     }
@@ -138,14 +136,4 @@ public final class PufferfishArmor {
                 .is(VARIANTS.get("radiant_pufferfish_skin_" + type.getName()).get()));
     }
 
-    @javax.annotation.Nullable
-    private static MobEffectInstance poison(ArmorItem armor) {
-        for (int stage = 0; stage < PufferfishBlocks.COPPER_SKINS.size(); stage++) {
-            String name = PufferfishBlocks.COPPER_SKINS.get(stage).getId().getPath() + "_" + armor.getType().getName();
-            if (VARIANTS.get(name).get() == armor) {
-                return PufferfishCombat.passiveEffect(new ItemStack(PufferfishItems.COPPER_VARIANTS.get(stage).get()));
-            }
-        }
-        return new MobEffectInstance(MobEffects.POISON, PufferfishCombat.POISON_DURATION_TICKS, 0);
-    }
 }

@@ -209,7 +209,7 @@ public final class PufferfishHeadgearGameTests {
             target.hurt(target.damageSources().thorns(wearer), 2);
             var poison = target.getEffect(MobEffects.POISON);
             helper.assertTrue(target.getHealth() == target.getMaxHealth() && target.getAbsorptionAmount() == 2
-                    && poison != null && poison.getAmplifier() == 0 && poison.getDuration() == 60,
+                    && poison != null && poison.getAmplifier() == 0 && poison.getDuration() == 100,
                     "Absorbed thorns did not apply Poison I");
             target.removeAllEffects();
             target.invulnerableTime = 0;
