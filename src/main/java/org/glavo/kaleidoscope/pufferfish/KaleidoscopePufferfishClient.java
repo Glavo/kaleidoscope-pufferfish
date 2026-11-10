@@ -58,6 +58,8 @@ public class KaleidoscopePufferfishClient {
         }, net.minecraft.world.item.Items.PUFFERFISH_SPAWN_EGG));
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishHeadRenderer::beforePlayer);
         NeoForge.EVENT_BUS.addListener(PufferfishHeadRenderer::afterPlayer);
+        NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishHeadRenderer::beforeLiving);
+        NeoForge.EVENT_BUS.addListener(PufferfishHeadRenderer::afterLiving);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishGloveRenderer::renderHand);
         NeoForge.EVENT_BUS.addListener(EventPriority.HIGH, org.glavo.kaleidoscope.pufferfish.client.PufferfishRowingAnimation::renderHands);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, org.glavo.kaleidoscope.pufferfish.client.PufferfishFlailArmAnimation::renderHand);

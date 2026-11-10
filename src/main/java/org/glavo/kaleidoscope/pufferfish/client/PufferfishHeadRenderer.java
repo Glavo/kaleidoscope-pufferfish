@@ -7,7 +7,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.model.PlayerModel;
+import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -16,27 +16,45 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.neoforge.client.event.RenderPlayerEvent;
+import net.neoforged.neoforge.client.event.RenderLivingEvent;
 import org.glavo.kaleidoscope.pufferfish.PufferfishColors;
 import org.glavo.kaleidoscope.pufferfish.PufferfishHeadgear;
 import org.glavo.kaleidoscope.pufferfish.PufferfishItems;
 
 public final class PufferfishHeadRenderer {
     private static final ResourceLocation ORIGINAL = ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png");
-    private static final Map<PlayerModel<?>, Visibility> VISIBILITY = new IdentityHashMap<>();
+    private static final Map<HumanoidModel<?>, Visibility> VISIBILITY = new IdentityHashMap<>();
     private final DeflatingPufferfishModel<LivingEntity> model = new DeflatingPufferfishModel<>(
             Minecraft.getInstance().getEntityModels());
 
     public static void beforePlayer(RenderPlayerEvent.Pre event) {
         if (PufferfishHeadgear.isWearing(event.getEntity())) {
-            var model = event.getRenderer().getModel();
-            VISIBILITY.put(model, new Visibility(model.head.visible, model.hat.visible));
-            model.head.visible = false;
-            model.hat.visible = false;
+            hide(event.getRenderer().getModel());
         }
     }
 
     public static void afterPlayer(RenderPlayerEvent.Post event) {
-        var model = event.getRenderer().getModel();
+        restore(event.getRenderer().getModel());
+    }
+
+    public static void beforeLiving(RenderLivingEvent.Pre<?, ?> event) {
+        if (!(event.getEntity() instanceof net.minecraft.world.entity.player.Player)
+                && PufferfishHeadgear.isWearing(event.getEntity())
+                && event.getRenderer().getModel() instanceof HumanoidModel<?> model) hide(model);
+    }
+
+    public static void afterLiving(RenderLivingEvent.Post<?, ?> event) {
+        if (!(event.getEntity() instanceof net.minecraft.world.entity.player.Player)
+                && event.getRenderer().getModel() instanceof HumanoidModel<?> model) restore(model);
+    }
+
+    private static void hide(HumanoidModel<?> model) {
+        VISIBILITY.put(model, new Visibility(model.head.visible, model.hat.visible));
+        model.head.visible = false;
+        model.hat.visible = false;
+    }
+
+    private static void restore(HumanoidModel<?> model) {
         var visibility = VISIBILITY.remove(model);
         if (visibility != null) {
             model.head.visible = visibility.head();
@@ -53,6 +71,10 @@ public final class PufferfishHeadRenderer {
                 : PufferfishItems.materialName(stack) != null ? PufferfishTextures.materialEntity(PufferfishItems.materialName(stack))
                 : color == null ? ORIGINAL : PufferfishTextures.entity(color);
         pose.pushPose();
+        if (wearer.isBaby()) {
+            pose.scale(0.75F, 0.75F, 0.75F);
+            pose.translate(0, 1, 0);
+        }
         head.translateAndRotate(pose);
         pose.translate(0.0F, -22.0F / 16.0F, 0.0F);
         pose.translate(0, (1 - DeflatingPufferfishModel.height(org.glavo.kaleidoscope.pufferfish.PufferfishDurability.deflationStage(stack))) / 4, 0);

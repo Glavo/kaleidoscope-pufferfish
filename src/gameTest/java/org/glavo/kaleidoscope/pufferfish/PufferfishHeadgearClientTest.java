@@ -91,6 +91,7 @@ public final class PufferfishHeadgearClientTest {
         var context = new EntityRendererProvider.Context(minecraft.getEntityRenderDispatcher(), minecraft.getItemRenderer(),
                 minecraft.getBlockRenderer(), minecraft.getEntityRenderDispatcher().getItemInHandRenderer(),
                 minecraft.getResourceManager(), minecraft.getEntityModels(), minecraft.font);
+        verifyZombie(minecraft, context);
         for (boolean slim : new boolean[] {false, true}) {
             var renderer = new PlayerRenderer(context, slim);
             var model = renderer.getModel();
@@ -143,6 +144,39 @@ public final class PufferfishHeadgearClientTest {
             if (capture.vertices != 0 || !model.head.visible || model.hat.visible) {
                 throw new IllegalStateException("Unequipped player retained headgear rendering");
             }
+        }
+    }
+
+    private static void verifyZombie(Minecraft minecraft, EntityRendererProvider.Context context) {
+        var zombie = net.minecraft.world.entity.EntityType.ZOMBIE.create(level(minecraft));
+        var renderer = new net.minecraft.client.renderer.entity.ZombieRenderer(context);
+        var model = renderer.getModel();
+        var layer = new CustomHeadLayer<>(renderer, minecraft.getEntityModels(), context.getItemInHandRenderer());
+        float adultMinY = 0;
+        float adultMaxY = 0;
+        for (boolean baby : new boolean[] {false, true}) {
+            zombie.setBaby(baby);
+            model.young = baby;
+            zombie.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.PUFFERFISH));
+            var pose = new PoseStack();
+            var capture = new CapturedVertices();
+            NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.client.event.RenderLivingEvent.Pre<>(zombie, renderer, 0, pose, capture, 15728880));
+            if (model.head.visible || model.hat.visible) throw new IllegalStateException("Zombie head was not hidden");
+            layer.render(pose, capture, 15728880, zombie, 0, 0, 0, 0, 0, 0);
+            if (capture.vertices < 100 || capture.type != RenderType.entityCutoutNoCull(ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png"))) {
+                throw new IllegalStateException("Zombie pufferfish head did not render");
+            }
+            if (baby) {
+                if (Math.abs(capture.minY - (adultMinY * 0.75F + 0.75F)) > 0.001F
+                        || Math.abs(capture.maxY - (adultMaxY * 0.75F + 0.75F)) > 0.001F) {
+                    throw new IllegalStateException("Baby zombie headgear did not follow the humanoid head transform");
+                }
+            } else {
+                adultMinY = capture.minY;
+                adultMaxY = capture.maxY;
+            }
+            NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.client.event.RenderLivingEvent.Post<>(zombie, renderer, 0, pose, capture, 15728880));
+            if (!model.head.visible || !model.hat.visible) throw new IllegalStateException("Zombie head visibility was not restored");
         }
     }
 

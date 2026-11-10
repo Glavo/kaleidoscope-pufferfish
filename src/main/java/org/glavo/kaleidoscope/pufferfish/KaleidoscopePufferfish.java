@@ -170,6 +170,8 @@ public class KaleidoscopePufferfish {
         NeoForge.EVENT_BUS.addListener(PufferfishColors::interact);
         NeoForge.EVENT_BUS.addListener(PufferfishColors::colorDrops);
         NeoForge.EVENT_BUS.addListener(PufferfishMobs::naturalColors);
+        NeoForge.EVENT_BUS.addListener(PufferfishZombieHeadgear::prepare);
+        NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, PufferfishZombieHeadgear::equip);
         NeoForge.EVENT_BUS.addListener(PufferfishFriendlyFire::damage);
         NeoForge.EVENT_BUS.addListener(PufferfishFriendlyFire::effect);
         NeoForge.EVENT_BUS.addListener(PufferfishMobThorns::retaliate);
@@ -187,6 +189,7 @@ public class KaleidoscopePufferfish {
         NeoForge.EVENT_BUS.addListener(PufferfishConduitSpawning::unload);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishEnchantments::applyBook);
         NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::breathe);
+        NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::breatheZombie);
         NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::retaliate);
         NeoForge.EVENT_BUS.addListener(PufferfishArmor::retaliate);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishShields::retaliate);

@@ -109,9 +109,10 @@ public final class PufferfishDurability {
         if (source.is(DamageTypes.PLAYER_ATTACK) && source.getDirectEntity() instanceof Player player) {
             damage(player.getMainHandItem(), level, player, EquipmentSlot.MAINHAND);
         }
-        if (event.getEntity() instanceof Player player && source.getEntity() instanceof LivingEntity
-                && !source.is(DamageTypes.THORNS) && PufferfishHeadgear.isWearing(player)) {
-            damage(player.getItemBySlot(EquipmentSlot.HEAD), level, player, EquipmentSlot.HEAD);
+        var wearer = event.getEntity();
+        if (source.getEntity() instanceof LivingEntity
+                && !source.is(DamageTypes.THORNS) && PufferfishHeadgear.isWearing(wearer)) {
+            damage(wearer.getItemBySlot(EquipmentSlot.HEAD), level, wearer, EquipmentSlot.HEAD);
         }
     }
 

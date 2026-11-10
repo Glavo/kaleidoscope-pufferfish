@@ -16,6 +16,7 @@ public final class PufferfishMobConfig {
     public enum Kind { COPPER, IRON, GOLDEN, DIAMOND, NETHERITE, HEAVY, RADIANT }
 
     public static final ModConfigSpec SPEC;
+    public static final ModConfigSpec.DoubleValue ZOMBIE_HEADGEAR_CHANCE;
     public static final ModConfigSpec.DoubleValue REINFORCEMENT_CHANCE;
     public static final ModConfigSpec.IntValue REINFORCEMENT_COOLDOWN;
     public static final ModConfigSpec.IntValue REINFORCEMENT_MAX_CALLS;
@@ -53,6 +54,10 @@ public final class PufferfishMobConfig {
         weights.put(Kind.NETHERITE, builder.defineInRange("netherite", 3, 0, 10000));
         REINFORCEMENT_WEIGHTS = java.util.Collections.unmodifiableMap(weights);
         builder.pop(2);
+        builder.push("zombieHeadgear");
+        ZOMBIE_HEADGEAR_CHANCE = builder.comment("Chance for a naturally spawned ordinary zombie with an empty head slot to wear a pufferfish; 0 disables this.")
+                .defineInRange("chance", 0.05, 0, 1);
+        builder.pop();
         SPEC = builder.build();
     }
 
