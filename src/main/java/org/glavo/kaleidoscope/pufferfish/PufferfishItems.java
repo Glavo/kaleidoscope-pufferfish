@@ -22,7 +22,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public final class PufferfishItems {
     private static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(KaleidoscopePufferfish.MODID);
     public static final DeferredItem<PufferfishPumpItem> PUMP = ITEMS.register("pufferfish_pump",
-            () -> new PufferfishPumpItem(new Item.Properties().durability(256)));
+            () -> new PufferfishPumpItem(new Item.Properties().stacksTo(1)));
     public static final DeferredItem<Item> COPPER = registerMaterialFish("copper");
     public static final java.util.List<DeferredItem<Item>> COPPER_VARIANTS = java.util.List.of(
             COPPER, registerMaterialFish("exposed_copper"), registerMaterialFish("weathered_copper"),

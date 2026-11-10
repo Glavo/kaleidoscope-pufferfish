@@ -84,8 +84,7 @@ public final class PufferfishPumpGameTests {
                     helper.assertTrue(pump.fish().getDamageValue() == Math.max(0, oldDamage - amount), "Stroke must restore ten percent, rounded up");
                     if (completed == 10) {
                         helper.assertTrue(ItemStack.matches(pump.fish(), variants.get(i)), "Repair lost fish components or pristine stacking");
-                        int expectedUses = (PufferfishDurability.maximum(variants.get(i)) - 2) / amount + 1;
-                        helper.assertTrue(pump.pump().getDamageValue() == expectedUses, "Full fish consumed pump durability");
+                        helper.assertTrue(ItemStack.matches(pump.pump(), PufferfishItems.PUMP.toStack()), "Inflation changed the reusable pump");
                     }
                 }
                 if (completed == 10) helper.succeed();
@@ -110,7 +109,7 @@ public final class PufferfishPumpGameTests {
         player.fallDistance = 1;
         player.setDeltaMovement(0, -1.5, 0);
         player.move(net.minecraft.world.entity.MoverType.SELF, new net.minecraft.world.phys.Vec3(0, -1.5, 0));
-        helper.assertTrue(player.onGround() && pump.fish().getDamageValue() == 53 && pump.pump().getDamageValue() == 1,
+        helper.assertTrue(player.onGround() && pump.fish().getDamageValue() == 53 && !pump.pump().isDamageableItem(),
                 "Actual landing did not pump exactly once");
         PufferfishBlocks.PUMP.get().fallOn(helper.getLevel(), state, pos, player, 1);
         helper.assertTrue(pump.fish().getDamageValue() == 53, "Duplicate landing bypassed pedal rebound");
@@ -122,8 +121,7 @@ public final class PufferfishPumpGameTests {
         var pump = placed(helper);
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         var tool = PufferfishItems.PUMP.toStack();
-        tool.setDamageValue(37);
-        tool.enchant(helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.UNBREAKING), 3);
+        tool.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Workshop pump"));
         PufferfishBlocks.PUMP.get().setPlacedBy(helper.getLevel(), pump.getBlockPos(), pump.getBlockState(), player, tool);
         var fish = PufferfishDurabilityGameTests.worn(PufferfishItems.HEAVY_FLAIL.toStack());
         fish.setDamageValue(2000);
@@ -142,10 +140,10 @@ public final class PufferfishPumpGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void breakingPumpDropsFishAndPreservesPumpWear(GameTestHelper helper) {
+    public static void breakingPumpDropsFishAndPreservesPumpName(GameTestHelper helper) {
         var pump = placed(helper);
         var tool = PufferfishItems.PUMP.toStack();
-        tool.setDamageValue(17);
+        tool.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Workshop pump"));
         pump.setPump(tool);
         var fish = PufferfishDurabilityGameTests.worn(PufferfishItems.DIAMOND.toStack());
         pump.setFish(fish);
@@ -158,27 +156,35 @@ public final class PufferfishPumpGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void lastStrokeBreaksPumpAndReleasesRepairedFish(GameTestHelper helper) {
+    public static void legacyWornPumpBecomesReusableWithoutLosingItsFish(GameTestHelper helper) {
         var pump = placed(helper);
         var tool = PufferfishItems.PUMP.toStack();
-        tool.setDamageValue(255);
+        tool.set(DataComponents.MAX_DAMAGE, 256);
+        tool.set(DataComponents.DAMAGE, 255);
+        tool.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Old pump"));
         pump.setPump(tool);
         pump.setFish(PufferfishDurabilityGameTests.worn(new ItemStack(Items.PUFFERFISH)));
-        var pos = pump.getBlockPos();
-        pump.press(helper.makeMockPlayer(GameType.SURVIVAL));
-        var drops = helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, new net.minecraft.world.phys.AABB(pos).inflate(2));
-        helper.assertTrue(helper.getLevel().getBlockState(pos).isAir() && drops.size() == 1
-                && drops.getFirst().getItem().is(Items.PUFFERFISH) && !drops.getFirst().getItem().isDamaged(), "Broken pump failed to release the repaired fish");
+        var saved = pump.saveWithoutMetadata(helper.getLevel().registryAccess());
+        saved.put("Pump", tool.save(helper.getLevel().registryAccess()));
+        pump.loadWithComponents(saved, helper.getLevel().registryAccess());
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        helper.assertTrue(pump.press(player) && helper.getLevel().getBlockState(pump.getBlockPos()).is(PufferfishBlocks.PUMP.get())
+                && pump.fish().is(Items.PUFFERFISH) && !pump.fish().isDamaged()
+                && !pump.pump().has(DataComponents.MAX_DAMAGE) && !pump.pump().has(DataComponents.DAMAGE),
+                "Legacy worn pump broke or retained durability");
+        PufferfishItems.PUMP.get().inventoryTick(tool, helper.getLevel(), player, 0, true);
+        helper.assertTrue(ItemStack.matches(tool, pump.pump()) && tool.getHoverName().getString().equals("Old pump"),
+                "Inventory migration retained durability or lost item metadata");
         helper.succeed();
     }
 
     @GameTest(template = "empty")
-    public static void usingPumpPlacesBlockAndRetainsItemWear(GameTestHelper helper) {
+    public static void usingPumpPlacesBlockAndRetainsItemName(GameTestHelper helper) {
         var base = helper.absolutePos(new net.minecraft.core.BlockPos(2, 1, 2));
         helper.getLevel().setBlockAndUpdate(base, net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         var stack = PufferfishItems.PUMP.toStack();
-        stack.setDamageValue(91);
+        stack.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Workshop pump"));
         var expected = stack.copy();
         player.setItemInHand(InteractionHand.MAIN_HAND, stack);
         var hit = new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atBottomCenterOf(base.above()),
@@ -186,12 +192,12 @@ public final class PufferfishPumpGameTests {
         var result = stack.useOn(new net.minecraft.world.item.context.UseOnContext(player, InteractionHand.MAIN_HAND, hit));
         helper.assertTrue(result.consumesAction() && stack.isEmpty()
                 && helper.getLevel().getBlockEntity(base.above()) instanceof PufferfishPumpBlockEntity pump
-                && ItemStack.matches(pump.pump(), expected), "Placing the pump failed or reset its durability");
+                && ItemStack.matches(pump.pump(), expected), "Placing the pump failed or lost its name");
         helper.succeed();
     }
 
     @GameTest(template = "empty")
-    public static void pumpAcceptsUnbreakingButRejectsMendingInAnvil(GameTestHelper helper) {
+    public static void pumpRejectsDurabilityEnchantmentsAndCopperRepair(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         var registry = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
         for (var key : java.util.List.of(Enchantments.UNBREAKING, Enchantments.MENDING)) {
@@ -203,9 +209,9 @@ public final class PufferfishPumpGameTests {
             menu.getSlot(0).set(pump);
             menu.getSlot(1).set(book);
             menu.createResult();
-            boolean allowed = key.equals(Enchantments.UNBREAKING);
-            helper.assertTrue(!menu.getSlot(2).getItem().isEmpty() == allowed, "Wrong pump anvil enchantment support");
-            helper.assertTrue(pump.isPrimaryItemFor(enchantment) == allowed, "Wrong pump enchanting table support");
+            helper.assertTrue(menu.getSlot(2).getItem().isEmpty(), "Reusable pump accepted a durability enchantment");
+            helper.assertTrue(!pump.isPrimaryItemFor(enchantment), "Reusable pump accepted enchanting table durability enchantments");
+            helper.assertTrue(!pump.getItem().isValidRepairItem(pump, new ItemStack(Items.COPPER_INGOT)), "Reusable pump still accepts copper repair");
         }
         helper.succeed();
     }
@@ -218,7 +224,7 @@ public final class PufferfishPumpGameTests {
                 copper, new ItemStack(PufferfishBlocks.skin(null)), copper, empty, copper, empty));
         var recipe = helper.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel()).orElseThrow();
         var output = recipe.value().assemble(input, helper.getLevel().registryAccess());
-        helper.assertTrue(output.is(PufferfishItems.PUMP.get()) && output.getMaxDamage() == 256 && output.getCount() == 1, "Wrong pump recipe output");
+        helper.assertTrue(output.is(PufferfishItems.PUMP.get()) && !output.isDamageableItem() && !output.isBarVisible() && output.getMaxStackSize() == 1 && output.getCount() == 1, "Wrong pump recipe output");
         helper.succeed();
     }
 }

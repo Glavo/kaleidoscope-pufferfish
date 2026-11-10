@@ -15,7 +15,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
-/// Stores the inserted fish and the pump item, including wear and enchantments.
+/// Stores the complete inserted fish and preserves the pump item's metadata.
 public final class PufferfishPumpBlockEntity extends BlockEntity {
     public static final int REBOUND_TICKS = 8;
     private ItemStack fish = ItemStack.EMPTY;
@@ -34,6 +34,7 @@ public final class PufferfishPumpBlockEntity extends BlockEntity {
 
     public void setPump(ItemStack stack) {
         if (stack.is(PufferfishItems.PUMP.get())) pump = stack.copyWithCount(1);
+        PufferfishPumpItem.removeDurability(pump);
         changed();
     }
 
@@ -45,7 +46,7 @@ public final class PufferfishPumpBlockEntity extends BlockEntity {
     }
 
     public boolean press(Player player) {
-        if (!(level instanceof ServerLevel server) || player.isSpectator() || pump.isEmpty()) return false;
+        if (!(level instanceof ServerLevel) || player.isSpectator() || pump.isEmpty()) return false;
         long time = level.getGameTime();
         if (lastPress != Long.MIN_VALUE && time - lastPress < REBOUND_TICKS) return false;
         lastPress = time;
@@ -53,13 +54,8 @@ public final class PufferfishPumpBlockEntity extends BlockEntity {
         if (!PufferfishPumpItem.canInflate(fish)) return false;
         fish.setDamageValue(Math.max(0, fish.getDamageValue() - (fish.getMaxDamage() + 9) / 10));
         PufferfishDurability.normalize(fish);
-        pump.hurtAndBreak(1, server, player, item -> {});
         level.playSound(null, worldPosition, SoundEvents.PUFFER_FISH_BLOW_UP, SoundSource.BLOCKS, 0.6F, 1.1F);
         changed();
-        if (pump.isEmpty()) {
-            level.playSound(null, worldPosition, SoundEvents.ITEM_BREAK, SoundSource.BLOCKS, 0.8F, 1);
-            level.destroyBlock(worldPosition, false);
-        }
         return true;
     }
 
@@ -93,6 +89,7 @@ public final class PufferfishPumpBlockEntity extends BlockEntity {
         fish = PufferfishItems.isWeapon(storedFish) ? storedFish.copyWithCount(1) : ItemStack.EMPTY;
         var storedPump = ItemStack.parseOptional(registries, tag.getCompound("Pump"));
         pump = storedPump.is(PufferfishItems.PUMP.get()) ? storedPump.copyWithCount(1) : PufferfishItems.PUMP.toStack();
+        PufferfishPumpItem.removeDurability(pump);
     }
 
     @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries) { return saveWithoutMetadata(registries); }
