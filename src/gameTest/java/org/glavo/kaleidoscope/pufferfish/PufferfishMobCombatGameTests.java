@@ -455,6 +455,73 @@ public final class PufferfishMobCombatGameTests {
     }
 
     @GameTest(template = "combat_pool")
+    public static void radiantPulseHealsEveryFishVariantAndItselfOnlyOnce(GameTestHelper helper) {
+        pool(helper);
+        var caster = fish(helper, "radiant");
+        caster.setNoAi(true);
+        caster.setHealth(5);
+        helper.getLevel().addFreshEntity(caster);
+        var targets = new java.util.ArrayList<net.minecraft.world.entity.animal.Pufferfish>();
+        targets.add(EntityType.PUFFERFISH.create(helper.getLevel()));
+        for (var color : net.minecraft.world.item.DyeColor.values()) {
+            var target = EntityType.PUFFERFISH.create(helper.getLevel());
+            PufferfishColors.set(target, color);
+            targets.add(target);
+        }
+        for (var variant : PufferfishMobs.VARIANTS.values()) targets.add(variant.entity().get().create(helper.getLevel()));
+        try {
+            for (var target : targets) {
+                target.setNoAi(true);
+                target.setHealth(1);
+                target.setPos(caster.position().add(1, 0, 0));
+                helper.getLevel().addFreshEntity(target);
+            }
+            caster.pulse();
+            helper.assertTrue(caster.getHealth() == 25, "Pulse did not heal its caster by exactly twenty health");
+            for (var target : targets) {
+                helper.assertTrue(target.getHealth() == Math.min(target.getMaxHealth(), 21),
+                        "Pulse failed to heal a fish variant or exceeded its maximum health");
+                helper.assertTrue(!target.hasEffect(MobEffects.WITHER) && !target.hasEffect(MobEffects.GLOWING),
+                        "Healing pulse applied hostile effects to a fish");
+            }
+            caster.pulse();
+            helper.assertTrue(caster.getHealth() == 25, "Pulse healed again during cooldown");
+            for (var target : targets) helper.assertTrue(target.getHealth() == Math.min(target.getMaxHealth(), 21),
+                    "Pulse healed a nearby fish again during cooldown");
+        } finally { targets.forEach(net.minecraft.world.entity.Entity::discard); caster.discard(); }
+        helper.succeed();
+    }
+
+    @GameTest(template = "combat_pool")
+    public static void radiantHealingUsesSphericalRangeIncludesCoveredFishAndDoesNotRevive(GameTestHelper helper) {
+        pool(helper);
+        var caster = fish(helper, "radiant");
+        caster.setHealth(caster.getMaxHealth() - 1);
+        var edge = fish(helper, "heavy");
+        var outside = fish(helper, "heavy");
+        var covered = fish(helper, "heavy");
+        var dead = fish(helper, "heavy");
+        edge.setPos(caster.position().add(3, 0, 0));
+        outside.setPos(caster.position().add(3.01, 0, 0));
+        covered.setPos(caster.position().add(0, 0, 2));
+        dead.setPos(caster.position().add(1, 0, 0));
+        var targets = java.util.List.of(edge, outside, covered, dead);
+        try {
+            for (var target : targets) {
+                target.setNoAi(true);
+                target.setHealth(target == dead ? 0 : 10);
+                helper.getLevel().addFreshEntity(target);
+            }
+            for (int x = 4; x <= 6; x++) for (int y = 2; y <= 5; y++) helper.setBlock(new BlockPos(x, y, 8), Blocks.STONE);
+            caster.pulse();
+            helper.assertTrue(caster.getHealth() == caster.getMaxHealth(), "Self-healing exceeded maximum health");
+            helper.assertTrue(edge.getHealth() == 30 && covered.getHealth() == 30, "Healing missed a fish at the radius boundary or behind cover");
+            helper.assertTrue(outside.getHealth() == 10 && dead.getHealth() == 0, "Healing exceeded its range or revived a dead fish");
+        } finally { targets.forEach(MaterialPufferfish::discard); caster.discard(); }
+        helper.succeed();
+    }
+
+    @GameTest(template = "combat_pool")
     public static void radiantPulseHasRangeCoverAndFixedWither(GameTestHelper helper) {
         pool(helper);
         var fish = fish(helper, "radiant");

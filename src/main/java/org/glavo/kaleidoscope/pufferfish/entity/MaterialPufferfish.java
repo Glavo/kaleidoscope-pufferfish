@@ -335,13 +335,18 @@ public final class MaterialPufferfish extends Pufferfish {
         return false;
     }
 
-    /// A telegraphed pulse hits each visible nearby target once without stacking wither levels.
+    /// A pulse heals all fish within three blocks and damages visible enemies without stacking wither levels.
     public void pulse() {
         if (!(level() instanceof ServerLevel server) || !readyToAttack() || !isAlive()) return;
         attackCooldown = attackInterval();
         server.sendParticles(ParticleTypes.FLASH, getX(), getY(0.5), getZ(), 1, 0, 0, 0, 0);
         server.sendParticles(ParticleTypes.END_ROD, getX(), getY(0.5), getZ(), 36, 1.5, 1.5, 1.5, 0.05);
         playSound(SoundEvents.AMETHYST_BLOCK_RESONATE, 1.2F, 0.7F);
+        heal(20);
+        for (var fish : level().getEntitiesOfClass(Pufferfish.class, getBoundingBox().inflate(3),
+                fish -> fish != this && fish.isAlive() && distanceToSqr(fish) <= 9)) {
+            fish.heal(20);
+        }
         for (var target : level().getEntitiesOfClass(LivingEntity.class, getBoundingBox().inflate(3), this::canFight)) {
             if (distanceToSqr(target) <= 9 && hasLineOfSight(target)
                     && target.hurt(attackDamageSource(), (float) getAttributeValue(Attributes.ATTACK_DAMAGE))) {
