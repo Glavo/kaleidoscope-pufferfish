@@ -44,16 +44,20 @@ public final class PufferfishMobs {
             add(variants, PufferfishItems.COPPER_VARIANTS.get(i), i % 4 == 0 ? 0xC5724B : 0x58B69C, 0x653322, 4);
         }
         add(variants, PufferfishItems.IRON, 0xCDD2D3, 0x73787F, 4);
-        add(variants, PufferfishItems.DIAMOND, 0x6EE1D6, 0x258C91, 64);
-        add(variants, PufferfishItems.NETHERITE, 0x594F52, 0xE5DED1, 256);
-        add(variants, PufferfishItems.RADIANT, 0x9A92AE, 0xFFBE20, 1024);
-        add(variants, PufferfishItems.HEAVY, 0x73787F, 0xE5F0FA, 1024);
+        add(variants, PufferfishItems.DIAMOND, 0x6EE1D6, 0x258C91, 16, 64);
+        add(variants, PufferfishItems.NETHERITE, 0x594F52, 0xE5DED1, 64, 1024);
+        add(variants, PufferfishItems.RADIANT, 0x9A92AE, 0xFFBE20, 256, 4096);
+        add(variants, PufferfishItems.HEAVY, 0x73787F, 0xE5F0FA, 256, 4096);
         VARIANTS = Collections.unmodifiableMap(variants);
     }
 
     private PufferfishMobs() {}
 
     private static void add(Map<String, Variant> variants, DeferredItem<? extends Item> fish, int shell, int spots, int rarity) {
+        add(variants, fish, shell, spots, rarity, rarity);
+    }
+
+    private static void add(Map<String, Variant> variants, DeferredItem<? extends Item> fish, int shell, int spots, int rarity, int conduitRarity) {
         String name = fish.getId().getPath();
         var entity = ENTITIES.register(name, () -> {
             var builder = EntityType.Builder.<MaterialPufferfish>of((type, level) -> new MaterialPufferfish(type, level, fish.get()), MobCategory.WATER_AMBIENT)
@@ -64,7 +68,7 @@ public final class PufferfishMobs {
         var bucket = ITEMS.register(name + "_bucket", () -> new MobBucketItem(entity.get(), Fluids.WATER, SoundEvents.BUCKET_EMPTY_FISH,
                 new Item.Properties().stacksTo(1)));
         var egg = ITEMS.register(name + "_spawn_egg", () -> new DeferredSpawnEggItem(entity, shell, spots, new Item.Properties()));
-        variants.put(name, new Variant(fish, entity, bucket, egg, rarity));
+        variants.put(name, new Variant(fish, entity, bucket, egg, rarity, conduitRarity));
     }
 
     public static Variant variant(ItemStack fish) {
@@ -98,7 +102,8 @@ public final class PufferfishMobs {
         VARIANTS.values().forEach(variant -> event.register(variant.entity().get(), SpawnPlacementTypes.IN_WATER,
                 Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (type, level, reason, pos, random) ->
                         WaterAnimal.checkSurfaceWaterAnimalSpawnRules(type, level, reason, pos, random)
-                                && (reason != MobSpawnType.NATURAL || random.nextInt(variant.rarity()) == 0),
+                                && (reason != MobSpawnType.NATURAL || random.nextInt(PufferfishConduitSpawning.isInRange(level.getLevel(), pos)
+                                        ? variant.conduitRarity() : variant.rarity()) == 0),
                 RegisterSpawnPlacementsEvent.Operation.REPLACE));
     }
 
@@ -110,5 +115,5 @@ public final class PufferfishMobs {
     }
 
     public record Variant(DeferredItem<? extends Item> fish, DeferredHolder<EntityType<?>, EntityType<MaterialPufferfish>> entity,
-            DeferredItem<MobBucketItem> bucket, DeferredItem<DeferredSpawnEggItem> egg, int rarity) {}
+            DeferredItem<MobBucketItem> bucket, DeferredItem<DeferredSpawnEggItem> egg, int rarity, int conduitRarity) {}
 }

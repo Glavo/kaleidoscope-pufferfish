@@ -45,11 +45,15 @@ public final class PufferfishConduitSpawning {
         ACTIVE.remove(event.getLevel());
     }
 
-    public static void potentialSpawns(LevelEvent.PotentialSpawns event) {
-        if (!(event.getLevel() instanceof ServerLevel level)) return;
+    /// Uses the same spherical range for spawn replacement and material-fish rarity.
+    public static boolean isInRange(Level level, BlockPos pos) {
         var positions = ACTIVE.get(level);
-        if (positions == null || positions.entrySet().stream()
-                .noneMatch(entry -> entry.getKey().closerThan(event.getPos(), entry.getValue()))) return;
+        return positions != null && positions.entrySet().stream()
+                .anyMatch(entry -> entry.getKey().closerThan(pos, entry.getValue()));
+    }
+
+    public static void potentialSpawns(LevelEvent.PotentialSpawns event) {
+        if (!(event.getLevel() instanceof ServerLevel level) || !isInRange(level, event.getPos())) return;
         boolean replaced = false;
         for (var entry : List.copyOf(event.getSpawnerDataList())) {
             if (entry.type == EntityType.PUFFERFISH) continue;
