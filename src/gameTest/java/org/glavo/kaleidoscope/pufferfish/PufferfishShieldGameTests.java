@@ -57,9 +57,13 @@ public final class PufferfishShieldGameTests {
                         : name.startsWith("weathered_copper_") ? 240 : name.startsWith("exposed_copper_") ? 120
                         : name.startsWith("netherite_") || name.startsWith("heavy_") ? 100 : 60;
                 int amplifier = name.startsWith("oxidized_copper_") ? 2 : name.startsWith("weathered_copper_") ? 1 : 0;
-                helper.assertTrue(name.startsWith("waxed_") || PufferfishItems.isRadiant(shield) && attacker.getHealth() == 20 ? poison == null
+                helper.assertTrue(name.startsWith("waxed_") ? poison == null
                         : poison != null && poison.getDuration() == duration && poison.getAmplifier() == amplifier,
-                        "Shield applied an incorrect effect or radiant effects without thorns damage");
+                        "Shield applied an incorrect effect after a successful block");
+                if (PufferfishItems.isRadiant(shield)) {
+                    var glow = attacker.getEffect(net.minecraft.world.effect.MobEffects.GLOWING);
+                    helper.assertTrue(glow != null && glow.getDuration() == 200, "Radiant block did not apply glowing");
+                }
                 helper.assertTrue(player.getHealth() == 20, "Shield did not block incoming damage");
                 float damage = 20 - attacker.getHealth();
                 helper.assertTrue(damage == 0 || damage >= 1 && damage <= 5, "Shield exceeded native Thorns I damage");
@@ -74,32 +78,36 @@ public final class PufferfishShieldGameTests {
 
     @GameTest(template = "empty")
     public static void unsuccessfulBlocksAndOrdinaryShieldsDoNotRetaliate(GameTestHelper helper) {
-        for (int scenario = 0; scenario < 5; scenario++) {
-            var player = helper.makeMockPlayer(GameType.SURVIVAL);
-            player.setPos(Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(2, 2, 2))));
-            player.setNoGravity(true);
-            player.setYRot(scenario == 1 ? 180 : 0);
-            var shield = new ItemStack(scenario == 2 ? Items.SHIELD : PufferfishShields.VARIANTS.get("pufferfish_skin_shield").get());
-            player.setItemInHand(InteractionHand.OFF_HAND, shield);
-            if (scenario != 0) shield.use(helper.getLevel(), player, InteractionHand.OFF_HAND);
-            for (int tick = 0; tick < 6; tick++) player.tick();
-            var attacker = helper.spawn(EntityType.VILLAGER, new BlockPos(2, 2, 4));
-            attacker.setNoAi(true);
-            final int mode = scenario;
-            java.util.function.Consumer<net.neoforged.neoforge.event.entity.living.LivingShieldBlockEvent> intercept = event -> {
-                if (event.getEntity() == player) {
-                    if (mode == 3) event.setCanceled(true);
-                    if (mode == 4) event.setBlockedDamage(0);
+        for (var name : List.of("pufferfish_skin_shield", "radiant_pufferfish_skin_shield")) {
+            for (int scenario = 0; scenario < 5; scenario++) {
+                var player = helper.makeMockPlayer(GameType.SURVIVAL);
+                player.setPos(Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(2, 2, 2))));
+                player.setNoGravity(true);
+                player.setYRot(scenario == 1 ? 180 : 0);
+                var shield = new ItemStack(scenario == 2 ? Items.SHIELD : PufferfishShields.VARIANTS.get(name).get());
+                player.setItemInHand(InteractionHand.OFF_HAND, shield);
+                if (scenario != 0) shield.use(helper.getLevel(), player, InteractionHand.OFF_HAND);
+                for (int tick = 0; tick < 6; tick++) player.tick();
+                var attacker = helper.spawn(EntityType.VILLAGER, new BlockPos(2, 2, 4));
+                attacker.setNoAi(true);
+                final int mode = scenario;
+                java.util.function.Consumer<net.neoforged.neoforge.event.entity.living.LivingShieldBlockEvent> intercept = event -> {
+                    if (event.getEntity() == player) {
+                        if (mode == 3) event.setCanceled(true);
+                        if (mode == 4) event.setBlockedDamage(0);
+                    }
+                };
+                net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.HIGH, intercept);
+                try {
+                    player.hurt(player.damageSources().mobAttack(attacker), 6);
+                    helper.assertTrue(attacker.getHealth() == 20 && !attacker.hasEffect(net.minecraft.world.effect.MobEffects.POISON)
+                                && !attacker.hasEffect(net.minecraft.world.effect.MobEffects.WITHER)
+                                && !attacker.hasEffect(net.minecraft.world.effect.MobEffects.GLOWING),
+                            "Invalid shield block retaliated: scenario=" + scenario);
+                } finally {
+                    net.neoforged.neoforge.common.NeoForge.EVENT_BUS.unregister(intercept);
+                    attacker.discard();
                 }
-            };
-            net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.HIGH, intercept);
-            try {
-                player.hurt(player.damageSources().mobAttack(attacker), 6);
-                helper.assertTrue(attacker.getHealth() == 20 && !attacker.hasEffect(net.minecraft.world.effect.MobEffects.POISON),
-                        "Invalid shield block retaliated: scenario=" + scenario);
-            } finally {
-                net.neoforged.neoforge.common.NeoForge.EVENT_BUS.unregister(intercept);
-                attacker.discard();
             }
         }
         helper.succeed();

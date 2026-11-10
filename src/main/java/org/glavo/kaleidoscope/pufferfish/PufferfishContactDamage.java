@@ -49,7 +49,7 @@ public final class PufferfishContactDamage {
         }
         if (!touching) return;
         var source = new DamageSource(level.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(DAMAGE_TYPE));
-        entity.hurt(source, 1);
+        if (!entity.hurt(source, 1)) return;
         if (entity instanceof LivingEntity living && living.isAlive() && !living.isInvulnerableTo(source)) {
             if (effects.containsKey(MobEffects.WITHER)) PufferfishCombat.applyRadiantGlow(living, null);
             for (var effect : effects.values()) {
@@ -65,7 +65,8 @@ public final class PufferfishContactDamage {
     @javax.annotation.Nullable
     private static MobEffectInstance poison(Level level, BlockPos pos, BlockState state) {
         if (state.getBlock() instanceof PufferfishSkinBlock) {
-            if (CopperPufferfish.skinIndex(state.getBlock().asItem().getDefaultInstance()) >= 4) return null;
+            int copper = CopperPufferfish.skinIndex(state.getBlock().asItem().getDefaultInstance());
+            if (copper >= 0) return PufferfishRetaliation.effect(PufferfishItems.COPPER_VARIANTS.get(copper).get().getDefaultInstance());
             boolean radiant = state.is(PufferfishBlocks.RADIANT_SKIN.get());
             return new MobEffectInstance(radiant ? MobEffects.WITHER : MobEffects.POISON, radiant ? PufferfishCombat.RADIANT_WITHER_DURATION_TICKS : 120, 0);
         }

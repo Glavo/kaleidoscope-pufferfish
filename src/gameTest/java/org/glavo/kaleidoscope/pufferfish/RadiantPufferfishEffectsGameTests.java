@@ -104,7 +104,7 @@ public final class RadiantPufferfishEffectsGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void headgearArmorAndShieldApplyWitherOneOnlyAfterSuccessfulThorns(GameTestHelper helper) {
+    public static void headgearAndArmorApplyWitherOneOnlyAfterSuccessfulThorns(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         player.setNoGravity(true);
         player.setPos(Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(2, 2, 2))));
@@ -113,7 +113,7 @@ public final class RadiantPufferfishEffectsGameTests {
         attacker.getAttribute(Attributes.MAX_HEALTH).setBaseValue(1000);
         attacker.setHealth(1000);
         for (var slot : EquipmentSlot.values()) player.setItemSlot(slot, ItemStack.EMPTY);
-        for (int variant = 0; variant < 6; variant++) {
+        for (int variant = 0; variant < 5; variant++) {
             for (var slot : EquipmentSlot.values()) player.setItemSlot(slot, ItemStack.EMPTY);
             player.stopUsingItem();
             attacker.removeAllEffects();
@@ -121,11 +121,6 @@ public final class RadiantPufferfishEffectsGameTests {
             else if (variant < 5) {
                 var type = PufferfishArmor.TYPES.get(variant - 1);
                 player.setItemSlot(type.getSlot(), new ItemStack(PufferfishArmor.VARIANTS.get("radiant_pufferfish_skin_" + type.getName()).get()));
-            } else {
-                var shield = new ItemStack(PufferfishShields.VARIANTS.get("radiant_pufferfish_skin_shield").get());
-                player.setYRot(0);
-                player.setItemInHand(InteractionHand.MAIN_HAND, shield);
-                shield.use(helper.getLevel(), player, InteractionHand.MAIN_HAND);
             }
             for (int tick = 0; tick < 6; tick++) player.tick();
             int reflected = 0;

@@ -30,6 +30,60 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class PufferfishContactDamageGameTests {
     @GameTest(template = "empty")
+    public static void canceledOrRejectedContactDamageDoesNotApplyEffects(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var pos = helper.absolutePos(new BlockPos(2, 2, 2));
+        for (boolean radiant : new boolean[] {false, true}) {
+            for (boolean skin : new boolean[] {false, true}) {
+                var block = skin ? radiant ? PufferfishBlocks.RADIANT_SKIN.get() : PufferfishBlocks.skin(null)
+                        : PufferfishBlocks.PLACED_FISH.get();
+                level.setBlockAndUpdate(pos, block.defaultBlockState());
+                if (level.getBlockEntity(pos) instanceof PlacedPufferfishBlockEntity placed) {
+                    placed.setFish(new net.minecraft.world.item.ItemStack(radiant ? PufferfishItems.RADIANT.get() : net.minecraft.world.item.Items.PUFFERFISH));
+                }
+                var target = EntityType.COW.create(level);
+                target.setPos(Vec3.atBottomCenterOf(pos));
+                java.util.function.Consumer<net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent> cancel = event -> {
+                    if (event.getEntity() == target && event.getSource().is(PufferfishContactDamage.DAMAGE_TYPE)) event.setCanceled(true);
+                };
+                NeoForge.EVENT_BUS.addListener(cancel);
+                try {
+                    target.tickCount = 20;
+                    NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(target));
+                    helper.assertTrue(target.getHealth() == target.getMaxHealth() && target.getActiveEffects().isEmpty(),
+                            "Canceled contact damage applied poison, wither, or glowing");
+                    var existing = new MobEffectInstance(radiant ? MobEffects.WITHER : MobEffects.POISON, 1, 0);
+                    target.addEffect(existing);
+                    target.tickCount = 40;
+                    NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(target));
+                    helper.assertTrue(target.getEffect(existing.getEffect()).getDuration() == 1 && !target.hasEffect(MobEffects.GLOWING),
+                            "Canceled contact damage refreshed an existing effect");
+                } finally {
+                    NeoForge.EVENT_BUS.unregister(cancel);
+                }
+                target.removeAllEffects();
+                target.tickCount = 60;
+                NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(target));
+                helper.assertTrue(target.getHealth() == target.getMaxHealth() - 1
+                        && target.hasEffect(radiant ? MobEffects.WITHER : MobEffects.POISON), "Successful contact did not apply its effect");
+                target.removeAllEffects();
+                target.invulnerableTime = 20;
+                target.tickCount = 80;
+                NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(target));
+                helper.assertTrue(target.getActiveEffects().isEmpty(), "Rejected contact damage applied effects during hurt immunity");
+                target.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_ABSORPTION).setBaseValue(2);
+                target.setAbsorptionAmount(2);
+                target.invulnerableTime = 0;
+                target.tickCount = 100;
+                NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(target));
+                helper.assertTrue(target.getHealth() == target.getMaxHealth() - 1 && target.getAbsorptionAmount() == 1
+                        && target.hasEffect(radiant ? MobEffects.WITHER : MobEffects.POISON), "Absorbed contact damage did not apply its effect");
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void everyVariantHurtsOnContactWithAnyFace(GameTestHelper helper) {
         var level = helper.getLevel();
         var pos = helper.absolutePos(new BlockPos(2, 2, 2));
@@ -53,7 +107,7 @@ public final class PufferfishContactDamageGameTests {
                     var state = skin.defaultBlockState().setValue(PufferfishSkinBlock.FACE, face).setValue(PufferfishSkinBlock.FACING, facing);
                     level.setBlockAndUpdate(pos, state);
                     assertContact(helper, pos, state, copper >= 4
-                            ? null : new MobEffectInstance(MobEffects.POISON, 120, 0));
+                            ? null : new MobEffectInstance(MobEffects.POISON, copper >= 0 ? duration : 120, copper >= 0 ? amplifier : 0));
                 }
             }
         }

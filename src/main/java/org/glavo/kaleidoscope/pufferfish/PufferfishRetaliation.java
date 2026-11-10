@@ -65,8 +65,7 @@ public final class PufferfishRetaliation {
         }
         if (poison != null) target.addEffect(poison, wearer);
         if (PufferfishHeadgear.isWearing(wearer) && PufferfishItems.isRadiant(wearer.getItemBySlot(EquipmentSlot.HEAD))
-                || PufferfishArmor.isWearingRadiant(wearer)
-                || wearer.isBlocking() && wearer.getUseItem().is(PufferfishShields.VARIANTS.get("radiant_pufferfish_skin_shield").get())) {
+                || PufferfishArmor.isWearingRadiant(wearer)) {
             target.addEffect(effect(new ItemStack(PufferfishItems.RADIANT.get())), wearer);
             PufferfishCombat.applyRadiantGlow(target, wearer);
         }
