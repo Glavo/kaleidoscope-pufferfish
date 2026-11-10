@@ -7,11 +7,9 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EquipmentSlotGroup;
@@ -20,17 +18,11 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
-import net.minecraft.world.item.ArmorMaterials;
-import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.enchantment.EnchantedItemInUse;
-import net.minecraft.world.item.enchantment.EnchantmentTarget;
-import net.minecraft.world.item.enchantment.Enchantments;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.common.damagesource.DamageContainer;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -41,56 +33,42 @@ public final class PufferfishArmor {
     public static final List<ArmorItem.Type> TYPES = List.of(ArmorItem.Type.HELMET, ArmorItem.Type.CHESTPLATE,
             ArmorItem.Type.LEGGINGS, ArmorItem.Type.BOOTS);
     public static final Map<String, DeferredItem<ArmorItem>> VARIANTS;
+    private static final List<EquipmentSlot> THORNS_SLOT_PRIORITY = List.of(
+            EquipmentSlot.CHEST, EquipmentSlot.HEAD, EquipmentSlot.LEGS, EquipmentSlot.FEET);
 
     static {
         var variants = new LinkedHashMap<String, DeferredItem<ArmorItem>>();
-        add(variants, "", () -> PufferfishBlocks.skin(null).asItem());
-        for (var color : DyeColor.values()) add(variants, color.getName() + "_", () -> PufferfishBlocks.skin(color).asItem());
-        add(variants, "golden_", () -> PufferfishBlocks.GOLDEN_SKIN.get().asItem());
-        for (var skin : PufferfishBlocks.COPPER_SKINS) {
-            String prefix = skin.getId().getPath().replace("pufferfish_skin", "");
-            add(variants, prefix, () -> skin.get().asItem());
-        }
-        add(variants, "iron_", () -> PufferfishBlocks.IRON_SKIN.get().asItem());
-        add(variants, "diamond_", () -> PufferfishBlocks.DIAMOND_SKIN.get().asItem());
-        add(variants, "netherite_", () -> PufferfishBlocks.NETHERITE_SKIN.get().asItem());
-        add(variants, "radiant_", () -> PufferfishBlocks.RADIANT_SKIN.get().asItem());
-        add(variants, "heavy_", () -> PufferfishBlocks.HEAVY_SKIN.get().asItem());
+        PufferfishVariant.ALL.forEach(variant -> add(variants, variant));
         VARIANTS = Collections.unmodifiableMap(variants);
     }
 
     private PufferfishArmor() {}
 
-    private static void add(Map<String, DeferredItem<ArmorItem>> variants, String prefix, Supplier<Item> skin) {
-        String name = prefix + "pufferfish_skin";
+    private static void add(Map<String, DeferredItem<ArmorItem>> variants, PufferfishVariant variant) {
+        String name = variant.skinName();
+        var kind = variant.material();
         var material = MATERIALS.register(name, () -> {
-            var protection = switch (prefix) {
-                case "golden_" -> ArmorMaterials.GOLD;
-                case "iron_" -> ArmorMaterials.IRON;
-                case "diamond_" -> ArmorMaterials.DIAMOND;
-                case "netherite_", "radiant_", "heavy_" -> ArmorMaterials.NETHERITE;
-                default -> ArmorMaterials.LEATHER;
-            };
+            var protection = kind.armorMaterial();
             return new ArmorMaterial(protection.value().defense(), 15,
-                    SoundEvents.ARMOR_EQUIP_LEATHER, () -> Ingredient.of(skin.get()),
+                    SoundEvents.ARMOR_EQUIP_LEATHER, () -> Ingredient.of(variant.skin()),
                     List.of(new ArmorMaterial.Layer(KaleidoscopePufferfish.id(name))), protection.value().toughness(),
-                    prefix.equals("heavy_") ? 0.15F : 0);
+                    kind == PufferfishMaterial.HEAVY ? 0.15F : 0);
         });
         for (var type : TYPES) {
             String itemName = name + "_" + type.getName();
             variants.put(itemName, ITEMS.register(itemName, () -> {
-                int durability = prefix.equals("heavy_") ? (type.getDurability(37) * 3 + 1) / 2 : type.getDurability(5);
+                int durability = kind == PufferfishMaterial.HEAVY ? (type.getDurability(37) * 3 + 1) / 2 : type.getDurability(5);
                 var properties = new Item.Properties().durability(durability);
-                if (prefix.equals("netherite_") || prefix.equals("radiant_") || prefix.equals("heavy_")) properties.fireResistant();
-                if (prefix.equals("heavy_")) return new ArmorItem(material, type, properties) {
+                if (kind.fireResistant()) properties.fireResistant();
+                if (kind == PufferfishMaterial.HEAVY) return variant.bind(new ArmorItem(material, type, properties) {
                     private final ItemAttributeModifiers modifiers = super.getDefaultAttributeModifiers().withModifierAdded(
                             Attributes.MOVEMENT_SPEED, new AttributeModifier(KaleidoscopePufferfish.id(itemName + "_weight"),
                                     -0.10, AttributeModifier.Operation.ADD_MULTIPLIED_BASE), EquipmentSlotGroup.bySlot(type.getSlot()));
 
                     @Override
                     public ItemAttributeModifiers getDefaultAttributeModifiers() { return modifiers; }
-                };
-                return new ArmorItem(material, type, properties);
+                });
+                return variant.bind(new ArmorItem(material, type, properties));
             }));
         }
     }
@@ -105,14 +83,13 @@ public final class PufferfishArmor {
         var wearer = event.getEntity();
         var source = event.getSource();
         if (!(wearer.level() instanceof ServerLevel level) || wearer.isSpectator()
-                || source.is(DamageTypes.THORNS) || !(source.getEntity() instanceof LivingEntity attacker)
-                || attacker == wearer || event.getNewDamage() + event.getReduction(DamageContainer.Reduction.ABSORPTION) <= 0) return;
+                || !PufferfishRetaliation.canRetaliate(event)) return;
         EnchantedItemInUse thornsItem = null;
         int strength = 0;
-        for (var slot : List.of(EquipmentSlot.CHEST, EquipmentSlot.HEAD, EquipmentSlot.LEGS, EquipmentSlot.FEET)) {
+        for (var slot : THORNS_SLOT_PRIORITY) {
             var stack = wearer.getItemBySlot(slot);
             if (!(stack.getItem() instanceof ArmorItem armor) || armor.getEquipmentSlot() != slot
-                    || VARIANTS.values().stream().noneMatch(item -> stack.is(item.get()))) continue;
+                    || PufferfishVariant.of(stack) == null) continue;
             int levelForItem = PufferfishRetaliation.thornsLevel(stack);
             if (levelForItem > strength) {
                 strength = levelForItem;
@@ -120,8 +97,7 @@ public final class PufferfishArmor {
             }
         }
         if (thornsItem == null) return;
-        var thorns = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.THORNS);
-        thorns.value().doPostAttack(level, strength, thornsItem, EnchantmentTarget.VICTIM, wearer, source);
+        PufferfishRetaliation.thorns(level, strength, thornsItem, wearer, source);
     }
 
     @javax.annotation.Nullable
@@ -130,15 +106,17 @@ public final class PufferfishArmor {
         for (var type : TYPES) {
             var stack = wearer.getItemBySlot(type.getSlot());
             if (!(stack.getItem() instanceof ArmorItem armor) || armor.getType() != type || PufferfishItems.isRadiant(stack)
-                    || VARIANTS.values().stream().noneMatch(item -> stack.is(item.get()))) continue;
+                    || PufferfishVariant.of(stack) == null) continue;
             poison = PufferfishRetaliation.strongestPoison(poison, PufferfishRetaliation.effect(stack));
         }
         return poison;
     }
 
     public static boolean isWearingRadiant(LivingEntity wearer) {
-        return TYPES.stream().anyMatch(type -> wearer.getItemBySlot(type.getSlot())
-                .is(VARIANTS.get("radiant_pufferfish_skin_" + type.getName()).get()));
+        return TYPES.stream().anyMatch(type -> {
+            var stack = wearer.getItemBySlot(type.getSlot());
+            return stack.getItem() instanceof ArmorItem armor && armor.getType() == type && PufferfishItems.isRadiant(stack);
+        });
     }
 
 }

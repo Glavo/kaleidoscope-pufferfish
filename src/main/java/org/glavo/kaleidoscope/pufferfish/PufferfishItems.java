@@ -21,19 +21,12 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 
 public final class PufferfishItems {
     private static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(KaleidoscopePufferfish.MODID);
-    public static final DeferredItem<PufferfishPumpItem> PUMP = ITEMS.register("pufferfish_pump",
-            () -> new PufferfishPumpItem(new Item.Properties().stacksTo(1)));
-    public static final DeferredItem<Item> COPPER = registerMaterialFish("copper");
-    public static final java.util.List<DeferredItem<Item>> COPPER_VARIANTS = java.util.List.of(
-            COPPER, registerMaterialFish("exposed_copper"), registerMaterialFish("weathered_copper"),
-            registerMaterialFish("oxidized_copper"), registerMaterialFish("waxed_copper"),
-            registerMaterialFish("waxed_exposed_copper"), registerMaterialFish("waxed_weathered_copper"),
-            registerMaterialFish("waxed_oxidized_copper"));
-    public static final DeferredItem<Item> IRON = registerMaterialFish("iron");
-    public static final DeferredItem<Item> DIAMOND = registerMaterialFish("diamond");
+    public static final DeferredItem<Item> COPPER = registerMaterialFish(PufferfishVariant.COPPER.getFirst());
+    public static final java.util.List<DeferredItem<Item>> COPPER_VARIANTS = registerCopperFish();
+    public static final DeferredItem<Item> IRON = registerMaterialFish(PufferfishVariant.IRON);
     /// An always-edible food with golden apple nutrition and effects, eight minutes of
     /// Water Breathing I, and one minute of Poison II. Right-clicking eats it instead of throwing it.
-    public static final DeferredItem<Item> GOLDEN = ITEMS.register("golden_pufferfish", () -> new Item(
+    public static final DeferredItem<Item> GOLDEN = ITEMS.register("golden_pufferfish", () -> PufferfishVariant.GOLDEN.bind(new Item(
             new Item.Properties().rarity(Rarity.RARE).food(new FoodProperties.Builder()
                     .nutrition(4).saturationModifier(1.2F).alwaysEdible()
                     .effect(() -> new MobEffectInstance(MobEffects.REGENERATION, 100, 1), 1)
@@ -43,7 +36,46 @@ public final class PufferfishItems {
                     .build())) {
         @Override
         public EquipmentSlot getEquipmentSlot(ItemStack stack) { return EquipmentSlot.HEAD; }
-    });
+    }));
+    public static final DeferredItem<Item> DIAMOND = registerMaterialFish(PufferfishVariant.DIAMOND);
+    public static final DeferredItem<Item> NETHERITE = ITEMS.register("netherite_pufferfish", () -> PufferfishVariant.NETHERITE.bind(new Item(
+            new Item.Properties().fireResistant().attributes(ItemAttributeModifiers.builder()
+                    .add(Attributes.ARMOR, new AttributeModifier(KaleidoscopePufferfish.id("netherite_head_armor"),
+                            3, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD)
+                    .add(Attributes.ARMOR_TOUGHNESS, new AttributeModifier(KaleidoscopePufferfish.id("netherite_head_toughness"),
+                            3, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD)
+                    .build())) {
+        @Override
+        public EquipmentSlot getEquipmentSlot(ItemStack stack) {
+            return EquipmentSlot.HEAD;
+        }
+    }));
+    /// A fire-resistant mace-strength fish granting head armor, toughness, knockback resistance, and reduced movement speed.
+    public static final DeferredItem<HeavyPufferfishItem> HEAVY = ITEMS.register("heavy_pufferfish", () -> PufferfishVariant.HEAVY.bind(new HeavyPufferfishItem(
+            new Item.Properties().rarity(Rarity.EPIC).fireResistant().attributes(ItemAttributeModifiers.builder()
+                    .add(Attributes.ARMOR, new AttributeModifier(KaleidoscopePufferfish.id("heavy_head_armor"),
+                            4, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD)
+                    .add(Attributes.ARMOR_TOUGHNESS, new AttributeModifier(KaleidoscopePufferfish.id("heavy_head_toughness"),
+                            4, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD)
+                    .add(Attributes.KNOCKBACK_RESISTANCE, new AttributeModifier(KaleidoscopePufferfish.id("heavy_head_knockback_resistance"),
+                            0.5, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD)
+                    .add(Attributes.MOVEMENT_SPEED, new AttributeModifier(KaleidoscopePufferfish.id("heavy_head_movement_speed"),
+                            -0.30, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL), EquipmentSlotGroup.HEAD)
+                    .build()))));
+
+    public static final DeferredItem<Item> RADIANT = ITEMS.register("radiant_pufferfish", () -> PufferfishVariant.RADIANT.bind(new Item(
+            new Item.Properties().rarity(Rarity.EPIC).fireResistant().attributes(ItemAttributeModifiers.builder()
+                    .add(Attributes.ARMOR, new AttributeModifier(KaleidoscopePufferfish.id("radiant_head_armor"),
+                            3, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD)
+                    .add(Attributes.ARMOR_TOUGHNESS, new AttributeModifier(KaleidoscopePufferfish.id("radiant_head_toughness"),
+                            3, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD)
+                    .build())) {
+        @Override
+        public EquipmentSlot getEquipmentSlot(ItemStack stack) {
+            return EquipmentSlot.HEAD;
+        }
+    }));
+
     /// Edible pufferfish sashimi with two nutrition points and no status effects.
     public static final DeferredItem<Item> SASHIMI = ITEMS.register("pufferfish_sashimi", () -> new Item(
             new Item.Properties().food(new FoodProperties.Builder().nutrition(2).saturationModifier(0.1F).build())));
@@ -78,70 +110,36 @@ public final class PufferfishItems {
     /// The fire-resistant flail crafted from a netherite pufferfish and two chains.
     public static final DeferredItem<PufferfishFlailItem> NETHERITE_FLAIL = ITEMS.register("netherite_pufferfish_flail",
             () -> new PufferfishFlailItem(new Item.Properties().stacksTo(1).fireResistant(), () -> PufferfishItems.NETHERITE.get()));
-    public static final DeferredItem<PufferfishFlailItem> RADIANT_FLAIL = ITEMS.register("radiant_pufferfish_flail",
-            () -> new PufferfishFlailItem(new Item.Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant(), () -> PufferfishItems.RADIANT.get()));
     public static final DeferredItem<PufferfishFlailItem> HEAVY_FLAIL = ITEMS.register("heavy_pufferfish_flail",
             () -> new PufferfishFlailItem(new Item.Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant(), () -> PufferfishItems.HEAVY.get()));
+    public static final DeferredItem<PufferfishFlailItem> RADIANT_FLAIL = ITEMS.register("radiant_pufferfish_flail",
+            () -> new PufferfishFlailItem(new Item.Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant(), () -> PufferfishItems.RADIANT.get()));
     public static final java.util.List<DeferredItem<PufferfishFlailItem>> FLAIL_VARIANTS = registerFlails();
-    public static final DeferredItem<Item> NETHERITE = ITEMS.register("netherite_pufferfish", () -> new Item(
-            new Item.Properties().fireResistant().attributes(ItemAttributeModifiers.builder()
-                    .add(Attributes.ARMOR, new AttributeModifier(KaleidoscopePufferfish.id("netherite_head_armor"),
-                            3, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD)
-                    .add(Attributes.ARMOR_TOUGHNESS, new AttributeModifier(KaleidoscopePufferfish.id("netherite_head_toughness"),
-                            3, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD)
-                    .build())) {
-        @Override
-        public EquipmentSlot getEquipmentSlot(ItemStack stack) {
-            return EquipmentSlot.HEAD;
-        }
-    });
-    public static final DeferredItem<Item> RADIANT = ITEMS.register("radiant_pufferfish", () -> new Item(
-            new Item.Properties().rarity(Rarity.EPIC).fireResistant().attributes(ItemAttributeModifiers.builder()
-                    .add(Attributes.ARMOR, new AttributeModifier(KaleidoscopePufferfish.id("radiant_head_armor"),
-                            3, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD)
-                    .add(Attributes.ARMOR_TOUGHNESS, new AttributeModifier(KaleidoscopePufferfish.id("radiant_head_toughness"),
-                            3, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD)
-                    .build())) {
-        @Override
-        public EquipmentSlot getEquipmentSlot(ItemStack stack) {
-            return EquipmentSlot.HEAD;
-        }
-    });
-
-    /// A fire-resistant mace-strength fish granting head armor, toughness, knockback resistance, and reduced movement speed.
-    public static final DeferredItem<HeavyPufferfishItem> HEAVY = ITEMS.register("heavy_pufferfish", () -> new HeavyPufferfishItem(
-            new Item.Properties().rarity(Rarity.EPIC).fireResistant().attributes(ItemAttributeModifiers.builder()
-                    .add(Attributes.ARMOR, new AttributeModifier(KaleidoscopePufferfish.id("heavy_head_armor"),
-                            4, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD)
-                    .add(Attributes.ARMOR_TOUGHNESS, new AttributeModifier(KaleidoscopePufferfish.id("heavy_head_toughness"),
-                            4, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD)
-                    .add(Attributes.KNOCKBACK_RESISTANCE, new AttributeModifier(KaleidoscopePufferfish.id("heavy_head_knockback_resistance"),
-                            0.5, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD)
-                    .add(Attributes.MOVEMENT_SPEED, new AttributeModifier(KaleidoscopePufferfish.id("heavy_head_movement_speed"),
-                            -0.30, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL), EquipmentSlotGroup.HEAD)
-                    .build())));
-
-    /// Returns whether the stack contains a heavy pufferfish.
-    public static boolean isHeavy(ItemStack stack) {
-        return stack.is(HEAVY.get());
-    }
-
+    public static final DeferredItem<PufferfishPumpItem> PUMP = ITEMS.register("pufferfish_pump",
+            () -> new PufferfishPumpItem(new Item.Properties().stacksTo(1)));
     private PufferfishItems() {}
+
+    private static java.util.List<DeferredItem<Item>> registerCopperFish() {
+        var fish = new java.util.ArrayList<DeferredItem<Item>>();
+        fish.add(COPPER);
+        PufferfishVariant.COPPER.stream().skip(1).map(PufferfishItems::registerMaterialFish).forEach(fish::add);
+        return java.util.List.copyOf(fish);
+    }
 
     private static java.util.List<DeferredItem<PufferfishFlailItem>> registerFlails() {
         var flails = new java.util.ArrayList<DeferredItem<PufferfishFlailItem>>();
         flails.add(FLAIL);
         var fish = new java.util.ArrayList<>(COPPER_VARIANTS);
-        fish.addFirst(GOLDEN);
         fish.add(IRON);
+        fish.add(GOLDEN);
         fish.add(DIAMOND);
         for (var head : fish) {
             flails.add(ITEMS.register(head.getId().getPath() + "_flail",
                     () -> new PufferfishFlailItem(new Item.Properties().stacksTo(1), head)));
         }
         flails.add(NETHERITE_FLAIL);
-        flails.add(RADIANT_FLAIL);
         flails.add(HEAVY_FLAIL);
+        flails.add(RADIANT_FLAIL);
         return java.util.List.copyOf(flails);
     }
 
@@ -149,28 +147,34 @@ public final class PufferfishItems {
         return stack.getItem() instanceof PufferfishFlailItem flail ? flail.fish(stack) : stack;
     }
 
-    private static DeferredItem<Item> registerMaterialFish(String material) {
-        return ITEMS.register(material + "_pufferfish", () -> new Item(new Item.Properties()) {
+    private static DeferredItem<Item> registerMaterialFish(PufferfishVariant variant) {
+        return ITEMS.register(variant.fishName(), () -> variant.bind(new Item(new Item.Properties()) {
             @Override
             public EquipmentSlot getEquipmentSlot(ItemStack stack) {
                 return EquipmentSlot.HEAD;
             }
-        });
+        }));
     }
 
     @javax.annotation.Nullable
     public static String materialName(ItemStack stack) {
-        if (CopperPufferfish.index(stack) >= 0) return CopperPufferfish.material(stack);
-        if (stack.is(IRON.get())) return "iron";
-        if (stack.is(DIAMOND.get())) return "diamond";
-        if (stack.is(GOLDEN.get())) return "golden";
-        if (stack.is(RADIANT.get())) return "radiant";
-        return null;
+        if (!isPufferfish(stack)) return null;
+        var variant = PufferfishVariant.of(stack);
+        return switch (variant.material()) {
+            case COPPER -> CopperPufferfish.material(stack);
+            case IRON, GOLDEN, DIAMOND, RADIANT -> variant.fishName().replace("_pufferfish", "");
+            default -> null;
+        };
     }
 
     public static boolean isRadiant(ItemStack stack) {
-        var id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem());
-        return id.getNamespace().equals(KaleidoscopePufferfish.MODID) && id.getPath().startsWith("radiant_pufferfish");
+        var variant = PufferfishVariant.of(stack);
+        return variant != null && variant.material() == PufferfishMaterial.RADIANT;
+    }
+
+    /// Returns whether the stack contains a heavy pufferfish.
+    public static boolean isHeavy(ItemStack stack) {
+        return stack.is(HEAVY.get());
     }
 
     public static boolean isNetherite(ItemStack stack) {
@@ -178,7 +182,8 @@ public final class PufferfishItems {
     }
 
     public static boolean isPufferfish(ItemStack stack) {
-        return stack.is(Items.PUFFERFISH) || isNetherite(stack) || isHeavy(stack) || materialName(stack) != null;
+        var variant = PufferfishVariant.of(stack);
+        return variant != null && stack.getItem() == variant.fishItem();
     }
 
     public static boolean canThrow(ItemStack stack) {

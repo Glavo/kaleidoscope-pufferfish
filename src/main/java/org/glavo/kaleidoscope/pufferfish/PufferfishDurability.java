@@ -34,14 +34,8 @@ public final class PufferfishDurability {
     }
 
     public static int maximum(ItemStack stack) {
-        var fish = PufferfishItems.flailFish(stack);
-        if (PufferfishItems.isHeavy(fish)) return 3047;
-        if (fish.is(PufferfishItems.NETHERITE.get()) || fish.is(PufferfishItems.RADIANT.get())) return 2031;
-        if (fish.is(PufferfishItems.DIAMOND.get())) return 1561;
-        if (fish.is(PufferfishItems.IRON.get())) return 250;
-        if (fish.is(PufferfishItems.GOLDEN.get())) return 32;
-        if (CopperPufferfish.index(fish) >= 0) return 128;
-        return 64;
+        var variant = PufferfishVariant.of(stack);
+        return variant == null ? 64 : variant.material().fishDurability();
     }
 
     public static void activate(ItemStack stack) {

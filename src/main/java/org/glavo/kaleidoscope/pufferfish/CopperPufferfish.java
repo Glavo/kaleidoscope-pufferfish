@@ -18,10 +18,8 @@ public final class CopperPufferfish {
     private CopperPufferfish() {}
 
     public static int index(ItemStack stack) {
-        for (int i = 0; i < PufferfishItems.COPPER_VARIANTS.size(); i++) {
-            if (stack.is(PufferfishItems.COPPER_VARIANTS.get(i).get())) return i;
-        }
-        return -1;
+        var variant = PufferfishVariant.of(stack);
+        return variant != null && stack.getItem() == variant.fishItem() ? variant.copperIndex() : -1;
     }
 
     public static String material(ItemStack stack) {
@@ -34,10 +32,9 @@ public final class CopperPufferfish {
     }
 
     public static int skinIndex(ItemStack stack) {
-        for (int i = 0; i < PufferfishBlocks.COPPER_SKINS.size(); i++) {
-            if (stack.is(PufferfishBlocks.COPPER_SKINS.get(i).get().asItem())) return i;
-        }
-        return -1;
+        var variant = PufferfishVariant.of(stack);
+        return variant != null && stack.getItem() instanceof net.minecraft.world.item.BlockItem blockItem
+                && blockItem.getBlock() instanceof PufferfishSkinBlock ? variant.copperIndex() : -1;
     }
 
     private static int placedIndex(net.minecraft.world.level.Level level, BlockPos pos) {

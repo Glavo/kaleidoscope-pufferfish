@@ -7,10 +7,8 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Supplier;
-import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -25,36 +23,27 @@ public final class PufferfishLamps {
 
     static {
         var variants = new LinkedHashMap<String, Variant>();
-        add(variants, "pufferfish", () -> new ItemStack(Items.PUFFERFISH));
-        for (var color : DyeColor.values()) {
-            add(variants, color.getName() + "_pufferfish", () -> PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
-        }
-        add(variants, "golden_pufferfish", () -> new ItemStack(PufferfishItems.GOLDEN.get()));
-        for (var fish : PufferfishItems.COPPER_VARIANTS) add(variants, fish.getId().getPath(), () -> new ItemStack(fish.get()));
-        add(variants, "iron_pufferfish", () -> new ItemStack(PufferfishItems.IRON.get()));
-        add(variants, "diamond_pufferfish", () -> new ItemStack(PufferfishItems.DIAMOND.get()));
-        add(variants, "netherite_pufferfish", () -> new ItemStack(PufferfishItems.NETHERITE.get()));
-        add(variants, "heavy_pufferfish", () -> new ItemStack(PufferfishItems.HEAVY.get()));
+        PufferfishVariant.ALL.stream().filter(PufferfishVariant::hasLamp).forEach(variant -> add(variants, variant));
         VARIANTS = Collections.unmodifiableMap(variants);
     }
 
     private PufferfishLamps() {}
 
-    private static void add(Map<String, Variant> variants, String fishName, Supplier<ItemStack> fish) {
-        String name = fishName + "_lamp";
-        int light = switch (fishName) {
-            case "exposed_copper_pufferfish", "waxed_exposed_copper_pufferfish" -> 12;
-            case "weathered_copper_pufferfish", "waxed_weathered_copper_pufferfish" -> 8;
-            case "oxidized_copper_pufferfish", "waxed_oxidized_copper_pufferfish" -> 4;
+    private static void add(Map<String, Variant> variants, PufferfishVariant variant) {
+        String name = variant.fishName() + "_lamp";
+        int light = switch (variant.oxidation()) {
+            case 1 -> 12;
+            case 2 -> 8;
+            case 3 -> 4;
             default -> 15;
         };
         var block = BLOCKS.<PlacedPufferfishBlock>registerBlock(name,
-                fishName.equals("heavy_pufferfish") ? HeavyPufferfishBlock::new : PlacedPufferfishBlock::new,
+                variant.material() == PufferfishMaterial.HEAVY ? HeavyPufferfishBlock::new : PlacedPufferfishBlock::new,
                 BlockBehaviour.Properties.of().strength(0.3F).noOcclusion().lightLevel(state -> light).sound(SoundType.LANTERN));
         var properties = new Item.Properties();
-        if (fishName.equals("netherite_pufferfish") || fishName.equals("heavy_pufferfish")) properties.fireResistant();
-        ITEMS.registerSimpleBlockItem(block, properties);
-        variants.put(name, new Variant(block, fish));
+        if (variant.material().fireResistant()) properties.fireResistant();
+        ITEMS.register(name, () -> variant.bind(new net.minecraft.world.item.BlockItem(block.get(), properties)));
+        variants.put(name, new Variant(block, variant::fish));
     }
 
     public static boolean isLamp(Block block) {

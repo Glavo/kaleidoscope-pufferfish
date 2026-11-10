@@ -3,9 +3,7 @@
 
 package org.glavo.kaleidoscope.pufferfish;
 
-import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -14,9 +12,6 @@ import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.enchantment.EnchantedItemInUse;
-import net.minecraft.world.item.enchantment.EnchantmentTarget;
-import net.minecraft.world.item.enchantment.Enchantments;
-import net.neoforged.neoforge.common.damagesource.DamageContainer;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.minecraft.tags.FluidTags;
@@ -52,15 +47,12 @@ public final class PufferfishHeadgear {
         var wearer = event.getEntity();
         var source = event.getSource();
         if (!(wearer.level() instanceof ServerLevel level) || !isWearing(wearer)
-                || source.is(DamageTypes.THORNS) || !(source.getEntity() instanceof LivingEntity attacker)
-                || attacker == wearer || event.getNewDamage() + event.getReduction(DamageContainer.Reduction.ABSORPTION) <= 0) {
+                || !PufferfishRetaliation.canRetaliate(event)) {
             return;
         }
         int strength = PufferfishRetaliation.thornsLevel(wearer.getItemBySlot(EquipmentSlot.HEAD));
         if (!wearer.hasInfiniteMaterials()) PufferfishDurability.activate(wearer.getItemBySlot(EquipmentSlot.HEAD));
-        var thorns = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.THORNS);
-        thorns.value().doPostAttack(level, strength,
-                new EnchantedItemInUse(wearer.getItemBySlot(EquipmentSlot.HEAD), EquipmentSlot.HEAD, wearer),
-                EnchantmentTarget.VICTIM, wearer, source);
+        PufferfishRetaliation.thorns(level, strength,
+                new EnchantedItemInUse(wearer.getItemBySlot(EquipmentSlot.HEAD), EquipmentSlot.HEAD, wearer), wearer, source);
     }
 }

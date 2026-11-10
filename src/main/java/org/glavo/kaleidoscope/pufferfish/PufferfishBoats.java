@@ -9,7 +9,6 @@ import java.util.Map;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
-import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.DispenserBlock;
 import net.neoforged.bus.api.IEventBus;
@@ -26,31 +25,22 @@ public final class PufferfishBoats {
 
     static {
         var variants = new LinkedHashMap<String, Variant>();
-        add(variants, "");
-        for (var color : DyeColor.values()) add(variants, color.getName() + "_");
-        add(variants, "golden_");
-        for (var material : new String[] {"copper", "waxed_copper", "exposed_copper", "waxed_exposed_copper",
-                "weathered_copper", "waxed_weathered_copper", "oxidized_copper", "waxed_oxidized_copper", "iron", "diamond"}) {
-            add(variants, material + "_");
-        }
-        add(variants, "netherite_");
-        add(variants, "radiant_");
-        add(variants, "heavy_");
+        PufferfishVariant.ALL.forEach(variant -> add(variants, variant));
         VARIANTS = Collections.unmodifiableMap(variants);
     }
 
     private PufferfishBoats() {}
 
-    private static void add(Map<String, Variant> variants, String prefix) {
-        String name = prefix + "pufferfish_skin_boat";
+    private static void add(Map<String, Variant> variants, PufferfishVariant variant) {
+        String name = variant.skinName() + "_boat";
         var entity = ENTITIES.register(name, () -> EntityType.Builder.<PufferfishBoat>of(
                 (type, level) -> new PufferfishBoat(type, level, name), MobCategory.MISC)
                 .sized(1.375F, 0.5625F).eyeHeight(0.5625F).clientTrackingRange(10)
                 .build(KaleidoscopePufferfish.id(name).toString()));
         var item = ITEMS.register(name, () -> {
             var properties = new Item.Properties().stacksTo(1);
-            if (prefix.equals("netherite_") || prefix.equals("radiant_") || prefix.equals("heavy_")) properties.fireResistant();
-            return new PufferfishBoatItem(entity, properties);
+            if (variant.material().fireResistant()) properties.fireResistant();
+            return variant.bind(new PufferfishBoatItem(entity, properties));
         });
         variants.put(name, new Variant(entity, item));
     }

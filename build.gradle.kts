@@ -13,10 +13,12 @@ val dyeColors = listOf(
     "white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray",
     "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"
 )
-val skinVariants = listOf("") + dyeColors + listOf("golden", "copper", "iron", "diamond", "netherite", "radiant", "heavy")
-val allSkinVariants = skinVariants + listOf("exposed_copper", "weathered_copper", "oxidized_copper",
+val copperVariants = listOf("copper", "exposed_copper", "weathered_copper", "oxidized_copper",
     "waxed_copper", "waxed_exposed_copper", "waxed_weathered_copper", "waxed_oxidized_copper")
-val materialFishVariants = allSkinVariants.filter { it.isNotEmpty() && it !in dyeColors }
+val materialFishVariants = copperVariants + listOf("iron", "golden", "diamond", "netherite", "heavy", "radiant")
+val allSkinVariants = listOf("") + dyeColors + materialFishVariants
+// Oxidized and waxed copper shields are not registered.
+val shieldVariants = allSkinVariants.filter { it !in copperVariants.drop(1) }
 
 group = providers.gradleProperty("mod_group_id").get()
 version = providers.gradleProperty("mod_version").get()
@@ -292,10 +294,10 @@ val generateMobResources = tasks.register("generateMobResources") {
 
 val generateShieldResources = tasks.register<Sync>("generateShieldResources") {
     inputs.property("modId", modId)
-    inputs.property("variants", skinVariants)
+    inputs.property("variants", shieldVariants)
     filteringCharset = "UTF-8"
     into(layout.buildDirectory.dir("generated/resources/pufferfishShields"))
-    for (color in skinVariants) {
+    for (color in shieldVariants) {
         val prefix = if (color.isEmpty()) "" else "${color}_"
         val skinName = "${prefix}pufferfish_skin"
         val shieldName = "${skinName}_shield"
@@ -492,8 +494,7 @@ val generateLampResources = tasks.register<Sync>("generateLampResources") {
     }
 }
 val generateFlailResources = tasks.register<Sync>("generateFlailResources") {
-    val materials = listOf("golden", "copper", "exposed_copper", "weathered_copper", "oxidized_copper",
-        "waxed_copper", "waxed_exposed_copper", "waxed_weathered_copper", "waxed_oxidized_copper", "iron", "diamond", "radiant")
+    val materials = materialFishVariants.filter { it != "netherite" && it != "heavy" }
     inputs.property("modId", modId)
     inputs.property("materials", materials)
     filteringCharset = "UTF-8"

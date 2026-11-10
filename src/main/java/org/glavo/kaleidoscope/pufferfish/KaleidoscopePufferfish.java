@@ -89,13 +89,12 @@ public class KaleidoscopePufferfish {
                     if (ModList.get().isLoaded("create")) {
                         output.accept(CreateIntegration.ENGINE_ITEM.get());
                     }
-                    output.accept(PufferfishItems.NETHERITE);
-                    output.accept(PufferfishItems.RADIANT);
-                    PufferfishItems.COPPER_VARIANTS.forEach(output::accept);
-                    output.accept(PufferfishItems.IRON);
-                    output.accept(PufferfishItems.DIAMOND);
-                    output.accept(PufferfishItems.HEAVY);
-                    output.accept(PufferfishItems.GOLDEN);
+                    PufferfishVariant.ALL.stream().filter(variant -> variant != PufferfishVariant.NORMAL)
+                            .forEach(variant -> output.accept(variant.fish()));
+                    for (var color : DyeColor.values()) {
+                        output.accept(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH_BUCKET), color));
+                        output.accept(PufferfishMobs.dyedEgg(color));
+                    }
                     PufferfishMobs.VARIANTS.values().forEach(variant -> {
                         output.accept(variant.bucket());
                         output.accept(variant.egg());
@@ -113,28 +112,18 @@ public class KaleidoscopePufferfish {
                             output.accept(org.glavo.kaleidoscope.pufferfish.compat.cookery.CookeryFoodIntegration.ASPIC_ITEM);
                         }
                     }
-                    PufferfishItems.FLAIL_VARIANTS.forEach(output::accept);
-                    output.accept(PufferfishItems.PUMP);
-                    output.accept(PufferfishBlocks.skin(null));
-                    output.accept(PufferfishBlocks.GOLDEN_SKIN);
-                    PufferfishBlocks.COPPER_SKINS.forEach(output::accept);
-                    output.accept(PufferfishBlocks.IRON_SKIN);
-                    output.accept(PufferfishBlocks.DIAMOND_SKIN);
-                    output.accept(PufferfishBlocks.NETHERITE_SKIN);
-                    output.accept(PufferfishBlocks.RADIANT_SKIN);
-                    output.accept(PufferfishBlocks.HEAVY_SKIN);
-                    PufferfishShields.VARIANTS.values().forEach(output::accept);
-                    PufferfishArmor.VARIANTS.values().forEach(output::accept);
-                    PufferfishBoats.VARIANTS.values().forEach(variant -> output.accept(variant.item()));
-                    for (DyeColor color : DyeColor.values()) {
-                        output.accept(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
-                        output.accept(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH_BUCKET), color));
-                        output.accept(PufferfishMobs.dyedEgg(color));
+                    output.accept(PufferfishItems.FLAIL);
+                    for (var color : DyeColor.values()) {
                         var flail = new ItemStack(PufferfishItems.FLAIL.get());
                         flail.set(COLOR.get(), color);
                         output.accept(flail);
-                        output.accept(PufferfishBlocks.skin(color));
                     }
+                    PufferfishItems.FLAIL_VARIANTS.stream().skip(1).forEach(output::accept);
+                    output.accept(PufferfishItems.PUMP);
+                    PufferfishVariant.ALL.forEach(variant -> output.accept(variant.skin()));
+                    PufferfishShields.VARIANTS.values().forEach(output::accept);
+                    PufferfishArmor.VARIANTS.values().forEach(output::accept);
+                    PufferfishBoats.VARIANTS.values().forEach(variant -> output.accept(variant.item()));
                 }).build());
     }
 

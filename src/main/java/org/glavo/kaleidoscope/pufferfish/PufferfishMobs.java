@@ -38,15 +38,15 @@ public final class PufferfishMobs {
 
     static {
         var variants = new LinkedHashMap<String, Variant>();
-        add(variants, PufferfishItems.GOLDEN, 0xFAD64A, 0xB26411, 8);
         for (int i = 0; i < PufferfishItems.COPPER_VARIANTS.size(); i++) {
             add(variants, PufferfishItems.COPPER_VARIANTS.get(i), i % 4 == 0 ? 0xC5724B : 0x58B69C, 0x653322, 4);
         }
         add(variants, PufferfishItems.IRON, 0xCDD2D3, 0x73787F, 4);
+        add(variants, PufferfishItems.GOLDEN, 0xFAD64A, 0xB26411, 8);
         add(variants, PufferfishItems.DIAMOND, 0x6EE1D6, 0x258C91, 16, 64);
         add(variants, PufferfishItems.NETHERITE, 0x594F52, 0xE5DED1, 64, 1024);
-        add(variants, PufferfishItems.RADIANT, 0x9A92AE, 0xFFBE20, 256, 4096);
         add(variants, PufferfishItems.HEAVY, 0x73787F, 0xE5F0FA, 256, 4096);
+        add(variants, PufferfishItems.RADIANT, 0x9A92AE, 0xFFBE20, 256, 4096);
         VARIANTS = Collections.unmodifiableMap(variants);
     }
 
@@ -64,9 +64,9 @@ public final class PufferfishMobs {
             if (name.startsWith("netherite_") || name.startsWith("radiant_") || name.startsWith("heavy_")) builder.fireImmune();
             return builder.build(KaleidoscopePufferfish.id(name).toString());
         });
-        var bucket = ITEMS.register(name + "_bucket", () -> new MobBucketItem(entity.get(), Fluids.WATER, SoundEvents.BUCKET_EMPTY_FISH,
-                new Item.Properties().stacksTo(1)));
-        var egg = ITEMS.register(name + "_spawn_egg", () -> new DeferredSpawnEggItem(entity, shell, spots, new Item.Properties()));
+        var bucket = ITEMS.register(name + "_bucket", () -> PufferfishVariant.of(new ItemStack(fish.get())).bind(new MobBucketItem(entity.get(), Fluids.WATER, SoundEvents.BUCKET_EMPTY_FISH,
+                new Item.Properties().stacksTo(1))));
+        var egg = ITEMS.register(name + "_spawn_egg", () -> PufferfishVariant.of(new ItemStack(fish.get())).bind(new DeferredSpawnEggItem(entity, shell, spots, new Item.Properties())));
         variants.put(name, new Variant(fish, entity, bucket, egg, rarity, conduitRarity));
     }
 
