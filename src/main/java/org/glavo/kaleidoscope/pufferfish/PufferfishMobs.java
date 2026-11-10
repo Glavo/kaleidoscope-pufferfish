@@ -44,10 +44,10 @@ public final class PufferfishMobs {
             add(variants, PufferfishItems.COPPER_VARIANTS.get(i), i % 4 == 0 ? 0xC5724B : 0x58B69C, 0x653322, 4);
         }
         add(variants, PufferfishItems.IRON, 0xCDD2D3, 0x73787F, 4);
-        add(variants, PufferfishItems.DIAMOND, 0x6EE1D6, 0x258C91, 16);
-        add(variants, PufferfishItems.NETHERITE, 0x594F52, 0xE5DED1, 64);
-        add(variants, PufferfishItems.RADIANT, 0x9A92AE, 0xFFBE20, 128);
-        add(variants, PufferfishItems.HEAVY, 0x73787F, 0xE5F0FA, 64);
+        add(variants, PufferfishItems.DIAMOND, 0x6EE1D6, 0x258C91, 64);
+        add(variants, PufferfishItems.NETHERITE, 0x594F52, 0xE5DED1, 256);
+        add(variants, PufferfishItems.RADIANT, 0x9A92AE, 0xFFBE20, 1024);
+        add(variants, PufferfishItems.HEAVY, 0x73787F, 0xE5F0FA, 1024);
         VARIANTS = Collections.unmodifiableMap(variants);
     }
 
