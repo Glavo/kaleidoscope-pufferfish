@@ -5,7 +5,7 @@
   "key": {
     "S": { "tag": "minecraft:wooden_slabs" },
     "C": { "item": "minecraft:copper_ingot" },
-    "P": { "item": "kaleidoscope_pufferfish:pufferfish_skin" },
+    "P": { "tag": "kaleidoscope_pufferfish:pufferfish_skins" },
     "I": { "item": "minecraft:iron_nugget" }
   },
   "result": { "id": "kaleidoscope_pufferfish:pufferfish_pump", "count": 1 }

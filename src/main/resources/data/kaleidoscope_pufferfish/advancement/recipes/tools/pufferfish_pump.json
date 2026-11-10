@@ -3,7 +3,7 @@
   "criteria": {
     "has_skin": {
       "trigger": "minecraft:inventory_changed",
-      "conditions": { "items": [{ "items": "kaleidoscope_pufferfish:pufferfish_skin" }] }
+      "conditions": { "items": [{ "items": "#kaleidoscope_pufferfish:pufferfish_skins" }] }
     },
     "has_the_recipe": {
       "trigger": "minecraft:recipe_unlocked",

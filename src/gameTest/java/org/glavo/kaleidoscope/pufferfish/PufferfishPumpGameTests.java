@@ -222,12 +222,16 @@ public final class PufferfishPumpGameTests {
         var copper = new ItemStack(Items.COPPER_INGOT);
         var slabs = net.minecraft.core.registries.BuiltInRegistries.ITEM.stream()
                 .filter(item -> item.getDefaultInstance().is(net.minecraft.tags.ItemTags.WOODEN_SLABS)).toList();
-        helper.assertTrue(!slabs.isEmpty(), "Wooden slab tag is empty");
-        for (var slab : slabs) {
+        var skins = net.minecraft.core.registries.BuiltInRegistries.BLOCK.stream()
+                .filter(block -> block instanceof PufferfishSkinBlock).toList();
+        helper.assertTrue(!slabs.isEmpty() && !skins.isEmpty(), "Pump recipe ingredients are missing");
+        var recipe = (net.minecraft.world.item.crafting.CraftingRecipe) helper.getLevel().getRecipeManager()
+                .byKey(KaleidoscopePufferfish.id("pufferfish_pump")).orElseThrow().value();
+        for (var slab : slabs) for (var skin : skins) {
             var input = CraftingInput.of(3, 3, java.util.List.of(empty, new ItemStack(slab), empty,
-                    empty, new ItemStack(PufferfishBlocks.skin(null)), new ItemStack(Items.IRON_NUGGET), copper, copper, copper));
-            var recipe = helper.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel()).orElseThrow();
-            var output = recipe.value().assemble(input, helper.getLevel().registryAccess());
+                    empty, new ItemStack(skin), new ItemStack(Items.IRON_NUGGET), copper, copper, copper));
+            helper.assertTrue(recipe.matches(input, helper.getLevel()), "Pump recipe rejected a wooden slab or pufferfish skin variant");
+            var output = recipe.assemble(input, helper.getLevel().registryAccess());
             helper.assertTrue(output.is(PufferfishItems.PUMP.get()) && !output.isDamageableItem() && !output.isBarVisible()
                     && output.getMaxStackSize() == 1 && output.getCount() == 1, "Wrong pump recipe output");
         }
