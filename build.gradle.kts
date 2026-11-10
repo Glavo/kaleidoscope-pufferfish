@@ -16,6 +16,7 @@ val dyeColors = listOf(
 val skinVariants = listOf("") + dyeColors + listOf("golden", "copper", "iron", "diamond", "netherite", "radiant", "heavy")
 val allSkinVariants = skinVariants + listOf("exposed_copper", "weathered_copper", "oxidized_copper",
     "waxed_copper", "waxed_exposed_copper", "waxed_weathered_copper", "waxed_oxidized_copper")
+val materialFishVariants = allSkinVariants.filter { it.isNotEmpty() && it !in dyeColors }
 
 group = providers.gradleProperty("mod_group_id").get()
 version = providers.gradleProperty("mod_version").get()
@@ -254,6 +255,37 @@ val generateSkinResources = tasks.register<Sync>("generateSkinResources") {
             expand(goldenChoppingProperties)
             into("assets/$modId/models/chopping_board/golden_pufferfish")
             rename { "$stage.json" }
+        }
+    }
+}
+
+val generateMobResources = tasks.register("generateMobResources") {
+    inputs.property("modId", modId)
+    inputs.property("variants", materialFishVariants)
+    val destination = layout.buildDirectory.dir("generated/resources/mobs")
+    outputs.dir(destination)
+    doLast {
+        fun write(path: String, value: Any) {
+            val file = destination.get().file(path).asFile
+            file.parentFile.mkdirs()
+            file.writeText(JsonOutput.prettyPrint(JsonOutput.toJson(value)) + "\n")
+        }
+        for (variant in materialFishVariants) {
+            val name = "${variant}_pufferfish"
+            write("assets/$modId/models/item/${name}_bucket.json", mapOf("parent" to "minecraft:item/generated",
+                "textures" to mapOf("layer0" to "$modId:item/${name}_bucket")))
+            write("assets/$modId/models/item/${name}_spawn_egg.json", mapOf("parent" to "minecraft:item/template_spawn_egg"))
+            write("data/$modId/loot_table/entities/$name.json", mapOf("type" to "minecraft:entity",
+                "pools" to listOf(mapOf("rolls" to 1, "entries" to listOf(mapOf("type" to "minecraft:item", "name" to "$modId:$name"))))))
+        }
+        write("data/$modId/neoforge/biome_modifier/material_pufferfish.json", mapOf("type" to "neoforge:add_spawns",
+            "biomes" to listOf("minecraft:warm_ocean", "minecraft:lukewarm_ocean", "minecraft:deep_lukewarm_ocean"),
+            "spawners" to materialFishVariants.filter { !it.startsWith("waxed_") }.map {
+                mapOf("type" to "$modId:${it}_pufferfish", "weight" to 1, "minCount" to 1, "maxCount" to 2)
+            }))
+        for (tag in listOf("not_scary_for_pufferfish", "sensitive_to_impaling", "aquatic")) {
+            write("data/minecraft/tags/entity_type/$tag.json", mapOf("replace" to false,
+                "values" to materialFishVariants.map { "$modId:${it}_pufferfish" }))
         }
     }
 }
@@ -504,6 +536,7 @@ val generateMaterialFishRecipes = tasks.register<Sync>("generateMaterialFishReci
 }
 
 sourceSets.main {
+    resources.srcDir(generateMobResources)
     resources.srcDir(generateLampResources)
     resources.srcDir(generateFlailResources)
     resources.srcDir(generateMaterialFishRecipes)
@@ -517,6 +550,7 @@ sourceSets.main {
     resources.srcDir(generateSkinResources)
 }
 neoForge.ideSyncTask(generateLampResources)
+neoForge.ideSyncTask(generateMobResources)
 neoForge.ideSyncTask(generateFlailResources)
 neoForge.ideSyncTask(generateModMetadata)
 neoForge.ideSyncTask(generateItemModels)

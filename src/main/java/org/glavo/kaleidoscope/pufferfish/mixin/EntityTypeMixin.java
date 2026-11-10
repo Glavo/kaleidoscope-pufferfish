@@ -25,6 +25,18 @@ public abstract class EntityTypeMixin {
     @Inject(method = "createDefaultStackConfig", at = @At("RETURN"), cancellable = true)
     private static void kaleidoscope$initializeBucketColor(ServerLevel level, ItemStack stack, Player player,
                                                           CallbackInfoReturnable<Consumer<Entity>> cir) {
+        if (stack.getItem() instanceof net.minecraft.world.item.MobBucketItem) {
+            var tag = stack.getOrDefault(DataComponents.BUCKET_ENTITY_DATA, CustomData.EMPTY).copyTag();
+            cir.setReturnValue(cir.getReturnValue().andThen(entity -> {
+                if (entity instanceof org.glavo.kaleidoscope.pufferfish.entity.MaterialPufferfish fish) fish.loadFish(tag);
+            }));
+        }
+        if (stack.is(Items.PUFFERFISH_SPAWN_EGG) && stack.has(org.glavo.kaleidoscope.pufferfish.KaleidoscopePufferfish.COLOR.get())) {
+            var color = stack.get(org.glavo.kaleidoscope.pufferfish.KaleidoscopePufferfish.COLOR.get());
+            cir.setReturnValue(cir.getReturnValue().andThen(entity -> {
+                if (entity instanceof Pufferfish fish) PufferfishColors.set(fish, color);
+            }));
+        }
         if (stack.is(Items.PUFFERFISH_BUCKET)) {
             var tag = stack.getOrDefault(DataComponents.BUCKET_ENTITY_DATA, CustomData.EMPTY).copyTag();
             DyeColor color = DyeColor.byName(tag.getString(PufferfishColors.COLOR_TAG), null);

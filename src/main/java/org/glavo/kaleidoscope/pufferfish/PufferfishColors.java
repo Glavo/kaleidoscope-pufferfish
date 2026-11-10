@@ -82,7 +82,7 @@ public final class PufferfishColors {
     }
 
     public static void interact(PlayerInteractEvent.EntityInteract event) {
-        if (!(event.getTarget() instanceof Pufferfish fish) || event.getEntity().isSpectator()
+        if (!(event.getTarget() instanceof Pufferfish fish) || fish instanceof org.glavo.kaleidoscope.pufferfish.entity.MaterialPufferfish || event.getEntity().isSpectator()
                 || !event.getEntity().mayBuild()) {
             return;
         }
@@ -103,6 +103,12 @@ public final class PufferfishColors {
     }
 
     public static void colorDrops(LivingDropsEvent event) {
+        if (event.getEntity() instanceof org.glavo.kaleidoscope.pufferfish.entity.MaterialPufferfish fish) {
+            for (var drop : event.getDrops()) {
+                if (PufferfishItems.isPufferfish(drop.getItem())) drop.setItem(fish.fish().copyWithCount(drop.getItem().getCount()));
+            }
+            return;
+        }
         if (event.getEntity() instanceof Pufferfish fish) {
             DyeColor color = get(fish);
             if (color != null) {

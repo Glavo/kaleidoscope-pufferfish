@@ -92,12 +92,13 @@ public final class MaterialPufferfishClientTest {
     private static void verifyRadiantItems(Minecraft minecraft) {
         var items = net.minecraft.core.registries.BuiltInRegistries.ITEM.stream()
                 .map(ItemStack::new).filter(PufferfishItems::isRadiant).toList();
-        var target = new TextureTarget(1000, 400, true, Minecraft.ON_OSX);
+        int height = (items.size() + 4) / 5 * 200;
+        var target = new TextureTarget(1000, height, true, Minecraft.ON_OSX);
         target.setClearColor(0.16F, 0.18F, 0.21F, 1);
         target.clear(Minecraft.ON_OSX);
         target.bindWrite(true);
         RenderSystem.backupProjectionMatrix();
-        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 1000, 400, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
+        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 1000, height, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
         var view = RenderSystem.getModelViewStack();
         view.pushMatrix().identity();
         RenderSystem.applyModelViewMatrix();

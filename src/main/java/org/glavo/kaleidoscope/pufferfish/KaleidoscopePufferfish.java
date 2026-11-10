@@ -59,6 +59,8 @@ public class KaleidoscopePufferfish {
             RECIPES.register("pufferfish_flail", PufferfishFlailRecipe.Serializer::new);
     public static final DeferredHolder<RecipeSerializer<?>, SimpleCraftingRecipeSerializer<PufferfishDyeRecipe>> DYE_RECIPE =
             RECIPES.register("dye_pufferfish", () -> new SimpleCraftingRecipeSerializer<>(PufferfishDyeRecipe::new));
+    public static final DeferredHolder<RecipeSerializer<?>, SimpleCraftingRecipeSerializer<PufferfishBucketRecipe>> BUCKET_RECIPE =
+            RECIPES.register("bucket_pufferfish", () -> new SimpleCraftingRecipeSerializer<>(PufferfishBucketRecipe::new));
     public static final DeferredHolder<RecipeSerializer<?>, SimpleCraftingRecipeSerializer<CopperPufferfishWaxRecipe>> WAX_RECIPE =
             RECIPES.register("wax_copper_pufferfish", () -> new SimpleCraftingRecipeSerializer<>(CopperPufferfishWaxRecipe::new));
     public static final DeferredHolder<IngredientType<?>, IngredientType<PufferfishIngredient>> PUFFERFISH_INGREDIENT =
@@ -90,6 +92,10 @@ public class KaleidoscopePufferfish {
                     output.accept(PufferfishItems.DIAMOND);
                     output.accept(PufferfishItems.HEAVY);
                     output.accept(PufferfishItems.GOLDEN);
+                    PufferfishMobs.VARIANTS.values().forEach(variant -> {
+                        output.accept(variant.bucket());
+                        output.accept(variant.egg());
+                    });
                     output.accept(PufferfishItems.SASHIMI);
                     output.accept(PufferfishItems.BRAISED);
                     output.accept(PufferfishItems.BRAISED_RICE_BOWL);
@@ -118,6 +124,7 @@ public class KaleidoscopePufferfish {
                     for (DyeColor color : DyeColor.values()) {
                         output.accept(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
                         output.accept(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH_BUCKET), color));
+                        output.accept(PufferfishMobs.dyedEgg(color));
                         var flail = new ItemStack(PufferfishItems.FLAIL.get());
                         flail.set(COLOR.get(), color);
                         output.accept(flail);
@@ -133,6 +140,7 @@ public class KaleidoscopePufferfish {
             CreateIntegration.register(bus, container);
         }
         PufferfishItems.register(bus);
+        PufferfishMobs.register(bus);
         if (ModList.get().isLoaded("kaleidoscope_chinesefood")) {
             org.glavo.kaleidoscope.pufferfish.compat.chinesefood.ChineseFoodIntegration.register(bus);
         }
@@ -154,6 +162,7 @@ public class KaleidoscopePufferfish {
         NeoForge.EVENT_BUS.addListener(CopperPufferfish::interact);
         NeoForge.EVENT_BUS.addListener(PufferfishColors::interact);
         NeoForge.EVENT_BUS.addListener(PufferfishColors::colorDrops);
+        NeoForge.EVENT_BUS.addListener(PufferfishMobs::naturalColors);
         NeoForge.EVENT_BUS.addListener(PufferfishColors::legacyTooltip);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishThrowing::use);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishPlacement::use);

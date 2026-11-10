@@ -18,6 +18,16 @@ public final class PufferfishSpriteSource implements SpriteSource {
 
     @Override
     public void run(ResourceManager manager, Output output) {
+        for (var name : org.glavo.kaleidoscope.pufferfish.PufferfishMobs.VARIANTS.keySet()) {
+            var id = KaleidoscopePufferfish.id("item/" + name + "_bucket");
+            var replacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(id));
+            if (replacement.isPresent()) output.add(id, replacement.get());
+            else manager.getResource(ResourceLocation.withDefaultNamespace("textures/item/pufferfish_bucket.png"))
+                    .ifPresent(resource -> output.add(id, loader -> loader.loadSprite(id, resource, (sprite, size, image, metadata) -> {
+                        recolorBucket(image, name);
+                        return new SpriteContents(sprite, size, image, metadata);
+                    })));
+        }
         for (var name : org.glavo.kaleidoscope.pufferfish.PufferfishArmor.VARIANTS.keySet()) {
             var id = KaleidoscopePufferfish.id("item/" + name);
             var replacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(id));
@@ -155,5 +165,20 @@ public final class PufferfishSpriteSource implements SpriteSource {
     @Override
     public SpriteSourceType type() {
         return TYPE;
+    }
+
+    private static void recolorBucket(com.mojang.blaze3d.platform.NativeImage image, String name) {
+        try (var original = new com.mojang.blaze3d.platform.NativeImage(image.getWidth(), image.getHeight(), false)) {
+            original.copyFrom(image);
+            String material = name.replace("waxed_", "").replace("_pufferfish", "");
+            if (material.equals("netherite")) PufferfishTextures.recolor(image, PufferfishTextures.NETHERITE_COLOR);
+            else if (material.equals("heavy")) HeavyPufferfishVisuals.recolor(image, false);
+            else MaterialPufferfishTexture.recolor(image, material, false);
+            for (int y = 0; y < image.getHeight(); y++) for (int x = 0; x < image.getWidth(); x++) {
+                int pixel = original.getPixelRGBA(x, y);
+                int red = pixel & 255, green = pixel >>> 8 & 255, blue = pixel >>> 16 & 255;
+                if (red <= blue + 12 || green <= blue + 8) image.setPixelRGBA(x, y, pixel);
+            }
+        }
     }
 }

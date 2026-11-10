@@ -50,6 +50,11 @@ public class KaleidoscopePufferfishClient {
         bus.addListener(this::registerReloadListeners);
         bus.addListener(this::registerRenderers);
         bus.addListener(this::registerItemExtensions);
+        bus.addListener((net.neoforged.neoforge.client.event.RegisterColorHandlersEvent.Item event) -> event.register((stack, tint) -> {
+            var color = stack.get(KaleidoscopePufferfish.COLOR.get());
+            return color == null ? ((net.minecraft.world.item.SpawnEggItem) stack.getItem()).getColor(tint)
+                    : tint == 0 ? color.getTextureDiffuseColor() : 0xFFF0D5;
+        }, net.minecraft.world.item.Items.PUFFERFISH_SPAWN_EGG));
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishHeadRenderer::beforePlayer);
         NeoForge.EVENT_BUS.addListener(PufferfishHeadRenderer::afterPlayer);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishGloveRenderer::renderHand);
@@ -85,6 +90,8 @@ public class KaleidoscopePufferfishClient {
     }
 
     private void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        PufferfishMobs.VARIANTS.values().forEach(variant -> event.registerEntityRenderer(variant.entity().get(),
+                org.glavo.kaleidoscope.pufferfish.client.MaterialPufferfishRenderer::new));
         PufferfishBoats.VARIANTS.values().forEach(variant -> event.registerEntityRenderer(variant.entity().get(),
                 org.glavo.kaleidoscope.pufferfish.client.PufferfishBoatRenderer::new));
         event.registerEntityRenderer(KaleidoscopePufferfish.THROWN_PUFFERFISH.get(), ThrownItemRenderer::new);
