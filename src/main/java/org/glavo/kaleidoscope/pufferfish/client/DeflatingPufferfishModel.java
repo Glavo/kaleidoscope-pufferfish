@@ -29,6 +29,10 @@ public final class DeflatingPufferfishModel<T extends Entity> extends Hierarchic
     }
 
     public void prepare(ItemStack stack) {
+        prepare(stack, 0);
+    }
+
+    public void prepare(ItemStack stack, float pressure) {
         int stage = PufferfishDurability.deflationStage(stack);
         current = stage == 0 ? inflated : stage == 3 ? deflated : intermediate;
         current.root().getAllParts().forEach(ModelPart::resetPose);
@@ -37,7 +41,20 @@ public final class DeflatingPufferfishModel<T extends Entity> extends Hierarchic
         var root = current.root();
         root.xScale = root.yScale = root.zScale = scale;
         root.y = 18 - center * scale;
+        if (stage == 0 && pressure > 0) {
+            float swelling = pressureScale(pressure);
+            var body = root.getChild("body");
+            body.xScale = body.yScale = body.zScale = swelling;
+            root.getAllParts().filter(part -> part != root).forEach(part -> {
+                part.x *= swelling;
+                part.y = 18 + (part.y - 18) * swelling;
+                part.z *= swelling;
+            });
+        }
     }
+
+    /// Enlarges the body while keeping the attached fins and spines their original size.
+    public static float pressureScale(float pressure) { return 1 + Math.clamp(pressure, 0, 4) * 0.15F; }
 
     /// Relative height including the small fish's raised eyes, used to keep its underside supported.
     public static float height(int stage) {

@@ -44,8 +44,12 @@ public final class PufferfishPumpModel {
     }
 
     public void render(ItemStack stack, ItemStack fish, float compression, PoseStack pose, MultiBufferSource buffers, int light, int overlay) {
+        render(stack, fish, compression, 0, pose, buffers, light, overlay);
+    }
+
+    public void render(ItemStack stack, ItemStack fish, float compression, float pressure, PoseStack pose, MultiBufferSource buffers, int light, int overlay) {
         render(base, "copper_block", stack, pose, buffers, light, overlay);
-        var mouth = mouth(fish);
+        var mouth = mouth(fish, pressure);
         var outlet = new Vec3(0, 1.35 / 16, 3.35 / 16);
         var bend = new Vec3(5.0 / 16, 1.35 / 16, 4.5 / 16);
         var coupling = mouth.add(0, 0, 0.08);
@@ -66,14 +70,23 @@ public final class PufferfishPumpModel {
     }
 
     public static Vec3 fishCenter(ItemStack fish) {
+        return fishCenter(fish, 0);
+    }
+
+    public static Vec3 fishCenter(ItemStack fish, float pressure) {
         float height = DeflatingPufferfishModel.height(PufferfishDurability.deflationStage(fish));
-        return new Vec3(5.0 / 16, 1.0 / 16 + height * 0.10, 0);
+        return new Vec3(5.0 / 16, 1.0 / 16 + height * 0.10 * DeflatingPufferfishModel.pressureScale(pressure), 0);
     }
 
     /// Mouth centers from the vanilla front-face UVs after the cradle's 0.4 model scale.
     public static Vec3 mouth(ItemStack fish) {
+        return mouth(fish, 0);
+    }
+
+    public static Vec3 mouth(ItemStack fish, float pressure) {
         int stage = PufferfishDurability.deflationStage(fish);
-        return fishCenter(fish).add(0, stage == 0 ? 0.0125 : 0, DeflatingPufferfishModel.height(stage) * 0.10);
+        float scale = DeflatingPufferfishModel.pressureScale(pressure);
+        return fishCenter(fish, pressure).add(0, stage == 0 ? 0.0125 * scale : 0, DeflatingPufferfishModel.height(stage) * 0.10 * scale);
     }
 
     private static void segment(ModelPart part, String texture, ItemStack stack, Vec3 start, Vec3 end,

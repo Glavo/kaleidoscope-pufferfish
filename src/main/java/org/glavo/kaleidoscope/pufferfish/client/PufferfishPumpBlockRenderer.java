@@ -23,12 +23,15 @@ public final class PufferfishPumpBlockRenderer implements BlockEntityRenderer<Pu
         pose.translate(0.5, 0, 0.5);
         pose.mulPose(Axis.YP.rotationDegrees(-entity.getBlockState().getValue(PufferfishPumpBlock.FACING).toYRot()));
         var stack = entity.fish();
-        model.render(entity.pump(), stack, entity.compression(partialTick), pose, buffers, light, overlay);
+        float age = entity.getLevel() == null ? 0 : entity.getLevel().getGameTime() + partialTick;
+        float pressure = entity.pressure();
+        if (pressure >= 3) pressure += (float) Math.sin(age * 2.5F) * 0.08F;
+        model.render(entity.pump(), stack, entity.compression(partialTick), pressure, pose, buffers, light, overlay);
         if (!stack.isEmpty()) {
-            var center = PufferfishPumpModel.fishCenter(stack);
+            var center = PufferfishPumpModel.fishCenter(stack, pressure);
             pose.translate(center.x, center.y, center.z);
             pose.scale(0.5F, 0.5F, 0.5F);
-            fish.renderHead(stack, pose, buffers, light, overlay, 0);
+            fish.renderHead(stack, pose, buffers, light, overlay, age, pressure);
         }
         pose.popPose();
     }
