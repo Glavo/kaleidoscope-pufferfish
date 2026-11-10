@@ -114,6 +114,7 @@ public class KaleidoscopePufferfish {
                         }
                     }
                     PufferfishItems.FLAIL_VARIANTS.forEach(output::accept);
+                    output.accept(PufferfishItems.PUMP);
                     output.accept(PufferfishBlocks.skin(null));
                     output.accept(PufferfishBlocks.GOLDEN_SKIN);
                     PufferfishBlocks.COPPER_SKINS.forEach(output::accept);

@@ -1,0 +1,15 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_skin": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": { "items": [{ "items": "kaleidoscope_pufferfish:pufferfish_skin" }] }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": { "recipe": "kaleidoscope_pufferfish:pufferfish_pump" }
+    }
+  },
+  "requirements": [["has_skin", "has_the_recipe"]],
+  "rewards": { "recipes": ["kaleidoscope_pufferfish:pufferfish_pump"] }
+}

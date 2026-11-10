@@ -6,7 +6,6 @@ package org.glavo.kaleidoscope.pufferfish.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.model.PufferfishBigModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -35,7 +34,7 @@ public final class PufferfishFlailModel {
     private static final ResourceLocation NETHERITE_TEXTURE = ResourceLocation.withDefaultNamespace("textures/block/netherite_block.png");
     private static final ResourceLocation GRIP_TEXTURE = ResourceLocation.withDefaultNamespace("textures/block/stripped_dark_oak_log.png");
     /// The inflated head model, replaced when resource reload creates a new renderer.
-    private final PufferfishBigModel<Entity> fish;
+    private final DeflatingPufferfishModel<Entity> fish;
     /// A rectangular chain link centered on its local origin.
     private final ModelPart link;
     private final ModelPart grip;
@@ -43,7 +42,7 @@ public final class PufferfishFlailModel {
 
     /// Creates model geometry using the current client model layers.
     public PufferfishFlailModel() {
-        fish = new PufferfishBigModel<>(Minecraft.getInstance().getEntityModels().bakeLayer(ModelLayers.PUFFERFISH_BIG));
+        fish = new DeflatingPufferfishModel<>(Minecraft.getInstance().getEntityModels().bakeLayer(ModelLayers.PUFFERFISH_BIG));
         var mesh = new MeshDefinition();
         mesh.getRoot().addOrReplaceChild("link", CubeListBuilder.create()
                 .texOffs(2, 2).addBox(-0.5F, -1, -0.1F, 0.2F, 2, 0.2F)
@@ -87,6 +86,7 @@ public final class PufferfishFlailModel {
         pose.pushPose();
         pose.scale(0.8F, -0.8F, -0.8F);
         pose.translate(0, -18.0F / 16, 0);
+        fish.prepare(stack);
         fish.setupAnim(null, 0, 0, age, 0, 0);
         fish.renderToBuffer(pose, ItemRenderer.getFoilBufferDirect(buffers, RenderType.entityCutoutNoCull(texture),
                 false, stack.hasFoil()), light, overlay);

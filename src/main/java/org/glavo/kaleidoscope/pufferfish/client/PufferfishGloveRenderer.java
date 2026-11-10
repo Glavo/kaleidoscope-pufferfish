@@ -7,7 +7,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ArmedModel;
-import net.minecraft.client.model.PufferfishBigModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -28,7 +27,7 @@ import org.glavo.kaleidoscope.pufferfish.PufferfishItems;
 public final class PufferfishGloveRenderer {
     private static final ResourceLocation ORIGINAL = ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png");
     private static PufferfishGloveRenderer firstPerson;
-    private final PufferfishBigModel<LivingEntity> model = new PufferfishBigModel<>(
+    private final DeflatingPufferfishModel<LivingEntity> model = new DeflatingPufferfishModel<>(
             Minecraft.getInstance().getEntityModels().bakeLayer(ModelLayers.PUFFERFISH_BIG));
 
     public static void reset() {
@@ -37,7 +36,7 @@ public final class PufferfishGloveRenderer {
 
     public static void renderHand(RenderHandEvent event) {
         var player = Minecraft.getInstance().player;
-        if (player == null || !PufferfishItems.isPufferfish(event.getItemStack())
+        if (player == null || !org.glavo.kaleidoscope.pufferfish.PufferfishDurability.canWearAsGlove(event.getItemStack())
                 || player.isUsingItem() && player.getUsedItemHand() == event.getHand()) return;
         if (firstPerson == null) firstPerson = new PufferfishGloveRenderer();
         HumanoidArm arm = event.getHand() == InteractionHand.MAIN_HAND ? player.getMainArm() : player.getMainArm().getOpposite();
@@ -58,6 +57,7 @@ public final class PufferfishGloveRenderer {
                 : PufferfishItems.isNetherite(stack) ? PufferfishTextures.netheriteEntity()
                 : PufferfishItems.materialName(stack) != null ? PufferfishTextures.materialEntity(PufferfishItems.materialName(stack))
                 : color == null ? ORIGINAL : PufferfishTextures.entity(color);
+        model.prepare(stack);
         model.setupAnim(player, 0, 0, age, 0, 0);
         model.renderToBuffer(pose, ItemRenderer.getFoilBufferDirect(buffers, RenderType.entityCutoutNoCull(texture),
                 false, stack.hasFoil()), light, OverlayTexture.NO_OVERLAY);

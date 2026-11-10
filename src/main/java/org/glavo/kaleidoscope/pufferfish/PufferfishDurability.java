@@ -21,6 +21,17 @@ import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 public final class PufferfishDurability {
     private PufferfishDurability() {}
 
+    /// Advances at each quarter of spent durability, with the final stage lasting until breakage.
+    public static int deflationStage(ItemStack stack) {
+        int maximum = stack.getMaxDamage();
+        return maximum <= 0 ? 0 : (int) Math.min(3, (long) stack.getDamageValue() * 4 / maximum);
+    }
+
+    public static boolean canWearAsGlove(ItemStack stack) {
+        return PufferfishItems.isPufferfish(stack)
+                && (stack.getMaxDamage() <= 0 || (long) stack.getDamageValue() * 2 <= stack.getMaxDamage());
+    }
+
     public static int maximum(ItemStack stack) {
         var fish = PufferfishItems.flailFish(stack);
         if (PufferfishItems.isHeavy(fish)) return 3047;

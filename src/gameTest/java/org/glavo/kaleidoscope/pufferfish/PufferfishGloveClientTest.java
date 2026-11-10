@@ -97,6 +97,18 @@ public final class PufferfishGloveClientTest {
                     }
                 }
             }
+            for (var original : stacks) {
+                var deflated = original.copy();
+                PufferfishDurability.activate(deflated);
+                deflated.setDamageValue(deflated.getMaxDamage() / 2 + 1);
+                player.setItemSlot(EquipmentSlot.MAINHAND, deflated);
+                var capture = new Capture();
+                var pose = new PoseStack();
+                layer.render(pose, capture, LIGHT, player, 0, 0, 0, 0, 0, 0);
+                if (capture.parts.isEmpty() || capture.parts.containsKey(type(deflated)) || !pose.clear()) {
+                    throw new IllegalStateException("Deflated fish remained a glove instead of a held item: " + deflated);
+                }
+            }
             var foil = stacks.getLast().copy();
             foil.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
             player.setItemSlot(EquipmentSlot.MAINHAND, foil);

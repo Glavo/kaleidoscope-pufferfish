@@ -5,7 +5,6 @@ package org.glavo.kaleidoscope.pufferfish.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-import net.minecraft.client.model.PufferfishBigModel;
 import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.LightTexture;
@@ -23,14 +22,14 @@ import org.glavo.kaleidoscope.pufferfish.PufferfishColors;
 import org.glavo.kaleidoscope.pufferfish.PufferfishItems;
 
 public final class PlacedPufferfishRenderer implements BlockEntityRenderer<PlacedPufferfishBlockEntity> {
-    private final PufferfishBigModel<Entity> model;
+    private final DeflatingPufferfishModel<Entity> model;
 
     public PlacedPufferfishRenderer(BlockEntityRendererProvider.Context context) {
         this(context.getModelSet());
     }
 
     public PlacedPufferfishRenderer(EntityModelSet models) {
-        model = new PufferfishBigModel<>(models.bakeLayer(ModelLayers.PUFFERFISH_BIG));
+        model = new DeflatingPufferfishModel<>(models.bakeLayer(ModelLayers.PUFFERFISH_BIG));
         model.setupAnim(null, 0, 0, 0, 0, 0);
     }
 
@@ -56,6 +55,9 @@ public final class PlacedPufferfishRenderer implements BlockEntityRenderer<Place
         pose.mulPose(Axis.YP.rotationDegrees(-state.getValue(PlacedPufferfishBlock.FACING).toYRot()));
         pose.scale(1, -1, -1);
         pose.translate(0, -23.0 / 16, 0);
+        pose.translate(0, (1 - DeflatingPufferfishModel.height(org.glavo.kaleidoscope.pufferfish.PufferfishDurability.deflationStage(stack))) / 4, 0);
+        model.prepare(stack);
+        model.setupAnim(null, 0, 0, 0, 0, 0);
         model.renderToBuffer(pose, buffers.getBuffer(RenderType.entityCutoutNoCull(texture)), light, overlay);
         RadiantPufferfishVisuals.render(stack, pose, buffers, overlay);
         pose.popPose();

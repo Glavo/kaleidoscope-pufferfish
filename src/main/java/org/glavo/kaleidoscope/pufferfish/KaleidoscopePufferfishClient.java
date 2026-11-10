@@ -106,6 +106,7 @@ public class KaleidoscopePufferfishClient {
     }
 
     private void registerItemExtensions(RegisterClientExtensionsEvent event) {
+        event.registerItem(new org.glavo.kaleidoscope.pufferfish.client.PufferfishPumpRenderer(), PufferfishItems.PUMP.get());
         event.registerItem(lampRenderer(), PufferfishLamps.VARIANTS.values().stream()
                 .map(variant -> variant.block().get().asItem()).toArray(net.minecraft.world.item.Item[]::new));
         event.registerItem(boatRenderer(), PufferfishBoats.VARIANTS.values().stream().map(variant -> variant.item().get()).toArray(net.minecraft.world.item.Item[]::new));
@@ -147,5 +148,10 @@ public class KaleidoscopePufferfishClient {
             }
             event.getModels().computeIfPresent(id, (key, original) -> new PufferfishItemModel(original, models));
         }
+        net.minecraft.core.registries.BuiltInRegistries.ITEM.forEach(item -> {
+            if (!PufferfishItems.isPufferfish(item.getDefaultInstance())) return;
+            var id = new ModelResourceLocation(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(item), "inventory");
+            event.getModels().computeIfPresent(id, (key, original) -> new org.glavo.kaleidoscope.pufferfish.client.PufferfishWearModel(original));
+        });
     }
 }

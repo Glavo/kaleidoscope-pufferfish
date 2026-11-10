@@ -120,6 +120,7 @@ public final class PufferfishClientSmokeTest {
         verifyModelDelegation(minecraft);
         PufferfishHeadgearClientTest.verify(minecraft);
         PufferfishGloveClientTest.verify(minecraft);
+        PufferfishDeflationClientTest.verify(minecraft);
         PufferfishConduitClientTest.verify(minecraft);
         PufferfishPlacementClientTest.verify(minecraft);
         PufferfishLampClientTest.verify(minecraft);

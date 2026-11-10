@@ -15,7 +15,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
-import org.glavo.kaleidoscope.pufferfish.PufferfishItems;
+import org.glavo.kaleidoscope.pufferfish.PufferfishDurability;
 import org.glavo.kaleidoscope.pufferfish.client.PufferfishGloveRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -39,7 +39,7 @@ public abstract class PufferfishHandLayerMixin<T extends LivingEntity, M extends
             callback.cancel();
             return;
         }
-        if (entity instanceof Player && PufferfishItems.isPufferfish(stack)) {
+        if (entity instanceof Player && PufferfishDurability.canWearAsGlove(stack)) {
             if (kaleidoscope$gloveRenderer == null) kaleidoscope$gloveRenderer = new PufferfishGloveRenderer();
             kaleidoscope$gloveRenderer.renderAttached(getParentModel(), entity, stack, arm, pose, buffers, light, entity.tickCount);
             callback.cancel();

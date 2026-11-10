@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [" S ", "CPC", " C "],
+  "key": {
+    "S": { "item": "minecraft:stick" },
+    "C": { "item": "minecraft:copper_ingot" },
+    "P": { "item": "kaleidoscope_pufferfish:pufferfish_skin" }
+  },
+  "result": { "id": "kaleidoscope_pufferfish:pufferfish_pump", "count": 1 }
+}

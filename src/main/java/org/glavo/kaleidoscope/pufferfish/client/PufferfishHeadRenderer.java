@@ -8,7 +8,6 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.PlayerModel;
-import net.minecraft.client.model.PufferfishBigModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -25,7 +24,7 @@ import org.glavo.kaleidoscope.pufferfish.PufferfishItems;
 public final class PufferfishHeadRenderer {
     private static final ResourceLocation ORIGINAL = ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png");
     private static final Map<PlayerModel<?>, Visibility> VISIBILITY = new IdentityHashMap<>();
-    private final PufferfishBigModel<LivingEntity> model = new PufferfishBigModel<>(
+    private final DeflatingPufferfishModel<LivingEntity> model = new DeflatingPufferfishModel<>(
             Minecraft.getInstance().getEntityModels().bakeLayer(ModelLayers.PUFFERFISH_BIG));
 
     public static void beforePlayer(RenderPlayerEvent.Pre event) {
@@ -57,6 +56,8 @@ public final class PufferfishHeadRenderer {
         pose.pushPose();
         head.translateAndRotate(pose);
         pose.translate(0.0F, -22.0F / 16.0F, 0.0F);
+        pose.translate(0, (1 - DeflatingPufferfishModel.height(org.glavo.kaleidoscope.pufferfish.PufferfishDurability.deflationStage(stack))) / 4, 0);
+        model.prepare(stack);
         model.setupAnim(wearer, 0.0F, 0.0F, ageInTicks, 0.0F, 0.0F);
         model.renderToBuffer(pose, buffers.getBuffer(RenderType.entityCutoutNoCull(texture)), light,
                 LivingEntityRenderer.getOverlayCoords(wearer, 0.0F));
