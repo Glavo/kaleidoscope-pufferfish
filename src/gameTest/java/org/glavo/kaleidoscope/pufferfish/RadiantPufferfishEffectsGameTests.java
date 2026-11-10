@@ -23,6 +23,11 @@ import org.glavo.kaleidoscope.pufferfish.entity.ThrownPufferfish;
 @GameTestHolder(KaleidoscopePufferfish.MODID)
 @PrefixGameTestTemplate(false)
 public final class RadiantPufferfishEffectsGameTests {
+    private static void assertGlowing(GameTestHelper helper, net.minecraft.world.entity.LivingEntity target) {
+        var glow = target.getEffect(MobEffects.GLOWING);
+        helper.assertTrue(glow != null && glow.getDuration() == 200 && glow.getAmplifier() == 0, "Radiant damage did not apply ten seconds of glowing");
+    }
+
     @GameTest(template = "empty")
     public static void meleeEscalatesWitherAndProjectilesContinueIt(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
@@ -38,6 +43,7 @@ public final class RadiantPufferfishEffectsGameTests {
             target.invulnerableTime = 0;
             for (int tick = 0; tick < 25; tick++) player.tick();
             player.attack(target);
+            assertGlowing(helper, target);
             var effect = target.getEffect(MobEffects.WITHER);
             helper.assertTrue(effect != null && effect.getAmplifier() == Math.min(hit, 9) && effect.getDuration() == 100
                     && !target.hasEffect(MobEffects.POISON), "Melee wither did not advance exactly once or exceeded level ten");
@@ -50,11 +56,16 @@ public final class RadiantPufferfishEffectsGameTests {
         projectile.setPos(target.getX() - 1, target.getY() + 0.5, target.getZ());
         projectile.setDeltaMovement(2, 0, 0);
         projectile.tick();
+        assertGlowing(helper, target);
         helper.assertTrue(target.getEffect(MobEffects.WITHER).getAmplifier() == 2
                 && target.getEffect(MobEffects.WITHER).getDuration() == 100, "Thrown fish did not escalate existing wither");
         target.removeAllEffects();
         PufferfishCombat.hitEffects(new ItemStack(PufferfishItems.RADIANT_FLAIL.get()), target, player, Vec3.ZERO);
         helper.assertTrue(target.getEffect(MobEffects.WITHER).getAmplifier() == 0, "Flail did not start with wither one");
+        assertGlowing(helper, target);
+        target.removeAllEffects();
+        PufferfishCombat.hitEffects(new ItemStack(PufferfishItems.NETHERITE.get()), target, player, Vec3.ZERO);
+        helper.assertTrue(!target.hasEffect(MobEffects.GLOWING), "Non-radiant attacks applied glowing");
         helper.succeed();
     }
 
@@ -87,6 +98,7 @@ public final class RadiantPufferfishEffectsGameTests {
                 player.setHealth(20);
                 player.invulnerableTime = 0;
                 player.hurt(player.damageSources().mobAttack(attacker), 2);
+                assertGlowing(helper, attacker);
                 helper.assertTrue(attacker.hasEffect(MobEffects.WITHER) && attacker.getEffect(MobEffects.WITHER).getAmplifier() == 1 && attacker.getEffect(MobEffects.WITHER).getDuration() == 100
                         && !attacker.hasEffect(MobEffects.POISON), "Passive retaliation escalated or applied poison: " + variant);
             }
@@ -107,6 +119,7 @@ public final class RadiantPufferfishEffectsGameTests {
                 target.tickCount = tick;
                 target.invulnerableTime = 0;
                 NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(target));
+                assertGlowing(helper, target);
                 helper.assertTrue(target.hasEffect(MobEffects.WITHER) && target.getEffect(MobEffects.WITHER).getAmplifier() == 1 && target.getEffect(MobEffects.WITHER).getDuration() == 100
                         && !target.hasEffect(MobEffects.POISON), "Contact should apply fixed wither two");
             }

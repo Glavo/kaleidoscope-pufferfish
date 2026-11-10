@@ -115,7 +115,7 @@ public final class PufferfishArmor {
             if (!(stack.getItem() instanceof ArmorItem armor) || armor.getEquipmentSlot() != slot
                     || VARIANTS.values().stream().noneMatch(item -> stack.is(item.get()))) continue;
             if (PufferfishItems.isRadiant(stack)) {
-                attacker.addEffect(new MobEffectInstance(MobEffects.WITHER, PufferfishCombat.RADIANT_WITHER_DURATION_TICKS, 1), wearer);
+                PufferfishCombat.applyPassiveEffect(stack, attacker, wearer);
                 if (thornsItem == null) thornsItem = new EnchantedItemInUse(stack, slot, wearer);
                 continue;
             }

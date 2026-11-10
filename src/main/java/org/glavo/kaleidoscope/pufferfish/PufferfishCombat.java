@@ -30,6 +30,7 @@ import net.neoforged.neoforge.common.damagesource.DamageContainer;
 public final class PufferfishCombat {
     public static final int POISON_DURATION_TICKS = 60;
     public static final int RADIANT_WITHER_DURATION_TICKS = 100;
+    public static final int RADIANT_GLOW_DURATION_TICKS = 200;
     /// Prevents construction of this combat utility.
     private PufferfishCombat() {}
 
@@ -94,6 +95,7 @@ public final class PufferfishCombat {
             var current = target.getEffect(MobEffects.WITHER);
             int amplifier = current == null ? 0 : Math.min(9, current.getAmplifier() + 1);
             target.addEffect(new MobEffectInstance(MobEffects.WITHER, RADIANT_WITHER_DURATION_TICKS, amplifier), source);
+            applyRadiantGlow(target, source);
         } else {
             applyPassiveEffect(stack, target, source);
         }
@@ -109,6 +111,11 @@ public final class PufferfishCombat {
     public static void applyPassiveEffect(ItemStack stack, LivingEntity target, Entity source) {
         var poison = passiveEffect(stack);
         if (poison != null) target.addEffect(poison, source);
+        if (PufferfishItems.isRadiant(stack)) applyRadiantGlow(target, source);
+    }
+
+    public static void applyRadiantGlow(LivingEntity target, @javax.annotation.Nullable Entity source) {
+        target.addEffect(new MobEffectInstance(MobEffects.GLOWING, RADIANT_GLOW_DURATION_TICKS), source);
     }
 
     @javax.annotation.Nullable

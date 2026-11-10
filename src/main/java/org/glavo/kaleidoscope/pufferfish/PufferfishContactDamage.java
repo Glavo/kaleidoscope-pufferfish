@@ -51,6 +51,7 @@ public final class PufferfishContactDamage {
         var source = new DamageSource(level.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(DAMAGE_TYPE));
         entity.hurt(source, 1);
         if (entity instanceof LivingEntity living && living.isAlive() && !living.isInvulnerableTo(source)) {
+            if (effects.containsKey(MobEffects.WITHER)) PufferfishCombat.applyRadiantGlow(living, null);
             for (var effect : effects.values()) {
                 var current = living.getEffect(effect.getEffect());
                 if (current == null || !current.isInfiniteDuration() && (current.getAmplifier() < effect.getAmplifier()

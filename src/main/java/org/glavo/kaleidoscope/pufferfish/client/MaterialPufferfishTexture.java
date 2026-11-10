@@ -23,7 +23,7 @@ public final class MaterialPufferfishTexture {
             case "iron" -> IRON;
             case "diamond" -> DIAMOND;
             case "golden" -> GOLDEN;
-            case "radiant" -> new int[] {0x556B6B, 0x649090, 0x88A4A4, 0xB9C9C9, 0xCBD6D6, 0xDAE2E2};
+            case "radiant" -> new int[] {0x656080, 0x9A92AE, 0xC8BDD3, 0xE7DAE7, 0xFFF1D5, 0xFFFFFF};
             default -> throw new IllegalArgumentException("Unknown pufferfish material: " + material);
         };
         int size = entity ? 32 : 16;
@@ -42,9 +42,6 @@ public final class MaterialPufferfishTexture {
                 int shade = brightness < 150 ? 0 : brightness < 190 ? 1 : brightness < 220 ? 2 : brightness < 245 ? 3 : 4;
                 if (!entity && brightness >= 210 && v >= 2 && v <= 5 && (u + v == 9 || u + v == 10)) shade = 5;
                 int rgb = palette[shade];
-                if (material.equals("radiant") && brightness >= 190 && (u + v) % 7 <= 1) {
-                    rgb = brightness >= 220 ? 0xFDFFA8 : 0xE0E277;
-                }
                 image.setPixelRGBA(x, y, pixel & 0xFF000000 | (rgb & 255) << 16 | rgb & 0xFF00 | rgb >>> 16);
             }
         }

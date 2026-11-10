@@ -31,7 +31,7 @@ public final class PufferfishArmorTextures implements ResourceManagerReloadListe
         int ventral = switch (prefix) {
             case "heavy_" -> 0xCADFE4;
             case "netherite_" -> 0xBAB4B3;
-            case "radiant_" -> 0x88A4A4;
+            case "radiant_" -> 0xE7DAE7;
             case "copper_" -> 0xFFD3AC;
             case "exposed_copper_" -> 0xD5BA8B;
             case "weathered_copper_" -> 0xADD6B8;

@@ -8,8 +8,6 @@ import java.util.Map;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageTypes;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.enchantment.EnchantedItemInUse;
 import net.minecraft.world.item.enchantment.EnchantmentTarget;
@@ -67,8 +65,7 @@ public final class PufferfishShields {
                 || !event.getBlocked() || event.getBlockedDamage() <= 0 || source.is(DamageTypes.THORNS)
                 || !(source.getEntity() instanceof LivingEntity attacker) || attacker == defender
                 || VARIANTS.values().stream().noneMatch(item -> shield.is(item.get()))) return;
-        attacker.addEffect(new MobEffectInstance(PufferfishItems.isRadiant(shield) ? MobEffects.WITHER : MobEffects.POISON,
-                PufferfishItems.isRadiant(shield) ? PufferfishCombat.RADIANT_WITHER_DURATION_TICKS : PufferfishCombat.POISON_DURATION_TICKS, PufferfishItems.isRadiant(shield) ? 1 : 0), defender);
+        PufferfishCombat.applyPassiveEffect(shield, attacker, defender);
         var thorns = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.THORNS);
         thorns.value().doPostAttack(level, 1,
                 new EnchantedItemInUse(shield, LivingEntity.getSlotForHand(defender.getUsedItemHand()), defender),
