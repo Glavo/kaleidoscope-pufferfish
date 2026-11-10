@@ -92,6 +92,17 @@ public final class PufferfishCombat {
 
     /// Applies the fish's active status effect and Punch knockback, respecting immunity and knockback resistance.
     public static void hitEffects(ItemStack stack, LivingEntity target, Entity source, Vec3 direction) {
+        applyAttackEffect(stack, target, source);
+        int punch = enchantmentLevel(stack, Enchantments.PUNCH);
+        if (punch > 0) {
+            double resistance = Math.max(0, 1 - target.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE));
+            Vec3 push = direction.multiply(1, 0, 1).normalize().scale(punch * 0.6 * resistance);
+            if (push.lengthSqr() > 0) target.push(push.x, 0.1, push.z);
+        }
+    }
+
+    /// Shares attack status effects between living fish and weapons, including stacking radiant wither.
+    public static void applyAttackEffect(ItemStack stack, LivingEntity target, Entity source) {
         if (PufferfishItems.isRadiant(stack)) {
             var current = target.getEffect(MobEffects.WITHER);
             if (current != null && current.getAmplifier() >= 9) {
@@ -102,12 +113,6 @@ public final class PufferfishCombat {
             applyRadiantGlow(target, source);
         } else {
             applyPassiveEffect(stack, target, source);
-        }
-        int punch = enchantmentLevel(stack, Enchantments.PUNCH);
-        if (punch > 0) {
-            double resistance = Math.max(0, 1 - target.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE));
-            Vec3 push = direction.multiply(1, 0, 1).normalize().scale(punch * 0.6 * resistance);
-            if (push.lengthSqr() > 0) target.push(push.x, 0.1, push.z);
         }
     }
 

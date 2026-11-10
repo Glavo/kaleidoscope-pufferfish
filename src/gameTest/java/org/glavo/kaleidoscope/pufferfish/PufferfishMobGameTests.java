@@ -134,8 +134,9 @@ public final class PufferfishMobGameTests {
             if (expected == null) helper.assertTrue(!target.hasEffect(MobEffects.POISON), "Waxed fish poisoned a mob");
             else {
                 var actual = target.getEffect(expected.getEffect());
-                helper.assertTrue(actual != null && actual.getAmplifier() == expected.getAmplifier() && actual.getDuration() == expected.getDuration(),
-                        "Material fish applied the wrong passive status effect");
+                int amplifier = PufferfishItems.isRadiant(fish.fish()) ? 0 : expected.getAmplifier();
+                helper.assertTrue(actual != null && actual.getAmplifier() == amplifier && actual.getDuration() == expected.getDuration(),
+                        "Material fish applied the wrong attack status effect");
             }
             if (PufferfishItems.isRadiant(fish.fish())) helper.assertTrue(target.hasEffect(MobEffects.GLOWING) && !target.hasEffect(MobEffects.POISON), "Radiant sting lost glowing or applied poison");
         }

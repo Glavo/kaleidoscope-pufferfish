@@ -322,12 +322,12 @@ public final class MaterialPufferfish extends Pufferfish {
         };
     }
 
-    /// Contact and deliberate attacks share one damage cooldown and fixed mob effects.
+    /// Contact and deliberate attacks share one damage cooldown and attack status effects.
     public boolean strike(LivingEntity target, double knockback, int cooldown) {
         if (level().isClientSide || !isAlive() || !readyToAttack() || !canFight(target) || !hasLineOfSight(target)) return false;
         attackCooldown = cooldown;
         if (target.hurt(attackDamageSource(), (float) getAttributeValue(Attributes.ATTACK_DAMAGE))) {
-            PufferfishCombat.applyPassiveEffect(fish(), target, this);
+            PufferfishCombat.applyAttackEffect(fish(), target, this);
             if (knockback > 0) target.knockback(knockback, getX() - target.getX(), getZ() - target.getZ());
             playSound(SoundEvents.PUFFER_FISH_STING, 1, 1);
             return true;
@@ -335,7 +335,7 @@ public final class MaterialPufferfish extends Pufferfish {
         return false;
     }
 
-    /// A pulse heals all fish within three blocks and damages visible enemies without stacking wither levels.
+    /// A pulse heals all fish within three blocks and applies attack effects to visible enemies.
     public void pulse() {
         if (!(level() instanceof ServerLevel server) || !readyToAttack() || !isAlive()) return;
         attackCooldown = attackInterval();
@@ -350,7 +350,7 @@ public final class MaterialPufferfish extends Pufferfish {
         for (var target : level().getEntitiesOfClass(LivingEntity.class, getBoundingBox().inflate(3), this::canFight)) {
             if (distanceToSqr(target) <= 9 && hasLineOfSight(target)
                     && target.hurt(attackDamageSource(), (float) getAttributeValue(Attributes.ATTACK_DAMAGE))) {
-                PufferfishCombat.applyPassiveEffect(fish(), target, this);
+                PufferfishCombat.applyAttackEffect(fish(), target, this);
                 target.knockback(0.6, getX() - target.getX(), getZ() - target.getZ());
             }
         }

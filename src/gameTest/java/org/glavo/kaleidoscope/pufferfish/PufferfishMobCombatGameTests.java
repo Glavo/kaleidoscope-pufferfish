@@ -455,6 +455,50 @@ public final class PufferfishMobCombatGameTests {
     }
 
     @GameTest(template = "combat_pool")
+    public static void radiantMobAttacksStackWitherLikeWeapons(GameTestHelper helper) {
+        pool(helper);
+        var target = helper.spawn(EntityType.COW, new BlockPos(6, 3, 7));
+        target.setNoAi(true);
+        target.getAttribute(Attributes.MAX_HEALTH).setBaseValue(1000);
+        target.setHealth(1000);
+        var weaponTarget = EntityType.COW.create(helper.getLevel());
+        try {
+            for (int hit = 0; hit < 12; hit++) {
+                var attacker = fish(helper, "radiant");
+                target.invulnerableTime = 0;
+                switch (hit % 3) {
+                    case 0 -> { attacker.setPuffState(2); attacker.sting(target); }
+                    case 1 -> helper.assertTrue(attacker.strike(target, 0, attacker.attackInterval()), "Radiant direct attack missed");
+                    case 2 -> attacker.pulse();
+                }
+                PufferfishCombat.hitEffects(attacker.fish(), weaponTarget, attacker, net.minecraft.world.phys.Vec3.ZERO);
+                var wither = target.getEffect(MobEffects.WITHER);
+                helper.assertTrue(wither != null && wither.getAmplifier() == Math.min(hit, 9) && wither.getDuration() == 100,
+                        "Mob attack did not stack and refresh wither correctly: " + hit);
+                for (var effect : java.util.List.of(MobEffects.WITHER, MobEffects.GLOWING, MobEffects.BLINDNESS)) {
+                    var actual = target.getEffect(effect);
+                    var expected = weaponTarget.getEffect(effect);
+                    helper.assertTrue(actual == null ? expected == null : expected != null
+                                    && actual.getAmplifier() == expected.getAmplifier() && actual.getDuration() == expected.getDuration(),
+                            "Living radiant fish effects diverged from weapon effects");
+                }
+                helper.assertTrue(target.hasEffect(MobEffects.BLINDNESS) == (hit >= 10), "Blindness triggered before or after the expected threshold");
+                attacker.discard();
+            }
+            target.removeAllEffects();
+            var attacker = fish(helper, "radiant");
+            target.setInvulnerable(true);
+            target.invulnerableTime = 0;
+            helper.assertTrue(!attacker.strike(target, 0, 0) && !target.hasEffect(MobEffects.WITHER), "Failed attack applied wither");
+            target.setInvulnerable(false);
+            helper.assertTrue(attacker.strike(target, 0, 0) && target.getEffect(MobEffects.WITHER).getAmplifier() == 0,
+                    "Wither did not restart at level one after the previous effect ended");
+            attacker.discard();
+        } finally { target.discard(); }
+        helper.succeed();
+    }
+
+    @GameTest(template = "combat_pool")
     public static void radiantPulseHealsEveryFishVariantAndItselfOnlyOnce(GameTestHelper helper) {
         pool(helper);
         var caster = fish(helper, "radiant");
@@ -522,7 +566,7 @@ public final class PufferfishMobCombatGameTests {
     }
 
     @GameTest(template = "combat_pool")
-    public static void radiantPulseHasRangeCoverAndFixedWither(GameTestHelper helper) {
+    public static void radiantPulseHasRangeCoverAndSharedAttackCooldown(GameTestHelper helper) {
         pool(helper);
         var fish = fish(helper, "radiant");
         var near = helper.spawn(EntityType.COW, new BlockPos(7, 3, 7));
@@ -536,15 +580,16 @@ public final class PufferfishMobCombatGameTests {
                         && message.getKey().equals("death.attack.kaleidoscope_pufferfish.radiant_pufferfish"),
                 "Radiant pulse did not use its variant death message");
         helper.assertTrue(near.getHealth() < near.getMaxHealth() && near.hasEffect(MobEffects.GLOWING)
-                && near.getEffect(MobEffects.WITHER).getAmplifier() == 1 && near.getEffect(MobEffects.WITHER).getDuration() == 100,
-                "Radiant pulse did not apply fixed Wither II and glowing");
+                && near.getEffect(MobEffects.WITHER).getAmplifier() == 0 && near.getEffect(MobEffects.WITHER).getDuration() == 100,
+                "Radiant pulse did not apply initial Wither I and glowing");
         helper.assertTrue(far.getHealth() == far.getMaxHealth() && covered.getHealth() == covered.getMaxHealth(),
                 "Pulse passed through cover or exceeded its radius");
         float health = near.getHealth();
         near.invulnerableTime = 0;
         fish.pulse();
         fish.sting(near);
-        helper.assertTrue(near.getHealth() == health && !near.hasEffect(MobEffects.BLINDNESS), "Pulse duplicated damage or used item-only blindness");
+        helper.assertTrue(near.getHealth() == health && near.getEffect(MobEffects.WITHER).getAmplifier() == 0
+                && !near.hasEffect(MobEffects.BLINDNESS), "Pulse duplicated damage or stacked effects during cooldown");
         fish.discard();
         helper.succeed();
     }
