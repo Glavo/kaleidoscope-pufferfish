@@ -41,7 +41,7 @@ public final class HeavyPufferfishGameTests {
     /// Prevents construction of the test holder.
     private HeavyPufferfishGameTests() {}
 
-    /// Verifies empty-template smithing, preserved components, ingredient consumption, and recipe synchronization.
+    /// Verifies template-gated smithing, preserved components, ingredient consumption, and recipe synchronization.
     @GameTest(template = "empty")
     public static void heavyCoreUpgradesOneNetheriteFish(GameTestHelper helper) {
         var level = helper.getLevel();
@@ -49,7 +49,7 @@ public final class HeavyPufferfishGameTests {
         base.set(DataComponents.CUSTOM_NAME, Component.literal("Tempest"));
         var density = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.DENSITY);
         EnchantmentHelper.updateEnchantments(base, entries -> entries.set(density, 5));
-        var input = new SmithingRecipeInput(ItemStack.EMPTY, base, new ItemStack(Items.HEAVY_CORE, 2));
+        var input = new SmithingRecipeInput(PufferfishItems.UPGRADE_TEMPLATE.toStack(2), base, new ItemStack(Items.HEAVY_CORE, 2));
         var recipe = level.getRecipeManager().getRecipeFor(RecipeType.SMITHING, input, level).orElseThrow().value();
         var output = recipe.assemble(input, level.registryAccess());
         helper.assertTrue(output.is(PufferfishItems.HEAVY.get()) && output.getCount() == 1
@@ -67,21 +67,23 @@ public final class HeavyPufferfishGameTests {
         }
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         var menu = new SmithingMenu(1, player.getInventory());
-        helper.assertTrue(menu.getSlot(1).mayPlace(base) && menu.getSlot(2).mayPlace(input.addition()), "Smithing slots rejected upgrade ingredients");
+        helper.assertTrue(menu.getSlot(0).mayPlace(input.template()) && menu.getSlot(1).mayPlace(base) && menu.getSlot(2).mayPlace(input.addition()), "Smithing slots rejected upgrade ingredients");
+        menu.getSlot(0).set(input.template().copy());
         menu.getSlot(1).set(base.copy());
         menu.getSlot(2).set(input.addition().copy());
         menu.createResult();
         var result = menu.getSlot(3);
-        helper.assertTrue(result.mayPickup(player) && ItemStack.matches(output, result.getItem()), "Smithing table required an unwanted template");
+        helper.assertTrue(result.mayPickup(player) && ItemStack.matches(output, result.getItem()), "Smithing table rejected the pufferfish upgrade template");
         var taken = result.remove(1);
         result.onTake(player, taken);
-        helper.assertTrue(menu.getSlot(0).getItem().isEmpty() && menu.getSlot(1).getItem().getCount() == 2
-                && menu.getSlot(2).getItem().getCount() == 1, "Upgrade did not consume exactly one fish and one core");
+        helper.assertTrue(menu.getSlot(0).getItem().getCount() == 1 && menu.getSlot(1).getItem().getCount() == 2
+                && menu.getSlot(2).getItem().getCount() == 1, "Upgrade did not consume exactly one template, one fish and one core");
         for (var invalid : List.of(
+                new SmithingRecipeInput(ItemStack.EMPTY, base, input.addition()),
                 new SmithingRecipeInput(new ItemStack(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE), base, input.addition()),
-                new SmithingRecipeInput(ItemStack.EMPTY, new ItemStack(Items.PUFFERFISH), input.addition()),
-                new SmithingRecipeInput(ItemStack.EMPTY, output, input.addition()),
-                new SmithingRecipeInput(ItemStack.EMPTY, base, new ItemStack(Items.BREEZE_ROD)))) {
+                new SmithingRecipeInput(input.template(), new ItemStack(Items.PUFFERFISH), input.addition()),
+                new SmithingRecipeInput(input.template(), output, input.addition()),
+                new SmithingRecipeInput(input.template(), base, new ItemStack(Items.BREEZE_ROD)))) {
             helper.assertTrue(!recipe.matches(invalid, level) && recipe.assemble(invalid, level.registryAccess()).isEmpty(),
                     "Upgrade accepted invalid or already-upgraded ingredients");
         }

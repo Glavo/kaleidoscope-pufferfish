@@ -75,7 +75,7 @@ public class KaleidoscopePufferfish {
     public static final DeferredHolder<RecipeSerializer<?>, RadiantPufferfishUpgradeRecipe.Serializer> RADIANT_UPGRADE =
             RECIPES.register("radiant_pufferfish_upgrade", RadiantPufferfishUpgradeRecipe.Serializer::new);
 
-    /// The template-free smithing upgrade from netherite to heavy pufferfish.
+    /// The smithing upgrade from netherite to heavy pufferfish.
     public static final DeferredHolder<RecipeSerializer<?>, HeavyPufferfishUpgradeRecipe.Serializer> HEAVY_UPGRADE =
             RECIPES.register("heavy_pufferfish_upgrade", HeavyPufferfishUpgradeRecipe.Serializer::new);
 
@@ -120,6 +120,7 @@ public class KaleidoscopePufferfish {
                     }
                     PufferfishItems.FLAIL_VARIANTS.stream().skip(1).forEach(output::accept);
                     output.accept(PufferfishItems.PUMP);
+                    output.accept(PufferfishItems.UPGRADE_TEMPLATE);
                     PufferfishVariant.ALL.forEach(variant -> output.accept(variant.skin()));
                     PufferfishShields.VARIANTS.values().forEach(output::accept);
                     PufferfishArmor.VARIANTS.values().forEach(output::accept);

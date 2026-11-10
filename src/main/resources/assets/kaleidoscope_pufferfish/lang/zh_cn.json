@@ -1,4 +1,9 @@
 {
+  "item.kaleidoscope_pufferfish.pufferfish_upgrade_smithing_template": "河豚升级模板",
+  "upgrade.kaleidoscope_pufferfish.pufferfish_upgrade": "河豚升级",
+  "item.kaleidoscope_pufferfish.pufferfish_upgrade.ingredients": "沉重核心或下界之星",
+  "item.kaleidoscope_pufferfish.pufferfish_upgrade.base_slot_description": "放入下界合金河豚",
+  "item.kaleidoscope_pufferfish.pufferfish_upgrade.additions_slot_description": "放入沉重核心或下界之星",
   "block.kaleidoscope_pufferfish.pufferfish_pump": "河豚打气筒",
   "item.kaleidoscope_pufferfish.pufferfish_pump": "河豚打气筒",
   "itemGroup.kaleidoscope_pufferfish": "森罗物语：河豚",

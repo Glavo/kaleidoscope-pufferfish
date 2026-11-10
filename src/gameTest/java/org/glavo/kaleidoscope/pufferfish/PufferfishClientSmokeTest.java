@@ -72,6 +72,13 @@ public final class PufferfishClientSmokeTest {
             }
         }
         verifySkin(minecraft, null);
+        var upgradeTemplate = PufferfishItems.UPGRADE_TEMPLATE.toStack();
+        var templateModel = minecraft.getItemRenderer().getModel(upgradeTemplate, null, null, 0);
+        if (templateModel == minecraft.getModelManager().getMissingModel()
+                || templateModel.getQuads(null, null, RandomSource.create()).isEmpty()
+                || upgradeTemplate.getHoverName().getString().startsWith("item.")) {
+            throw new IllegalStateException("Missing pufferfish upgrade template model or translation");
+        }
         MaterialPufferfishClientTest.verify(minecraft);
         PufferfishMobClientTest.verify(minecraft);
         verifySkin(minecraft, PufferfishBlocks.GOLDEN_SKIN.get(), "golden_pufferfish_skin");

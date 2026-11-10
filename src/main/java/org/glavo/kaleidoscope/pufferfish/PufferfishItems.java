@@ -3,6 +3,9 @@
 
 package org.glavo.kaleidoscope.pufferfish;
 
+import java.util.List;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -13,6 +16,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.Rarity;
+import net.minecraft.world.item.SmithingTemplateItem;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.neoforged.bus.api.IEventBus;
@@ -117,6 +121,14 @@ public final class PufferfishItems {
     public static final java.util.List<DeferredItem<PufferfishFlailItem>> FLAIL_VARIANTS = registerFlails();
     public static final DeferredItem<PufferfishPumpItem> PUMP = ITEMS.register("pufferfish_pump",
             () -> new PufferfishPumpItem(new Item.Properties().stacksTo(1)));
+    public static final DeferredItem<SmithingTemplateItem> UPGRADE_TEMPLATE = ITEMS.register("pufferfish_upgrade_smithing_template",
+            () -> new SmithingTemplateItem(
+                    Component.translatable("item.kaleidoscope_pufferfish.netherite_pufferfish").withStyle(ChatFormatting.BLUE),
+                    Component.translatable("item.kaleidoscope_pufferfish.pufferfish_upgrade.ingredients").withStyle(ChatFormatting.BLUE),
+                    Component.translatable("upgrade.kaleidoscope_pufferfish.pufferfish_upgrade").withStyle(ChatFormatting.GRAY),
+                    Component.translatable("item.kaleidoscope_pufferfish.pufferfish_upgrade.base_slot_description"),
+                    Component.translatable("item.kaleidoscope_pufferfish.pufferfish_upgrade.additions_slot_description"),
+                    List.of(), List.of()));
     private PufferfishItems() {}
 
     private static java.util.List<DeferredItem<Item>> registerCopperFish() {

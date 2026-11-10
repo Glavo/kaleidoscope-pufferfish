@@ -1,4 +1,9 @@
 {
+  "item.kaleidoscope_pufferfish.pufferfish_upgrade_smithing_template": "Pufferfish Upgrade Template",
+  "upgrade.kaleidoscope_pufferfish.pufferfish_upgrade": "Pufferfish Upgrade",
+  "item.kaleidoscope_pufferfish.pufferfish_upgrade.ingredients": "Heavy Core or Nether Star",
+  "item.kaleidoscope_pufferfish.pufferfish_upgrade.base_slot_description": "Add a Netherite Pufferfish",
+  "item.kaleidoscope_pufferfish.pufferfish_upgrade.additions_slot_description": "Add a Heavy Core or Nether Star",
   "block.kaleidoscope_pufferfish.pufferfish_pump": "Pufferfish Pump",
   "item.kaleidoscope_pufferfish.pufferfish_pump": "Pufferfish Pump",
   "itemGroup.kaleidoscope_pufferfish": "Kaleidoscope Pufferfish",

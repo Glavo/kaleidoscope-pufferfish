@@ -14,14 +14,14 @@ import net.minecraft.world.item.crafting.SmithingRecipe;
 import net.minecraft.world.item.crafting.SmithingRecipeInput;
 import net.minecraft.world.level.Level;
 
-/// Upgrades one netherite pufferfish with one heavy core and an empty smithing template slot.
+/// Upgrades one netherite pufferfish with one heavy core and a pufferfish upgrade template.
 public final class HeavyPufferfishUpgradeRecipe implements SmithingRecipe {
     /// Creates the fixed-ingredient heavy pufferfish upgrade recipe.
     public HeavyPufferfishUpgradeRecipe() {}
 
     @Override
     public boolean matches(SmithingRecipeInput input, Level level) {
-        return input.template().isEmpty() && isBaseIngredient(input.base()) && isAdditionIngredient(input.addition());
+        return isTemplateIngredient(input.template()) && isBaseIngredient(input.base()) && isAdditionIngredient(input.addition());
     }
 
     /// Creates one heavy pufferfish preserving the base stack's component changes, or an empty stack for invalid input.
@@ -35,9 +35,8 @@ public final class HeavyPufferfishUpgradeRecipe implements SmithingRecipe {
         return new ItemStack(PufferfishItems.HEAVY.get());
     }
 
-    /// Returns false because this recipe does not accept a template item.
     @Override
-    public boolean isTemplateIngredient(ItemStack stack) { return false; }
+    public boolean isTemplateIngredient(ItemStack stack) { return stack.is(PufferfishItems.UPGRADE_TEMPLATE.get()); }
 
     @Override
     public boolean isBaseIngredient(ItemStack stack) { return PufferfishItems.isNetherite(stack); }
@@ -45,7 +44,7 @@ public final class HeavyPufferfishUpgradeRecipe implements SmithingRecipe {
     @Override
     public boolean isAdditionIngredient(ItemStack stack) { return stack.is(Items.HEAVY_CORE); }
 
-    /// Returns false because both required ingredients are always registered.
+    /// Returns false because all required ingredients are always registered.
     @Override
     public boolean isIncomplete() { return false; }
 

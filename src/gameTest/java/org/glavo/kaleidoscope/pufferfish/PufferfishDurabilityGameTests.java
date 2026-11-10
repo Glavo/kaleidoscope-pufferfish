@@ -214,7 +214,7 @@ public final class PufferfishDurabilityGameTests {
         var netherite = worn(new ItemStack(PufferfishItems.NETHERITE.get()));
         netherite.setDamageValue(1000);
         for (var addition : java.util.List.of(Items.HEAVY_CORE, Items.NETHER_STAR)) {
-            var input = new net.minecraft.world.item.crafting.SmithingRecipeInput(ItemStack.EMPTY, netherite, new ItemStack(addition));
+            var input = new net.minecraft.world.item.crafting.SmithingRecipeInput(PufferfishItems.UPGRADE_TEMPLATE.toStack(), netherite, new ItemStack(addition));
             var recipe = level.getRecipeManager().getRecipeFor(net.minecraft.world.item.crafting.RecipeType.SMITHING, input, level).orElseThrow().value();
             var result = recipe.assemble(input, level.registryAccess());
             helper.assertTrue(result.getMaxDamage() == PufferfishDurability.maximum(result)

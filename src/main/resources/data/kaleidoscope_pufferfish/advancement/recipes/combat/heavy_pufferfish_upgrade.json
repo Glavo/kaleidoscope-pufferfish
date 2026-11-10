@@ -1,6 +1,10 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
+    "has_template": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {"items": [{"items": "kaleidoscope_pufferfish:pufferfish_upgrade_smithing_template"}]}
+    },
     "has_heavy_core": {
       "trigger": "minecraft:inventory_changed",
       "conditions": {"items": [{"items": "minecraft:heavy_core"}]}
@@ -10,6 +14,6 @@
       "conditions": {"recipe": "kaleidoscope_pufferfish:heavy_pufferfish_upgrade"}
     }
   },
-  "requirements": [["has_heavy_core", "has_the_recipe"]],
+  "requirements": [["has_template", "has_heavy_core", "has_the_recipe"]],
   "rewards": {"recipes": ["kaleidoscope_pufferfish:heavy_pufferfish_upgrade"]}
 }

@@ -1,6 +1,10 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
+    "has_template": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {"items": [{"items": "kaleidoscope_pufferfish:pufferfish_upgrade_smithing_template"}]}
+    },
     "has_nether_star": {
       "trigger": "minecraft:inventory_changed",
       "conditions": {"items": [{"items": "minecraft:nether_star"}]}
@@ -10,6 +14,6 @@
       "conditions": {"recipe": "kaleidoscope_pufferfish:radiant_pufferfish_upgrade"}
     }
   },
-  "requirements": [["has_nether_star", "has_the_recipe"]],
+  "requirements": [["has_template", "has_nether_star", "has_the_recipe"]],
   "rewards": {"recipes": ["kaleidoscope_pufferfish:radiant_pufferfish_upgrade"]}
 }
