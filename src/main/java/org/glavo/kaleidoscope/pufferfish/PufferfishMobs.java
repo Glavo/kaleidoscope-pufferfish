@@ -12,7 +12,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.SpawnPlacementTypes;
-import net.minecraft.world.entity.animal.AbstractFish;
 import net.minecraft.world.entity.animal.Pufferfish;
 import net.minecraft.world.entity.animal.WaterAnimal;
 import net.minecraft.world.item.DyeColor;
@@ -95,7 +94,7 @@ public final class PufferfishMobs {
     }
 
     private static void attributes(EntityAttributeCreationEvent event) {
-        VARIANTS.values().forEach(variant -> event.put(variant.entity().get(), AbstractFish.createAttributes().build()));
+        VARIANTS.values().forEach(variant -> event.put(variant.entity().get(), PufferfishMobConfig.attributes(variant.fish().toStack())));
     }
 
     private static void placements(RegisterSpawnPlacementsEvent event) {

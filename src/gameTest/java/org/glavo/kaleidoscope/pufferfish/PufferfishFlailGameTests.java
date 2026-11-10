@@ -652,7 +652,8 @@ public final class PufferfishFlailGameTests {
             head.tick();
             helper.assertTrue(head.isReturning() && head.position().distanceTo(player.getEyePosition()) <= PufferfishFlailHead.REACH + 0.00001,
                     "Last outward segment exceeded the tether limit");
-            helper.assertTrue(target.getHealth() == (distance < 6.5 ? 18 : 20), "Last segment missed a reachable hit or damaged beyond reach");
+            helper.assertTrue(target.getHealth() == (distance < 6.5 ? 18 : 20), "Last segment missed a reachable hit or damaged beyond reach: distance="
+                    + distance + ", health=" + target.getHealth() + ", head=" + head.position() + ", target=" + target.position());
             head.discard();
             target.discard();
         }

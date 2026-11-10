@@ -40,7 +40,9 @@ public final class PufferfishHeadgear {
     }
 
     public static void protect(LivingIncomingDamageEvent event) {
-        if (isWearing(event.getEntity()) && event.getSource().getDirectEntity() instanceof Pufferfish) {
+        if (isWearing(event.getEntity()) && event.getSource().getDirectEntity() instanceof Pufferfish fish
+                && (!(fish instanceof org.glavo.kaleidoscope.pufferfish.entity.MaterialPufferfish material)
+                    || !material.isAngryAt(event.getEntity()))) {
             event.setCanceled(true);
         }
     }

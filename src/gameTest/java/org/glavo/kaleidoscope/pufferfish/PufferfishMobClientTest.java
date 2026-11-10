@@ -63,6 +63,9 @@ public final class PufferfishMobClientTest {
                 Lighting.setupFor3DItems();
                 for (int puff = 0; puff < 3; puff++) {
                     fish.setPuffState(puff);
+                    if (PufferfishItems.isRadiant(fish.fish()) && puff == 2) {
+                        fish.setAttackPhase(org.glavo.kaleidoscope.pufferfish.entity.MaterialPufferfish.PULSE);
+                    }
                     var pose = new PoseStack();
                     pose.translate(x + 27 + puff * 53, y + 145, 0);
                     pose.scale(60, -60, 60);

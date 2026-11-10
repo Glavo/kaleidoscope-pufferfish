@@ -30,6 +30,11 @@ public final class MaterialPufferfishRenderer extends PufferfishRenderer {
                 float scale = puff == 0 ? 0.5F : puff == 1 ? 0.7F : 1;
                 pose.scale(scale, scale, scale);
                 RadiantPufferfishVisuals.renderCentered(pose, buffers, OverlayTexture.NO_OVERLAY);
+                if (((MaterialPufferfish) entity).attackPhase() == MaterialPufferfish.PULSE) {
+                    pose.scale(1.25F, 1.25F, 1.25F);
+                    pose.mulPose(com.mojang.math.Axis.YP.rotationDegrees(45));
+                    RadiantPufferfishVisuals.renderCentered(pose, buffers, OverlayTexture.NO_OVERLAY);
+                }
                 pose.popPose();
             }
         });

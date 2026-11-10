@@ -387,5 +387,6 @@
   "gui.kaleidoscope_pufferfish.engine.empty": "请放入一只河豚",
   "gui.kaleidoscope_pufferfish.engine.dry": "需要一桶水",
   "gui.kaleidoscope_pufferfish.engine.stopped": "红石信号已停机",
-  "gui.kaleidoscope_pufferfish.engine.running": "运行中"
+  "gui.kaleidoscope_pufferfish.engine.running": "运行中",
+  "message.kaleidoscope_pufferfish.capture_too_healthy": "这只河豚还太强壮，无法装入桶中。"
 }
