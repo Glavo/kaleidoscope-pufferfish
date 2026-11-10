@@ -42,6 +42,7 @@ import net.neoforged.neoforge.common.ItemAbilities;
 import org.glavo.kaleidoscope.pufferfish.CopperPufferfish;
 import org.glavo.kaleidoscope.pufferfish.PufferfishCombat;
 import org.glavo.kaleidoscope.pufferfish.PufferfishMobs;
+import org.glavo.kaleidoscope.pufferfish.PufferfishReinforcements;
 
 /// A swimming material fish whose stored item survives oxidation, capture and release.
 public final class MaterialPufferfish extends Pufferfish {
@@ -53,6 +54,9 @@ public final class MaterialPufferfish extends Pufferfish {
     private UUID provokerId;
     private LivingEntity provoker;
     private int angerTicks;
+    private int reinforcementCooldown;
+    private int reinforcementCalls;
+    private boolean reinforcement;
 
     public MaterialPufferfish(EntityType<? extends MaterialPufferfish> type, Level level, Item item) {
         super(type, level);
@@ -78,8 +82,8 @@ public final class MaterialPufferfish extends Pufferfish {
 
     public PufferfishMobConfig.Kind kind() { return PufferfishMobConfig.kind(fish()); }
     public PufferfishMobConfig.Settings settings() { return PufferfishMobConfig.settings(fish()); }
-    public boolean hasActiveAttacks() { return kind() != PufferfishMobConfig.Kind.GOLDEN; }
-    public boolean isHostileToPlayers() { return hasActiveAttacks() && kind() != PufferfishMobConfig.Kind.COPPER; }
+    public boolean hasActiveAttacks() { return kind() != PufferfishMobConfig.Kind.GOLDEN || reinforcement; }
+    public boolean isHostileToPlayers() { return kind() != PufferfishMobConfig.Kind.GOLDEN && kind() != PufferfishMobConfig.Kind.COPPER; }
     public int attackPhase() { return entityData.get(ATTACK_PHASE); }
     public void setAttackPhase(int phase) {
         entityData.set(ATTACK_PHASE, phase);
@@ -139,7 +143,7 @@ public final class MaterialPufferfish extends Pufferfish {
     public boolean validTarget(LivingEntity target) {
         double range = getAttributeValue(Attributes.FOLLOW_RANGE);
         return hasActiveAttacks() && canFight(target) && !isDisguisedFrom(target)
-                && (kind() != PufferfishMobConfig.Kind.COPPER || isHuntedHostile(target))
+                && (kind() != PufferfishMobConfig.Kind.COPPER || isHuntedHostile(target) || reinforcement && isAngryAt(target))
                 && target.level() == level() && target.isInWater() && distanceToSqr(target) <= range * range && hasLineOfSight(target);
     }
 
@@ -150,6 +154,16 @@ public final class MaterialPufferfish extends Pufferfish {
             provokerId = attacker.getUUID();
             provoker = attacker;
             angerTicks = 400;
+            if (isAlive() && !isNoAi() && isAddedToLevel() && level() instanceof ServerLevel
+                    && (kind() == PufferfishMobConfig.Kind.HEAVY || kind() == PufferfishMobConfig.Kind.RADIANT)
+                    && isInWater() && canFight(attacker) && level().getDifficulty() != Difficulty.PEACEFUL
+                    && level().getGameRules().getBoolean(net.minecraft.world.level.GameRules.RULE_DOMOBSPAWNING)
+                    && reinforcementCooldown == 0 && reinforcementCalls < PufferfishMobConfig.value(PufferfishMobConfig.REINFORCEMENT_MAX_CALLS)
+                    && random.nextDouble() < PufferfishMobConfig.value(PufferfishMobConfig.REINFORCEMENT_CHANCE)
+                    && PufferfishReinforcements.summon(this, attacker)) {
+                reinforcementCooldown = PufferfishMobConfig.value(PufferfishMobConfig.REINFORCEMENT_COOLDOWN);
+                reinforcementCalls++;
+            }
         }
         return damaged;
     }
@@ -163,11 +177,26 @@ public final class MaterialPufferfish extends Pufferfish {
     @Override
     public ItemStack getPickResult() { return getBucketItemStack(); }
 
+    public void joinReinforcement(LivingEntity attacker) {
+        reinforcement = true;
+        provokerId = attacker.getUUID();
+        provoker = attacker;
+        angerTicks = 400;
+        setTarget(attacker);
+    }
+
+    private void saveReinforcements(CompoundTag tag) {
+        tag.putInt("FishReinforcementCooldown", reinforcementCooldown);
+        tag.putInt("FishReinforcementCalls", reinforcementCalls);
+        tag.putBoolean("FishReinforcement", reinforcement);
+    }
+
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         tag.put("Fish", fish().save(registryAccess()));
         tag.putInt("FishAttackCooldown", attackCooldown);
+        saveReinforcements(tag);
         if (angerTicks > 0 && provokerId != null) {
             tag.putUUID("FishProvoker", provokerId);
             tag.putInt("FishAngerTicks", angerTicks);
@@ -187,12 +216,18 @@ public final class MaterialPufferfish extends Pufferfish {
 
     public void loadFish(CompoundTag tag) {
         if (tag.contains("Fish")) ItemStack.parse(registryAccess(), tag.getCompound("Fish")).ifPresent(this::setFish);
+        reinforcementCooldown = Math.max(0, Math.min(72000, tag.getInt("FishReinforcementCooldown")));
+        reinforcementCalls = Math.max(0, Math.min(100, tag.getInt("FishReinforcementCalls")));
+        reinforcement = tag.getBoolean("FishReinforcement");
     }
 
     @Override
     public void saveToBucketTag(ItemStack stack) {
         super.saveToBucketTag(stack);
-        CustomData.update(DataComponents.BUCKET_ENTITY_DATA, stack, tag -> tag.put("Fish", fish().save(registryAccess())));
+        CustomData.update(DataComponents.BUCKET_ENTITY_DATA, stack, tag -> {
+            tag.put("Fish", fish().save(registryAccess()));
+            saveReinforcements(tag);
+        });
     }
 
     @Override
@@ -205,6 +240,7 @@ public final class MaterialPufferfish extends Pufferfish {
     public void tick() {
         if (!level().isClientSide) {
             if (attackCooldown > 0) attackCooldown--;
+            if (reinforcementCooldown > 0) reinforcementCooldown--;
             if (angerTicks > 0 && --angerTicks == 0) { provoker = null; provokerId = null; }
         }
         super.tick();

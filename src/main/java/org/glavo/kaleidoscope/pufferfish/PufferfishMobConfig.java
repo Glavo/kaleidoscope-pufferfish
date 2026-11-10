@@ -16,6 +16,12 @@ public final class PufferfishMobConfig {
     public enum Kind { COPPER, IRON, GOLDEN, DIAMOND, NETHERITE, HEAVY, RADIANT }
 
     public static final ModConfigSpec SPEC;
+    public static final ModConfigSpec.DoubleValue REINFORCEMENT_CHANCE;
+    public static final ModConfigSpec.IntValue REINFORCEMENT_COOLDOWN;
+    public static final ModConfigSpec.IntValue REINFORCEMENT_MAX_CALLS;
+    public static final ModConfigSpec.IntValue REINFORCEMENT_NEARBY_LIMIT;
+    public static final ModConfigSpec.IntValue REINFORCEMENT_RADIUS;
+    public static final Map<Kind, ModConfigSpec.IntValue> REINFORCEMENT_WEIGHTS;
     private static final Map<Kind, Settings> SETTINGS = new EnumMap<>(Kind.class);
 
     static {
@@ -28,6 +34,25 @@ public final class PufferfishMobConfig {
         add(builder, Kind.NETHERITE, 60, 10, 12, 0.9, 0, 0.75, 26, 0.25);
         add(builder, Kind.HEAVY, 80, 12, 16, 0.5, 0.75, 1, 50, 0.25);
         add(builder, Kind.RADIANT, 60, 8, 8, 0.9, 0, 0.5, 30, 0.25);
+        builder.push("reinforcements");
+        REINFORCEMENT_CHANCE = builder.comment("Chance per successful hit against a living heavy or radiant fish; 0 disables reinforcements.")
+                .defineInRange("chance", 0.25, 0, 1);
+        REINFORCEMENT_COOLDOWN = builder.comment("Ticks between successful calls.").defineInRange("cooldownTicks", 400, 1, 72000);
+        REINFORCEMENT_MAX_CALLS = builder.comment("Lifetime successful calls per elite, preserved through saving and bucket capture.")
+                .defineInRange("maxCalls", 3, 0, 100);
+        REINFORCEMENT_NEARBY_LIMIT = builder.comment("Maximum nearby living material fish, excluding the caller.")
+                .defineInRange("nearbyLimit", 8, 1, 100);
+        REINFORCEMENT_RADIUS = builder.comment("Horizontal search radius in blocks; spawn positions must be at least two blocks from the caller.")
+                .defineInRange("radius", 8, 2, 32);
+        builder.push("weights");
+        var weights = new EnumMap<Kind, ModConfigSpec.IntValue>(Kind.class);
+        weights.put(Kind.COPPER, builder.defineInRange("copper", 40, 0, 10000));
+        weights.put(Kind.IRON, builder.defineInRange("iron", 30, 0, 10000));
+        weights.put(Kind.GOLDEN, builder.defineInRange("golden", 15, 0, 10000));
+        weights.put(Kind.DIAMOND, builder.defineInRange("diamond", 12, 0, 10000));
+        weights.put(Kind.NETHERITE, builder.defineInRange("netherite", 3, 0, 10000));
+        REINFORCEMENT_WEIGHTS = java.util.Collections.unmodifiableMap(weights);
+        builder.pop(2);
         SPEC = builder.build();
     }
 
