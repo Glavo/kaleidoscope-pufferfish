@@ -226,4 +226,40 @@ public final class PufferfishConduitGameTests {
         NeoForge.EVENT_BUS.post(event);
         return event.getSpawnerDataList();
     }
+
+    @GameTest(template = "empty")
+    public static void chineseFoodFishAreReplacedWithoutSuppressingMaterialPufferfish(GameTestHelper helper) {
+        var croaker = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getOptional(
+                net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("kaleidoscope_chinesefood", "yellow_croaker"));
+        if (croaker.isEmpty()) {
+            helper.succeed();
+            return;
+        }
+        var pos = helper.absolutePos(CENTER);
+        var original = WeightedRandomList.create(new MobSpawnSettings.SpawnerData(croaker.get(), 10, 3, 6));
+        helper.assertTrue(spawnList(helper, pos, MobCategory.WATER_AMBIENT, original).equals(original.unwrap()),
+                "Inactive conduit changed yellow croaker spawns");
+        PufferfishConduitSpawning.update(helper.getLevel(), pos, 32);
+        try {
+            var replaced = spawnList(helper, pos, MobCategory.WATER_AMBIENT, original);
+            helper.assertTrue(replaced.size() == 1 && replaced.getFirst().type == EntityType.PUFFERFISH,
+                    "Active conduit did not replace Chinese Food yellow croaker spawns");
+            helper.assertTrue(spawnList(helper, pos, MobCategory.WATER_AMBIENT, original).contains(replaced.getFirst()),
+                    "Yellow croaker replacement failed the natural spawner identity check");
+            helper.assertTrue(spawnList(helper, pos.north(32), MobCategory.WATER_AMBIENT, original).equals(original.unwrap()),
+                    "Conduit replaced yellow croaker outside its radius");
+            var mixed = new ArrayList<>(original.unwrap());
+            for (var variant : PufferfishMobs.VARIANTS.values()) {
+                mixed.add(new MobSpawnSettings.SpawnerData(variant.entity().get(), 1, 1, 2));
+            }
+            var result = spawnList(helper, pos, MobCategory.WATER_AMBIENT, WeightedRandomList.create(mixed));
+            helper.assertTrue(result.size() == PufferfishMobs.VARIANTS.size() + 1 && !result.contains(original.unwrap().getFirst())
+                    && result.containsAll(mixed.subList(1, mixed.size())), "Conduit suppressed a material pufferfish or retained yellow croaker");
+        } finally {
+            PufferfishConduitSpawning.update(helper.getLevel(), pos, 0);
+        }
+        helper.assertTrue(spawnList(helper, pos, MobCategory.WATER_AMBIENT, original).equals(original.unwrap()),
+                "Deactivated conduit continued replacing yellow croaker");
+        helper.succeed();
+    }
 }

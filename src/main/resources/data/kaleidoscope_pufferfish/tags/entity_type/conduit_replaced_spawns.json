@@ -1,4 +1,12 @@
 {
   "replace": false,
-  "values": ["minecraft:cod", "minecraft:salmon", "minecraft:tropical_fish"]
+  "values": [
+    "minecraft:cod",
+    "minecraft:salmon",
+    "minecraft:tropical_fish",
+    {
+      "id": "kaleidoscope_chinesefood:yellow_croaker",
+      "required": false
+    }
+  ]
 }
