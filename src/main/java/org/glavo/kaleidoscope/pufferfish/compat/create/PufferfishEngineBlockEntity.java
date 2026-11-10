@@ -95,7 +95,7 @@ public final class PufferfishEngineBlockEntity extends GeneratingKineticBlockEnt
         boolean nextPowered = level.hasNeighborSignal(worldPosition);
         int nextSpeed = CreateIntegration.SPEED.get();
         int nextCapacity = (PufferfishItems.isHeavy(fish) ? CreateIntegration.HEAVY_CAPACITY
-                : PufferfishItems.isNetherite(fish) ? CreateIntegration.NETHERITE_CAPACITY : CreateIntegration.NORMAL_CAPACITY).get();
+                : PufferfishItems.hasNetheriteCombat(fish) ? CreateIntegration.NETHERITE_CAPACITY : CreateIntegration.NORMAL_CAPACITY).get();
         if (powered != nextPowered || configuredSpeed != nextSpeed || configuredCapacity != nextCapacity) {
             powered = nextPowered;
             configuredSpeed = nextSpeed;

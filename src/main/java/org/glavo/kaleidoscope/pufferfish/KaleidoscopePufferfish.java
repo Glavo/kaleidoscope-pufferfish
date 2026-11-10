@@ -66,6 +66,9 @@ public class KaleidoscopePufferfish {
     public static final DeferredHolder<RecipeSerializer<?>, NetheritePufferfishUpgradeRecipe.Serializer> NETHERITE_UPGRADE =
             RECIPES.register("netherite_pufferfish_upgrade", NetheritePufferfishUpgradeRecipe.Serializer::new);
 
+    public static final DeferredHolder<RecipeSerializer<?>, RadiantPufferfishUpgradeRecipe.Serializer> RADIANT_UPGRADE =
+            RECIPES.register("radiant_pufferfish_upgrade", RadiantPufferfishUpgradeRecipe.Serializer::new);
+
     /// The template-free smithing upgrade from netherite to heavy pufferfish.
     public static final DeferredHolder<RecipeSerializer<?>, HeavyPufferfishUpgradeRecipe.Serializer> HEAVY_UPGRADE =
             RECIPES.register("heavy_pufferfish_upgrade", HeavyPufferfishUpgradeRecipe.Serializer::new);
@@ -81,6 +84,7 @@ public class KaleidoscopePufferfish {
                         output.accept(CreateIntegration.ENGINE_ITEM.get());
                     }
                     output.accept(PufferfishItems.NETHERITE);
+                    output.accept(PufferfishItems.RADIANT);
                     PufferfishItems.COPPER_VARIANTS.forEach(output::accept);
                     output.accept(PufferfishItems.IRON);
                     output.accept(PufferfishItems.DIAMOND);

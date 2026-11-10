@@ -91,6 +91,21 @@ public final class PufferfishItems {
             return EquipmentSlot.HEAD;
         }
     });
+    public static final DeferredItem<Item> RADIANT = ITEMS.register("radiant_pufferfish", () -> new Item(
+            new Item.Properties().rarity(Rarity.EPIC).fireResistant().attributes(ItemAttributeModifiers.builder()
+                    .add(Attributes.ARMOR, new AttributeModifier(KaleidoscopePufferfish.id("radiant_head_armor"),
+                            3, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD)
+                    .add(Attributes.ARMOR_TOUGHNESS, new AttributeModifier(KaleidoscopePufferfish.id("radiant_head_toughness"),
+                            3, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD)
+                    .build())) {
+        @Override
+        public boolean isFoil(ItemStack stack) { return true; }
+
+        @Override
+        public EquipmentSlot getEquipmentSlot(ItemStack stack) {
+            return EquipmentSlot.HEAD;
+        }
+    });
 
     /// A fire-resistant mace-strength fish granting head armor, toughness, knockback resistance, and reduced movement speed.
     public static final DeferredItem<HeavyPufferfishItem> HEAVY = ITEMS.register("heavy_pufferfish", () -> new HeavyPufferfishItem(
@@ -147,6 +162,7 @@ public final class PufferfishItems {
         if (stack.is(IRON.get())) return "iron";
         if (stack.is(DIAMOND.get())) return "diamond";
         if (stack.is(GOLDEN.get())) return "golden";
+        if (stack.is(RADIANT.get())) return "radiant";
         return null;
     }
 
@@ -173,7 +189,7 @@ public final class PufferfishItems {
 
     /// Returns whether the stack is a fish or flail with netherite combat properties.
     public static boolean hasNetheriteCombat(ItemStack stack) {
-        return isNetherite(stack) || hasHeavyCombat(stack) || stack.is(NETHERITE_FLAIL.get());
+        return isNetherite(stack) || stack.is(RADIANT.get()) || hasHeavyCombat(stack) || stack.is(NETHERITE_FLAIL.get());
     }
 
     /// Returns whether the stack supports pufferfish melee damage and poison.

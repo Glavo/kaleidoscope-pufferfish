@@ -78,6 +78,7 @@ public final class PufferfishSpriteSource implements SpriteSource {
         addItem(manager, output, "netherite_pufferfish", PufferfishTextures.NETHERITE_COLOR);
         addItem(manager, output, "golden_pufferfish", 0);
         addItem(manager, output, "heavy_pufferfish", 0);
+        addItem(manager, output, "radiant_pufferfish", 0);
         for (var material : new String[] {"iron", "diamond"}) {
             addItem(manager, output, material + "_pufferfish", 0);
         }
@@ -121,7 +122,7 @@ public final class PufferfishSpriteSource implements SpriteSource {
                     .ifPresent(resource -> output.add(id, loader -> loader.loadSprite(id, resource, (name, size, image, metadata) -> {
                         if (itemName.equals("heavy_pufferfish")) HeavyPufferfishVisuals.recolor(image, false);
                         else if (itemName.equals("golden_pufferfish")) GoldenPufferfishTexture.recolor(image);
-                        else if (itemName.endsWith("copper_pufferfish") || itemName.equals("iron_pufferfish") || itemName.equals("diamond_pufferfish")) {
+                        else if (itemName.endsWith("copper_pufferfish") || itemName.equals("iron_pufferfish") || itemName.equals("diamond_pufferfish") || itemName.equals("radiant_pufferfish")) {
                             MaterialPufferfishTexture.recolor(image, itemName.substring(0, itemName.length() - "_pufferfish".length()), false);
                         }
                         else PufferfishTextures.recolor(image, color);

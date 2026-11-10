@@ -52,7 +52,7 @@ public final class PufferfishCombat {
                 meleeDamage - 1, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
         double speed = PufferfishItems.isFlail(stack) ? 20.0 / Math.max(1, PufferfishCombatConfig.value(PufferfishCombatConfig.THROW_COOLDOWN_TICKS))
                 : PufferfishItems.hasHeavyCombat(stack) ? 0.6
-                : PufferfishCombatConfig.value(PufferfishItems.isNetherite(stack)
+                : PufferfishCombatConfig.value(PufferfishItems.hasNetheriteCombat(stack)
                 ? PufferfishCombatConfig.NETHERITE_ATTACK_SPEED : PufferfishCombatConfig.NORMAL_ATTACK_SPEED);
         event.addModifier(Attributes.ATTACK_SPEED, new AttributeModifier(Item.BASE_ATTACK_SPEED_ID,
                 speed - 4, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);

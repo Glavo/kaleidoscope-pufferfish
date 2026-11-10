@@ -81,7 +81,7 @@ public final class PufferfishFlailModel {
         stack = PufferfishItems.flailFish(stack);
         var color = stack.get(KaleidoscopePufferfish.COLOR.get());
         var texture = PufferfishItems.hasHeavyCombat(stack) ? PufferfishTextures.heavyEntity()
-                : PufferfishItems.hasNetheriteCombat(stack) ? PufferfishTextures.netheriteEntity()
+                : PufferfishItems.isNetherite(stack) ? PufferfishTextures.netheriteEntity()
                 : PufferfishItems.materialName(stack) != null ? PufferfishTextures.materialEntity(PufferfishItems.materialName(stack))
                 : color == null ? FISH_TEXTURE : PufferfishTextures.entity(color);
         pose.pushPose();
