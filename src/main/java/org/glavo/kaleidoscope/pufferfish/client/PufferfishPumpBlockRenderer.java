@@ -8,7 +8,6 @@ import com.mojang.math.Axis;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
-import org.glavo.kaleidoscope.pufferfish.PufferfishDurability;
 import org.glavo.kaleidoscope.pufferfish.PufferfishPumpBlock;
 import org.glavo.kaleidoscope.pufferfish.PufferfishPumpBlockEntity;
 
@@ -23,11 +22,11 @@ public final class PufferfishPumpBlockRenderer implements BlockEntityRenderer<Pu
         pose.pushPose();
         pose.translate(0.5, 0, 0.5);
         pose.mulPose(Axis.YP.rotationDegrees(-entity.getBlockState().getValue(PufferfishPumpBlock.FACING).toYRot()));
-        model.render(entity.pump(), entity.compression(partialTick), pose, buffers, light, overlay);
         var stack = entity.fish();
+        model.render(entity.pump(), stack, entity.compression(partialTick), pose, buffers, light, overlay);
         if (!stack.isEmpty()) {
-            float height = DeflatingPufferfishModel.height(PufferfishDurability.deflationStage(stack));
-            pose.translate(5.0 / 16, 1.0 / 16 + height * 0.10, 0);
+            var center = PufferfishPumpModel.fishCenter(stack);
+            pose.translate(center.x, center.y, center.z);
             pose.scale(0.5F, 0.5F, 0.5F);
             fish.renderHead(stack, pose, buffers, light, overlay, 0);
         }
