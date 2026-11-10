@@ -165,6 +165,8 @@ public class KaleidoscopePufferfish {
         NeoForge.EVENT_BUS.addListener(PufferfishColors::interact);
         NeoForge.EVENT_BUS.addListener(PufferfishColors::colorDrops);
         NeoForge.EVENT_BUS.addListener(PufferfishMobs::naturalColors);
+        NeoForge.EVENT_BUS.addListener(PufferfishFriendlyFire::damage);
+        NeoForge.EVENT_BUS.addListener(PufferfishFriendlyFire::effect);
         NeoForge.EVENT_BUS.addListener(PufferfishColors::legacyTooltip);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishThrowing::use);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishPlacement::use);
