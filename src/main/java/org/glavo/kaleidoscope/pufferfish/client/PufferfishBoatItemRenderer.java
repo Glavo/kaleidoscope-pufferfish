@@ -15,6 +15,7 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import org.glavo.kaleidoscope.pufferfish.KaleidoscopePufferfish;
+import org.glavo.kaleidoscope.pufferfish.PufferfishItems;
 
 /// Uses the world hull for a three-quarter inventory view and held items.
 public final class PufferfishBoatItemRenderer extends BlockEntityWithoutLevelRenderer implements IClientItemExtensions {
@@ -42,6 +43,10 @@ public final class PufferfishBoatItemRenderer extends BlockEntityWithoutLevelRen
         else pose.scale(0.34F, -0.34F, -0.34F);
         model.restPaddle();
         model.renderToBuffer(pose, ItemRenderer.getFoilBufferDirect(buffers, model.renderType(texture), true, stack.hasFoil()), light, overlay);
+        if (PufferfishItems.isRadiant(stack)) {
+            pose.scale(3, 1.1F, 1.2F);
+            RadiantPufferfishVisuals.renderCentered(pose, buffers, overlay);
+        }
         pose.popPose();
     }
 }

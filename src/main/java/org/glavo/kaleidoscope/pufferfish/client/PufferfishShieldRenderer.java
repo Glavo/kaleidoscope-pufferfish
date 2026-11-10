@@ -19,6 +19,7 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import org.glavo.kaleidoscope.pufferfish.KaleidoscopePufferfish;
+import org.glavo.kaleidoscope.pufferfish.PufferfishItems;
 
 /// Keeps the vanilla shield frame and handle, covering its front plate with matching skin.
 public final class PufferfishShieldRenderer extends BlockEntityWithoutLevelRenderer implements IClientItemExtensions {
@@ -51,6 +52,11 @@ public final class PufferfishShieldRenderer extends BlockEntityWithoutLevelRende
         vertices.addVertex(pose.last(), -5F / 16, 10F / 16, z).setColor(-1).setUv(skin.getU0(), skin.getV1()).setOverlay(overlay).setLight(light).setNormal(pose.last(), 0, 0, -1);
         vertices.addVertex(pose.last(), 5F / 16, 10F / 16, z).setColor(-1).setUv(skin.getU1(), skin.getV1()).setOverlay(overlay).setLight(light).setNormal(pose.last(), 0, 0, -1);
         vertices.addVertex(pose.last(), 5F / 16, -10F / 16, z).setColor(-1).setUv(skin.getU1(), skin.getV0()).setOverlay(overlay).setLight(light).setNormal(pose.last(), 0, 0, -1);
+        if (PufferfishItems.isRadiant(stack)) {
+            pose.translate(0, 0, z);
+            pose.scale(1, 1.4F, 1);
+            RadiantPufferfishVisuals.renderCentered(pose, buffers, overlay);
+        }
         pose.popPose();
     }
 }

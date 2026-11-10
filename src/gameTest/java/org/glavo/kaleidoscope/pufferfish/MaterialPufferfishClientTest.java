@@ -29,6 +29,7 @@ public final class MaterialPufferfishClientTest {
     private MaterialPufferfishClientTest() {}
 
     public static void verify(Minecraft minecraft) {
+        verifyRadiantItems(minecraft);
         var target = new TextureTarget(1280, 320, true, Minecraft.ON_OSX);
         target.setClearColor(0.16F, 0.18F, 0.21F, 1);
         target.clear(Minecraft.ON_OSX);
@@ -87,6 +88,57 @@ public final class MaterialPufferfishClientTest {
             minecraft.getMainRenderTarget().bindWrite(true);
         }
     }
+
+    private static void verifyRadiantItems(Minecraft minecraft) {
+        var items = net.minecraft.core.registries.BuiltInRegistries.ITEM.stream()
+                .map(ItemStack::new).filter(PufferfishItems::isRadiant).toList();
+        var target = new TextureTarget(1000, 400, true, Minecraft.ON_OSX);
+        target.setClearColor(0.16F, 0.18F, 0.21F, 1);
+        target.clear(Minecraft.ON_OSX);
+        target.bindWrite(true);
+        RenderSystem.backupProjectionMatrix();
+        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 1000, 400, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
+        var view = RenderSystem.getModelViewStack();
+        view.pushMatrix().identity();
+        RenderSystem.applyModelViewMatrix();
+        RenderSystem.setShaderColor(1, 1, 1, 1);
+        try {
+            var buffers = minecraft.renderBuffers().bufferSource();
+            var stars = RenderType.entityTranslucentEmissive(net.minecraft.resources.ResourceLocation.withDefaultNamespace("textures/particle/flash.png"));
+            for (int i = 0; i < items.size(); i++) {
+                var stack = items.get(i);
+                var model = minecraft.getItemRenderer().getModel(stack, null, null, 0);
+                if (model.usesBlockLight()) Lighting.setupFor3DItems();
+                else Lighting.setupForFlatItems();
+                for (var context : ItemDisplayContext.values()) {
+                    boolean[] hasTrails = {false};
+                    var pose = new PoseStack();
+                    pose.translate(context == ItemDisplayContext.GUI ? 100 + i % 5 * 200 : -10000, 100 + i / 5 * 200, 0);
+                    pose.scale(112, -112, 112);
+                    minecraft.getItemRenderer().renderStatic(stack, context, 15728880, OverlayTexture.NO_OVERLAY, pose, type -> {
+                        if (type == stars) hasTrails[0] = true;
+                        return buffers.getBuffer(type);
+                    }, null, 0);
+                    if (!PufferfishItems.isPufferfish(stack) && !hasTrails[0]) {
+                        throw new IllegalStateException("Missing radiant item trails: " + stack + ", " + context);
+                    }
+                    buffers.endBatch();
+                }
+            }
+            try (var image = Screenshot.takeScreenshot(target)) {
+                image.writeToFile(Path.of("radiant-items-preview.png"));
+            }
+        } catch (java.io.IOException exception) {
+            throw new IllegalStateException("Could not save radiant item preview", exception);
+        } finally {
+            view.popMatrix();
+            RenderSystem.applyModelViewMatrix();
+            RenderSystem.restoreProjectionMatrix();
+            target.destroyBuffers();
+            minecraft.getMainRenderTarget().bindWrite(true);
+        }
+    }
+
     private static void verifyRadiantSprite(net.minecraft.client.resources.model.BakedModel model) {
         var sprite = model.getParticleIcon().contents();
         if (model.isGui3d() || model.isCustomRenderer() || sprite.getUniqueFrames().count() < 2) {

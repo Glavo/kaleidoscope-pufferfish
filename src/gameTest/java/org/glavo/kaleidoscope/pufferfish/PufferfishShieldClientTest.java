@@ -50,7 +50,7 @@ public final class PufferfishShieldClientTest {
                 var capture = new Capture();
                 var pose = new PoseStack();
                 IClientItemExtensions.of(stack).getCustomRenderer().renderByItem(stack, context, pose, capture, LIGHT, OverlayTexture.NO_OVERLAY);
-                if (capture.vertices != 52 || !pose.clear()) throw new IllegalStateException("Shield frame, grip or skin did not render");
+                if (capture.vertices != (PufferfishItems.isRadiant(stack) ? 180 : 52) || !pose.clear()) throw new IllegalStateException("Shield frame, grip, skin or radiant trails did not render");
             }
         }
         preview(minecraft);

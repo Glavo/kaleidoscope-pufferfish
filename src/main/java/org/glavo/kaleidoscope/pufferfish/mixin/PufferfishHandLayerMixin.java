@@ -39,7 +39,7 @@ public abstract class PufferfishHandLayerMixin<T extends LivingEntity, M extends
             callback.cancel();
             return;
         }
-        if (entity instanceof Player && PufferfishItems.isPufferfish(stack) && !PufferfishItems.isRadiant(stack)) {
+        if (entity instanceof Player && PufferfishItems.isPufferfish(stack)) {
             if (kaleidoscope$gloveRenderer == null) kaleidoscope$gloveRenderer = new PufferfishGloveRenderer();
             kaleidoscope$gloveRenderer.renderAttached(getParentModel(), entity, stack, arm, pose, buffers, light, entity.tickCount);
             callback.cancel();

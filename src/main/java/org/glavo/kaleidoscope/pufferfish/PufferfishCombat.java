@@ -31,6 +31,7 @@ public final class PufferfishCombat {
     public static final int POISON_DURATION_TICKS = 60;
     public static final int RADIANT_WITHER_DURATION_TICKS = 100;
     public static final int RADIANT_GLOW_DURATION_TICKS = 200;
+    public static final int RADIANT_BLINDNESS_DURATION_TICKS = 60;
     /// Prevents construction of this combat utility.
     private PufferfishCombat() {}
 
@@ -93,6 +94,9 @@ public final class PufferfishCombat {
     public static void hitEffects(ItemStack stack, LivingEntity target, Entity source, Vec3 direction) {
         if (PufferfishItems.isRadiant(stack)) {
             var current = target.getEffect(MobEffects.WITHER);
+            if (current != null && current.getAmplifier() >= 9) {
+                target.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, RADIANT_BLINDNESS_DURATION_TICKS), source);
+            }
             int amplifier = current == null ? 0 : Math.min(9, current.getAmplifier() + 1);
             target.addEffect(new MobEffectInstance(MobEffects.WITHER, RADIANT_WITHER_DURATION_TICKS, amplifier), source);
             applyRadiantGlow(target, source);

@@ -17,6 +17,7 @@
     "PufferfishRendererMixin",
     "PufferfishHeadLayerMixin",
     "PufferfishHandLayerMixin",
+    "RadiantPufferfishItemMixin",
     "PufferfishFlailArmMixin"
   ],
   "injectors": {

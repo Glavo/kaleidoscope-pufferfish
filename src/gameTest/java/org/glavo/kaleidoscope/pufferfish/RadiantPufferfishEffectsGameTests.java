@@ -49,6 +49,9 @@ public final class RadiantPufferfishEffectsGameTests {
             var effect = target.getEffect(MobEffects.WITHER);
             helper.assertTrue(effect != null && effect.getAmplifier() == Math.min(hit, 9) && effect.getDuration() == 100
                     && !target.hasEffect(MobEffects.POISON), "Melee wither did not advance exactly once or exceeded level ten");
+            var blindness = target.getEffect(MobEffects.BLINDNESS);
+            helper.assertTrue(hit < 10 ? blindness == null : blindness != null && blindness.getDuration() == 60 && blindness.getAmplifier() == 0,
+                    "Blindness should start only on hits against existing wither ten");
         }
         target.removeAllEffects();
         target.addEffect(new MobEffectInstance(MobEffects.WITHER, 20, 1));
@@ -70,6 +73,33 @@ public final class RadiantPufferfishEffectsGameTests {
         target.removeAllEffects();
         PufferfishCombat.hitEffects(new ItemStack(PufferfishItems.NETHERITE.get()), target, player, Vec3.ZERO);
         helper.assertTrue(!target.hasEffect(MobEffects.GLOWING), "Non-radiant attacks applied glowing");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void cappedWitherBlindsOnThrowsAndFlailsButNotRetaliation(GameTestHelper helper) {
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        var target = helper.spawn(EntityType.VILLAGER, new BlockPos(3, 2, 2));
+        target.setNoAi(true);
+        for (var weapon : new net.minecraft.world.item.Item[] {PufferfishItems.RADIANT.get(), PufferfishItems.RADIANT_FLAIL.get()}) {
+            var stack = new ItemStack(weapon);
+            target.removeAllEffects();
+            target.addEffect(new MobEffectInstance(MobEffects.WITHER, 100, 9));
+            PufferfishCombat.applyPassiveEffect(stack, target, player);
+            helper.assertTrue(!target.hasEffect(MobEffects.BLINDNESS), "Passive radiant effects must not blind");
+            if (PufferfishItems.isFlail(stack)) {
+                PufferfishCombat.hitEffects(stack, target, player, Vec3.ZERO);
+            } else {
+                var projectile = new ThrownPufferfish(helper.getLevel(), player);
+                projectile.setItem(stack);
+                projectile.setPos(target.getX() - 1, target.getY() + 0.5, target.getZ());
+                projectile.setDeltaMovement(2, 0, 0);
+                projectile.tick();
+            }
+            var blindness = target.getEffect(MobEffects.BLINDNESS);
+            helper.assertTrue(blindness != null && blindness.getAmplifier() == 0 && blindness.getDuration() == 60,
+                    "Active radiant hits against wither ten should blind for three seconds");
+        }
         helper.succeed();
     }
 

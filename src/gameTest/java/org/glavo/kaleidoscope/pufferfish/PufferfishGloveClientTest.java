@@ -57,6 +57,7 @@ public final class PufferfishGloveClientTest {
         stacks.add(new ItemStack(PufferfishItems.NETHERITE.get()));
         stacks.add(new ItemStack(PufferfishItems.HEAVY.get()));
         stacks.add(new ItemStack(PufferfishItems.GOLDEN.get()));
+        stacks.add(new ItemStack(PufferfishItems.RADIANT.get()));
         stacks.addAll(java.util.List.of(new ItemStack(PufferfishItems.COPPER.get()), new ItemStack(PufferfishItems.IRON.get()), new ItemStack(PufferfishItems.DIAMOND.get())));
         var glove = new PufferfishGloveRenderer();
         for (boolean slim : new boolean[] {false, true}) {
@@ -73,7 +74,7 @@ public final class PufferfishGloveClientTest {
                     layer.render(pose, capture, LIGHT, player, 0, 0, 0, 0, 0, 0);
                     var vertices = capture.parts.get(type(stack));
                     float center = arm == HumanoidArm.RIGHT ? -0.36F : 0.36F;
-                    if (capture.parts.size() != 1 || vertices == null || vertices.count < 100
+                    if (capture.parts.size() != (PufferfishItems.isRadiant(stack) ? 2 : 1) || vertices == null || vertices.count < 100
                             || Math.abs((vertices.minX + vertices.maxX) / 2 - center) > 0.05F
                             || vertices.minY < 0.28F || vertices.maxY > 0.95F || !pose.clear()) {
                         throw new IllegalStateException("Glove did not replace held fish or cover the hand: " + stack + ", " + arm
@@ -151,7 +152,7 @@ public final class PufferfishGloveClientTest {
                 model.renderToBuffer(pose, buffers.getBuffer(RenderType.entityCutoutNoCull(player.getSkin().texture())), LIGHT, OverlayTexture.NO_OVERLAY);
                 glove.renderAttached(model, player, PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), DyeColor.RED), HumanoidArm.RIGHT,
                         pose, buffers, LIGHT, 0);
-                glove.renderAttached(model, player, new ItemStack(i < 2 ? PufferfishItems.NETHERITE.get() : PufferfishItems.HEAVY.get()),
+                glove.renderAttached(model, player, new ItemStack(i < 2 ? PufferfishItems.NETHERITE.get() : PufferfishItems.RADIANT.get()),
                         HumanoidArm.LEFT, pose, buffers, LIGHT, 0);
                 buffers.endBatch();
             }
@@ -159,7 +160,7 @@ public final class PufferfishGloveClientTest {
                 var pose = new PoseStack();
                 pose.translate(150 + i * 300, 620, 0);
                 pose.scale(160, -160, 160);
-                glove.renderFirstPerson(player, new ItemStack(i < 2 ? Items.PUFFERFISH : PufferfishItems.HEAVY.get()), i % 2 == 0 ? HumanoidArm.RIGHT : HumanoidArm.LEFT,
+                glove.renderFirstPerson(player, new ItemStack(i < 2 ? Items.PUFFERFISH : PufferfishItems.RADIANT.get()), i % 2 == 0 ? HumanoidArm.RIGHT : HumanoidArm.LEFT,
                         0, i < 2 ? 0 : 0.4F, pose, buffers, LIGHT);
                 buffers.endBatch();
             }
