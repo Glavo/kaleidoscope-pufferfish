@@ -29,6 +29,7 @@ import net.neoforged.neoforge.common.damagesource.DamageContainer;
 /// Calculates pufferfish weapon damage and applies shared melee and projectile effects.
 public final class PufferfishCombat {
     public static final int POISON_DURATION_TICKS = 60;
+    public static final int RADIANT_WITHER_DURATION_TICKS = 100;
     /// Prevents construction of this combat utility.
     private PufferfishCombat() {}
 
@@ -92,7 +93,7 @@ public final class PufferfishCombat {
         if (PufferfishItems.isRadiant(stack)) {
             var current = target.getEffect(MobEffects.WITHER);
             int amplifier = current == null ? 0 : Math.min(9, current.getAmplifier() + 1);
-            target.addEffect(new MobEffectInstance(MobEffects.WITHER, POISON_DURATION_TICKS, amplifier), source);
+            target.addEffect(new MobEffectInstance(MobEffects.WITHER, RADIANT_WITHER_DURATION_TICKS, amplifier), source);
         } else {
             applyPassiveEffect(stack, target, source);
         }
@@ -113,7 +114,7 @@ public final class PufferfishCombat {
     @javax.annotation.Nullable
     public static MobEffectInstance passiveEffect(ItemStack stack) {
         stack = PufferfishItems.flailFish(stack);
-        if (PufferfishItems.isRadiant(stack)) return new MobEffectInstance(MobEffects.WITHER, POISON_DURATION_TICKS, 1);
+        if (PufferfishItems.isRadiant(stack)) return new MobEffectInstance(MobEffects.WITHER, RADIANT_WITHER_DURATION_TICKS, 1);
         int copper = CopperPufferfish.index(stack);
         if (copper >= 4) return null;
         int duration = copper > 0 ? copper * 120 : POISON_DURATION_TICKS;

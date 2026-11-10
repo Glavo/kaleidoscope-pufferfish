@@ -66,7 +66,7 @@ public final class PufferfishContactDamage {
         if (state.getBlock() instanceof PufferfishSkinBlock) {
             if (CopperPufferfish.skinIndex(state.getBlock().asItem().getDefaultInstance()) >= 4) return null;
             boolean radiant = state.is(PufferfishBlocks.RADIANT_SKIN.get());
-            return new MobEffectInstance(radiant ? MobEffects.WITHER : MobEffects.POISON, 120, radiant ? 1 : 0);
+            return new MobEffectInstance(radiant ? MobEffects.WITHER : MobEffects.POISON, radiant ? PufferfishCombat.RADIANT_WITHER_DURATION_TICKS : 120, radiant ? 1 : 0);
         }
         if (level.getBlockEntity(pos) instanceof PlacedPufferfishBlockEntity placed && !placed.fish().isEmpty()) {
             return PufferfishCombat.passiveEffect(placed.fish());

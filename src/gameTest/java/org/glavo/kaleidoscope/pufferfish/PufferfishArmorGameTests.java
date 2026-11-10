@@ -211,7 +211,7 @@ public final class PufferfishArmorGameTests {
                 player.hurt(player.damageSources().mobAttack(attacker), 2);
                 var poison = attacker.getEffect(PufferfishItems.isRadiant(armor) ? MobEffects.WITHER : MobEffects.POISON);
                 String name = item.getId().getPath();
-                int duration = name.startsWith("oxidized_copper_") ? 360 : name.startsWith("weathered_copper_") ? 240
+                int duration = PufferfishItems.isRadiant(armor) ? 100 : name.startsWith("oxidized_copper_") ? 360 : name.startsWith("weathered_copper_") ? 240
                         : name.startsWith("exposed_copper_") ? 120 : 60;
                 int amplifier = PufferfishItems.isRadiant(armor) ? 1 : name.startsWith("oxidized_copper_") ? 2 : name.startsWith("weathered_copper_") ? 1 : 0;
                 helper.assertTrue(name.startsWith("waxed_") ? poison == null

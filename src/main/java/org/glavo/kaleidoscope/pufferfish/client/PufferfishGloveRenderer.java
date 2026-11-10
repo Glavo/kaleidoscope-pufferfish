@@ -37,7 +37,7 @@ public final class PufferfishGloveRenderer {
 
     public static void renderHand(RenderHandEvent event) {
         var player = Minecraft.getInstance().player;
-        if (player == null || !PufferfishItems.isPufferfish(event.getItemStack())
+        if (player == null || !PufferfishItems.isPufferfish(event.getItemStack()) || PufferfishItems.isRadiant(event.getItemStack())
                 || player.isUsingItem() && player.getUsedItemHand() == event.getHand()) return;
         if (firstPerson == null) firstPerson = new PufferfishGloveRenderer();
         HumanoidArm arm = event.getHand() == InteractionHand.MAIN_HAND ? player.getMainArm() : player.getMainArm().getOpposite();

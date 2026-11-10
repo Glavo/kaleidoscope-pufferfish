@@ -50,6 +50,7 @@ public final class MaterialPufferfishClientTest {
                 var material = PufferfishItems.materialName(stack);
                 var model = minecraft.getItemRenderer().getModel(stack, null, null, 0);
                 var texture = PufferfishTextures.materialEntity(material);
+                if (material.equals("radiant")) verifyRadiantSprite(model);
                 if (model == minecraft.getModelManager().getMissingModel() || model.getQuads(null, null, RandomSource.create()).isEmpty()
                         || !model.getParticleIcon().contents().name().equals(KaleidoscopePufferfish.id("item/" + material + "_pufferfish"))
                         || !texture.getNamespace().equals(KaleidoscopePufferfish.MODID) || stack.getHoverName().getString().startsWith("item.")) {
@@ -84,6 +85,36 @@ public final class MaterialPufferfishClientTest {
             RenderSystem.restoreProjectionMatrix();
             target.destroyBuffers();
             minecraft.getMainRenderTarget().bindWrite(true);
+        }
+    }
+    private static void verifyRadiantSprite(net.minecraft.client.resources.model.BakedModel model) {
+        var sprite = model.getParticleIcon().contents();
+        if (model.isGui3d() || model.isCustomRenderer() || sprite.getUniqueFrames().count() < 2) {
+            throw new IllegalStateException("Radiant item must remain flat and animate its star trails");
+        }
+        var source = sprite.getOriginalImage();
+        int size = sprite.width();
+        var hashes = new java.util.HashSet<Long>();
+        for (int frame : sprite.getUniqueFrames().toArray()) {
+            long hash = 1;
+            for (int y = 0; y < size; y++) for (int x = 0; x < size; x++) {
+                hash = hash * 31 + source.getPixelRGBA(x, frame * size + y);
+            }
+            hashes.add(hash);
+        }
+        if (hashes.size() < 16) throw new IllegalStateException("Radiant star trail animation is static");
+        try (var preview = new com.mojang.blaze3d.platform.NativeImage(size * 6 * 4, size * 4, false)) {
+            for (int sample = 0; sample < 6; sample++) for (int y = 0; y < size * 4; y++) for (int x = 0; x < size * 4; x++) {
+                int pixel = source.getPixelRGBA(x / 4, sample * 8 * size + y / 4);
+                int alpha = pixel >>> 24;
+                int red = ((pixel & 255) * alpha + 41 * (255 - alpha)) / 255;
+                int green = ((pixel >>> 8 & 255) * alpha + 46 * (255 - alpha)) / 255;
+                int blue = ((pixel >>> 16 & 255) * alpha + 54 * (255 - alpha)) / 255;
+                preview.setPixelRGBA(sample * size * 4 + x, y, 0xFF000000 | blue << 16 | green << 8 | red);
+            }
+            preview.writeToFile(Path.of("radiant-item-animation-preview.png"));
+        } catch (java.io.IOException exception) {
+            throw new IllegalStateException("Could not save radiant animation preview", exception);
         }
     }
 }

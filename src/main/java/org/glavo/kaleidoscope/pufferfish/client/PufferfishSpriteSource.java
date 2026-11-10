@@ -127,7 +127,7 @@ public final class PufferfishSpriteSource implements SpriteSource {
                             MaterialPufferfishTexture.recolor(image, itemName.substring(0, itemName.length() - "_pufferfish".length()), false);
                         }
                         else PufferfishTextures.recolor(image, color);
-                        if (itemName.equals("radiant_pufferfish")) RadiantPufferfishVisuals.drawIconHalos(image);
+                        if (itemName.equals("radiant_pufferfish")) return RadiantPufferfishVisuals.createItemSprite(name, size, image);
                         if (itemName.equals("netherite_pufferfish")) PufferfishTextures.whiteEyes(image, false, PufferfishTextures.NETHERITE_EYE_COLOR);
                         return new SpriteContents(name, size, image, metadata);
                     })));

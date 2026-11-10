@@ -39,7 +39,7 @@ public final class RadiantPufferfishEffectsGameTests {
             for (int tick = 0; tick < 25; tick++) player.tick();
             player.attack(target);
             var effect = target.getEffect(MobEffects.WITHER);
-            helper.assertTrue(effect != null && effect.getAmplifier() == Math.min(hit, 9) && effect.getDuration() == 60
+            helper.assertTrue(effect != null && effect.getAmplifier() == Math.min(hit, 9) && effect.getDuration() == 100
                     && !target.hasEffect(MobEffects.POISON), "Melee wither did not advance exactly once or exceeded level ten");
         }
         target.removeAllEffects();
@@ -51,7 +51,7 @@ public final class RadiantPufferfishEffectsGameTests {
         projectile.setDeltaMovement(2, 0, 0);
         projectile.tick();
         helper.assertTrue(target.getEffect(MobEffects.WITHER).getAmplifier() == 2
-                && target.getEffect(MobEffects.WITHER).getDuration() == 60, "Thrown fish did not escalate existing wither");
+                && target.getEffect(MobEffects.WITHER).getDuration() == 100, "Thrown fish did not escalate existing wither");
         target.removeAllEffects();
         PufferfishCombat.hitEffects(new ItemStack(PufferfishItems.RADIANT_FLAIL.get()), target, player, Vec3.ZERO);
         helper.assertTrue(target.getEffect(MobEffects.WITHER).getAmplifier() == 0, "Flail did not start with wither one");
@@ -87,7 +87,7 @@ public final class RadiantPufferfishEffectsGameTests {
                 player.setHealth(20);
                 player.invulnerableTime = 0;
                 player.hurt(player.damageSources().mobAttack(attacker), 2);
-                helper.assertTrue(attacker.hasEffect(MobEffects.WITHER) && attacker.getEffect(MobEffects.WITHER).getAmplifier() == 1
+                helper.assertTrue(attacker.hasEffect(MobEffects.WITHER) && attacker.getEffect(MobEffects.WITHER).getAmplifier() == 1 && attacker.getEffect(MobEffects.WITHER).getDuration() == 100
                         && !attacker.hasEffect(MobEffects.POISON), "Passive retaliation escalated or applied poison: " + variant);
             }
         }
@@ -107,7 +107,7 @@ public final class RadiantPufferfishEffectsGameTests {
                 target.tickCount = tick;
                 target.invulnerableTime = 0;
                 NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(target));
-                helper.assertTrue(target.hasEffect(MobEffects.WITHER) && target.getEffect(MobEffects.WITHER).getAmplifier() == 1
+                helper.assertTrue(target.hasEffect(MobEffects.WITHER) && target.getEffect(MobEffects.WITHER).getAmplifier() == 1 && target.getEffect(MobEffects.WITHER).getDuration() == 100
                         && !target.hasEffect(MobEffects.POISON), "Contact should apply fixed wither two");
             }
         }
