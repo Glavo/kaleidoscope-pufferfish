@@ -31,7 +31,7 @@ public record NetheritePufferfishUpgradeRecipe(SmithingTransformRecipe delegate)
                 && translated.getKey().equals("item.kaleidoscope_pufferfish.dyed_pufferfish")) {
             result.remove(DataComponents.ITEM_NAME);
         }
-        return result;
+        return PufferfishDurability.transfer(input.base(), result);
     }
 
     @Override

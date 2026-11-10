@@ -80,8 +80,9 @@ public final class PufferfishMeleeGameTests {
             var poison = target.getEffect(MobEffects.POISON);
             helper.assertTrue(poison != null && poison.getDuration() == 60 && poison.getAmplifier() == (netherite ? 1 : 0),
                     "Melee poison differs from throwing");
-            helper.assertTrue(player.getMainHandItem().getCount() == 4 && ItemStack.isSameItemSameComponents(stack, player.getMainHandItem()),
-                    "Melee consumed or changed pufferfish");
+            helper.assertTrue(player.getMainHandItem().getCount() == 1 && player.getInventory().countItem(stack.getItem()) == 4
+                    && ItemStack.isSameItemSameComponents(PufferfishDurabilityGameTests.worn(stack), player.getMainHandItem()),
+                    "Melee did not separate and wear exactly one fish");
             target.discard();
         }
         helper.succeed();

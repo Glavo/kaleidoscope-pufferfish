@@ -44,6 +44,8 @@ public class KaleidoscopePufferfish {
             () -> DataComponentType.<DyeColor>builder().persistent(DyeColor.CODEC).networkSynchronized(DyeColor.STREAM_CODEC).build());
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<DyeColor>> ENTITY_COLOR = ATTACHMENTS.register("color",
             () -> AttachmentType.builder(() -> DyeColor.WHITE).serialize(DyeColor.CODEC).sync(DyeColor.STREAM_CODEC).build());
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<ItemStack>> FISH_ITEM = ATTACHMENTS.register("fish_item",
+            () -> AttachmentType.builder(() -> ItemStack.EMPTY).serialize(ItemStack.OPTIONAL_CODEC).build());
     public static final DeferredHolder<EntityType<?>, EntityType<ThrownPufferfish>> THROWN_PUFFERFISH = ENTITIES.register("thrown_pufferfish",
             () -> EntityType.Builder.<ThrownPufferfish>of(ThrownPufferfish::new, MobCategory.MISC)
                     .sized(0.25F, 0.25F).clientTrackingRange(4).updateInterval(10).build(id("thrown_pufferfish").toString()));
@@ -57,6 +59,8 @@ public class KaleidoscopePufferfish {
     /// The shaped flail recipe serializer, which retains the ingredient fish's component changes.
     public static final DeferredHolder<RecipeSerializer<?>, PufferfishFlailRecipe.Serializer> FLAIL_RECIPE =
             RECIPES.register("pufferfish_flail", PufferfishFlailRecipe.Serializer::new);
+    public static final DeferredHolder<RecipeSerializer<?>, PufferfishMaterialRecipe.Serializer> MATERIAL_RECIPE =
+            RECIPES.register("material_pufferfish", PufferfishMaterialRecipe.Serializer::new);
     public static final DeferredHolder<RecipeSerializer<?>, SimpleCraftingRecipeSerializer<PufferfishDyeRecipe>> DYE_RECIPE =
             RECIPES.register("dye_pufferfish", () -> new SimpleCraftingRecipeSerializer<>(PufferfishDyeRecipe::new));
     public static final DeferredHolder<RecipeSerializer<?>, SimpleCraftingRecipeSerializer<PufferfishBucketRecipe>> BUCKET_RECIPE =
@@ -173,6 +177,9 @@ public class KaleidoscopePufferfish {
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishPlacement::use);
         NeoForge.EVENT_BUS.addListener(PufferfishCombat::attributes);
         NeoForge.EVENT_BUS.addListener(PufferfishCombat::meleeHit);
+        NeoForge.EVENT_BUS.addListener(PufferfishDurability::beforeAttack);
+        NeoForge.EVENT_BUS.addListener(PufferfishDurability::beforeDamage);
+        NeoForge.EVENT_BUS.addListener(PufferfishDurability::repair);
         NeoForge.EVENT_BUS.addListener(HeavyPufferfishBlock::poisonOnImpact);
         NeoForge.EVENT_BUS.addListener(PufferfishContactDamage::tick);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishConduitSpawning::potentialSpawns);
@@ -182,6 +189,8 @@ public class KaleidoscopePufferfish {
         NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::retaliate);
         NeoForge.EVENT_BUS.addListener(PufferfishArmor::retaliate);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishShields::retaliate);
+        NeoForge.EVENT_BUS.addListener(PufferfishDurability::afterDamage);
+        NeoForge.EVENT_BUS.addListener(PufferfishDurability::tick);
     }
 
     public static ResourceLocation id(String path) {

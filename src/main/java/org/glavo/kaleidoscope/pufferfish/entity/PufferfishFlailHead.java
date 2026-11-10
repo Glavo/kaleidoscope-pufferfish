@@ -263,7 +263,7 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
         var owner = getOwner();
         if (!level().isClientSide() && (!(owner instanceof Player player) || !player.isAlive()
                 || player.isSpectator() || player.level() != level()
-                || !ItemStack.isSameItemSameComponents(player.getItemInHand(getHand()), getItem())
+                || !org.glavo.kaleidoscope.pufferfish.PufferfishDurability.sameWeapon(player.getItemInHand(getHand()), getItem())
                 || (!isSpinning() && tickCount - flightStartTick >= LIFETIME))) {
             discard();
             return;
@@ -377,6 +377,13 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
         }
         setPos(impact);
         super.onHit(result);
+        if (level() instanceof ServerLevel server && getOwner() instanceof Player player
+                && org.glavo.kaleidoscope.pufferfish.PufferfishDurability.sameWeapon(player.getItemInHand(getHand()), getItem())) {
+            var held = player.getItemInHand(getHand());
+            org.glavo.kaleidoscope.pufferfish.PufferfishDurability.damage(held, server, player, LivingEntity.getSlotForHand(getHand()));
+            if (held.isEmpty()) { discard(); return; }
+            setItem(held);
+        }
         beginReturn();
     }
 }

@@ -115,7 +115,7 @@ public final class PufferfishWindBurstGameTests {
                     helper.assertTrue(distant.getDeltaMovement().lengthSqr() == 0, "Higher gust levels enlarged the range");
                     previous = speed;
                     var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, target.getBoundingBox().inflate(4));
-                    helper.assertTrue(drops.size() == 1 && ItemStack.isSameItemSameComponents(drops.getFirst().getItem(), stack),
+                    helper.assertTrue(drops.size() == 1 && ItemStack.isSameItemSameComponents(drops.getFirst().getItem(), PufferfishDurabilityGameTests.worn(stack)),
                             "Gust lost or changed the recovered fish");
                     drops.forEach(ItemEntity::discard);
                     target.discard(); nearby.discard(); distant.discard();
@@ -199,7 +199,7 @@ public final class PufferfishWindBurstGameTests {
                 bolts.forEach(LightningBolt::discard);
                 for (int tick = 0; tick < 100 && !projectile.isRemoved(); tick++) projectile.tick();
                 helper.assertTrue(projectile.isRemoved() && bursts[0] == before + 1
-                        && ItemStack.isSameItemSameComponents(owner.getInventory().getItem(0), stack),
+                        && ItemStack.isSameItemSameComponents(owner.getInventory().getItem(0), PufferfishDurabilityGameTests.worn(stack)),
                         "Return flight repeated the gust or lost enchanted fish");
                 target.discard();
                 clearDrops(helper, target.position());

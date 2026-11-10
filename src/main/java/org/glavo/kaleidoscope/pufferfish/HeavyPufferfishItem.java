@@ -7,7 +7,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Item;
 
-/// A wearable pufferfish using the shared configurable combat hooks without durability consumption.
+/// A wearable pufferfish using shared combat and durability hooks.
 public final class HeavyPufferfishItem extends Item {
     /// Creates a heavy pufferfish with the supplied equipment and item properties.
     public HeavyPufferfishItem(Properties properties) {

@@ -421,7 +421,7 @@ public class PufferfishProjectileGameTests {
         helper.assertTrue(projectile.isRemoved(), "Projectile survived a block impact");
         var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(4))
                 .stream().filter(drop -> drop.getItem().is(Items.PUFFERFISH)).toList();
-        helper.assertTrue(drops.size() == 1 && ItemStack.isSameItemSameComponents(drops.getFirst().getItem(), stack),
+        helper.assertTrue(drops.size() == 1 && ItemStack.isSameItemSameComponents(drops.getFirst().getItem(), PufferfishDurabilityGameTests.worn(stack)),
                 "Block impact did not recover exactly one matching fish");
         helper.assertTrue(helper.getLevel().getBlockState(drops.getFirst().blockPosition()).isAir(),
                 "Recovered fish was embedded in the block");
@@ -441,12 +441,12 @@ public class PufferfishProjectileGameTests {
                     .stream().filter(drop -> drop.getItem().is(Items.PUFFERFISH)).toList();
             helper.assertTrue(projectile.isRemoved() && drops.size() == 1, "Impact did not recover exactly one fish");
             var recovered = drops.getFirst();
-            helper.assertTrue(recovered.getItem().getCount() == 1 && ItemStack.isSameItemSameComponents(recovered.getItem(), stack),
+            helper.assertTrue(recovered.getItem().getCount() == 1 && ItemStack.isSameItemSameComponents(recovered.getItem(), PufferfishDurabilityGameTests.worn(stack)),
                     "Recovered fish lost its color or name");
             var player = helper.makeMockPlayer(GameType.SURVIVAL);
             recovered.setNoPickUpDelay();
             recovered.playerTouch(player);
-            helper.assertTrue(recovered.isRemoved() && ItemStack.isSameItemSameComponents(player.getInventory().getItem(0), stack),
+            helper.assertTrue(recovered.isRemoved() && ItemStack.isSameItemSameComponents(player.getInventory().getItem(0), PufferfishDurabilityGameTests.worn(stack)),
                     "Recovered fish could not be picked up");
             target.discard();
         }

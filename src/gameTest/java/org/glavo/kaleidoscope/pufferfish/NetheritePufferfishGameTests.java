@@ -154,6 +154,8 @@ public final class NetheritePufferfishGameTests {
             helper.getLevel().getRandom().setSeed(92183);
             attacker.getRandom().setSeed(78194);
             for (int i = 0; i < 256; i++) {
+                var head = wearer.getItemBySlot(EquipmentSlot.HEAD);
+                if (head.isDamageableItem()) head.setDamageValue(0);
                 wearer.setHealth(wearer.getMaxHealth());
                 wearer.invulnerableTime = 0;
                 attacker.setHealth(attacker.getMaxHealth());
@@ -201,7 +203,7 @@ public final class NetheritePufferfishGameTests {
         helper.assertTrue(poison != null && poison.getDuration() == 60 && poison.getAmplifier() == 1, "Netherite projectile did not apply three seconds of Poison II");
         var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, target.getBoundingBox().inflate(3));
         helper.assertTrue(projectile.isRemoved() && drops.size() == 1 && drops.getFirst().getItem().getCount() == 1
-                && ItemStack.isSameItemSameComponents(drops.getFirst().getItem(), stack), "Recovered projectile lost its netherite identity or name");
+                && ItemStack.isSameItemSameComponents(drops.getFirst().getItem(), PufferfishDurabilityGameTests.worn(stack)), "Recovered projectile lost its netherite identity or name");
         drops.forEach(ItemEntity::discard);
         target.discard();
         helper.succeed();

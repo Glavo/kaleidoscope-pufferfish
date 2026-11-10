@@ -111,6 +111,12 @@ public final class PufferfishColors {
         }
         if (event.getEntity() instanceof Pufferfish fish) {
             DyeColor color = get(fish);
+            var stored = fish.getExistingDataOrNull(KaleidoscopePufferfish.FISH_ITEM);
+            if (stored != null && !stored.isEmpty()) {
+                for (var drop : event.getDrops()) {
+                    if (drop.getItem().is(Items.PUFFERFISH)) drop.setItem(stored.copyWithCount(1));
+                }
+            }
             if (color != null) {
                 for (var drop : event.getDrops()) {
                     if (drop.getItem().is(Items.PUFFERFISH)) {

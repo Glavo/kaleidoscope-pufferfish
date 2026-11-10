@@ -18,6 +18,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class AbstractFishMixin {
     @Inject(method = "saveToBucketTag", at = @At("TAIL"))
     private void kaleidoscope$saveBucketColor(ItemStack stack, CallbackInfo ci) {
+        if ((Object) this instanceof Pufferfish fish && !(fish instanceof org.glavo.kaleidoscope.pufferfish.entity.MaterialPufferfish)) {
+            var stored = fish.getExistingDataOrNull(org.glavo.kaleidoscope.pufferfish.KaleidoscopePufferfish.FISH_ITEM);
+            if (stored != null && !stored.isEmpty()) net.minecraft.world.item.component.CustomData.update(
+                    net.minecraft.core.component.DataComponents.BUCKET_ENTITY_DATA, stack, tag -> tag.put("Fish", stored.save(fish.registryAccess())));
+        }
         if ((Object) this instanceof Pufferfish fish && PufferfishColors.get(fish) != null) {
             PufferfishColors.dye(stack, PufferfishColors.get(fish));
         }
@@ -27,6 +32,11 @@ public abstract class AbstractFishMixin {
     private void kaleidoscope$loadBucketColor(CompoundTag tag, CallbackInfo ci) {
         if ((Object) this instanceof Pufferfish fish) {
             PufferfishColors.set(fish, DyeColor.byName(tag.getString(PufferfishColors.COLOR_TAG), null));
+            if (!(fish instanceof org.glavo.kaleidoscope.pufferfish.entity.MaterialPufferfish) && tag.contains("Fish")) {
+                ItemStack.parse(fish.registryAccess(), tag.getCompound("Fish"))
+                        .filter(item -> item.is(net.minecraft.world.item.Items.PUFFERFISH))
+                        .ifPresent(item -> fish.setData(org.glavo.kaleidoscope.pufferfish.KaleidoscopePufferfish.FISH_ITEM, item.copyWithCount(1)));
+            }
         }
     }
 }

@@ -393,5 +393,6 @@
   "gui.kaleidoscope_pufferfish.engine.dry": "Needs a bucket of water",
   "gui.kaleidoscope_pufferfish.engine.stopped": "Stopped by redstone",
   "gui.kaleidoscope_pufferfish.engine.running": "Running",
-  "message.kaleidoscope_pufferfish.capture_too_healthy": "This pufferfish is still too strong to capture."
+  "message.kaleidoscope_pufferfish.capture_too_healthy": "This pufferfish is still too strong to capture.",
+  "message.kaleidoscope_pufferfish.split_fish_before_attack": "Inventory full. Separate one pufferfish before attacking."
 }

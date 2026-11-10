@@ -46,6 +46,7 @@ public final class PufferfishHeadgear {
             return;
         }
         boolean netherite = PufferfishItems.hasNetheriteCombat(wearer.getItemBySlot(EquipmentSlot.HEAD));
+        if (!wearer.hasInfiniteMaterials()) PufferfishDurability.activate(wearer.getItemBySlot(EquipmentSlot.HEAD));
         PufferfishCombat.applyPassiveEffect(wearer.getItemBySlot(EquipmentSlot.HEAD), attacker, wearer);
         var thorns = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.THORNS);
         thorns.value().doPostAttack(level, netherite ? 3 : 1,

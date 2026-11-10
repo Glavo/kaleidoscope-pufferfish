@@ -35,10 +35,9 @@ public final class PufferfishBucketRecipe extends CustomRecipe {
         if (fish.isEmpty() || !water) return ItemStack.EMPTY;
         var variant = PufferfishMobs.variant(fish);
         var bucket = new ItemStack(variant == null ? Items.PUFFERFISH_BUCKET : variant.bucket().get());
-        if (variant != null) {
-            var stored = fish;
-            CustomData.update(DataComponents.BUCKET_ENTITY_DATA, bucket, tag -> tag.put("Fish", stored.save(registries)));
-        } else if (PufferfishColors.get(fish) != null) PufferfishColors.dye(bucket, PufferfishColors.get(fish));
+        var stored = fish;
+        CustomData.update(DataComponents.BUCKET_ENTITY_DATA, bucket, tag -> tag.put("Fish", stored.save(registries)));
+        if (variant == null && PufferfishColors.get(fish) != null) PufferfishColors.dye(bucket, PufferfishColors.get(fish));
         if (fish.has(DataComponents.CUSTOM_NAME)) bucket.set(DataComponents.CUSTOM_NAME, fish.get(DataComponents.CUSTOM_NAME));
         return bucket;
     }

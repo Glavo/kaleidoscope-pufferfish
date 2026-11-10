@@ -27,7 +27,7 @@ public final class HeavyPufferfishUpgradeRecipe implements SmithingRecipe {
     /// Creates one heavy pufferfish preserving the base stack's component changes, or an empty stack for invalid input.
     @Override
     public ItemStack assemble(SmithingRecipeInput input, HolderLookup.Provider registries) {
-        return matches(input, null) ? input.base().transmuteCopy(PufferfishItems.HEAVY.get(), 1) : ItemStack.EMPTY;
+        return matches(input, null) ? PufferfishDurability.transfer(input.base(), input.base().transmuteCopy(PufferfishItems.HEAVY.get(), 1)) : ItemStack.EMPTY;
     }
 
     @Override

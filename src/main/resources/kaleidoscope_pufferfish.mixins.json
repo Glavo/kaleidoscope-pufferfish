@@ -11,6 +11,7 @@
     "PufferfishPuffGoalMixin",
     "EntityTypeMixin",
     "PufferfishEquipmentMixin",
+    "PufferfishRepairRecipeMixin",
     "PufferfishSmashMixin"
   ],
   "client": [

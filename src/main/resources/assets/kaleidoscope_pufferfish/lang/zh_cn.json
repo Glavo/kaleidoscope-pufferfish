@@ -393,5 +393,6 @@
   "gui.kaleidoscope_pufferfish.engine.dry": "需要一桶水",
   "gui.kaleidoscope_pufferfish.engine.stopped": "红石信号已停机",
   "gui.kaleidoscope_pufferfish.engine.running": "运行中",
-  "message.kaleidoscope_pufferfish.capture_too_healthy": "这只河豚还太强壮，无法装入桶中。"
+  "message.kaleidoscope_pufferfish.capture_too_healthy": "这只河豚还太强壮，无法装入桶中。",
+  "message.kaleidoscope_pufferfish.split_fish_before_attack": "背包空间不足，请先将手中的河豚拆分为一只。"
 }

@@ -198,6 +198,13 @@ public class ThrownPufferfish extends ThrowableItemProjectile {
                 position = position.add(Vec3.atLowerCornerOf(blockHit.getDirection().getNormal()).scale(0.25));
             }
             PufferfishWindBurst.burst(this, position);
+            if (!creativeThrow && level() instanceof ServerLevel server) {
+                var worn = getItem().copyWithCount(1);
+                org.glavo.kaleidoscope.pufferfish.PufferfishDurability.damage(worn, server,
+                        getOwner() instanceof LivingEntity living ? living : null, null);
+                if (worn.isEmpty()) { discard(); return; }
+                setItem(worn);
+            }
             if (entityData.get(RETURN_ACCELERATION) > 0 && canReturnToOwner()) {
                 setPos(position);
                 beginReturn();

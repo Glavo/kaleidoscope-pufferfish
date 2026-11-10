@@ -279,12 +279,12 @@ public final class PufferfishExtraEnchantmentGameTests {
                             if (loyal) {
                                 helper.assertTrue(projectile.isReturning(), "Channeling prevented Loyalty return");
                                 for (int tick = 0; tick < 100 && !projectile.isRemoved(); tick++) projectile.tick();
-                                helper.assertTrue(projectile.isRemoved() && ItemStack.isSameItemSameComponents(owner.getInventory().getItem(0), stack),
+                                helper.assertTrue(projectile.isRemoved() && ItemStack.isSameItemSameComponents(owner.getInventory().getItem(0), PufferfishDurabilityGameTests.worn(stack)),
                                         "Loyalty lost the fish or its enchantments");
                             }
                             var drops = level.getEntitiesOfClass(ItemEntity.class, target.getBoundingBox().inflate(4));
                             helper.assertTrue(loyal ? drops.isEmpty() : drops.size() == 1
-                                            && ItemStack.isSameItemSameComponents(drops.getFirst().getItem(), stack),
+                                            && ItemStack.isSameItemSameComponents(drops.getFirst().getItem(), PufferfishDurabilityGameTests.worn(stack)),
                                     "Channeling changed immediate fish recovery");
                             drops.forEach(ItemEntity::discard);
                             target.discard();
@@ -367,6 +367,7 @@ public final class PufferfishExtraEnchantmentGameTests {
                         helper.getLevel().getRandom().setSeed(81357);
                         int reflected = 0;
                         for (int hit = 0; hit < 128; hit++) {
+                            if (stack.isDamageableItem()) stack.setDamageValue(0);
                             wearer.setHealth(wearer.getMaxHealth());
                             wearer.invulnerableTime = 0;
                             attacker.setHealth(attacker.getMaxHealth());
@@ -382,7 +383,7 @@ public final class PufferfishExtraEnchantmentGameTests {
                         } else {
                             helper.assertTrue(reflected > baseline && reflected < 128,
                                     "Thorns did not add chance-based retaliation: " + item + ", slot=" + slot);
-                            helper.assertTrue(stack.getCount() == 1 && !stack.isDamaged(), "Thorns damaged or consumed the fish");
+                            helper.assertTrue(stack.getCount() == 1, "Thorns consumed a freshly repaired fish");
                         }
                     }
                 }

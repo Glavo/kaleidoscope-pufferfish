@@ -76,7 +76,8 @@ public final class PufferfishSmashGameTests {
                 float expected = (PufferfishItems.isNetherite(stack) ? 6 : 1) * (distance > 0 ? 1.5F : 1);
                 helper.assertTrue(Math.abs(1000 - target.getHealth() - expected) < 0.001F, "Ordinary fish gained falling damage at distance " + distance);
                 helper.assertTrue(player.fallDistance == distance && !PufferfishCombat.canSmash(player, stack), "Fall distance reset without a successful smash");
-                helper.assertTrue(ItemStack.matches(player.getMainHandItem(), stack) && target.hasEffect(MobEffects.POISON),
+                helper.assertTrue(ItemStack.matches(player.getMainHandItem(), PufferfishDurabilityGameTests.worn(stack))
+                        && player.getInventory().countItem(stack.getItem()) == 4 && target.hasEffect(MobEffects.POISON),
                         "Smash consumed fish or lost existing poison effects");
                 target.discard();
             }

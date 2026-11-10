@@ -42,7 +42,8 @@ public final class PufferfishEnchantmentGameTests {
     private static final List<ResourceKey<Enchantment>> SUPPORTED = List.of(
             Enchantments.RESPIRATION, Enchantments.AQUA_AFFINITY, Enchantments.LOYALTY, Enchantments.DENSITY, Enchantments.BREACH, Enchantments.PUNCH,
             Enchantments.WIND_BURST, Enchantments.SMITE, Enchantments.BANE_OF_ARTHROPODS,
-            Enchantments.VANISHING_CURSE, Enchantments.BINDING_CURSE, Enchantments.THORNS, Enchantments.CHANNELING);
+            Enchantments.VANISHING_CURSE, Enchantments.BINDING_CURSE, Enchantments.THORNS, Enchantments.CHANNELING,
+            Enchantments.UNBREAKING, Enchantments.MENDING);
 
     private static ItemStack enchant(GameTestHelper helper, ItemStack stack, ResourceKey<Enchantment> key, int level) {
         var holder = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(key);
@@ -300,7 +301,7 @@ public final class PufferfishEnchantmentGameTests {
                 restored.setOwner(player);
                 helper.getLevel().addFreshEntity(restored);
                 for (int tick = 0; tick < 200 && !restored.isRemoved(); tick++) restored.tick();
-                helper.assertTrue(restored.isRemoved() && ItemStack.matches(player.getInventory().getItem(0), stack),
+                helper.assertTrue(restored.isRemoved() && ItemStack.matches(player.getInventory().getItem(0), PufferfishDurabilityGameTests.worn(stack)),
                         "Combined enchantments were lost during impact, save, or return");
                 clearDrops(helper, target);
             }

@@ -115,7 +115,7 @@ public final class HeavyPufferfishGameTests {
             var poison = target.getEffect(MobEffects.POISON);
             helper.assertTrue(poison != null && poison.getAmplifier() == 1 && poison.getDuration() == 60,
                     "Heavy fish lost pufferfish poison effects");
-            helper.assertTrue(stack.getCount() == 1 && !stack.isDamaged(), "Heavy fish attack consumed or damaged the item");
+            helper.assertTrue(stack.getCount() == 1 && stack.getDamageValue() == 1, "Heavy fish attack did not spend exactly one durability");
             helper.assertTrue(player.fallDistance == (distance > 1.5F && PufferfishCombatConfig.SMASH_ENABLED.get() ? 0 : distance),
                     "Heavy fish did not respect smash landing rules");
         }

@@ -15,7 +15,7 @@ import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.ShapedRecipe;
 
 /// Crafts a flail using a shaped recipe while retaining the fish's component changes.
-public final class PufferfishFlailRecipe extends ShapedRecipe {
+public class PufferfishFlailRecipe extends ShapedRecipe {
     /// Creates a recipe with the supplied pattern, output, and recipe-book settings.
     ///
     /// @param recipe the shaped recipe to extend
@@ -37,7 +37,7 @@ public final class PufferfishFlailRecipe extends ShapedRecipe {
                         && translated.getKey().equals("item.kaleidoscope_pufferfish.dyed_pufferfish")) {
                     result.remove(DataComponents.ITEM_NAME);
                 }
-                return result;
+                return PufferfishDurability.transfer(stack, result);
             }
         }
         return ItemStack.EMPTY;
