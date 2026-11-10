@@ -14,8 +14,8 @@ import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 public final class PufferfishRetaliation {
     private PufferfishRetaliation() {}
 
-    /// Equipment poison follows successful intrinsic or enchanted thorns, including damage absorbed by absorption hearts.
-    public static void poisonOnThorns(LivingDamageEvent.Post event) {
+    /// Equipment effects follow successful intrinsic or enchanted thorns, including damage absorbed by absorption hearts.
+    public static void effectsOnThorns(LivingDamageEvent.Post event) {
         var target = event.getEntity();
         if (target.level().isClientSide() || !event.getSource().is(DamageTypes.THORNS)
                 || !(event.getSource().getEntity() instanceof LivingEntity wearer) || wearer == target || wearer.isSpectator()
@@ -27,5 +27,10 @@ public final class PufferfishRetaliation {
                     && (poison == null || headEffect.getDuration() > poison.getDuration())) poison = headEffect;
         }
         if (poison != null) target.addEffect(new MobEffectInstance(MobEffects.POISON, poison.getDuration(), 0), wearer);
+        if (PufferfishHeadgear.isWearing(wearer) && PufferfishItems.isRadiant(wearer.getItemBySlot(EquipmentSlot.HEAD))
+                || PufferfishArmor.isWearingRadiant(wearer)
+                || wearer.isBlocking() && wearer.getUseItem().is(PufferfishShields.VARIANTS.get("radiant_pufferfish_skin_shield").get())) {
+            PufferfishCombat.applyPassiveEffect(new net.minecraft.world.item.ItemStack(PufferfishItems.RADIANT.get()), target, wearer);
+        }
     }
 }

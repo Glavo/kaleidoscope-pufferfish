@@ -113,11 +113,6 @@ public final class PufferfishArmor {
             var stack = wearer.getItemBySlot(slot);
             if (!(stack.getItem() instanceof ArmorItem armor) || armor.getEquipmentSlot() != slot
                     || VARIANTS.values().stream().noneMatch(item -> stack.is(item.get()))) continue;
-            if (PufferfishItems.isRadiant(stack)) {
-                PufferfishCombat.applyPassiveEffect(stack, attacker, wearer);
-                if (thornsItem == null) thornsItem = new EnchantedItemInUse(stack, slot, wearer);
-                continue;
-            }
             if (thornsItem == null) thornsItem = new EnchantedItemInUse(stack, slot, wearer);
         }
         if (thornsItem == null) return;
@@ -136,6 +131,11 @@ public final class PufferfishArmor {
             if (effect != null && (poison == null || effect.getDuration() > poison.getDuration())) poison = effect;
         }
         return poison;
+    }
+
+    public static boolean isWearingRadiant(LivingEntity wearer) {
+        return TYPES.stream().anyMatch(type -> wearer.getItemBySlot(type.getSlot())
+                .is(VARIANTS.get("radiant_pufferfish_skin_" + type.getName()).get()));
     }
 
     @javax.annotation.Nullable

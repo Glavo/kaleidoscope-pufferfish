@@ -104,7 +104,7 @@ public final class RadiantPufferfishEffectsGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void headgearArmorAndShieldRetaliateWithFixedWitherTwo(GameTestHelper helper) {
+    public static void headgearArmorAndShieldApplyWitherOneOnlyAfterSuccessfulThorns(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         player.setNoGravity(true);
         player.setPos(Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(2, 2, 2))));
@@ -128,20 +128,64 @@ public final class RadiantPufferfishEffectsGameTests {
                 shield.use(helper.getLevel(), player, InteractionHand.MAIN_HAND);
             }
             for (int tick = 0; tick < 6; tick++) player.tick();
-            for (int hit = 0; hit < 3; hit++) {
+            int reflected = 0;
+            for (int hit = 0; hit < 64; hit++) {
                 player.setHealth(20);
                 player.invulnerableTime = 0;
+                for (var slot : EquipmentSlot.values()) {
+                    var stack = player.getItemBySlot(slot);
+                    if (stack.isDamageableItem()) stack.setDamageValue(0);
+                }
+                attacker.setHealth(1000);
+                attacker.invulnerableTime = 0;
+                attacker.removeAllEffects();
                 player.hurt(player.damageSources().mobAttack(attacker), 2);
-                assertGlowing(helper, attacker);
-                helper.assertTrue(attacker.hasEffect(MobEffects.WITHER) && attacker.getEffect(MobEffects.WITHER).getAmplifier() == 1 && attacker.getEffect(MobEffects.WITHER).getDuration() == 100
-                        && !attacker.hasEffect(MobEffects.POISON), "Passive retaliation escalated or applied poison: " + variant);
+                if (attacker.getHealth() < 1000) {
+                    reflected++;
+                    assertGlowing(helper, attacker);
+                    var wither = attacker.getEffect(MobEffects.WITHER);
+                    helper.assertTrue(wither != null && wither.getAmplifier() == 0 && wither.getDuration() == 100,
+                            "Successful radiant thorns did not apply five seconds of Wither I: " + variant);
+                } else {
+                    helper.assertTrue(!attacker.hasEffect(MobEffects.WITHER) && !attacker.hasEffect(MobEffects.GLOWING),
+                            "Radiant effects triggered without thorns damage: " + variant);
+                }
+                helper.assertTrue(!attacker.hasEffect(MobEffects.POISON), "Radiant equipment applied poison");
             }
+            helper.assertTrue(reflected > 0 && reflected < 64, "Radiant retaliation did not roll thorns: " + variant);
+            attacker.removeAllEffects();
+            attacker.invulnerableTime = 0;
+            java.util.function.Consumer<net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent> cancel = event -> {
+                if (event.getEntity() == attacker && event.getSource().is(net.minecraft.world.damagesource.DamageTypes.THORNS)) {
+                    event.setCanceled(true);
+                }
+            };
+            NeoForge.EVENT_BUS.addListener(cancel);
+            try {
+                attacker.hurt(attacker.damageSources().thorns(player), 1);
+                helper.assertTrue(!attacker.hasEffect(MobEffects.WITHER) && !attacker.hasEffect(MobEffects.GLOWING),
+                        "Canceled radiant thorns applied effects");
+            } finally {
+                NeoForge.EVENT_BUS.unregister(cancel);
+            }
+            attacker.getAttribute(Attributes.MAX_ABSORPTION).setBaseValue(4);
+            attacker.setHealth(1000);
+            attacker.setAbsorptionAmount(4);
+            for (int hit = 0; hit < 3; hit++) {
+                attacker.invulnerableTime = 0;
+                attacker.hurt(attacker.damageSources().thorns(player), 1);
+                helper.assertTrue(attacker.getHealth() == 1000 && attacker.getAbsorptionAmount() == 3 - hit
+                        && attacker.getEffect(MobEffects.WITHER) != null && attacker.getEffect(MobEffects.WITHER).getAmplifier() == 0,
+                        "Absorbed radiant thorns failed to apply fixed Wither I");
+                assertGlowing(helper, attacker);
+            }
+            attacker.setAbsorptionAmount(0);
         }
         helper.succeed();
     }
 
     @GameTest(template = "empty")
-    public static void radiantFishAndSkinApplyContactWitherTwo(GameTestHelper helper) {
+    public static void radiantFishAndSkinApplyContactWitherOne(GameTestHelper helper) {
         var level = helper.getLevel();
         var pos = helper.absolutePos(new BlockPos(2, 2, 2));
         for (var block : new net.minecraft.world.level.block.Block[] {PufferfishBlocks.PLACED_FISH.get(), PufferfishBlocks.RADIANT_SKIN.get()}) {
@@ -154,8 +198,8 @@ public final class RadiantPufferfishEffectsGameTests {
                 target.invulnerableTime = 0;
                 NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(target));
                 assertGlowing(helper, target);
-                helper.assertTrue(target.hasEffect(MobEffects.WITHER) && target.getEffect(MobEffects.WITHER).getAmplifier() == 1 && target.getEffect(MobEffects.WITHER).getDuration() == 100
-                        && !target.hasEffect(MobEffects.POISON), "Contact should apply fixed wither two");
+                helper.assertTrue(target.hasEffect(MobEffects.WITHER) && target.getEffect(MobEffects.WITHER).getAmplifier() == 0 && target.getEffect(MobEffects.WITHER).getDuration() == 100
+                        && !target.hasEffect(MobEffects.POISON), "Contact should apply fixed wither one");
             }
         }
         helper.succeed();

@@ -214,8 +214,8 @@ public final class PufferfishArmorGameTests {
                 String name = item.getId().getPath();
                 int duration = PufferfishItems.isRadiant(armor) ? 100 : name.startsWith("oxidized_copper_") ? 360 : name.startsWith("weathered_copper_") ? 240
                         : name.startsWith("exposed_copper_") ? 120 : 60;
-                int amplifier = PufferfishItems.isRadiant(armor) ? 1 : 0;
-                helper.assertTrue(name.startsWith("waxed_") || !PufferfishItems.isRadiant(armor) && attacker.getHealth() == 20 ? poison == null
+                int amplifier = 0;
+                helper.assertTrue(name.startsWith("waxed_") || attacker.getHealth() == 20 ? poison == null
                         : poison != null && poison.getDuration() == duration && poison.getAmplifier() == amplifier,
                         "Skin armor applied the wrong poison effect");
                 float damage = 20 - attacker.getHealth();

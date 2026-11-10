@@ -130,7 +130,7 @@ public final class PufferfishCombat {
     @javax.annotation.Nullable
     public static MobEffectInstance passiveEffect(ItemStack stack) {
         stack = PufferfishItems.flailFish(stack);
-        if (PufferfishItems.isRadiant(stack)) return new MobEffectInstance(MobEffects.WITHER, RADIANT_WITHER_DURATION_TICKS, 1);
+        if (PufferfishItems.isRadiant(stack)) return new MobEffectInstance(MobEffects.WITHER, RADIANT_WITHER_DURATION_TICKS, 0);
         int copper = CopperPufferfish.index(stack);
         if (copper >= 4) return null;
         int duration = copper > 0 ? copper * 120 : POISON_DURATION_TICKS;
