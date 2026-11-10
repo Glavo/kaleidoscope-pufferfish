@@ -122,22 +122,35 @@ public final class PufferfishPumpPressureGameTests {
         });
     }
 
-    @GameTest(template = "empty", timeoutTicks = 70)
-    public static void flailsRepairWithoutBuildingPressure(GameTestHelper helper) {
-        var fish = PufferfishItems.FLAIL.toStack();
-        PufferfishDurability.activate(fish);
-        fish.setDamageValue(1);
-        var pump = placed(helper, fish);
+    @GameTest(template = "empty")
+    public static void flailsAreRejectedAndPreviouslyStoredFlailsRemainRecoverable(GameTestHelper helper) {
+        var pump = placed(helper, ItemStack.EMPTY);
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
-        pump.press(player);
-        for (int stroke = 1; stroke <= 6; stroke++) {
-            int completed = stroke;
-            helper.runAfterDelay(stroke * 8L, () -> {
-                helper.assertTrue(!pump.press(player) && pump.pressure() == 0 && !pump.fish().isDamaged()
-                        && pump.fish().is(PufferfishItems.FLAIL.get()), "Repaired flail built pressure or exploded");
-                if (completed == 6) helper.succeed();
-            });
+        var hit = new net.minecraft.world.phys.BlockHitResult(pump.getBlockPos().getCenter(), net.minecraft.core.Direction.UP, pump.getBlockPos(), false);
+        for (var item : PufferfishItems.FLAIL_VARIANTS) {
+            for (boolean damaged : new boolean[] {false, true}) {
+                var flail = item.toStack();
+                if (damaged) {
+                    PufferfishDurability.activate(flail);
+                    flail.setDamageValue(1);
+                }
+                var expected = flail.copy();
+                player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, flail);
+                var result = pump.getBlockState().useItemOn(flail, helper.getLevel(), player, net.minecraft.world.InteractionHand.MAIN_HAND, hit);
+                helper.assertTrue(result == net.minecraft.world.ItemInteractionResult.FAIL && pump.fish().isEmpty()
+                        && ItemStack.matches(flail, expected), "Pump accepted or consumed a flail");
+                pump.setFish(flail);
+                helper.assertTrue(pump.fish().isEmpty() && !PufferfishPumpItem.canInflate(flail), "Flail bypassed pump validation");
+                var saved = pump.saveWithoutMetadata(helper.getLevel().registryAccess());
+                saved.put("Fish", flail.save(helper.getLevel().registryAccess()));
+                var restored = new PufferfishPumpBlockEntity(pump.getBlockPos(), pump.getBlockState());
+                restored.loadWithComponents(saved, helper.getLevel().registryAccess());
+                restored.setLevel(helper.getLevel());
+                helper.assertTrue(!restored.press(player) && restored.pressure() == 0
+                        && ItemStack.matches(restored.removeFish(), expected), "Stored flail was repaired or lost on recovery");
+            }
         }
+        helper.succeed();
     }
 
     @GameTest(template = "empty", timeoutTicks = 70)

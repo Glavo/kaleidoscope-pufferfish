@@ -15,7 +15,7 @@ public final class PufferfishPumpItem extends BlockItem {
     public PufferfishPumpItem(Properties properties) { super(PufferfishBlocks.PUMP.get(), properties); }
 
     public static boolean canInflate(ItemStack fish) {
-        return PufferfishItems.isWeapon(fish) && fish.getCount() == 1 && fish.isDamaged();
+        return PufferfishItems.isPufferfish(fish) && fish.getCount() == 1 && fish.isDamaged();
     }
 
     static void removeDurability(ItemStack stack) {

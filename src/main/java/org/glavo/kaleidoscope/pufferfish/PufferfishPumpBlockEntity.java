@@ -45,7 +45,7 @@ public final class PufferfishPumpBlockEntity extends BlockEntity {
     public int pressure() { return pressure; }
 
     public void setFish(ItemStack stack) {
-        fish = PufferfishItems.isWeapon(stack) ? stack.copyWithCount(1) : ItemStack.EMPTY;
+        fish = PufferfishItems.isPufferfish(stack) ? stack.copyWithCount(1) : ItemStack.EMPTY;
         pressure = releaseTicks = 0;
         changed();
     }
@@ -166,6 +166,7 @@ public final class PufferfishPumpBlockEntity extends BlockEntity {
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         var storedFish = ItemStack.parseOptional(registries, tag.getCompound("Fish"));
+        // Previously inserted flails remain recoverable, but cannot be inflated.
         fish = PufferfishItems.isWeapon(storedFish) ? storedFish.copyWithCount(1) : ItemStack.EMPTY;
         var storedPump = ItemStack.parseOptional(registries, tag.getCompound("Pump"));
         pump = storedPump.is(PufferfishItems.PUMP.get()) ? storedPump.copyWithCount(1) : PufferfishItems.PUMP.toStack();

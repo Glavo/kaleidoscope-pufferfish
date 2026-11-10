@@ -59,7 +59,6 @@ public final class PufferfishPumpGameTests {
         var variants = new java.util.ArrayList<ItemStack>();
         variants.add(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), net.minecraft.world.item.DyeColor.CYAN));
         PufferfishMobs.VARIANTS.values().forEach(variant -> variants.add(variant.fish().toStack()));
-        PufferfishItems.FLAIL_VARIANTS.forEach(item -> variants.add(item.toStack()));
         var pumps = new java.util.ArrayList<PufferfishPumpBlockEntity>();
         var mending = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.MENDING);
         for (var fish : variants) {
@@ -123,7 +122,7 @@ public final class PufferfishPumpGameTests {
         var tool = PufferfishItems.PUMP.toStack();
         tool.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Workshop pump"));
         PufferfishBlocks.PUMP.get().setPlacedBy(helper.getLevel(), pump.getBlockPos(), pump.getBlockState(), player, tool);
-        var fish = PufferfishDurabilityGameTests.worn(PufferfishItems.HEAVY_FLAIL.toStack());
+        var fish = PufferfishDurabilityGameTests.worn(PufferfishItems.HEAVY.toStack());
         fish.setDamageValue(2000);
         var expected = fish.copy();
         player.setItemInHand(InteractionHand.MAIN_HAND, fish);

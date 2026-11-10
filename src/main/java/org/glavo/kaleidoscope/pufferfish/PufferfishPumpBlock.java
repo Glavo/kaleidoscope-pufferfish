@@ -66,7 +66,7 @@ public final class PufferfishPumpBlock extends BaseEntityBlock {
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
             Player player, InteractionHand hand, BlockHitResult hit) {
         if (stack.isEmpty()) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-        if (!(level.getBlockEntity(pos) instanceof PufferfishPumpBlockEntity pump) || !PufferfishItems.isWeapon(stack)
+        if (!(level.getBlockEntity(pos) instanceof PufferfishPumpBlockEntity pump) || !PufferfishItems.isPufferfish(stack)
                 || !pump.fish().isEmpty()) return ItemInteractionResult.FAIL;
         if (!level.isClientSide) {
             pump.setFish(stack);
