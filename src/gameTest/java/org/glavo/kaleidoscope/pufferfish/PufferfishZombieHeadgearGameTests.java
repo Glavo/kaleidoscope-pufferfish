@@ -34,7 +34,7 @@ public final class PufferfishZombieHeadgearGameTests {
                     zombie.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
                     helper.getLevel().addFreshEntity(zombie);
                     boolean expected = type == EntityType.ZOMBIE && reason == MobSpawnType.NATURAL;
-                    helper.assertTrue(zombie.getItemBySlot(EquipmentSlot.HEAD).is(Items.PUFFERFISH) == expected,
+                    helper.assertTrue(PufferfishItems.isPufferfish(zombie.getItemBySlot(EquipmentSlot.HEAD)) == expected,
                             "Unexpected headgear for " + type + " / " + reason);
                     if (expected) helper.assertTrue(zombie.getItemBySlot(EquipmentSlot.HEAD).isDamageableItem(), "Spawned headgear had no durability");
                     zombie.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
@@ -56,6 +56,53 @@ public final class PufferfishZombieHeadgearGameTests {
             chance.set(previous);
         }
         helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void zombieHeadgearWeightsSupportAllVariantsAndDisabling(GameTestHelper helper) {
+        var weights = PufferfishMobConfig.ZOMBIE_HEADGEAR_WEIGHTS;
+        var previous = new java.util.EnumMap<PufferfishZombieHeadgear.Variant, Integer>(PufferfishZombieHeadgear.Variant.class);
+        weights.forEach((variant, weight) -> previous.put(variant, weight.get()));
+        double previousChance = PufferfishMobConfig.ZOMBIE_HEADGEAR_CHANCE.get();
+        try {
+            PufferfishMobConfig.ZOMBIE_HEADGEAR_CHANCE.set(1.0);
+            for (var selected : PufferfishZombieHeadgear.Variant.values()) {
+                weights.forEach((variant, weight) -> weight.set(variant == selected ? 1 : 0));
+                var seen = new java.util.HashSet<net.minecraft.world.item.Item>();
+                for (int i = 0; i < 128; i++) {
+                    var fish = generateHeadgear(helper, i);
+                    boolean matches = switch (selected) {
+                        case NORMAL -> fish.is(Items.PUFFERFISH);
+                        case COPPER -> PufferfishItems.COPPER_VARIANTS.stream().anyMatch(item -> fish.is(item.get()));
+                        case IRON -> fish.is(PufferfishItems.IRON.get());
+                        case GOLDEN -> fish.is(PufferfishItems.GOLDEN.get());
+                        case DIAMOND -> fish.is(PufferfishItems.DIAMOND.get());
+                    };
+                    helper.assertTrue(matches, "Selected a disabled headgear variant: " + fish);
+                    helper.assertTrue(fish.getCount() == 1 && fish.isDamageableItem()
+                            && fish.getMaxDamage() == PufferfishDurability.maximum(fish), "Variant headgear had incorrect durability");
+                    seen.add(fish.getItem());
+                }
+                helper.assertTrue(seen.size() == (selected == PufferfishZombieHeadgear.Variant.COPPER ? 8 : 1),
+                        "Not all enabled headgear variants were selected");
+            }
+            weights.values().forEach(weight -> weight.set(0));
+            helper.assertTrue(generateHeadgear(helper, 0).isEmpty(), "All-zero weights did not disable headgear");
+        } finally {
+            previous.forEach((variant, weight) -> weights.get(variant).set(weight));
+            PufferfishMobConfig.ZOMBIE_HEADGEAR_CHANCE.set(previousChance);
+        }
+        helper.succeed();
+    }
+
+    private static ItemStack generateHeadgear(GameTestHelper helper, long seed) {
+        var zombie = EntityType.ZOMBIE.create(helper.getLevel());
+        zombie.moveTo(helper.absolutePos(new net.minecraft.core.BlockPos(1, 2, 1)), 0, 0);
+        EventHooks.finalizeMobSpawn(zombie, helper.getLevel(), helper.getLevel().getCurrentDifficultyAt(zombie.blockPosition()), MobSpawnType.NATURAL, null);
+        zombie.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
+        zombie.getRandom().setSeed(seed);
+        NeoForge.EVENT_BUS.post(new EntityJoinLevelEvent(zombie, helper.getLevel()));
+        return zombie.getItemBySlot(EquipmentSlot.HEAD);
     }
 
     @GameTest(template = "empty")

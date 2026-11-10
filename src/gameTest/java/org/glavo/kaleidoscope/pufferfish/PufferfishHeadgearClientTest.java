@@ -152,31 +152,42 @@ public final class PufferfishHeadgearClientTest {
         var renderer = new net.minecraft.client.renderer.entity.ZombieRenderer(context);
         var model = renderer.getModel();
         var layer = new CustomHeadLayer<>(renderer, minecraft.getEntityModels(), context.getItemInHandRenderer());
-        float adultMinY = 0;
-        float adultMaxY = 0;
-        for (boolean baby : new boolean[] {false, true}) {
-            zombie.setBaby(baby);
-            model.young = baby;
-            zombie.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.PUFFERFISH));
-            var pose = new PoseStack();
-            var capture = new CapturedVertices();
-            NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.client.event.RenderLivingEvent.Pre<>(zombie, renderer, 0, pose, capture, 15728880));
-            if (model.head.visible || model.hat.visible) throw new IllegalStateException("Zombie head was not hidden");
-            layer.render(pose, capture, 15728880, zombie, 0, 0, 0, 0, 0, 0);
-            if (capture.vertices < 100 || capture.type != RenderType.entityCutoutNoCull(ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png"))) {
-                throw new IllegalStateException("Zombie pufferfish head did not render");
-            }
-            if (baby) {
-                if (Math.abs(capture.minY - (adultMinY * 0.75F + 0.75F)) > 0.001F
-                        || Math.abs(capture.maxY - (adultMaxY * 0.75F + 0.75F)) > 0.001F) {
-                    throw new IllegalStateException("Baby zombie headgear did not follow the humanoid head transform");
+        var variants = new ArrayList<ItemStack>();
+        variants.add(new ItemStack(Items.PUFFERFISH));
+        PufferfishItems.COPPER_VARIANTS.forEach(item -> variants.add(new ItemStack(item.get())));
+        variants.add(new ItemStack(PufferfishItems.IRON.get()));
+        variants.add(new ItemStack(PufferfishItems.GOLDEN.get()));
+        variants.add(new ItemStack(PufferfishItems.DIAMOND.get()));
+        for (var stack : variants) {
+            var material = PufferfishItems.materialName(stack);
+            var texture = material == null ? ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png")
+                    : PufferfishTextures.materialEntity(material);
+            float adultMinY = 0;
+            float adultMaxY = 0;
+            for (boolean baby : new boolean[] {false, true}) {
+                zombie.setBaby(baby);
+                model.young = baby;
+                zombie.setItemSlot(EquipmentSlot.HEAD, stack.copy());
+                var pose = new PoseStack();
+                var capture = new CapturedVertices();
+                NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.client.event.RenderLivingEvent.Pre<>(zombie, renderer, 0, pose, capture, 15728880));
+                if (model.head.visible || model.hat.visible) throw new IllegalStateException("Zombie head was not hidden");
+                layer.render(pose, capture, 15728880, zombie, 0, 0, 0, 0, 0, 0);
+                if (capture.vertices < 100 || capture.type != RenderType.entityCutoutNoCull(texture)) {
+                    throw new IllegalStateException("Zombie pufferfish head did not render");
                 }
-            } else {
-                adultMinY = capture.minY;
-                adultMaxY = capture.maxY;
+                if (baby) {
+                    if (Math.abs(capture.minY - (adultMinY * 0.75F + 0.75F)) > 0.001F
+                            || Math.abs(capture.maxY - (adultMaxY * 0.75F + 0.75F)) > 0.001F) {
+                        throw new IllegalStateException("Baby zombie headgear did not follow the humanoid head transform");
+                    }
+                } else {
+                    adultMinY = capture.minY;
+                    adultMaxY = capture.maxY;
+                }
+                NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.client.event.RenderLivingEvent.Post<>(zombie, renderer, 0, pose, capture, 15728880));
+                if (!model.head.visible || !model.hat.visible) throw new IllegalStateException("Zombie head visibility was not restored");
             }
-            NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.client.event.RenderLivingEvent.Post<>(zombie, renderer, 0, pose, capture, 15728880));
-            if (!model.head.visible || !model.hat.visible) throw new IllegalStateException("Zombie head visibility was not restored");
         }
     }
 

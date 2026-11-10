@@ -17,6 +17,7 @@ public final class PufferfishMobConfig {
 
     public static final ModConfigSpec SPEC;
     public static final ModConfigSpec.DoubleValue ZOMBIE_HEADGEAR_CHANCE;
+    public static final Map<PufferfishZombieHeadgear.Variant, ModConfigSpec.IntValue> ZOMBIE_HEADGEAR_WEIGHTS;
     public static final ModConfigSpec.DoubleValue REINFORCEMENT_CHANCE;
     public static final ModConfigSpec.IntValue REINFORCEMENT_COOLDOWN;
     public static final ModConfigSpec.IntValue REINFORCEMENT_MAX_CALLS;
@@ -57,7 +58,17 @@ public final class PufferfishMobConfig {
         builder.push("zombieHeadgear");
         ZOMBIE_HEADGEAR_CHANCE = builder.comment("Chance for a naturally spawned ordinary zombie with an empty head slot to wear a pufferfish; 0 disables this.")
                 .defineInRange("chance", 0.05, 0, 1);
-        builder.pop();
+        builder.comment("Relative headgear weights after the chance roll. Zero excludes a variant; all zero disables headgear.")
+                .push("weights");
+        var headgearWeights = new EnumMap<PufferfishZombieHeadgear.Variant, ModConfigSpec.IntValue>(PufferfishZombieHeadgear.Variant.class);
+        headgearWeights.put(PufferfishZombieHeadgear.Variant.NORMAL, builder.defineInRange("normal", 80, 0, 10000));
+        headgearWeights.put(PufferfishZombieHeadgear.Variant.COPPER,
+                builder.comment("Shared weight for all eight copper variants, selected uniformly.").defineInRange("copper", 10, 0, 10000));
+        headgearWeights.put(PufferfishZombieHeadgear.Variant.IRON, builder.defineInRange("iron", 5, 0, 10000));
+        headgearWeights.put(PufferfishZombieHeadgear.Variant.GOLDEN, builder.defineInRange("golden", 4, 0, 10000));
+        headgearWeights.put(PufferfishZombieHeadgear.Variant.DIAMOND, builder.defineInRange("diamond", 1, 0, 10000));
+        ZOMBIE_HEADGEAR_WEIGHTS = java.util.Collections.unmodifiableMap(headgearWeights);
+        builder.pop(2);
         SPEC = builder.build();
     }
 
