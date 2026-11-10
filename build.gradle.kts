@@ -122,10 +122,12 @@ configurations.runtimeClasspath {
 
 dependencies {
     val cookery = "maven.modrinth:kaleidoscope-cookery:${providers.gradleProperty("kaleidoscope_cookery_version").get()}"
+    val chineseFood = "maven.modrinth:kaleidoscopechinesefood:${providers.gradleProperty("kaleidoscope_chinesefood_version").get()}"
     val farmersDelight = "maven.modrinth:farmers-delight:${providers.gradleProperty("farmers_delight_version").get()}"
     val create = "maven.modrinth:create:${providers.gradleProperty("create_version").get()}"
 
     compileOnly(cookery)
+    compileOnly(chineseFood)
     compileOnly(farmersDelight)
     compileOnly(create)
     // Create bundles Ponder at runtime; its base interfaces are also needed by javac.
@@ -137,6 +139,7 @@ dependencies {
     }
     if (providers.gradleProperty("include_cookery").get().toBoolean()) {
         localRuntime(cookery)
+        if (providers.gradleProperty("include_chinesefood").get().toBoolean()) localRuntime(chineseFood)
     }
     if (providers.gradleProperty("include_farmers_delight").get().toBoolean()) {
         localRuntime(farmersDelight)
@@ -389,6 +392,44 @@ val generatePieModels = tasks.register<Sync>("generatePieModels") {
     }
 }
 
+val generateAspicModels = tasks.register<Sync>("generateAspicModels") {
+    inputs.property("modId", modId)
+    filteringCharset = "UTF-8"
+    into(layout.buildDirectory.dir("generated/resources/pufferfishAspic"))
+    fun box(x: Double, y: Double, z: Double, w: Double, h: Double, d: Double, tile: Int) = mapOf(
+        "from" to listOf(x, y, z), "to" to listOf(x + w, y + h, z + d),
+        "faces" to listOf("north", "south", "east", "west", "up", "down").associateWith {
+            mapOf("texture" to "#food", "uv" to listOf(tile % 4 * 4, tile / 4 * 4, tile % 4 * 4 + 4, tile / 4 * 4 + 4))
+        }
+    )
+    val bowl = listOf(
+        box(3.0, 0.0, 3.0, 10.0, 1.0, 10.0, 1), box(2.0, 1.0, 2.0, 12.0, 1.0, 12.0, 0),
+        box(2.0, 2.0, 2.0, 12.0, 2.0, 1.0, 0), box(2.0, 2.0, 13.0, 12.0, 2.0, 1.0, 0),
+        box(2.0, 2.0, 3.0, 1.0, 2.0, 10.0, 0), box(13.0, 2.0, 3.0, 1.0, 2.0, 10.0, 0)
+    )
+    val portions = listOf(3.5 to 3.5, 8.5 to 3.5, 3.5 to 8.5, 8.5 to 8.5).map { (x, z) -> listOf(
+        box(x + 0.7, 3.0, z + 0.8, 2.3, 0.6, 1.2, 5), box(x + 1.1, 4.3, z + 2.1, 1.7, 0.4, 1.0, 6),
+        box(x, 2.0, z, 4.0, 4.0, 4.0, 3), box(x + 0.3, 6.0, z + 0.4, 1.2, 0.15, 0.5, 4)
+    ) }
+    for (bites in 0..4) {
+        val elements = JsonOutput.toJson(bowl + portions.drop(bites).flatten())
+        inputs.property("elements$bites", elements)
+        from("src/main/modelTemplates/pufferfish_aspic.json") {
+            expand("modId" to modId, "elements" to elements)
+            into("assets/$modId/models/block")
+            rename { "pufferfish_aspic_$bites.json" }
+        }
+    }
+    val broth = JsonOutput.toJson(bowl + listOf(box(3.0, 2.0, 3.0, 10.0, 1.4, 10.0, 2),
+        box(4.0, 3.4, 5.0, 3.0, 0.1, 1.5, 5), box(8.0, 3.4, 8.0, 3.0, 0.1, 2.0, 6)))
+    inputs.property("broth", broth)
+    from("src/main/modelTemplates/pufferfish_aspic.json") {
+        expand("modId" to modId, "elements" to broth)
+        into("assets/$modId/models/block")
+        rename { "pufferfish_skin_broth.json" }
+    }
+}
+
 val generateLampResources = tasks.register<Sync>("generateLampResources") {
     inputs.property("modId", modId)
     inputs.property("variants", allSkinVariants)
@@ -467,6 +508,7 @@ sourceSets.main {
     resources.srcDir(generateFlailResources)
     resources.srcDir(generateMaterialFishRecipes)
     resources.srcDir(generatePieModels)
+    resources.srcDir(generateAspicModels)
     resources.srcDir(generateBoatResources)
     resources.srcDir(generateArmorResources)
     resources.srcDir(generateShieldResources)

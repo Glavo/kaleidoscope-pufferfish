@@ -28,6 +28,11 @@ public final class CookeryFoodIntegration {
             () -> new FoodBiteBlock(withPoison(ModFoods.STARGAZY_PIE_BLOCK), 4, null).setAABB(Block.box(1, 0, 1, 15, 12, 15)));
     public static final DeferredItem<BowlFoodBlockItem> STARGAZY_PIE_ITEM = ITEMS.register("pufferfish_stargazy_pie",
             () -> new BowlFoodBlockItem(STARGAZY_PIE.get(), withPoison(ModFoods.STARGAZY_PIE_ITEM), Items.BOWL));
+    public static final DeferredBlock<FoodBiteBlock> ASPIC = BLOCKS.register("pufferfish_aspic",
+            () -> new FoodBiteBlock(withPoison(new FoodProperties.Builder().nutrition(2).saturationModifier(0.6F).build()), 4, null)
+                    .setAABB(Block.box(2, 0, 2, 14, 7, 14)));
+    public static final DeferredItem<BowlFoodBlockItem> ASPIC_ITEM = ITEMS.register("pufferfish_aspic",
+            () -> new BowlFoodBlockItem(ASPIC.get(), withPoison(new FoodProperties.Builder().nutrition(8).saturationModifier(0.6F).build()), Items.BOWL));
 
     private CookeryFoodIntegration() {}
 

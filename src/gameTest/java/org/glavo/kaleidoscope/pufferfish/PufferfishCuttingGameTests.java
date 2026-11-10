@@ -36,6 +36,7 @@ public final class PufferfishCuttingGameTests {
     /// Registers board tests only when their respective optional mods are loaded.
     @SubscribeEvent
     public static void register(RegisterGameTestsEvent event) {
+        if (ModList.get().isLoaded("kaleidoscope_chinesefood")) event.register(org.glavo.kaleidoscope.pufferfish.compat.chinesefood.PufferfishAspicGameTests.class);
         if (ModList.get().isLoaded("kaleidoscope_cookery")) event.register(CookeryCuttingGameTests.class);
         if (ModList.get().isLoaded("kaleidoscope_cookery")) event.register(CookeryDishGameTests.class);
         if (ModList.get().isLoaded("kaleidoscope_cookery")) event.register(org.glavo.kaleidoscope.pufferfish.compat.cooking.CookeryPieGameTests.class);

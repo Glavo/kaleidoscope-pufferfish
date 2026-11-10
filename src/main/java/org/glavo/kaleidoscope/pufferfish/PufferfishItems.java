@@ -62,6 +62,14 @@ public final class PufferfishItems {
     public static final DeferredItem<Item> ZOSUI = ITEMS.register("pufferfish_zosui", () -> new Item(
             new Item.Properties().food(new FoodProperties.Builder().nutrition(10).saturationModifier(0.6F)
                     .usingConvertsTo(Items.BOWL).build())));
+    public static final DeferredItem<Item> SKIN_BROTH = ITEMS.register("pufferfish_skin_broth", () -> new Item(new Item.Properties().stacksTo(16)) {
+        @Override
+        public void appendHoverText(ItemStack stack, TooltipContext context, java.util.List<net.minecraft.network.chat.Component> tooltip,
+                net.minecraft.world.item.TooltipFlag flag) {
+            tooltip.add(net.minecraft.network.chat.Component.translatable("tooltip.kaleidoscope_pufferfish.pufferfish_skin_broth")
+                    .withStyle(net.minecraft.ChatFormatting.GRAY));
+        }
+    });
     /// The reusable flail crafted from an ordinary or dyed pufferfish and two chains.
     public static final DeferredItem<PufferfishFlailItem> FLAIL = ITEMS.register("pufferfish_flail",
             () -> new PufferfishFlailItem(new Item.Properties().stacksTo(1), () -> Items.PUFFERFISH));

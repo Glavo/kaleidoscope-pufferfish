@@ -23,6 +23,10 @@
   "item.kaleidoscope_pufferfish.pufferfish_zosui": "Pufferfish Zosui",
   "item.kaleidoscope_pufferfish.raw_pufferfish_baozi": "Raw Pufferfish Baozi",
   "item.kaleidoscope_pufferfish.pufferfish_baozi": "Pufferfish Baozi",
+  "item.kaleidoscope_pufferfish.pufferfish_skin_broth": "Pufferfish Skin Broth",
+  "tooltip.kaleidoscope_pufferfish.pufferfish_skin_broth": "Refrigerate in the upper compartment for 2 minutes to set into aspic.",
+  "block.kaleidoscope_pufferfish.pufferfish_aspic": "Pufferfish Aspic",
+  "tooltip.kaleidoscope_pufferfish.pufferfish_aspic.maxim": "A golden wobble with a familiar sting.",
   "block.kaleidoscope_pufferfish.pufferfish_stargazy_pie": "Pufferfish Stargazy Pie",
   "tooltip.kaleidoscope_pufferfish.pufferfish_stargazy_pie.maxim": "A skyward stare in every serving.",
 

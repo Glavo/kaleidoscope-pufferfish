@@ -44,6 +44,10 @@ public final class PufferfishSpriteSource implements SpriteSource {
         addDish(manager, output, false);
         addDish(manager, output, true);
         addZosui(manager, output);
+        var aspicTexture = KaleidoscopePufferfish.id("block/pufferfish_aspic");
+        var aspicReplacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(aspicTexture));
+        if (aspicReplacement.isPresent()) output.add(aspicTexture, aspicReplacement.get());
+        else output.add(aspicTexture, loader -> PufferfishAspicTexture.create(aspicTexture));
         var pieTexture = KaleidoscopePufferfish.id("block/pufferfish_stargazy_pie");
         var pieReplacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(pieTexture));
         if (pieReplacement.isPresent()) output.add(pieTexture, pieReplacement.get());

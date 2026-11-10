@@ -94,6 +94,10 @@ public class KaleidoscopePufferfish {
                     output.accept(PufferfishItems.BAOZI);
                     if (ModList.get().isLoaded("kaleidoscope_cookery")) {
                         output.accept(org.glavo.kaleidoscope.pufferfish.compat.cookery.CookeryFoodIntegration.STARGAZY_PIE_ITEM);
+                        if (ModList.get().isLoaded("kaleidoscope_chinesefood")) {
+                            output.accept(PufferfishItems.SKIN_BROTH);
+                            output.accept(org.glavo.kaleidoscope.pufferfish.compat.cookery.CookeryFoodIntegration.ASPIC_ITEM);
+                        }
                     }
                     PufferfishItems.FLAIL_VARIANTS.forEach(output::accept);
                     output.accept(PufferfishBlocks.skin(null));
@@ -124,6 +128,9 @@ public class KaleidoscopePufferfish {
             CreateIntegration.register(bus, container);
         }
         PufferfishItems.register(bus);
+        if (ModList.get().isLoaded("kaleidoscope_chinesefood")) {
+            org.glavo.kaleidoscope.pufferfish.compat.chinesefood.ChineseFoodIntegration.register(bus);
+        }
         if (ModList.get().isLoaded("kaleidoscope_cookery")) {
             org.glavo.kaleidoscope.pufferfish.compat.cookery.CookeryFoodIntegration.register(bus);
         }

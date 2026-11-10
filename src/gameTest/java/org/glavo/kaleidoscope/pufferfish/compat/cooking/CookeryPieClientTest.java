@@ -24,10 +24,16 @@ public final class CookeryPieClientTest {
     private CookeryPieClientTest() {}
 
     public static void verify(Minecraft minecraft) {
-        var item = new ItemStack(CookeryFoodIntegration.STARGAZY_PIE_ITEM.get());
+        verify(minecraft, CookeryFoodIntegration.STARGAZY_PIE.get(), CookeryFoodIntegration.STARGAZY_PIE_ITEM.get(), "stargazy-pie");
+        verify(minecraft, CookeryFoodIntegration.ASPIC.get(), CookeryFoodIntegration.ASPIC_ITEM.get(), "aspic");
+    }
+
+    private static void verify(Minecraft minecraft, com.github.ysbbbbbb.kaleidoscopecookery.block.food.FoodBiteBlock block,
+            net.minecraft.world.item.Item food, String name) {
+        var item = new ItemStack(food);
         var itemModel = minecraft.getItemRenderer().getModel(item, null, null, 0);
         if (itemModel == minecraft.getModelManager().getMissingModel() || item.getHoverName().getString().startsWith("block.")) {
-            throw new IllegalStateException("Missing pufferfish pie item model or translation");
+            throw new IllegalStateException("Missing pufferfish meal model or translation: " + name);
         }
         var target = new TextureTarget(1000, 340, true, Minecraft.ON_OSX);
         target.setClearColor(0.16F, 0.18F, 0.21F, 1);
@@ -43,20 +49,24 @@ public final class CookeryPieClientTest {
         RenderSystem.setShaderColor(1, 1, 1, 1);
         try {
             int previous = Integer.MAX_VALUE;
-            var block = CookeryFoodIntegration.STARGAZY_PIE.get();
             for (int bites = 0; bites <= 4; bites++) {
                 var state = block.defaultBlockState().setValue(block.getBites(), bites);
                 var model = minecraft.getBlockRenderer().getBlockModel(state);
                 int quads = model.getQuads(state, null, RandomSource.create()).size();
                 if (model == minecraft.getModelManager().getMissingModel() || quads <= 0 || quads >= previous) {
-                    throw new IllegalStateException("Missing or non-decreasing pufferfish pie portion model: " + bites);
+                    throw new IllegalStateException("Missing or non-decreasing pufferfish meal portion model: " + name + "/" + bites);
                 }
                 previous = quads;
                 var buffers = minecraft.renderBuffers().bufferSource();
                 var pose = new PoseStack();
                 pose.translate(100 + bites * 200, 100, 0);
                 pose.scale(48, -48, 48);
-                minecraft.getItemRenderer().renderStatic(item, ItemDisplayContext.GUI, 15728880,
+                var display = name.equals("aspic") && bites == 0
+                        ? new ItemStack(org.glavo.kaleidoscope.pufferfish.PufferfishItems.SKIN_BROTH.get()) : item;
+                if (minecraft.getItemRenderer().getModel(display, null, null, 0) == minecraft.getModelManager().getMissingModel()) {
+                    throw new IllegalStateException("Missing broth model");
+                }
+                minecraft.getItemRenderer().renderStatic(display, ItemDisplayContext.GUI, 15728880,
                         OverlayTexture.NO_OVERLAY, pose, buffers, null, 0);
                 pose = new PoseStack();
                 pose.translate(100 + bites * 200, 250, 0);
@@ -68,10 +78,10 @@ public final class CookeryPieClientTest {
                 buffers.endBatch();
             }
             try (var image = Screenshot.takeScreenshot(target)) {
-                image.writeToFile(Path.of("pufferfish-stargazy-pie-preview.png"));
+                image.writeToFile(Path.of("pufferfish-" + name + "-preview.png"));
             }
         } catch (java.io.IOException exception) {
-            throw new IllegalStateException("Could not save pufferfish pie preview", exception);
+            throw new IllegalStateException("Could not save pufferfish meal preview: " + name, exception);
         } finally {
             view.popMatrix();
             RenderSystem.applyModelViewMatrix();

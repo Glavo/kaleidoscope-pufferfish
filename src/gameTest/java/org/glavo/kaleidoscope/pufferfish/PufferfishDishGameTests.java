@@ -21,6 +21,21 @@ public final class PufferfishDishGameTests {
     private PufferfishDishGameTests() {}
 
     @GameTest(template = "empty")
+    public static void aspicRecipesRequireChineseFood(GameTestHelper helper) {
+        boolean cookery = ModList.get().isLoaded("kaleidoscope_cookery");
+        boolean chineseFood = ModList.get().isLoaded("kaleidoscope_chinesefood");
+        var manager = helper.getLevel().getRecipeManager();
+        helper.assertTrue(manager.byKey(KaleidoscopePufferfish.id("compat/cookery/pufferfish_skin_broth")).isPresent() == (cookery && chineseFood)
+                && manager.byKey(KaleidoscopePufferfish.id("compat/chinesefood/pufferfish_aspic")).isPresent() == (cookery && chineseFood),
+                "Aspic processing ignored its optional dependencies");
+        helper.assertTrue(net.minecraft.core.registries.BuiltInRegistries.ITEM.containsKey(KaleidoscopePufferfish.id("pufferfish_aspic")) == cookery,
+                "Aspic ignored its optional food block dependency");
+        helper.assertTrue(PufferfishItems.SKIN_BROTH.get().getDefaultInstance().getFoodProperties(null) == null,
+                "Unchilled broth should not be edible");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void baoziProvidesWaterBreathingWithoutContainers(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         helper.assertTrue(PufferfishItems.RAW_BAOZI.get().getDefaultInstance().getFoodProperties(player) == null,

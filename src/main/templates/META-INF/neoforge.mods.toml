@@ -93,6 +93,13 @@ config="${mod_id}.mixins.json"
     side="BOTH"
 
 [[dependencies.${mod_id}]]
+    modId="kaleidoscope_chinesefood"
+    type="optional"
+    versionRange="[1.2.0,)"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.${mod_id}]]
     modId="farmersdelight"
     type="optional"
     versionRange="${farmers_delight_version_range}"
