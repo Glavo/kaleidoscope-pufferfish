@@ -6,7 +6,6 @@ package org.glavo.kaleidoscope.pufferfish.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.CubeListBuilder;
@@ -42,7 +41,7 @@ public final class PufferfishFlailModel {
 
     /// Creates model geometry using the current client model layers.
     public PufferfishFlailModel() {
-        fish = new DeflatingPufferfishModel<>(Minecraft.getInstance().getEntityModels().bakeLayer(ModelLayers.PUFFERFISH_BIG));
+        fish = new DeflatingPufferfishModel<>(Minecraft.getInstance().getEntityModels());
         var mesh = new MeshDefinition();
         mesh.getRoot().addOrReplaceChild("link", CubeListBuilder.create()
                 .texOffs(2, 2).addBox(-0.5F, -1, -0.1F, 0.2F, 2, 0.2F)
@@ -77,6 +76,7 @@ public final class PufferfishFlailModel {
 
     /// Renders a head centered at the current origin, preserving dye and enchantment glint.
     public void renderHead(ItemStack stack, PoseStack pose, MultiBufferSource buffers, int light, int overlay, float age) {
+        fish.prepare(stack);
         stack = PufferfishItems.flailFish(stack);
         var color = stack.get(KaleidoscopePufferfish.COLOR.get());
         var texture = PufferfishItems.hasHeavyCombat(stack) ? PufferfishTextures.heavyEntity()
@@ -86,7 +86,6 @@ public final class PufferfishFlailModel {
         pose.pushPose();
         pose.scale(0.8F, -0.8F, -0.8F);
         pose.translate(0, -18.0F / 16, 0);
-        fish.prepare(stack);
         fish.setupAnim(null, 0, 0, age, 0, 0);
         fish.renderToBuffer(pose, ItemRenderer.getFoilBufferDirect(buffers, RenderType.entityCutoutNoCull(texture),
                 false, stack.hasFoil()), light, overlay);

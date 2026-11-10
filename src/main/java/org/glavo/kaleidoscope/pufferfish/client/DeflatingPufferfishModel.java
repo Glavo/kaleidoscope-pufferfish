@@ -3,77 +3,51 @@
 
 package org.glavo.kaleidoscope.pufferfish.client;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.model.HierarchicalModel;
 import net.minecraft.client.model.PufferfishBigModel;
+import net.minecraft.client.model.PufferfishMidModel;
+import net.minecraft.client.model.PufferfishSmallModel;
+import net.minecraft.client.model.geom.EntityModelSet;
+import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.geom.ModelPart;
-import net.minecraft.client.model.geom.PartPose;
-import net.minecraft.client.model.geom.builders.CubeListBuilder;
-import net.minecraft.client.model.geom.builders.LayerDefinition;
-import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import org.glavo.kaleidoscope.pufferfish.PufferfishDurability;
 
-/// Keeps fins attached while the body flattens and the spines fold against its skin.
-public final class DeflatingPufferfishModel<T extends Entity> extends PufferfishBigModel<T> {
-    private final ModelPart tail;
-    private int stage;
+/// Uses vanilla puff states, aligned around the same center for every item rendering context.
+public final class DeflatingPufferfishModel<T extends Entity> extends HierarchicalModel<T> {
+    private final HierarchicalModel<T> inflated;
+    private final HierarchicalModel<T> intermediate;
+    private final HierarchicalModel<T> deflated;
+    private HierarchicalModel<T> current;
 
-    public DeflatingPufferfishModel(ModelPart root) {
-        super(root);
-        var mesh = new MeshDefinition();
-        mesh.getRoot().addOrReplaceChild("tail", CubeListBuilder.create().texOffs(24, 0)
-                .addBox(-2, -0.3F, 0, 4, 0.6F, 2), PartPose.offset(0, 18, 4));
-        tail = LayerDefinition.create(mesh, 32, 32).bakeRoot().getChild("tail");
+    public DeflatingPufferfishModel(EntityModelSet models) {
+        inflated = new PufferfishBigModel<>(models.bakeLayer(ModelLayers.PUFFERFISH_BIG));
+        intermediate = new PufferfishMidModel<>(models.bakeLayer(ModelLayers.PUFFERFISH_MEDIUM));
+        deflated = new PufferfishSmallModel<>(models.bakeLayer(ModelLayers.PUFFERFISH_SMALL));
+        current = inflated;
     }
 
     public void prepare(ItemStack stack) {
-        stage = PufferfishDurability.deflationStage(stack);
-        root().getAllParts().forEach(ModelPart::resetPose);
-        tail.resetPose();
-        if (stage == 0) return;
-        float width = width(stage);
-        float height = height(stage);
-        float depth = 1 - stage * 0.04F;
-        for (var part : root().getAllParts().toList()) {
-            if (part == root()) continue;
-            part.x *= width;
-            part.y = 18 + (part.y - 18) * height;
-            part.z *= depth;
-            part.xScale = width;
-            part.yScale = height;
-            part.zScale = depth;
-        }
-        float spine = stage == 1 ? 0.65F : stage == 2 ? 0.3F : 0.08F;
-        for (String side : new String[] {"top", "bottom"}) {
-            for (String position : new String[] {"front", "middle", "back"}) {
-                var fin = root().getChild(side + "_" + position + "_fin");
-                fin.yScale = spine;
-                if (!position.equals("middle")) fin.xRot *= 1 + stage * 0.3F;
-            }
-        }
-        for (String side : new String[] {"left", "right"}) {
-            for (String position : new String[] {"front", "back"}) {
-                var fin = root().getChild(side + "_" + position + "_fin");
-                fin.xScale = spine;
-                fin.yRot *= 1 + stage * 0.3F;
-            }
-            var fin = root().getChild(side + "_blue_fin");
-            fin.xScale = 1;
-            fin.yScale = 1;
-            fin.zScale = 1;
-        }
-        tail.z = 4 * depth;
-        tail.zScale = stage * 0.35F;
+        int stage = PufferfishDurability.deflationStage(stack);
+        current = stage == 0 ? inflated : stage == 3 ? deflated : intermediate;
+        current.root().getAllParts().forEach(ModelPart::resetPose);
+        float scale = stage == 1 ? 1.3F : 1;
+        float center = stage == 0 ? 18 : stage == 3 ? 21.5F : 19.5F;
+        var root = current.root();
+        root.xScale = root.yScale = root.zScale = scale;
+        root.y = 18 - center * scale;
     }
 
-    public static float height(int stage) { return switch (stage) { case 1 -> 0.80F; case 2 -> 0.52F; case 3 -> 0.25F; default -> 1; }; }
-    public static float width(int stage) { return switch (stage) { case 1 -> 0.94F; case 2 -> 0.86F; case 3 -> 0.82F; default -> 1; }; }
+    /// Relative height including the small fish's raised eyes, used to keep its underside supported.
+    public static float height(int stage) {
+        return switch (stage) { case 1 -> 6.5F / 8; case 2 -> 5.0F / 8; case 3 -> 3.0F / 8; default -> 1; };
+    }
+
+    @Override public ModelPart root() { return current.root(); }
 
     @Override
-    public void renderToBuffer(PoseStack pose, VertexConsumer buffer, int light, int overlay, int color) {
-        super.renderToBuffer(pose, buffer, light, overlay, color);
-        if (stage > 0) tail.render(pose, buffer, light, overlay, color);
+    public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float age, float yaw, float pitch) {
+        current.setupAnim(entity, limbSwing, limbSwingAmount, age, yaw, pitch);
     }
 }

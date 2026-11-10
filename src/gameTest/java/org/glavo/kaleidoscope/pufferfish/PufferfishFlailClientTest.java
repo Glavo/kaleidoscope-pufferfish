@@ -66,6 +66,20 @@ public final class PufferfishFlailClientTest {
                 }
             }
         }
+        var headModel = new PufferfishFlailModel();
+        for (var item : PufferfishItems.FLAIL_VARIANTS) {
+            var pristine = item.toStack();
+            var worn = pristine.copy();
+            PufferfishDurability.activate(worn);
+            worn.setDamageValue(worn.getMaxDamage() - 1);
+            var before = new Capture();
+            var after = new Capture();
+            headModel.renderHead(pristine, new PoseStack(), before, LIGHT, OverlayTexture.NO_OVERLAY, 0);
+            headModel.renderHead(worn, new PoseStack(), after, LIGHT, OverlayTexture.NO_OVERLAY, 0);
+            if (before.vertices != after.vertices || !PufferfishItems.isRadiant(pristine) && before.geometry != after.geometry) {
+                throw new IllegalStateException("Worn flail changed its inflated head geometry");
+            }
+        }
         verifyFlight(minecraft);
         preview(minecraft);
         previewSlots(minecraft);

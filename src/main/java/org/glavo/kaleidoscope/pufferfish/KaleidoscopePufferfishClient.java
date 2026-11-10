@@ -38,6 +38,7 @@ public class KaleidoscopePufferfishClient {
     private org.glavo.kaleidoscope.pufferfish.client.PufferfishLampItemRenderer lampRenderer;
     private org.glavo.kaleidoscope.pufferfish.client.PufferfishShieldRenderer shieldRenderer;
     private org.glavo.kaleidoscope.pufferfish.client.PufferfishBoatItemRenderer boatRenderer;
+    private org.glavo.kaleidoscope.pufferfish.client.DeflatedPufferfishItemRenderer deflatedFishRenderer;
 
     public KaleidoscopePufferfishClient(IEventBus bus) {
         if (ModList.get().isLoaded("create")) {
@@ -107,6 +108,8 @@ public class KaleidoscopePufferfishClient {
     }
 
     private void registerItemExtensions(RegisterClientExtensionsEvent event) {
+        event.registerItem(deflatedFishRenderer(), net.minecraft.core.registries.BuiltInRegistries.ITEM.stream()
+                .filter(item -> PufferfishItems.isPufferfish(item.getDefaultInstance())).toArray(net.minecraft.world.item.Item[]::new));
         event.registerItem(new org.glavo.kaleidoscope.pufferfish.client.PufferfishPumpRenderer(), PufferfishItems.PUMP.get());
         event.registerItem(lampRenderer(), PufferfishLamps.VARIANTS.values().stream()
                 .map(variant -> variant.block().get().asItem()).toArray(net.minecraft.world.item.Item[]::new));
@@ -114,6 +117,11 @@ public class KaleidoscopePufferfishClient {
         event.registerItem(PufferfishConduitRenderer.itemExtensions(), PufferfishBlocks.CONDUIT.get().asItem());
         event.registerItem(shieldRenderer(), PufferfishShields.VARIANTS.values().stream().map(holder -> holder.get()).toArray(net.minecraft.world.item.Item[]::new));
         event.registerItem(flailRenderer(), PufferfishItems.FLAIL_VARIANTS.stream().map(item -> item.get()).toArray(net.minecraft.world.item.Item[]::new));
+    }
+
+    private org.glavo.kaleidoscope.pufferfish.client.DeflatedPufferfishItemRenderer deflatedFishRenderer() {
+        if (deflatedFishRenderer == null) deflatedFishRenderer = new org.glavo.kaleidoscope.pufferfish.client.DeflatedPufferfishItemRenderer();
+        return deflatedFishRenderer;
     }
 
     private void registerSprites(RegisterSpriteSourceTypesEvent event) {
@@ -130,6 +138,7 @@ public class KaleidoscopePufferfishClient {
     }
 
     private void registerReloadListeners(RegisterClientReloadListenersEvent event) {
+        event.registerReloadListener(deflatedFishRenderer());
         event.registerReloadListener(boatRenderer());
         event.registerReloadListener(new PufferfishTextures());
         event.registerReloadListener(new org.glavo.kaleidoscope.pufferfish.client.PufferfishBoatTextures());

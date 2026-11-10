@@ -105,7 +105,12 @@ public final class PufferfishGloveClientTest {
                 var capture = new Capture();
                 var pose = new PoseStack();
                 layer.render(pose, capture, LIGHT, player, 0, 0, 0, 0, 0, 0);
-                if (capture.parts.isEmpty() || capture.parts.containsKey(type(deflated)) || !pose.clear()) {
+                var wornVertices = capture.parts.get(type(deflated));
+                var gloveCapture = new Capture();
+                glove.renderAttached(model, player, deflated, player.getMainArm(), new PoseStack(), gloveCapture, LIGHT, 0);
+                var gloveVertices = gloveCapture.parts.get(type(deflated));
+                if (wornVertices == null || !pose.clear()
+                        || Math.abs((wornVertices.maxY - wornVertices.minY) - (gloveVertices.maxY - gloveVertices.minY)) < 0.01F) {
                     throw new IllegalStateException("Deflated fish remained a glove instead of a held item: " + deflated);
                 }
             }

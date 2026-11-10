@@ -23,6 +23,7 @@ public final class PufferfishDurability {
 
     /// Advances at each quarter of spent durability, with the final stage lasting until breakage.
     public static int deflationStage(ItemStack stack) {
+        if (!PufferfishItems.isPufferfish(stack)) return 0;
         int maximum = stack.getMaxDamage();
         return maximum <= 0 ? 0 : (int) Math.min(3, (long) stack.getDamageValue() * 4 / maximum);
     }

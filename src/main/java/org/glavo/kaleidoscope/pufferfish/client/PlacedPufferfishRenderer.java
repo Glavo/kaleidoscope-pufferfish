@@ -6,7 +6,6 @@ package org.glavo.kaleidoscope.pufferfish.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.model.geom.EntityModelSet;
-import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -29,7 +28,7 @@ public final class PlacedPufferfishRenderer implements BlockEntityRenderer<Place
     }
 
     public PlacedPufferfishRenderer(EntityModelSet models) {
-        model = new DeflatingPufferfishModel<>(models.bakeLayer(ModelLayers.PUFFERFISH_BIG));
+        model = new DeflatingPufferfishModel<>(models);
         model.setupAnim(null, 0, 0, 0, 0, 0);
     }
 

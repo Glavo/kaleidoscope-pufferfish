@@ -37,6 +37,13 @@ public final class PufferfishPumpGameTests {
         helper.assertTrue(PufferfishDurability.canWearAsGlove(heavy), "Odd maximum rounded glove cutoff down");
         heavy.setDamageValue(1524);
         helper.assertTrue(!PufferfishDurability.canWearAsGlove(heavy) && PufferfishDurability.deflationStage(heavy) == 2, "Odd maximum rounded glove cutoff up");
+        for (var item : PufferfishItems.FLAIL_VARIANTS) {
+            var flail = item.toStack();
+            PufferfishDurability.activate(flail);
+            flail.setDamageValue(flail.getMaxDamage() - 1);
+            helper.assertTrue(flail.isDamaged() && PufferfishDurability.deflationStage(flail) == 0,
+                    "Flail durability must not deflate its head");
+        }
         helper.succeed();
     }
 

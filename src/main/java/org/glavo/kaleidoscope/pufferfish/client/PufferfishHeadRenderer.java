@@ -8,7 +8,6 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.PlayerModel;
-import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -25,7 +24,7 @@ public final class PufferfishHeadRenderer {
     private static final ResourceLocation ORIGINAL = ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png");
     private static final Map<PlayerModel<?>, Visibility> VISIBILITY = new IdentityHashMap<>();
     private final DeflatingPufferfishModel<LivingEntity> model = new DeflatingPufferfishModel<>(
-            Minecraft.getInstance().getEntityModels().bakeLayer(ModelLayers.PUFFERFISH_BIG));
+            Minecraft.getInstance().getEntityModels());
 
     public static void beforePlayer(RenderPlayerEvent.Pre event) {
         if (PufferfishHeadgear.isWearing(event.getEntity())) {
