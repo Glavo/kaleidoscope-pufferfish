@@ -16,6 +16,13 @@ import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 public final class PufferfishRetaliation {
     private PufferfishRetaliation() {}
 
+    public static int thornsLevel(ItemStack stack) {
+        if (PufferfishItems.hasNetheriteCombat(stack)) return 3;
+        var id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        return stack.is(PufferfishItems.DIAMOND.get()) || id.getNamespace().equals(KaleidoscopePufferfish.MODID)
+                && id.getPath().startsWith("diamond_pufferfish_skin_") ? 2 : 1;
+    }
+
     /// Equipment retaliation is balanced independently of weapon attacks and placed-fish contact.
     @javax.annotation.Nullable
     public static MobEffectInstance effect(ItemStack stack) {

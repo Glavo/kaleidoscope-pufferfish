@@ -56,7 +56,7 @@ public final class PufferfishShields {
 
     public static void register(IEventBus bus) { ITEMS.register(bus); }
 
-    /// Successful blocks roll Thorns I; radiant effects require successful thorns damage.
+    /// Successful blocks roll material-specific thorns; radiant effects require successful thorns damage.
     public static void retaliate(LivingShieldBlockEvent event) {
         var defender = event.getEntity();
         var source = event.getDamageSource();
@@ -70,7 +70,7 @@ public final class PufferfishShields {
             if (effect != null) attacker.addEffect(effect, defender);
         }
         var thorns = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.THORNS);
-        thorns.value().doPostAttack(level, 1,
+        thorns.value().doPostAttack(level, PufferfishRetaliation.thornsLevel(shield),
                 new EnchantedItemInUse(shield, LivingEntity.getSlotForHand(defender.getUsedItemHand()), defender),
                 EnchantmentTarget.VICTIM, defender, source);
     }

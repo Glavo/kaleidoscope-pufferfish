@@ -108,15 +108,20 @@ public final class PufferfishArmor {
                 || source.is(DamageTypes.THORNS) || !(source.getEntity() instanceof LivingEntity attacker)
                 || attacker == wearer || event.getNewDamage() + event.getReduction(DamageContainer.Reduction.ABSORPTION) <= 0) return;
         EnchantedItemInUse thornsItem = null;
+        int strength = 0;
         for (var slot : List.of(EquipmentSlot.CHEST, EquipmentSlot.HEAD, EquipmentSlot.LEGS, EquipmentSlot.FEET)) {
             var stack = wearer.getItemBySlot(slot);
             if (!(stack.getItem() instanceof ArmorItem armor) || armor.getEquipmentSlot() != slot
                     || VARIANTS.values().stream().noneMatch(item -> stack.is(item.get()))) continue;
-            if (thornsItem == null) thornsItem = new EnchantedItemInUse(stack, slot, wearer);
+            int levelForItem = PufferfishRetaliation.thornsLevel(stack);
+            if (levelForItem > strength) {
+                strength = levelForItem;
+                thornsItem = new EnchantedItemInUse(stack, slot, wearer);
+            }
         }
         if (thornsItem == null) return;
         var thorns = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.THORNS);
-        thorns.value().doPostAttack(level, 1, thornsItem, EnchantmentTarget.VICTIM, wearer, source);
+        thorns.value().doPostAttack(level, strength, thornsItem, EnchantmentTarget.VICTIM, wearer, source);
     }
 
     @javax.annotation.Nullable
