@@ -8,7 +8,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.ConduitBlockEntity;
 import org.glavo.mcmod.pufferfish.PufferfishConduitBlockEntity;
-import org.glavo.mcmod.pufferfish.PufferfishBlocks;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -18,10 +17,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ConduitBlockEntity.class)
 public abstract class PufferfishConduitMixin {
     @Inject(method = "updateShape", at = @At("HEAD"), cancellable = true)
-    private static void pufferfishPlease$ancientActivation(Level level, BlockPos pos, List<BlockPos> frame,
+    private static void pufferfishPlease$activation(Level level, BlockPos pos, List<BlockPos> frame,
             CallbackInfoReturnable<Boolean> callback) {
-        if (level.getBlockState(pos).is(PufferfishBlocks.ANCIENT_CONDUIT.get())) {
-            callback.setReturnValue(PufferfishConduitBlockEntity.updateAncientFrame(level, pos, frame));
+        if (level.getBlockEntity(pos) instanceof PufferfishConduitBlockEntity) {
+            callback.setReturnValue(PufferfishConduitBlockEntity.updateFrame(level, pos, frame));
         }
     }
 

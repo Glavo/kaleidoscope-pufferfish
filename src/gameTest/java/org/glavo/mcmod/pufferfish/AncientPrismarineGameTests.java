@@ -38,7 +38,7 @@ public final class AncientPrismarineGameTests {
         level.setBlockAndUpdate(pos, PufferfishBlocks.ANCIENT_CONDUIT.get().defaultBlockState());
         var core = (PufferfishConduitBlockEntity) level.getBlockEntity(pos);
         var frame = new ArrayList<BlockPos>();
-        helper.assertTrue(!PufferfishConduitBlockEntity.updateAncientFrame(level, pos, frame), "Water alone activated the core");
+        helper.assertTrue(!PufferfishConduitBlockEntity.updateFrame(level, pos, frame), "Water alone activated the core");
         var ring = new ArrayList<BlockPos>();
         for (int x = -2; x <= 2; x++) for (int y = -2; y <= 2; y++) {
             if (Math.abs(x) == 2 || Math.abs(y) == 2) {
@@ -47,11 +47,13 @@ public final class AncientPrismarineGameTests {
                 level.setBlockAndUpdate(block, Blocks.PRISMARINE.defaultBlockState());
             }
         }
-        helper.assertTrue(!PufferfishConduitBlockEntity.updateAncientFrame(level, pos, frame), "Vanilla prismarine activated the core");
-        for (var block : ring) level.setBlockAndUpdate(block, PufferfishBlocks.ANCIENT_PRISMARINE.get().defaultBlockState());
+        helper.assertTrue(PufferfishConduitBlockEntity.updateFrame(level, pos, frame), "Vanilla prismarine did not activate the core");
+        for (int i = 0; i < ring.size(); i += 2) {
+            level.setBlockAndUpdate(ring.get(i), PufferfishBlocks.ANCIENT_PRISMARINE.get().defaultBlockState());
+        }
         var missing = ring.getFirst();
         level.removeBlock(missing, false);
-        helper.assertTrue(!PufferfishConduitBlockEntity.updateAncientFrame(level, pos, frame) && frame.size() == 15,
+        helper.assertTrue(!PufferfishConduitBlockEntity.updateFrame(level, pos, frame) && frame.size() == 15,
                 "Fifteen blocks activated the core");
         level.setBlockAndUpdate(missing, PufferfishBlocks.SUSPICIOUS_ANCIENT_PRISMARINE.get().defaultBlockState());
         helper.runAfterDelay(45, () -> {
@@ -60,7 +62,7 @@ public final class AncientPrismarineGameTests {
             var player = helper.makeMockPlayer(GameType.SURVIVAL);
             for (int i = 0; i < 10; i++) brushable.brush(level.getGameTime() + i * 10, player, Direction.UP);
             helper.assertTrue(level.getBlockState(missing).is(PufferfishBlocks.ANCIENT_PRISMARINE.get())
-                    && PufferfishConduitBlockEntity.updateAncientFrame(level, pos, frame), "Brushing broke the frame");
+                    && PufferfishConduitBlockEntity.updateFrame(level, pos, frame), "Brushing broke the frame");
             level.removeBlock(missing, false);
             helper.runAfterDelay(45, () -> {
                 helper.assertTrue(!core.isActive() && !PufferfishConduitSpawning.isInAncientRange(level, pos),

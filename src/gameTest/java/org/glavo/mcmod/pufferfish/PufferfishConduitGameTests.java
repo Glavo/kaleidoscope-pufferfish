@@ -131,7 +131,8 @@ public final class PufferfishConduitGameTests {
                     boolean perimeter = z == 0 && (Math.abs(x) == 2 || Math.abs(y) == 2)
                             || full && (x == 0 && (Math.abs(y) == 2 || Math.abs(z) == 2)
                             || y == 0 && (Math.abs(x) == 2 || Math.abs(z) == 2));
-                    if (perimeter) helper.setBlock(CENTER.offset(x, y, z), Blocks.PRISMARINE);
+                    if (perimeter) helper.setBlock(CENTER.offset(x, y, z),
+                            full && (x + y + z) % 2 == 0 ? PufferfishBlocks.ANCIENT_PRISMARINE.get() : Blocks.PRISMARINE);
                 }
             }
         }

@@ -36,13 +36,13 @@ public final class PufferfishConduitBlockEntity extends ConduitBlockEntity {
         return true;
     }
 
-    public static boolean updateAncientFrame(Level level, BlockPos pos, List<BlockPos> frame) {
+    public static boolean updateFrame(Level level, BlockPos pos, List<BlockPos> frame) {
         frame.clear();
         if (!isSubmerged(level, pos)) return false;
         for (var offset : BlockPos.betweenClosed(-2, -2, -2, 2, 2, 2)) {
             if (isFrameOffset(offset)) {
                 var framePos = pos.offset(offset);
-                if (level.getBlockState(framePos).is(ANCIENT_FRAME)) frame.add(framePos);
+                if (isFrameBlock(level, framePos, pos)) frame.add(framePos);
             }
         }
         return frame.size() >= 16;
@@ -51,6 +51,11 @@ public final class PufferfishConduitBlockEntity extends ConduitBlockEntity {
     private static boolean isFrameOffset(BlockPos offset) {
         int x = Math.abs(offset.getX()), y = Math.abs(offset.getY()), z = Math.abs(offset.getZ());
         return x == 0 && (y == 2 || z == 2) || y == 0 && (x == 2 || z == 2) || z == 0 && (x == 2 || y == 2);
+    }
+
+    private static boolean isFrameBlock(Level level, BlockPos framePos, BlockPos corePos) {
+        var state = level.getBlockState(framePos);
+        return state.is(ANCIENT_FRAME) || state.isConduitFrame(level, framePos, corePos);
     }
 
     public static void applyPower(Level level, BlockPos pos, int frameSize) {
@@ -79,7 +84,7 @@ public final class PufferfishConduitBlockEntity extends ConduitBlockEntity {
             for (var offset : BlockPos.betweenClosed(-2, -2, -2, 2, 2, 2)) {
                 if (isFrameOffset(offset)) {
                     var framePos = pos.offset(offset);
-                    if (level.getBlockState(framePos).isConduitFrame(level, framePos, pos)) frameSize++;
+                    if (isFrameBlock(level, framePos, pos)) frameSize++;
                 }
             }
         }

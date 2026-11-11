@@ -35,7 +35,7 @@ public final class AncientPufferfishConduitGameTests {
         level.setBlockAndUpdate(normalPos, PufferfishBlocks.CONDUIT.get().defaultBlockState());
         for (int x = -2; x <= 2; x++) for (int y = -2; y <= 2; y++) {
             if (Math.abs(x) == 2 || Math.abs(y) == 2) {
-                level.setBlockAndUpdate(pos.offset(x, y, 0), PufferfishBlocks.ANCIENT_PRISMARINE.get().defaultBlockState());
+                level.setBlockAndUpdate(pos.offset(x, y, 0), Blocks.PRISMARINE.defaultBlockState());
                 level.setBlockAndUpdate(normalPos.offset(x, y, 0), PufferfishBlocks.ANCIENT_PRISMARINE.get().defaultBlockState());
             }
         }
@@ -56,7 +56,9 @@ public final class AncientPufferfishConduitGameTests {
         distant.setNoGravity(true);
         level.addFreshEntity(distant);
         helper.runAfterDelay(45, () -> {
-            helper.assertTrue(ancient.isActive() && !normal.isActive(), "Ancient frame activated the wrong conduit");
+            helper.assertTrue(ancient.isActive() && normal.isActive(), "Conduits did not accept each other's frame materials");
+            helper.assertTrue(PufferfishConduitSpawning.isInRange(level, normalPos.east(31)),
+                    "Ancient frame did not contribute to the normal conduit aura range");
             helper.assertTrue(PufferfishConduitSpawning.isInAncientRange(level, pos.north(31))
                     && !PufferfishConduitSpawning.isInAncientRange(level, pos.above(32)), "Ancient range is not thirty-two blocks");
             helper.assertTrue(player.hasEffect(PufferfishEffects.PUFFERFISH_POWER)
