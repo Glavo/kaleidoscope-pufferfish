@@ -1,0 +1,28 @@
+{
+  "parent": "pufferfish_please:adventure/fish_fighter",
+  "display": {
+    "icon": {
+      "id": "pufferfish_please:diamond_pufferfish"
+    },
+    "title": {
+      "translate": "advancements.pufferfish_please.diamond_persuasion.title"
+    },
+    "description": {
+      "translate": "advancements.pufferfish_please.diamond_persuasion.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "kill": {
+      "trigger": "pufferfish_please:kill_with_diamond_pufferfish"
+    }
+  },
+  "requirements": [
+    [
+      "kill"
+    ]
+  ]
+}

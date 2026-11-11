@@ -108,6 +108,7 @@ public final class PufferfishAdvancementGameTests {
                 boolean granted = List.of("melee", "throw", "flail").contains(mode);
                 helper.assertTrue(done(player, "fish_fighter") == granted, "Incorrect weapon kill progress: " + mode);
                 helper.assertTrue(!done(player, "tetanus"), "Unrelated or indirect damage granted tetanus progress: " + mode);
+                helper.assertTrue(!done(player, "diamond_persuasion"), "Unrelated or indirect damage granted diamond progress: " + mode);
                 player.getAdvancements().stopListening();
             });
             helper.succeed();
@@ -115,8 +116,8 @@ public final class PufferfishAdvancementGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void tetanusUsesTheKillingWeaponAcrossFishAndFlailVariants(GameTestHelper helper) {
-        record KillCase(ServerPlayer player, boolean tetanus, String name) {}
+    public static void materialKillProgressUsesTheKillingWeaponAcrossFishAndFlailVariants(GameTestHelper helper) {
+        record KillCase(ServerPlayer player, boolean tetanus, boolean diamond, String name) {}
         var cases = new java.util.ArrayList<KillCase>();
         var weapons = new java.util.ArrayList<ItemStack>();
         PufferfishVariant.ALL.forEach(variant -> weapons.add(variant.fish()));
@@ -125,6 +126,8 @@ public final class PufferfishAdvancementGameTests {
             var fish = PufferfishItems.flailFish(weapon);
             boolean expected = fish.is(PufferfishItems.IRON.get())
                     || PufferfishItems.COPPER_VARIANTS.stream().anyMatch(item -> fish.is(item.get()));
+            boolean diamond = fish.is(PufferfishItems.DIAMOND.get());
+            var switchedWeapon = expected ? PufferfishItems.DIAMOND.toStack() : PufferfishItems.IRON.toStack();
             for (boolean projectile : new boolean[] {false, true}) {
                 if (!projectile && PufferfishItems.isFlail(weapon)) continue;
                 if (projectile && !PufferfishItems.isFlail(weapon) && !PufferfishItems.canThrow(weapon)) continue;
@@ -141,7 +144,7 @@ public final class PufferfishAdvancementGameTests {
                     } else {
                         shot = new ThrownPufferfish(helper.getLevel(), player);
                         shot.setItem(weapon.copy());
-                        player.setItemInHand(InteractionHand.MAIN_HAND, expected ? new ItemStack(Items.PUFFERFISH) : PufferfishItems.IRON.toStack());
+                        player.setItemInHand(InteractionHand.MAIN_HAND, switchedWeapon.copy());
                     }
                     shot.setPos(target.getX(), target.getY() + 0.8, target.getZ() - 2);
                     shot.setDeltaMovement(0, 0, 3);
@@ -154,8 +157,8 @@ public final class PufferfishAdvancementGameTests {
                 String name = PufferfishVariant.of(weapon).fishName() + (projectile ? " projectile" : " melee");
                 helper.assertTrue(target.isDeadOrDying(), "Weapon did not kill its target: " + name);
                 // The deferred death check must retain the weapon that actually killed the target.
-                player.setItemInHand(InteractionHand.MAIN_HAND, expected ? new ItemStack(Items.PUFFERFISH) : PufferfishItems.IRON.toStack());
-                cases.add(new KillCase(player, expected, name));
+                player.setItemInHand(InteractionHand.MAIN_HAND, switchedWeapon.copy());
+                cases.add(new KillCase(player, expected, diamond, name));
                 target.discard();
             }
         }
@@ -163,6 +166,7 @@ public final class PufferfishAdvancementGameTests {
             for (var test : cases) {
                 helper.assertTrue(done(test.player(), "fish_fighter"), "Weapon kill did not grant the parent: " + test.name());
                 helper.assertTrue(done(test.player(), "tetanus") == test.tetanus(), "Incorrect material kill progress: " + test.name());
+                helper.assertTrue(done(test.player(), "diamond_persuasion") == test.diamond(), "Incorrect diamond kill progress: " + test.name());
                 test.player().getAdvancements().stopListening();
             }
             helper.succeed();
