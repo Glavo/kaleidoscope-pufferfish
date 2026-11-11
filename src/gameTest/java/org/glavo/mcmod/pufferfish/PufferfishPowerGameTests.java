@@ -8,7 +8,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffectUtil;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -29,14 +28,26 @@ public final class PufferfishPowerGameTests {
     @GameTest(template = "empty")
     public static void playersReceiveOnlyConduitAbilitiesAndMilkCuresPower(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        var state = Blocks.STONE.defaultBlockState();
+        var pos = helper.absolutePos(new BlockPos(2, 1, 2));
+        float baseSpeed = player.getDigSpeed(state, pos);
         player.addEffect(new MobEffectInstance(PufferfishEffects.PUFFERFISH_POWER, 260));
-        helper.assertTrue(MobEffectUtil.hasWaterBreathing(player) && MobEffectUtil.hasDigSpeed(player)
-                && MobEffectUtil.getDigSpeedAmplification(player) == 0, "Power did not grant conduit abilities");
+        helper.assertTrue(Math.abs(player.getDigSpeed(state, pos) - baseSpeed * 1.2F) < 0.0001F,
+                "Power did not increase mining speed by twenty percent");
         helper.assertTrue(!player.hasEffect(MobEffects.CONDUIT_POWER) && player.getActiveEffects().size() == 1,
                 "Power created extra status effects");
         player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 100, 1));
-        helper.assertTrue(MobEffectUtil.getDigSpeedAmplification(player) == 1, "Power suppressed stronger Haste");
+        helper.assertTrue(Math.abs(player.getDigSpeed(state, pos) - baseSpeed * 1.4F) < 0.0001F,
+                "Power stacked with or suppressed stronger Haste");
         player.removeEffect(MobEffects.DIG_SPEED);
+        player.addEffect(new MobEffectInstance(MobEffects.CONDUIT_POWER, 100));
+        helper.assertTrue(Math.abs(player.getDigSpeed(state, pos) - baseSpeed * 1.2F) < 0.0001F,
+                "Power stacked with conduit mining speed");
+        player.removeEffect(MobEffects.CONDUIT_POWER);
+        player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 1));
+        helper.assertTrue(Math.abs(player.getDigSpeed(state, pos) - baseSpeed * 1.2F * 0.09F) < 0.0001F,
+                "Power bypassed Mining Fatigue");
+        player.removeEffect(MobEffects.DIG_SLOWDOWN);
         player.setHealth(10);
         player.tickCount = 50;
         PufferfishEffects.PUFFERFISH_POWER.get().applyEffectTick(player, 0);
@@ -44,11 +55,48 @@ public final class PufferfishPowerGameTests {
         player.hurt(player.damageSources().magic(), 5);
         helper.assertTrue(player.getHealth() == 5, "Power granted player damage resistance");
         Items.MILK_BUCKET.finishUsingItem(new ItemStack(Items.MILK_BUCKET), helper.getLevel(), player);
-        helper.assertTrue(!MobEffectUtil.hasWaterBreathing(player) && !MobEffectUtil.hasDigSpeed(player)
+        helper.assertTrue(Math.abs(player.getDigSpeed(state, pos) - baseSpeed) < 0.0001F
                 && !player.hasEffect(PufferfishEffects.PUFFERFISH_POWER), "Power survived milk");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void powerPreservesUnderwaterAirWithoutRefillingIt(GameTestHelper helper) {
+        for (var pos : BlockPos.betweenClosed(1, 1, 1, 3, 3, 3)) helper.setBlock(pos, Blocks.WATER);
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setPos(Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(2, 1, 2))));
+        player.addEffect(new MobEffectInstance(PufferfishEffects.PUFFERFISH_POWER, 260));
+        player.baseTick();
+        player.setAirSupply(100);
+        player.baseTick();
+        helper.assertTrue(player.getAirSupply() == 100, "Power consumed or refilled underwater air");
+        var state = Blocks.STONE.defaultBlockState();
+        float poweredSpeed = player.getDigSpeed(state, player.blockPosition());
+        Items.MILK_BUCKET.finishUsingItem(new ItemStack(Items.MILK_BUCKET), helper.getLevel(), player);
+        player.baseTick();
+        helper.assertTrue(player.getAirSupply() < 100, "Milk did not restore underwater air consumption");
+        helper.assertTrue(Math.abs(poweredSpeed - player.getDigSpeed(state, player.blockPosition()) * 1.2F) < 0.0001F,
+                "Power changed the underwater mining penalty");
+
+        player.addEffect(new MobEffectInstance(PufferfishEffects.PUFFERFISH_POWER, 260));
+        player.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 100));
+        player.setAirSupply(100);
+        player.baseTick();
+        helper.assertTrue(player.getAirSupply() == 100, "Power changed existing water breathing");
+        player.removeEffect(MobEffects.WATER_BREATHING);
+        player.setPos(Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(2, 5, 2))));
+        player.baseTick();
+        player.setAirSupply(100);
+        player.baseTick();
+        helper.assertTrue(player.getAirSupply() > 100, "Power prevented air recovery above water");
+
         var cow = EntityType.COW.create(helper.getLevel());
+        cow.setPos(Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(2, 1, 2))));
         cow.addEffect(new MobEffectInstance(PufferfishEffects.PUFFERFISH_POWER, 260));
-        helper.assertTrue(!MobEffectUtil.hasWaterBreathing(cow) && !MobEffectUtil.hasDigSpeed(cow), "Power empowered unrelated mobs");
+        cow.baseTick();
+        cow.setAirSupply(100);
+        cow.baseTick();
+        helper.assertTrue(cow.getAirSupply() < 100, "Power granted breathing to an unrelated mob");
         helper.succeed();
     }
 

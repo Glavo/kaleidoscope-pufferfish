@@ -7,12 +7,15 @@ import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
+import net.minecraft.world.effect.MobEffectUtil;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.Pufferfish;
 import net.minecraft.world.entity.player.Player;
+import net.neoforged.neoforge.event.entity.living.LivingBreatheEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import org.glavo.mcmod.pufferfish.entity.MaterialPufferfish;
 
 public final class PufferfishPowerEffect extends MobEffect {
@@ -26,6 +29,19 @@ public final class PufferfishPowerEffect extends MobEffect {
 
     private static boolean empowersFish(LivingEntity entity) {
         return entity instanceof Pufferfish && entity.hasEffect(PufferfishEffects.PUFFERFISH_POWER);
+    }
+
+    public static void breathe(LivingBreatheEvent event) {
+        if (empowersPlayer(event.getEntity()) && !event.canBreathe()) {
+            event.setCanBreathe(true);
+            event.setRefillAirAmount(0);
+        }
+    }
+
+    public static void digSpeed(PlayerEvent.BreakSpeed event) {
+        if (empowersPlayer(event.getEntity()) && !MobEffectUtil.hasDigSpeed(event.getEntity())) {
+            event.setNewSpeed(event.getNewSpeed() * 1.2F);
+        }
     }
 
     @Override

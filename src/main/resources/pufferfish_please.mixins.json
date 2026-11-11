@@ -5,18 +5,15 @@
   "mixins": [
     "PufferfishCatArmorMixin",
     "PufferfishConduitMixin",
-    "PufferfishPowerMixin",
     "LethalToxinMixin",
     "PufferfishBoatBuoyancyMixin",
-    "LegacyPufferfishDataMixin",
     "ChoppingBoardMixin",
     "AbstractFishMixin",
     "MaterialPufferfishMixin",
     "PufferfishPuffGoalMixin",
     "EntityTypeMixin",
     "PufferfishEquipmentMixin",
-    "PufferfishRepairRecipeMixin",
-    "PufferfishSmashMixin"
+    "PufferfishRepairRecipeMixin"
   ],
   "client": [
     "PufferfishPowerLightMixin",

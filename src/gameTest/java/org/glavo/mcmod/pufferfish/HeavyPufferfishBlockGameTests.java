@@ -21,7 +21,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class HeavyPufferfishBlockGameTests {
     @GameTest(template = "empty", timeoutTicks = 80)
-    public static void heavyFishFallAndLegacyDisplaysRetainTheirData(GameTestHelper helper) {
+    public static void heavyFishFallAndReloadedDisplaysRetainTheirData(GameTestHelper helper) {
         var level = helper.getLevel();
         var block = PufferfishBlocks.PLACED_HEAVY_FISH.get();
         var expected = block.defaultBlockState().setValue(PlacedPufferfishBlock.FACING, Direction.EAST);
@@ -31,7 +31,7 @@ public final class HeavyPufferfishBlockGameTests {
             helper.setBlock(new BlockPos(x, 0, 2), Blocks.STONE);
             helper.setBlock(new BlockPos(x, 5, 2), Blocks.STONE);
             var pos = helper.absolutePos(new BlockPos(x, 6, 2));
-            level.setBlockAndUpdate(pos, x == 1 ? expected : PufferfishBlocks.PLACED_FISH.get().withPropertiesOf(expected));
+            level.setBlockAndUpdate(pos, expected);
             var entity = (PlacedPufferfishBlockEntity) level.getBlockEntity(pos);
             entity.setFish(fish);
             if (x == 3) {

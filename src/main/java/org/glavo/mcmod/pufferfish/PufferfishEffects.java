@@ -48,6 +48,8 @@ public final class PufferfishEffects {
         PARTICLES.register(bus);
         NeoForge.EVENT_BUS.addListener(PufferfishEffects::immunity);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishEffects::mergeAddedToxin);
+        NeoForge.EVENT_BUS.addListener(PufferfishPowerEffect::breathe);
+        NeoForge.EVENT_BUS.addListener(PufferfishPowerEffect::digSpeed);
         NeoForge.EVENT_BUS.addListener(PufferfishPowerEffect::strength);
         NeoForge.EVENT_BUS.addListener(PufferfishPowerEffect::resistance);
         NeoForge.EVENT_BUS.addListener(PufferfishCurseEffect::onAttack);

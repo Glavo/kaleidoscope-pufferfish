@@ -52,7 +52,6 @@ public final class PufferfishPumpBlockEntity extends BlockEntity {
 
     public void setPump(ItemStack stack) {
         if (stack.is(PufferfishItems.PUMP.get())) pump = stack.copyWithCount(1);
-        PufferfishPumpItem.removeDurability(pump);
         changed();
     }
 
@@ -171,7 +170,6 @@ public final class PufferfishPumpBlockEntity extends BlockEntity {
         fish = PufferfishItems.isWeapon(storedFish) ? storedFish.copyWithCount(1) : ItemStack.EMPTY;
         var storedPump = ItemStack.parseOptional(registries, tag.getCompound("Pump"));
         pump = storedPump.is(PufferfishItems.PUMP.get()) ? storedPump.copyWithCount(1) : PufferfishItems.PUMP.toStack();
-        PufferfishPumpItem.removeDurability(pump);
         pressure = PufferfishItems.isPufferfish(fish) && !fish.isDamaged()
                 ? Math.clamp(tag.getInt("Pressure"), 0, BURST_PRESSURE - 1) : 0;
         releaseTicks = pressure == 0 ? 0 : Math.clamp(tag.getInt("ReleaseTicks"), 1, RELEASE_DELAY);

@@ -155,29 +155,6 @@ public final class PufferfishPumpGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void legacyWornPumpBecomesReusableWithoutLosingItsFish(GameTestHelper helper) {
-        var pump = placed(helper);
-        var tool = PufferfishItems.PUMP.toStack();
-        tool.set(DataComponents.MAX_DAMAGE, 256);
-        tool.set(DataComponents.DAMAGE, 255);
-        tool.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Old pump"));
-        pump.setPump(tool);
-        pump.setFish(TestItems.worn(new ItemStack(Items.PUFFERFISH)));
-        var saved = pump.saveWithoutMetadata(helper.getLevel().registryAccess());
-        saved.put("Pump", tool.save(helper.getLevel().registryAccess()));
-        pump.loadWithComponents(saved, helper.getLevel().registryAccess());
-        var player = helper.makeMockPlayer(GameType.SURVIVAL);
-        helper.assertTrue(pump.press(player) && helper.getLevel().getBlockState(pump.getBlockPos()).is(PufferfishBlocks.PUMP.get())
-                && pump.fish().is(Items.PUFFERFISH) && !pump.fish().isDamaged()
-                && !pump.pump().has(DataComponents.MAX_DAMAGE) && !pump.pump().has(DataComponents.DAMAGE),
-                "Legacy worn pump broke or retained durability");
-        PufferfishItems.PUMP.get().inventoryTick(tool, helper.getLevel(), player, 0, true);
-        helper.assertTrue(ItemStack.matches(tool, pump.pump()) && tool.getHoverName().getString().equals("Old pump"),
-                "Inventory migration retained durability or lost item metadata");
-        helper.succeed();
-    }
-
-    @GameTest(template = "empty")
     public static void usingPumpPlacesBlockAndRetainsItemName(GameTestHelper helper) {
         var base = helper.absolutePos(new net.minecraft.core.BlockPos(2, 1, 2));
         helper.getLevel().setBlockAndUpdate(base, net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());

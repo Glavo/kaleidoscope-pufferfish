@@ -18,7 +18,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
 import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
-import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 public final class PufferfishColors {
@@ -68,17 +67,6 @@ public final class PufferfishColors {
             CustomData.update(DataComponents.BUCKET_ENTITY_DATA, stack, tag -> tag.putString(COLOR_TAG, color.getName()));
         }
         return stack;
-    }
-
-    public static void legacyTooltip(ItemTooltipEvent event) {
-        ItemStack stack = event.getItemStack();
-        DyeColor color = get(stack);
-        var lines = event.getToolTip();
-        // Older stacks have a color component but no item name component.
-        if (color != null && !stack.has(DataComponents.ITEM_NAME) && !stack.has(DataComponents.CUSTOM_NAME)
-                && !lines.isEmpty() && lines.getFirst().getString().equals(stack.getHoverName().getString())) {
-            lines.set(0, name(stack, color).withStyle(lines.getFirst().getStyle()));
-        }
     }
 
     public static void interact(PlayerInteractEvent.EntityInteract event) {

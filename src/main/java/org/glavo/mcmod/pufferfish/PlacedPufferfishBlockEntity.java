@@ -26,14 +26,12 @@ public final class PlacedPufferfishBlockEntity extends BlockEntity {
         setChanged();
         if (level != null) level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
         updateLight();
-        scheduleHeavyConversion();
     }
 
     @Override
     public void onLoad() {
         super.onLoad();
         updateLight();
-        scheduleHeavyConversion();
     }
 
     private void updateLight() {
@@ -41,12 +39,6 @@ public final class PlacedPufferfishBlockEntity extends BlockEntity {
         boolean lit = fish.is(PufferfishItems.RADIANT.get());
         if (getBlockState().getValue(PlacedPufferfishBlock.LIT) != lit) {
             level.setBlock(worldPosition, getBlockState().setValue(PlacedPufferfishBlock.LIT, lit), 3);
-        }
-    }
-
-    private void scheduleHeavyConversion() {
-        if (level != null && !level.isClientSide && getBlockState().is(PufferfishBlocks.PLACED_FISH.get()) && PufferfishItems.isHeavy(fish)) {
-            level.scheduleTick(worldPosition, getBlockState().getBlock(), 1);
         }
     }
 

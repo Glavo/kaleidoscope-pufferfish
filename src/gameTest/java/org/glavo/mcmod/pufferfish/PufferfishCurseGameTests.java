@@ -14,7 +14,6 @@ import net.minecraft.network.protocol.game.ClientboundLevelParticlesPacket;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffectUtil;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -39,13 +38,14 @@ public final class PufferfishCurseGameTests {
             var packets = new ArrayList<Packet<?>>();
             var player = player(helper, packets);
             var fish = variant.entity().get().create(helper.getLevel());
+            float baseSpeed = player.getDigSpeed(Blocks.STONE.defaultBlockState(), player.blockPosition());
             player.addEffect(new MobEffectInstance(PufferfishEffects.PUFFERFISH_POWER, 123));
             player.hurt(player.damageSources().mobAttack(fish), 1);
             var curse = player.getEffect(PufferfishEffects.PUFFERFISH_CURSE);
             helper.assertTrue(curse != null && curse.getDuration() == 260 && curse.getAmplifier() == 0 && curse.isAmbient()
                     && !player.hasEffect(PufferfishEffects.PUFFERFISH_POWER), "Rare fish did not convert power: " + variant.fish().getId());
-            helper.assertTrue(!MobEffectUtil.hasWaterBreathing(player) && !MobEffectUtil.hasDigSpeed(player),
-                    "Cursed player retained conduit abilities");
+            helper.assertTrue(Math.abs(player.getDigSpeed(Blocks.STONE.defaultBlockState(), player.blockPosition()) - baseSpeed * 0.3F) < 0.0001F,
+                    "Cursed player retained the mining speed bonus");
             var packet = packets.stream().filter(value -> value instanceof ClientboundLevelParticlesPacket particle
                     && particle.getParticle().getType() == PufferfishEffects.CURSE_APPEARANCE.get()).findFirst().orElseThrow();
             var options = (net.minecraft.core.particles.ItemParticleOption) ((ClientboundLevelParticlesPacket) packet).getParticle();

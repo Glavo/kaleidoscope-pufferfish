@@ -20,11 +20,9 @@ import net.minecraft.world.entity.animal.Pufferfish;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.DyeItem;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.MobBucketItem;
-import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.Ingredient;
@@ -81,24 +79,19 @@ public class PufferfishGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void legacyEntityColorsMigrateToAttachments(GameTestHelper helper) {
+    public static void entityColorsPersistAndSynchronizeAsAttachments(GameTestHelper helper) {
         for (DyeColor color : DyeColor.values()) {
-            CompoundTag legacy = new CompoundTag();
-            EntityType.PUFFERFISH.create(helper.getLevel()).saveWithoutId(legacy);
-            legacy.putString(PufferfishColors.COLOR_TAG, color.getName());
             Pufferfish fish = EntityType.PUFFERFISH.create(helper.getLevel());
-            fish.load(legacy);
-            helper.assertTrue(PufferfishColors.get(fish) == color, "Legacy entity color was lost");
-            helper.assertTrue(initialTrackedColor(helper, fish) == color, "Migrated color was not synchronized");
-            CompoundTag migrated = new CompoundTag();
-            fish.saveWithoutId(migrated);
-            helper.assertTrue(!migrated.contains(PufferfishColors.COLOR_TAG), "Legacy color was written again");
-            helper.assertTrue(migrated.getCompound(AttachmentHolder.ATTACHMENTS_NBT_KEY)
+            PufferfishColors.set(fish, color);
+            helper.assertTrue(initialTrackedColor(helper, fish) == color, "Entity color was not synchronized");
+            CompoundTag saved = new CompoundTag();
+            fish.saveWithoutId(saved);
+            helper.assertTrue(saved.getCompound(AttachmentHolder.ATTACHMENTS_NBT_KEY)
                     .getString(PufferfishColors.COLOR_TAG).equals(color.getName()), "Color was not saved as an attachment");
-            migrated.putString(PufferfishColors.COLOR_TAG, color == DyeColor.RED ? "blue" : "red");
             Pufferfish restored = EntityType.PUFFERFISH.create(helper.getLevel());
-            restored.load(migrated);
-            helper.assertTrue(PufferfishColors.get(restored) == color, "Stale legacy data replaced the attachment");
+            restored.load(saved);
+            helper.assertTrue(PufferfishColors.get(restored) == color, "Saved entity color was lost");
+            helper.assertTrue(initialTrackedColor(helper, restored) == color, "Restored color was not synchronized");
             PufferfishColors.set(restored, null);
             helper.assertTrue(PufferfishColors.get(restored) == null
                     && !restored.hasData(PufferfishPlease.ENTITY_COLOR), "Undyed fish retained a color attachment");
@@ -107,15 +100,12 @@ public class PufferfishGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void itemNamesPreserveOverridesAndLegacyTooltips(GameTestHelper helper) {
+    public static void itemNamesPreserveOverrides(GameTestHelper helper) {
         for (var item : List.of(Items.PUFFERFISH, Items.PUFFERFISH_BUCKET)) {
             for (DyeColor color : DyeColor.values()) {
                 ItemStack stack = PufferfishColors.dye(new ItemStack(item), DyeColor.BLACK);
                 PufferfishColors.dye(stack, color);
                 helper.assertTrue(stack.getHoverName().equals(PufferfishColors.name(stack, color)), "Recoloring left a stale item name");
-                stack.remove(DataComponents.ITEM_NAME);
-                var tooltip = stack.getTooltipLines(Item.TooltipContext.of(helper.getLevel()), null, TooltipFlag.NORMAL);
-                helper.assertTrue(tooltip.getFirst().getString().equals(PufferfishColors.name(stack, color).getString()), "Legacy tooltip lost its color name");
                 stack.set(DataComponents.ITEM_NAME, Component.literal("External item name"));
                 PufferfishColors.dye(stack, color);
                 helper.assertTrue(stack.getHoverName().getString().equals("External item name"), "An external item name was replaced");
