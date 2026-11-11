@@ -229,7 +229,9 @@ public final class PufferfishRuinGameTests {
         var level = helper.getLevel();
         var floor = helper.absolutePos(new BlockPos(2, 30, 2));
         boolean single = false, pair = false;
-        for (long seed = 1; seed <= 8; seed++) {
+        var seeds = RandomSource.create(74392L);
+        for (int sample = 0; sample < 8; sample++) {
+            long seed = seeds.nextLong();
             var piece = new PufferfishRuinPiece(floor, false, seed);
             var box = piece.getBoundingBox();
             piece.postProcess(level, level.structureManager(), level.getChunkSource().getGenerator(), RandomSource.create(),

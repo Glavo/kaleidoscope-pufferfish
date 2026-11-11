@@ -75,7 +75,8 @@ public final class PufferfishRuinPiece extends StructurePiece {
                     placeBlock(level, stone.defaultBlockState(), x, y, z, box);
                 }
             }
-            var floor = ancient || (x + z) % 3 == 0 ? stone : Blocks.PRISMARINE_BRICKS;
+            boolean edge = x == 0 || x == 8 || z == 0 || z == 8 || Math.abs(x - 4) + Math.abs(z - 4) == 6;
+            var floor = !ancient && edge ? Blocks.DARK_PRISMARINE : stone;
             placeBlock(level, floor.defaultBlockState(), x, 4, z, box);
         }
         for (int x = 2; x <= 6; x++) for (int y = 6; y <= 10; y++) for (int z = 2; z <= 6; z++) {
@@ -86,17 +87,13 @@ public final class PufferfishRuinPiece extends StructurePiece {
                 frame = decoration.nextInt(remainingFrameSlots--) < retainedFrameBlocks;
                 if (frame) retainedFrameBlocks--;
             }
-            var block = !frame ? Blocks.WATER : ancient ? stone : switch (decoration.nextInt(3)) {
-                case 0 -> Blocks.PRISMARINE;
-                case 1 -> Blocks.PRISMARINE_BRICKS;
-                default -> Blocks.DARK_PRISMARINE;
-            };
+            var block = !frame ? Blocks.WATER : ancient ? stone : Blocks.PRISMARINE_BRICKS;
             placeBlock(level, block.defaultBlockState(), x, y, z, box);
         }
         for (int x : new int[] {1, 7}) for (int z : new int[] {1, 7}) {
-            int height = 1 + decoration.nextInt(3);
+            int height = ancient ? 1 + decoration.nextInt(3) : 2;
             for (int y = 5; y < 5 + height; y++) {
-                placeBlock(level, (ancient ? stone : Blocks.DARK_PRISMARINE).defaultBlockState(), x, y, z, box);
+                placeBlock(level, (ancient ? stone : Blocks.PRISMARINE_BRICKS).defaultBlockState(), x, y, z, box);
             }
             placeBlock(level, Blocks.SEA_LANTERN.defaultBlockState(), x, 5 + height, z, box);
         }
