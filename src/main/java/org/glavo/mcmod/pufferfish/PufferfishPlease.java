@@ -42,6 +42,9 @@ public class PufferfishPlease {
 
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<DyeColor>> COLOR = COMPONENTS.register("color",
             () -> DataComponentType.<DyeColor>builder().persistent(DyeColor.CODEC).networkSynchronized(DyeColor.STREAM_CODEC).build());
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<PufferfishDurability.State>> MANAGED_DURABILITY =
+            COMPONENTS.register("managed_durability", () -> DataComponentType.<PufferfishDurability.State>builder()
+                    .persistent(PufferfishDurability.State.CODEC).networkSynchronized(PufferfishDurability.State.STREAM_CODEC).build());
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<DyeColor>> ENTITY_COLOR = ATTACHMENTS.register("color",
             () -> AttachmentType.builder(() -> DyeColor.WHITE).serialize(DyeColor.CODEC).sync(DyeColor.STREAM_CODEC).build());
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<ItemStack>> FISH_ITEM = ATTACHMENTS.register("fish_item",

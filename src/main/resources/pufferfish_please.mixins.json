@@ -21,6 +21,7 @@
     "PufferfishBoatSpeedMixin",
     "PufferfishRendererMixin",
     "PufferfishHeadLayerMixin",
+    "PufferfishHeadVisibilityMixin",
     "PufferfishHandLayerMixin",
     "RadiantPufferfishItemMixin",
     "PufferfishFlailArmMixin"

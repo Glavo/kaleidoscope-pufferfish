@@ -30,6 +30,41 @@ import org.glavo.mcmod.pufferfish.test.TestPlayers;
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishDurabilityGameTests {
+    @GameTest(template = "empty")
+    public static void externalDurabilityAndStackLimitsSurviveUseAndRepair(GameTestHelper helper) {
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        var external = new ItemStack(Items.PUFFERFISH);
+        external.set(DataComponents.MAX_STACK_SIZE, 1);
+        external.set(DataComponents.MAX_DAMAGE, 777);
+        external.set(DataComponents.DAMAGE, 0);
+        var expected = external.copy();
+        player.getInventory().setItem(3, external);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.event.tick.PlayerTickEvent.Post(player));
+        helper.assertTrue(ItemStack.matches(expected, external), "Inventory cleanup overwrote external durability");
+        PufferfishDurability.damage(external, helper.getLevel(), null, null);
+        helper.assertTrue(external.getMaxDamage() == 777 && external.getDamageValue() == 1, "Using a fish replaced external durability");
+        external.setDamageValue(0);
+        PufferfishDurability.normalize(external);
+        helper.assertTrue(ItemStack.matches(expected, external), "Repair removed external durability");
+
+        var limited = new ItemStack(Items.PUFFERFISH);
+        limited.set(DataComponents.MAX_STACK_SIZE, 16);
+        var original = limited.copy();
+        PufferfishDurability.damage(limited, helper.getLevel(), null, null);
+        limited = ItemStack.parse(helper.getLevel().registryAccess(), limited.save(helper.getLevel().registryAccess())).orElseThrow();
+        limited.setDamageValue(0);
+        PufferfishDurability.normalize(limited);
+        helper.assertTrue(ItemStack.matches(original, limited), "Repair failed to restore the external stack limit");
+
+        PufferfishDurability.damage(limited, helper.getLevel(), null, null);
+        limited.set(DataComponents.MAX_DAMAGE, 999);
+        limited.setDamageValue(0);
+        PufferfishDurability.normalize(limited);
+        helper.assertTrue(limited.getMaxDamage() == 999 && limited.getMaxStackSize() == 1
+                && !limited.has(PufferfishPlease.MANAGED_DURABILITY.get()), "Cleanup overwrote a later external durability change");
+        helper.succeed();
+    }
+
 
     private static ArrayList<ItemStack> variants() {
         var stacks = new ArrayList<>(TestItems.fishVariants());

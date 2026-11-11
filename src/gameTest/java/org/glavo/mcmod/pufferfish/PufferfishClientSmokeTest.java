@@ -47,6 +47,7 @@ public final class PufferfishClientSmokeTest {
         PufferfishCurseClientTest.verify(minecraft);
         PufferfishTooltipClientTest.verify();
         PufferfishHeadgearClientTest.verify(minecraft);
+        PufferfishCompatibilityClientTest.verify(minecraft);
         PufferfishGloveClientTest.verify(minecraft);
         PufferfishDeflationClientTest.verify(minecraft);
         PufferfishPumpClientTest.verify(minecraft);

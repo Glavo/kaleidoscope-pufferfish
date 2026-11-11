@@ -39,9 +39,8 @@ public final class PufferfishGloveRenderer {
                 || player.isUsingItem() && player.getUsedItemHand() == event.getHand()) return;
         if (firstPerson == null) firstPerson = new PufferfishGloveRenderer();
         HumanoidArm arm = event.getHand() == InteractionHand.MAIN_HAND ? player.getMainArm() : player.getMainArm().getOpposite();
-        firstPerson.renderFirstPerson(player, event.getItemStack(), arm, event.getEquipProgress(), event.getSwingProgress(),
-                event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight());
-        event.setCanceled(true);
+        if (firstPerson.renderFirstPerson(player, event.getItemStack(), arm, event.getEquipProgress(), event.getSwingProgress(),
+                event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight())) event.setCanceled(true);
     }
 
     public void renderAttached(ArmedModel parent, LivingEntity player, ItemStack stack, HumanoidArm arm,
@@ -64,8 +63,9 @@ public final class PufferfishGloveRenderer {
         pose.popPose();
     }
 
-    public void renderFirstPerson(AbstractClientPlayer player, ItemStack stack, HumanoidArm arm, float equip, float swing,
+    public boolean renderFirstPerson(AbstractClientPlayer player, ItemStack stack, HumanoidArm arm, float equip, float swing,
             PoseStack pose, MultiBufferSource buffers, int light) {
+        if (!(Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(player) instanceof PlayerRenderer renderer)) return false;
         float side = arm == HumanoidArm.RIGHT ? 1 : -1;
         float rootSwing = Mth.sqrt(swing);
         float arc = Mth.sin(rootSwing * Mth.PI);
@@ -82,7 +82,6 @@ public final class PufferfishGloveRenderer {
         pose.mulPose(Axis.XP.rotationDegrees(200));
         pose.mulPose(Axis.YP.rotationDegrees(side * -135));
         pose.translate(side * 5.6F, 0, 0);
-        var renderer = (PlayerRenderer) Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(player);
         if (!player.isInvisible()) {
             if (arm == HumanoidArm.RIGHT) renderer.renderRightHand(pose, buffers, light, player);
             else renderer.renderLeftHand(pose, buffers, light, player);
@@ -96,5 +95,6 @@ public final class PufferfishGloveRenderer {
         }
         renderAttached(renderer.getModel(), player, stack, arm, pose, buffers, light, player.tickCount);
         pose.popPose();
+        return true;
     }
 }

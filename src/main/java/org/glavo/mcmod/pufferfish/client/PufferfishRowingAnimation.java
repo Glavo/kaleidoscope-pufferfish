@@ -104,6 +104,7 @@ public final class PufferfishRowingAnimation {
         var minecraft = Minecraft.getInstance();
         var player = minecraft.player;
         if (player == null || !isRowing(player)) return;
+        if (!(minecraft.getEntityRenderDispatcher().getRenderer(player) instanceof PlayerRenderer renderer)) return;
         if (event.getHand() == InteractionHand.OFF_HAND) {
             event.setCanceled(true);
             return;
@@ -113,7 +114,7 @@ public final class PufferfishRowingAnimation {
         try {
             if (!PufferfishFlailTether.transformToView(pose)) return;
             float partial = PufferfishFlailTether.partialTick(event.getPartialTick());
-            var model = ((PlayerRenderer) minecraft.getEntityRenderDispatcher().getRenderer(player)).getModel();
+            var model = renderer.getModel();
             for (var arm : HumanoidArm.values()) {
                 var target = PufferfishFlailTether.localPosition(grip((PufferfishBoat) player.getVehicle(), arm, partial), pose);
                 if (target == null) continue;

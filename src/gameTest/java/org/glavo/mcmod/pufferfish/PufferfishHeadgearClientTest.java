@@ -25,7 +25,6 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.neoforged.neoforge.client.event.RenderPlayerEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import org.glavo.mcmod.pufferfish.client.PufferfishTextures;
 
@@ -40,6 +39,7 @@ public final class PufferfishHeadgearClientTest {
         var context = new EntityRendererProvider.Context(minecraft.getEntityRenderDispatcher(), minecraft.getItemRenderer(),
                 minecraft.getBlockRenderer(), minecraft.getEntityRenderDispatcher().getItemInHandRenderer(),
                 minecraft.getResourceManager(), minecraft.getEntityModels(), minecraft.font);
+        verifyScopedVisibility(minecraft, context);
         verifyZombie(minecraft, context);
         verifyArmorStand(minecraft, context);
         for (boolean slim : new boolean[] {false, true}) {
@@ -65,10 +65,6 @@ public final class PufferfishHeadgearClientTest {
                 model.hat.visible = true;
                 var capture = new CapturedVertices();
                 var pose = new PoseStack();
-                NeoForge.EVENT_BUS.post(new RenderPlayerEvent.Pre(player, renderer, 0, pose, capture, 15728880));
-                if (model.head.visible || model.hat.visible) {
-                    throw new IllegalStateException("Player head was not hidden");
-                }
                 layer.render(pose, capture, 15728880, player, 0, 0, 0, 0, 0, 0);
                 var color = PufferfishColors.get(stack);
                 var texture = PufferfishItems.isHeavy(stack) ? PufferfishTextures.heavyEntity()
@@ -79,7 +75,6 @@ public final class PufferfishHeadgearClientTest {
                         || capture.minY < -0.65F || capture.maxY > 0.15F) {
                     throw new IllegalStateException("Pufferfish head model, texture, or alignment was incorrect: " + stack);
                 }
-                NeoForge.EVENT_BUS.post(new RenderPlayerEvent.Post(player, renderer, 0, pose, capture, 15728880));
                 if (!model.head.visible || !model.hat.visible) {
                     throw new IllegalStateException("Player head visibility was not restored");
                 }
@@ -88,13 +83,63 @@ public final class PufferfishHeadgearClientTest {
             model.hat.visible = false;
             var pose = new PoseStack();
             var capture = new CapturedVertices();
-            NeoForge.EVENT_BUS.post(new RenderPlayerEvent.Pre(player, renderer, 0, pose, capture, 15728880));
             layer.render(pose, capture, 15728880, player, 0, 0, 0, 0, 0, 0);
-            NeoForge.EVENT_BUS.post(new RenderPlayerEvent.Post(player, renderer, 0, pose, capture, 15728880));
             if (capture.vertices != 0 || !model.head.visible || model.hat.visible) {
                 throw new IllegalStateException("Unequipped player retained headgear rendering");
             }
         }
+    }
+
+    private static void verifyScopedVisibility(Minecraft minecraft, EntityRendererProvider.Context context) {
+        var entity = net.minecraft.world.entity.EntityType.ZOMBIE.create(level(minecraft));
+        entity.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.PUFFERFISH));
+        Runnable[] drawing = {() -> {}};
+        var model = new net.minecraft.client.model.HumanoidModel<net.minecraft.world.entity.LivingEntity>(
+                minecraft.getEntityModels().bakeLayer(net.minecraft.client.model.geom.ModelLayers.ZOMBIE)) {
+            @Override
+            public void renderToBuffer(PoseStack pose, VertexConsumer buffer, int light, int overlay, int color) {
+                drawing[0].run();
+            }
+        };
+        var renderer = new net.minecraft.client.renderer.entity.LivingEntityRenderer<>(context, model, 0) {
+            @Override public ResourceLocation getTextureLocation(net.minecraft.world.entity.LivingEntity target) {
+                return ResourceLocation.withDefaultNamespace("textures/entity/zombie/zombie.png");
+            }
+            @Override protected boolean shouldShowName(net.minecraft.world.entity.LivingEntity target) { return false; }
+        };
+        model.head.visible = true;
+        model.hat.visible = false;
+        int[] calls = {0};
+        drawing[0] = () -> {
+            if (model.head.visible || model.hat.visible) throw new IllegalStateException("Head was visible during body rendering");
+            if (++calls[0] == 1) renderer.render(entity, 0, 0, new PoseStack(), new CapturedVertices(), 15728880);
+            if (model.head.visible || model.hat.visible) throw new IllegalStateException("Nested rendering restored the outer head too early");
+        };
+        renderer.render(entity, 0, 0, new PoseStack(), new CapturedVertices(), 15728880);
+        if (calls[0] != 2 || !model.head.visible || model.hat.visible) {
+            throw new IllegalStateException("Nested rendering lost the original head visibility");
+        }
+        java.util.function.Consumer<net.neoforged.neoforge.client.event.RenderLivingEvent.Pre<?, ?>> cancel = event -> {
+            if (event.getEntity() == entity) event.setCanceled(true);
+        };
+        NeoForge.EVENT_BUS.addListener(cancel);
+        try {
+            renderer.render(entity, 0, 0, new PoseStack(), new CapturedVertices(), 15728880);
+            if (calls[0] != 2 || !model.head.visible || model.hat.visible) {
+                throw new IllegalStateException("Canceled rendering changed head visibility");
+            }
+        } finally {
+            NeoForge.EVENT_BUS.unregister(cancel);
+        }
+        var failure = new IllegalStateException("Expected rendering failure");
+        drawing[0] = () -> { throw failure; };
+        try {
+            renderer.render(entity, 0, 0, new PoseStack(), new CapturedVertices(), 15728880);
+            throw new IllegalStateException("Rendering failure was swallowed");
+        } catch (IllegalStateException exception) {
+            if (exception != failure) throw exception;
+        }
+        if (!model.head.visible || model.hat.visible) throw new IllegalStateException("Failed rendering leaked head visibility");
     }
 
     private static void verifyZombie(Minecraft minecraft, EntityRendererProvider.Context context) {
@@ -120,8 +165,6 @@ public final class PufferfishHeadgearClientTest {
                 zombie.setItemSlot(EquipmentSlot.HEAD, stack.copy());
                 var pose = new PoseStack();
                 var capture = new CapturedVertices();
-                NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.client.event.RenderLivingEvent.Pre<>(zombie, renderer, 0, pose, capture, 15728880));
-                if (model.head.visible || model.hat.visible) throw new IllegalStateException("Zombie head was not hidden");
                 layer.render(pose, capture, 15728880, zombie, 0, 0, 0, 0, 0, 0);
                 if (capture.vertices < 100 || capture.type != RenderType.entityCutoutNoCull(texture)) {
                     throw new IllegalStateException("Zombie pufferfish head did not render");
@@ -135,7 +178,6 @@ public final class PufferfishHeadgearClientTest {
                     adultMinY = capture.minY;
                     adultMaxY = capture.maxY;
                 }
-                NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.client.event.RenderLivingEvent.Post<>(zombie, renderer, 0, pose, capture, 15728880));
                 if (!model.head.visible || !model.hat.visible) throw new IllegalStateException("Zombie head visibility was not restored");
             }
         }
@@ -166,9 +208,7 @@ public final class PufferfishHeadgearClientTest {
                         stand.setHeadPose(rotation);
                         var pose = new PoseStack();
                         var capture = new CapturedVertices();
-                        NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.client.event.RenderLivingEvent.Pre<>(stand, renderer, 0, pose, capture, 15728880));
                         model.setupAnim(stand, 0, 0, 0, 0, 0);
-                        if (model.head.visible || model.hat.visible) throw new IllegalStateException("Armor stand head was not hidden");
                         layer.render(pose, capture, 15728880, stand, 0, 0, 0, 0, 0, 0);
                         var texture = switch (variant.material()) {
                             case NORMAL -> variant.color() == null ? ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png")
@@ -181,7 +221,6 @@ public final class PufferfishHeadgearClientTest {
                                 || !Float.isFinite(capture.minY) || capture.minY < -1 || capture.maxY > 1.5F) {
                             throw new IllegalStateException("Incorrect armor stand fish model, texture or head transform: " + variant.fishName());
                         }
-                        NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.client.event.RenderLivingEvent.Post<>(stand, renderer, 0, pose, capture, 15728880));
                         if (!model.head.visible || model.hat.visible) throw new IllegalStateException("Armor stand head visibility was not restored");
                     }
                 }
@@ -190,9 +229,7 @@ public final class PufferfishHeadgearClientTest {
             stand.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.PUFFERFISH));
             var pose = new PoseStack();
             var capture = new CapturedVertices();
-            NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.client.event.RenderLivingEvent.Pre<>(stand, renderer, 0, pose, capture, 15728880));
             layer.render(pose, capture, 15728880, stand, 0, 0, 0, 0, 0, 0);
-            NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.client.event.RenderLivingEvent.Post<>(stand, renderer, 0, pose, capture, 15728880));
             if (capture.vertices != 0 || !model.head.visible || model.hat.visible) {
                 throw new IllegalStateException("Armor stand hand item incorrectly replaced its head");
             }

@@ -14,6 +14,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.model.BakedModelWrapper;
+import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import org.glavo.mcmod.pufferfish.PufferfishDurability;
 
 /// Selects three-dimensional puff-state rendering for worn fish while retaining pristine item overrides.
@@ -28,7 +29,8 @@ public final class PufferfishWearModel extends BakedModelWrapper<BakedModel> {
             public BakedModel resolve(BakedModel model, ItemStack stack, ClientLevel level, LivingEntity entity, int seed) {
                 var resolved = original.getOverrides().resolve(original, stack, level, entity, seed);
                 if (resolved == null) resolved = original;
-                if (PufferfishDurability.deflationStage(stack) == 0 || resolved.isCustomRenderer()) return resolved;
+                if (PufferfishDurability.deflationStage(stack) == 0 || resolved.isCustomRenderer()
+                        || !(IClientItemExtensions.of(stack).getCustomRenderer() instanceof DeflatedPufferfishItemRenderer)) return resolved;
                 return models.computeIfAbsent(resolved, Worn::new);
             }
         };

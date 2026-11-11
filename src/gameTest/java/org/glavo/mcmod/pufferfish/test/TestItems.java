@@ -19,8 +19,7 @@ public final class TestItems {
 
     public static ItemStack worn(ItemStack original) {
         var result = original.copyWithCount(1);
-        result.set(DataComponents.MAX_STACK_SIZE, 1);
-        result.set(DataComponents.MAX_DAMAGE, PufferfishDurability.maximum(original));
+        PufferfishDurability.activate(result);
         result.set(DataComponents.DAMAGE, original.getOrDefault(DataComponents.DAMAGE, 0) + 1);
         return result;
     }

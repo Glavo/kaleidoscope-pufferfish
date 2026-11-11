@@ -3,8 +3,13 @@
 
 package org.glavo.mcmod.pufferfish;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -19,6 +24,19 @@ import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
 /// Pristine fish stack normally; only a single active fish receives native durability components.
 public final class PufferfishDurability {
+    public record State(int maxDamage, int maxStackSize) {
+        public static final Codec<State> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                Codec.intRange(1, Integer.MAX_VALUE).fieldOf("max_damage").forGetter(State::maxDamage),
+                Codec.intRange(1, 99).fieldOf("max_stack_size").forGetter(State::maxStackSize)).apply(instance, State::new));
+        public static final StreamCodec<ByteBuf, State> STREAM_CODEC = StreamCodec.composite(
+                ByteBufCodecs.VAR_INT, State::maxDamage, ByteBufCodecs.VAR_INT, State::maxStackSize, State::new);
+
+        public boolean matches(ItemStack stack) {
+            return stack.getOrDefault(DataComponents.MAX_DAMAGE, 0) == maxDamage
+                    && stack.getOrDefault(DataComponents.MAX_STACK_SIZE, 1) == 1;
+        }
+    }
+
     private PufferfishDurability() {}
 
     /// Advances at each quarter of spent durability, with the final stage lasting until breakage.
@@ -40,22 +58,41 @@ public final class PufferfishDurability {
 
     public static void activate(ItemStack stack) {
         if (!PufferfishItems.isWeapon(stack) || stack.getCount() != 1) return;
+        var state = stack.get(PufferfishPlease.MANAGED_DURABILITY.get());
+        if (state != null && !state.matches(stack)) stack.remove(PufferfishPlease.MANAGED_DURABILITY.get());
+        if (stack.has(DataComponents.MAX_DAMAGE)) return;
+        stack.set(PufferfishPlease.MANAGED_DURABILITY.get(), new State(maximum(stack), stack.getMaxStackSize()));
         stack.set(DataComponents.MAX_STACK_SIZE, 1);
         stack.set(DataComponents.MAX_DAMAGE, maximum(stack));
         if (!stack.has(DataComponents.DAMAGE)) stack.set(DataComponents.DAMAGE, 0);
     }
 
     public static void normalize(ItemStack stack) {
-        if (!PufferfishItems.isWeapon(stack) || stack.getOrDefault(DataComponents.DAMAGE, 0) > 0) return;
+        if (!PufferfishItems.isWeapon(stack)) return;
+        var state = stack.get(PufferfishPlease.MANAGED_DURABILITY.get());
+        if (state == null) return;
+        if (!state.matches(stack)) {
+            stack.remove(PufferfishPlease.MANAGED_DURABILITY.get());
+            return;
+        }
+        if (stack.getOrDefault(DataComponents.DAMAGE, 0) > 0) return;
         stack.remove(DataComponents.MAX_DAMAGE);
         stack.remove(DataComponents.DAMAGE);
-        stack.set(DataComponents.MAX_STACK_SIZE, stack.getItem().getDefaultInstance().getMaxStackSize());
+        stack.set(DataComponents.MAX_STACK_SIZE, state.maxStackSize());
+        stack.remove(PufferfishPlease.MANAGED_DURABILITY.get());
     }
 
     /// Preserves the fraction of durability spent when changing fish material or crafting a flail.
     public static ItemStack transfer(ItemStack source, ItemStack result) {
         if (result.isEmpty()) return result;
+        var state = source.get(PufferfishPlease.MANAGED_DURABILITY.get());
+        result.remove(PufferfishPlease.MANAGED_DURABILITY.get());
+        if (state == null || !state.matches(source)) return result;
         int damage = source.getOrDefault(DataComponents.DAMAGE, 0);
+        result.remove(DataComponents.MAX_DAMAGE);
+        result.remove(DataComponents.DAMAGE);
+        result.set(DataComponents.MAX_STACK_SIZE, state.maxStackSize() == source.getItem().getDefaultInstance().getMaxStackSize()
+                ? result.getItem().getDefaultInstance().getMaxStackSize() : state.maxStackSize());
         if (damage > 0) {
             int oldMaximum = source.getOrDefault(DataComponents.MAX_DAMAGE, maximum(source));
             activate(result);
@@ -142,7 +179,8 @@ public final class PufferfishDurability {
     public static boolean sameWeapon(ItemStack first, ItemStack second) {
         var a = first.copy();
         var b = second.copy();
-        for (var component : java.util.List.of(DataComponents.DAMAGE, DataComponents.MAX_DAMAGE, DataComponents.MAX_STACK_SIZE)) {
+        for (var component : java.util.List.of(DataComponents.DAMAGE, DataComponents.MAX_DAMAGE, DataComponents.MAX_STACK_SIZE,
+                PufferfishPlease.MANAGED_DURABILITY.get())) {
             a.remove(component);
             b.remove(component);
         }

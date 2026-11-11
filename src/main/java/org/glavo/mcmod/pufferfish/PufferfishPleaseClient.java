@@ -22,7 +22,6 @@ import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.neoforged.neoforge.client.event.RegisterSpriteSourceTypesEvent;
 import org.glavo.mcmod.pufferfish.client.PufferfishItemModel;
-import org.glavo.mcmod.pufferfish.client.PufferfishHeadRenderer;
 import org.glavo.mcmod.pufferfish.client.PufferfishGloveRenderer;
 import org.glavo.mcmod.pufferfish.client.PufferfishSpriteSource;
 import org.glavo.mcmod.pufferfish.client.PufferfishTextures;
@@ -54,15 +53,12 @@ public class PufferfishPleaseClient {
         bus.addListener(this::registerReloadListeners);
         bus.addListener(this::registerRenderers);
         bus.addListener((EntityRenderersEvent.AddLayers event) -> {
-            var renderer = event.<net.minecraft.world.entity.animal.Cat, net.minecraft.client.renderer.entity.CatRenderer>
-                    getRenderer(net.minecraft.world.entity.EntityType.CAT);
-            if (renderer != null) renderer.addLayer(new org.glavo.mcmod.pufferfish.client.PufferfishCatArmorLayer(renderer));
+            var renderer = event.getRenderer(net.minecraft.world.entity.EntityType.CAT);
+            if (renderer instanceof net.minecraft.client.renderer.entity.CatRenderer catRenderer) {
+                catRenderer.addLayer(new org.glavo.mcmod.pufferfish.client.PufferfishCatArmorLayer(catRenderer));
+            }
         });
-        bus.addListener(this::registerItemExtensions);
-        NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishHeadRenderer::beforePlayer);
-        NeoForge.EVENT_BUS.addListener(PufferfishHeadRenderer::afterPlayer);
-        NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishHeadRenderer::beforeLiving);
-        NeoForge.EVENT_BUS.addListener(PufferfishHeadRenderer::afterLiving);
+        bus.addListener(EventPriority.LOWEST, this::registerItemExtensions);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishGloveRenderer::renderHand);
         NeoForge.EVENT_BUS.addListener(EventPriority.HIGH, org.glavo.mcmod.pufferfish.client.PufferfishRowingAnimation::renderHands);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, org.glavo.mcmod.pufferfish.client.PufferfishFlailArmAnimation::renderHand);
@@ -115,16 +111,24 @@ public class PufferfishPleaseClient {
     }
 
     private void registerItemExtensions(RegisterClientExtensionsEvent event) {
-        event.registerItem(deflatedFishRenderer(), net.minecraft.core.registries.BuiltInRegistries.ITEM.stream()
-                .filter(item -> PufferfishItems.isPufferfish(item.getDefaultInstance())).toArray(net.minecraft.world.item.Item[]::new));
-        event.registerItem(new org.glavo.mcmod.pufferfish.client.PufferfishPumpRenderer(), PufferfishItems.PUMP.get());
-        event.registerItem(lampRenderer(), PufferfishLamps.VARIANTS.values().stream()
+        registerItemRenderer(event, deflatedFishRenderer(), net.minecraft.core.registries.BuiltInRegistries.ITEM.stream()
+                .filter(item -> PufferfishItems.isPufferfish(item.getDefaultInstance()))
+                .toArray(net.minecraft.world.item.Item[]::new));
+        registerItemRenderer(event, new org.glavo.mcmod.pufferfish.client.PufferfishPumpRenderer(), PufferfishItems.PUMP.get());
+        registerItemRenderer(event, lampRenderer(), PufferfishLamps.VARIANTS.values().stream()
                 .map(variant -> variant.block().get().asItem()).toArray(net.minecraft.world.item.Item[]::new));
-        event.registerItem(boatRenderer(), PufferfishBoats.VARIANTS.values().stream().map(variant -> variant.item().get()).toArray(net.minecraft.world.item.Item[]::new));
-        event.registerItem(PufferfishConduitRenderer.itemExtensions(), PufferfishBlocks.CONDUIT.get().asItem(),
+        registerItemRenderer(event, boatRenderer(), PufferfishBoats.VARIANTS.values().stream().map(variant -> variant.item().get()).toArray(net.minecraft.world.item.Item[]::new));
+        registerItemRenderer(event, PufferfishConduitRenderer.itemExtensions(), PufferfishBlocks.CONDUIT.get().asItem(),
                 PufferfishBlocks.ANCIENT_CONDUIT.get().asItem());
-        event.registerItem(shieldRenderer(), PufferfishShields.VARIANTS.values().stream().map(holder -> holder.get()).toArray(net.minecraft.world.item.Item[]::new));
-        event.registerItem(flailRenderer(), PufferfishItems.FLAIL_VARIANTS.stream().map(item -> item.get()).toArray(net.minecraft.world.item.Item[]::new));
+        registerItemRenderer(event, shieldRenderer(), PufferfishShields.VARIANTS.values().stream().map(holder -> holder.get()).toArray(net.minecraft.world.item.Item[]::new));
+        registerItemRenderer(event, flailRenderer(), PufferfishItems.FLAIL_VARIANTS.stream().map(item -> item.get()).toArray(net.minecraft.world.item.Item[]::new));
+    }
+
+    private static void registerItemRenderer(RegisterClientExtensionsEvent event,
+            net.neoforged.neoforge.client.extensions.common.IClientItemExtensions extensions, net.minecraft.world.item.Item... items) {
+        for (var item : items) {
+            if (!event.isItemRegistered(item)) event.registerItem(extensions, item);
+        }
     }
 
     private org.glavo.mcmod.pufferfish.client.DeflatedPufferfishItemRenderer deflatedFishRenderer() {

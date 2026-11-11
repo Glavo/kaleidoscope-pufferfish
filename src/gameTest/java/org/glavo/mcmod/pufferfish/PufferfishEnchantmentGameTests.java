@@ -41,6 +41,21 @@ import org.glavo.mcmod.pufferfish.test.TestItems;
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishEnchantmentGameTests {
+    @GameTest(template = "empty")
+    public static void mixedBooksRetainDataPackEnchantments(GameTestHelper helper) {
+        var external = ResourceKey.create(Registries.ENCHANTMENT, PufferfishPlease.id("compatibility_test"));
+        var player = owner(helper);
+        var book = enchant(helper, new ItemStack(Items.ENCHANTED_BOOK), external, 1);
+        enchant(helper, book, Enchantments.UNBREAKING, 1);
+        var menu = new AnvilMenu(1, player.getInventory());
+        menu.getSlot(0).set(new ItemStack(Items.PUFFERFISH));
+        menu.getSlot(1).set(book);
+        var result = menu.getSlot(2).getItem();
+        helper.assertTrue(!result.isEmpty() && level(helper, result, external) == 1
+                && level(helper, result, Enchantments.UNBREAKING) == 1, "Mixed book lost an applicable data-pack enchantment");
+        helper.succeed();
+    }
+
     private static final List<ResourceKey<Enchantment>> SUPPORTED = List.of(
             Enchantments.RESPIRATION, Enchantments.AQUA_AFFINITY, Enchantments.LOYALTY, Enchantments.DENSITY, Enchantments.BREACH, Enchantments.PUNCH,
             Enchantments.WIND_BURST, Enchantments.SMITE, Enchantments.BANE_OF_ARTHROPODS,

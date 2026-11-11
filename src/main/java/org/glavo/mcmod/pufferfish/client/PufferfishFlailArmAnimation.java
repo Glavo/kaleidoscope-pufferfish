@@ -57,6 +57,7 @@ public final class PufferfishFlailArmAnimation {
         var minecraft = Minecraft.getInstance();
         var player = minecraft.player;
         if (player == null || activeHand(player) != event.getHand() || !PufferfishItems.isFlail(event.getItemStack())) return;
+        if (!(minecraft.getEntityRenderDispatcher().getRenderer(player) instanceof PlayerRenderer renderer)) return;
         var pose = event.getPoseStack();
         pose.pushPose();
         if (!PufferfishFlailTether.transformToView(pose)) {
@@ -66,7 +67,6 @@ public final class PufferfishFlailArmAnimation {
         float partialTick = PufferfishFlailTether.partialTick(event.getPartialTick());
         var head = PufferfishFlailItem.activeHead(player);
         float yaw = head != null ? head.swingYaw(partialTick) : player.getViewYRot(partialTick);
-        var renderer = (PlayerRenderer) minecraft.getEntityRenderDispatcher().getRenderer(player);
         var model = renderer.getModel();
         var arm = event.getHand() == InteractionHand.MAIN_HAND ? player.getMainArm() : player.getMainArm().getOpposite();
         pose.translate(arm == HumanoidArm.RIGHT ? 0.32 : -0.32, -0.28, 0.22);
