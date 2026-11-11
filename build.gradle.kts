@@ -49,6 +49,15 @@ val gameTest = sourceSets.create("gameTest") {
 
 repositories {
     mavenCentral()
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "JEI"
+                url = uri("https://maven.blamejared.com/")
+            }
+        }
+        filter { includeGroup("mezz.jei") }
+    }
     maven {
         name = "Create"
         url = uri("https://maven.createmod.net")
@@ -133,6 +142,7 @@ dependencies {
     compileOnly(chineseFood)
     compileOnly(farmersDelight)
     compileOnly(create)
+    compileOnly("mezz.jei:jei-${providers.gradleProperty("minecraft_version").get()}-common-api:${providers.gradleProperty("jei_version").get()}")
     // Create bundles Ponder at runtime; its base interfaces are also needed by javac.
     compileOnly("net.createmod.ponder:ponder-neoforge:${providers.gradleProperty("ponder_version").get()}") {
         isTransitive = false
