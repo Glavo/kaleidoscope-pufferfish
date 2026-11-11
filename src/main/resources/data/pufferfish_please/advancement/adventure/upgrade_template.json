@@ -1,0 +1,35 @@
+{
+  "parent": "pufferfish_please:adventure/root",
+  "display": {
+    "icon": {
+      "id": "pufferfish_please:pufferfish_upgrade_smithing_template"
+    },
+    "title": {
+      "translate": "advancements.pufferfish_please.upgrade_template.title"
+    },
+    "description": {
+      "translate": "advancements.pufferfish_please.upgrade_template.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "pufferfish_please:pufferfish_upgrade_smithing_template"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "obtain"
+    ]
+  ]
+}

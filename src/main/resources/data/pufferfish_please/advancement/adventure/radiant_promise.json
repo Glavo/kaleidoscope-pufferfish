@@ -1,5 +1,5 @@
 {
-  "parent": "pufferfish_please:adventure/wax_on",
+  "parent": "pufferfish_please:adventure/upgrade_template",
   "display": {
     "icon": {
       "id": "pufferfish_please:radiant_pufferfish"

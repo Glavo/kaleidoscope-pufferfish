@@ -1,5 +1,5 @@
 {
-  "parent": "pufferfish_please:adventure/root",
+  "parent": "pufferfish_please:adventure/heavy_pufferfish",
   "display": {
     "icon": {
       "id": "pufferfish_please:heavy_pufferfish"

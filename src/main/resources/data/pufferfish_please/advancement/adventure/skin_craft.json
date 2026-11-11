@@ -1,0 +1,35 @@
+{
+  "parent": "pufferfish_please:adventure/root",
+  "display": {
+    "icon": {
+      "id": "pufferfish_please:pufferfish_skin"
+    },
+    "title": {
+      "translate": "advancements.pufferfish_please.skin_craft.title"
+    },
+    "description": {
+      "translate": "advancements.pufferfish_please.skin_craft.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "#pufferfish_please:pufferfish_skins"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "obtain"
+    ]
+  ]
+}

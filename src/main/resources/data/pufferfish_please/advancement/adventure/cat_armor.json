@@ -1,5 +1,5 @@
 {
-  "parent": "pufferfish_please:adventure/careful_with_spikes",
+  "parent": "pufferfish_please:adventure/skin_craft",
   "display": {
     "icon": {"id": "pufferfish_please:pufferfish_skin_cat_armor"},
     "title": {"translate": "advancements.pufferfish_please.cat_armor.title"},

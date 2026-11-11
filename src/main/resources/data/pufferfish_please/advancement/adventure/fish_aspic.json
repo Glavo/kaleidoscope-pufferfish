@@ -3,9 +3,13 @@
     {
       "type": "neoforge:mod_loaded",
       "modid": "kaleidoscope_cookery"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "kaleidoscope_chinesefood"
     }
   ],
-  "parent": "pufferfish_please:adventure/root",
+  "parent": "pufferfish_please:adventure/pufferfish_sashimi",
   "display": {
     "icon": {
       "id": "pufferfish_please:pufferfish_aspic"

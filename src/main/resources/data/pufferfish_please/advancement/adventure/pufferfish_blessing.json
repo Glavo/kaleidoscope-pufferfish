@@ -1,5 +1,5 @@
 {
-  "parent": "pufferfish_please:adventure/ocean_visitor",
+  "parent": "pufferfish_please:adventure/pufferfish_conduit",
   "display": {
     "icon": {
       "id": "pufferfish_please:pufferfish_conduit"

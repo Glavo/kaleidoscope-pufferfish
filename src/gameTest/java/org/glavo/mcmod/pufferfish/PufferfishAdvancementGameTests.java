@@ -28,6 +28,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.levelgen.structure.pieces.PiecesContainer;
 import net.minecraft.world.phys.BlockHitResult;
+import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.util.BlockSnapshot;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
@@ -216,12 +217,32 @@ public final class PufferfishAdvancementGameTests {
         player.addEffect(new MobEffectInstance(PufferfishEffects.PUFFERFISH_POWER, 260));
         player.addEffect(new MobEffectInstance(PufferfishEffects.PUFFERFISH_CURSE, 260));
         helper.assertTrue(done(player, "pufferfish_blessing") && done(player, "pufferfish_curse"), "Effects did not grant their advancements");
-        CriteriaTriggers.INVENTORY_CHANGED.trigger(player, player.getInventory(), PufferfishItems.RADIANT.toStack());
-        helper.assertTrue(done(player, "radiant_promise"), "Radiant pufferfish did not grant its challenge");
-        BuiltInRegistries.ITEM.getOptional(PufferfishPlease.id("pufferfish_aspic")).ifPresent(item -> {
+        for (var entry : java.util.Map.of(
+                "radiant_promise", "radiant_pufferfish",
+                "heavy_pufferfish", "heavy_pufferfish",
+                "upgrade_template", "pufferfish_upgrade_smithing_template",
+                "pufferfish_conduit", "pufferfish_conduit",
+                "pufferfish_pump", "pufferfish_pump",
+                "skin_craft", "pufferfish_skin").entrySet()) {
+            helper.assertTrue(!done(player, entry.getKey()), "Unrelated actions granted progress: " + entry.getKey());
+            var item = BuiltInRegistries.ITEM.get(PufferfishPlease.id(entry.getValue()));
+            CriteriaTriggers.INVENTORY_CHANGED.trigger(player, player.getInventory(), new ItemStack(item));
+            helper.assertTrue(done(player, entry.getKey()), "Obtaining an item did not grant progress: " + entry.getKey());
+        }
+        boolean cooking = ModList.get().isLoaded("kaleidoscope_cookery");
+        boolean sashimi = cooking || ModList.get().isLoaded("farmersdelight");
+        helper.assertTrue((advancement(player, "pufferfish_sashimi") != null) == sashimi, "Sashimi progress has incorrect mod conditions");
+        if (sashimi) {
+            CriteriaTriggers.INVENTORY_CHANGED.trigger(player, player.getInventory(), PufferfishItems.SASHIMI.toStack());
+            helper.assertTrue(done(player, "pufferfish_sashimi"), "Sashimi did not grant its advancement");
+        }
+        boolean aspic = cooking && ModList.get().isLoaded("kaleidoscope_chinesefood");
+        helper.assertTrue((advancement(player, "fish_aspic") != null) == aspic, "Aspic progress has incorrect mod conditions");
+        if (aspic) {
+            var item = BuiltInRegistries.ITEM.get(PufferfishPlease.id("pufferfish_aspic"));
             CriteriaTriggers.INVENTORY_CHANGED.trigger(player, player.getInventory(), new ItemStack(item));
             helper.assertTrue(done(player, "fish_aspic"), "Aspic did not grant its advancement");
-        });
+        }
         var vanillaBoat = EntityType.BOAT.create(level);
         player.startRiding(vanillaBoat, true);
         CriteriaTriggers.START_RIDING_TRIGGER.trigger(player);

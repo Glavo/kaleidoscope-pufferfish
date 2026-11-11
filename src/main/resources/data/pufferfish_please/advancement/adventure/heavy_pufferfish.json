@@ -1,0 +1,35 @@
+{
+  "parent": "pufferfish_please:adventure/upgrade_template",
+  "display": {
+    "icon": {
+      "id": "pufferfish_please:heavy_pufferfish"
+    },
+    "title": {
+      "translate": "advancements.pufferfish_please.heavy_pufferfish.title"
+    },
+    "description": {
+      "translate": "advancements.pufferfish_please.heavy_pufferfish.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "pufferfish_please:heavy_pufferfish"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "obtain"
+    ]
+  ]
+}
