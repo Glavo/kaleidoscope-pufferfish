@@ -22,7 +22,8 @@ public final class PufferfishConduitSpawning {
             PufferfishPlease.id("conduit_replaced_spawns"));
     public static final TagKey<EntityType<?>> SUPPRESSED = TagKey.create(Registries.ENTITY_TYPE,
             PufferfishPlease.id("conduit_suppressed_spawns"));
-    private static final Map<Level, Map<BlockPos, Integer>> ACTIVE = new WeakHashMap<>();
+    private static final Map<Level, Map<BlockPos, Aura>> ACTIVE = new WeakHashMap<>();
+    private record Aura(int radius, boolean ancient) {}
     // NaturalSpawner checks candidate identity again before spawning the selected mob.
     private static final MobSpawnSettings.SpawnerData PUFFERFISH = new MobSpawnSettings.SpawnerData(EntityType.PUFFERFISH, 1, 1, 3);
 
@@ -31,7 +32,8 @@ public final class PufferfishConduitSpawning {
     static void update(Level level, BlockPos pos, int radius) {
         if (level == null || level.isClientSide) return;
         if (radius > 0) {
-            ACTIVE.computeIfAbsent(level, ignored -> new HashMap<>()).put(pos.immutable(), radius);
+            ACTIVE.computeIfAbsent(level, ignored -> new HashMap<>()).put(pos.immutable(),
+                    new Aura(radius, level.getBlockState(pos).is(PufferfishBlocks.ANCIENT_CONDUIT.get())));
         } else {
             var positions = ACTIVE.get(level);
             if (positions != null) {
@@ -49,7 +51,13 @@ public final class PufferfishConduitSpawning {
     public static boolean isInRange(Level level, BlockPos pos) {
         var positions = ACTIVE.get(level);
         return positions != null && positions.entrySet().stream()
-                .anyMatch(entry -> entry.getKey().closerThan(pos, entry.getValue()));
+                .anyMatch(entry -> entry.getKey().closerThan(pos, entry.getValue().radius()));
+    }
+
+    public static boolean isInAncientRange(Level level, BlockPos pos) {
+        var positions = ACTIVE.get(level);
+        return positions != null && positions.entrySet().stream().anyMatch(entry -> entry.getValue().ancient()
+                && entry.getKey().closerThan(pos, entry.getValue().radius()));
     }
 
     public static void potentialSpawns(LevelEvent.PotentialSpawns event) {

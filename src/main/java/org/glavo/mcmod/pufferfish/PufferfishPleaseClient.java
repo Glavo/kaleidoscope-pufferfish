@@ -114,7 +114,8 @@ public class PufferfishPleaseClient {
         event.registerItem(lampRenderer(), PufferfishLamps.VARIANTS.values().stream()
                 .map(variant -> variant.block().get().asItem()).toArray(net.minecraft.world.item.Item[]::new));
         event.registerItem(boatRenderer(), PufferfishBoats.VARIANTS.values().stream().map(variant -> variant.item().get()).toArray(net.minecraft.world.item.Item[]::new));
-        event.registerItem(PufferfishConduitRenderer.itemExtensions(), PufferfishBlocks.CONDUIT.get().asItem());
+        event.registerItem(PufferfishConduitRenderer.itemExtensions(), PufferfishBlocks.CONDUIT.get().asItem(),
+                PufferfishBlocks.ANCIENT_CONDUIT.get().asItem());
         event.registerItem(shieldRenderer(), PufferfishShields.VARIANTS.values().stream().map(holder -> holder.get()).toArray(net.minecraft.world.item.Item[]::new));
         event.registerItem(flailRenderer(), PufferfishItems.FLAIL_VARIANTS.stream().map(item -> item.get()).toArray(net.minecraft.world.item.Item[]::new));
     }

@@ -36,6 +36,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class PufferfishCurseGameTests {
     @GameTest(template = "empty")
     public static void everyRareFishConvertsPowerOnlyOnSuccessfulAttacks(GameTestHelper helper) {
+        var ancient = ancientAura(helper);
         for (var variant : PufferfishMobs.VARIANTS.values()) {
             var packets = new ArrayList<Packet<?>>();
             var player = player(helper, packets);
@@ -63,6 +64,7 @@ public final class PufferfishCurseGameTests {
         }
         var fish = PufferfishMobs.VARIANTS.get("copper_pufferfish").entity().get().create(helper.getLevel());
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setPos(helper.absolutePos(new BlockPos(2, 82, 2)).getCenter());
         player.hurt(player.damageSources().mobAttack(fish), 1);
         helper.assertTrue(!player.hasEffect(PufferfishEffects.PUFFERFISH_CURSE), "Unempowered player was cursed");
         player.addEffect(new MobEffectInstance(PufferfishEffects.PUFFERFISH_POWER, 260));
@@ -78,12 +80,14 @@ public final class PufferfishCurseGameTests {
         player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 260));
         player.hurt(player.damageSources().mobAttack(fish), 1);
         helper.assertTrue(player.hasEffect(PufferfishEffects.PUFFERFISH_CURSE), "Absorbed attack did not convert power");
+        helper.getLevel().removeBlock(ancient, false);
         helper.succeed();
     }
 
     @GameTest(template = "empty")
     public static void curseMatchesVanillaFatigueAndWeaknessAndExpiresCleanly(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setPos(helper.absolutePos(new BlockPos(2, 82, 2)).getCenter());
         player.setOnGround(true);
         player.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(10);
         float speed = player.getDestroySpeed(Blocks.STONE.defaultBlockState());
@@ -109,6 +113,7 @@ public final class PufferfishCurseGameTests {
 
     @GameTest(template = "empty")
     public static void coreRenewsCurseUntilCuredWithoutRepeatingTheApparition(GameTestHelper helper) {
+        var ancient = ancientAura(helper);
         var packets = new ArrayList<Packet<?>>();
         var player = player(helper, packets);
         var fish = PufferfishMobs.VARIANTS.get("iron_pufferfish").entity().get().create(helper.getLevel());
@@ -131,12 +136,15 @@ public final class PufferfishCurseGameTests {
         helper.assertTrue(player.hasEffect(PufferfishEffects.PUFFERFISH_POWER)
                 && !player.hasEffect(PufferfishEffects.PUFFERFISH_CURSE), "Milk did not restore normal core behavior");
         player.discard();
+        helper.getLevel().removeBlock(ancient, false);
         helper.succeed();
     }
 
     @GameTest(template = "empty")
     public static void canceledCursePreservesPowerAndInfinitePowerStaysInfinite(GameTestHelper helper) {
+        var ancient = ancientAura(helper);
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setPos(helper.absolutePos(new BlockPos(2, 82, 2)).getCenter());
         var fish = PufferfishMobs.VARIANTS.get("diamond_pufferfish").entity().get().create(helper.getLevel());
         java.util.function.Consumer<MobEffectEvent.Applicable> listener = event -> {
             if (event.getEntity() == player && event.getEffectInstance().is(PufferfishEffects.PUFFERFISH_CURSE)) {
@@ -155,7 +163,15 @@ public final class PufferfishCurseGameTests {
         player.invulnerableTime = 0;
         player.hurt(player.damageSources().mobAttack(fish), 1);
         helper.assertTrue(player.getEffect(PufferfishEffects.PUFFERFISH_CURSE).isInfiniteDuration(), "Infinite power lost its duration");
+        helper.getLevel().removeBlock(ancient, false);
         helper.succeed();
+    }
+
+    private static BlockPos ancientAura(GameTestHelper helper) {
+        var pos = helper.absolutePos(new BlockPos(2, 82, 2));
+        helper.getLevel().setBlockAndUpdate(pos, PufferfishBlocks.ANCIENT_CONDUIT.get().defaultBlockState());
+        PufferfishConduitSpawning.update(helper.getLevel(), pos, PufferfishConduitBlockEntity.ANCIENT_RADIUS);
+        return pos;
     }
 
     private static long apparitions(ArrayList<Packet<?>> packets) {
@@ -181,7 +197,7 @@ public final class PufferfishCurseGameTests {
         }
         player.setGameMode(GameType.SURVIVAL);
         player.setNoGravity(true);
-        player.setPos(helper.absolutePos(new BlockPos(2, 2, 2)).getCenter());
+        player.setPos(helper.absolutePos(new BlockPos(2, 82, 2)).getCenter());
         return player;
     }
 }

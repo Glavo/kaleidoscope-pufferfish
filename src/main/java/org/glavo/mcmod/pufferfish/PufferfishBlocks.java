@@ -42,8 +42,12 @@ public final class PufferfishBlocks {
                             .toArray(net.minecraft.world.level.block.Block[]::new)).build(null));
     public static final DeferredBlock<PufferfishConduitBlock> CONDUIT = BLOCKS.registerBlock("pufferfish_conduit",
             PufferfishConduitBlock::new, BlockBehaviour.Properties.ofFullCopy(Blocks.CONDUIT));
+    public static final DeferredBlock<PufferfishConduitBlock> ANCIENT_CONDUIT = BLOCKS.registerBlock("ancient_pufferfish_conduit",
+            PufferfishConduitBlock::new, BlockBehaviour.Properties.ofFullCopy(Blocks.CONDUIT).noLootTable()
+                    .pushReaction(net.minecraft.world.level.material.PushReaction.BLOCK));
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PufferfishConduitBlockEntity>> CONDUIT_ENTITY =
-            BLOCK_ENTITIES.register("pufferfish_conduit", () -> BlockEntityType.Builder.of(PufferfishConduitBlockEntity::new, CONDUIT.get()).build(null));
+            BLOCK_ENTITIES.register("pufferfish_conduit", () -> BlockEntityType.Builder.of(PufferfishConduitBlockEntity::new,
+                    CONDUIT.get(), ANCIENT_CONDUIT.get()).build(null));
     private static final DeferredBlock<PufferfishSkinBlock> PLAIN_SKIN = registerSkin(PufferfishVariant.NORMAL, MapColor.COLOR_YELLOW);
     private static final Map<DyeColor, DeferredBlock<PufferfishSkinBlock>> COLORED_SKINS = registerColoredSkins();
     public static final DeferredBlock<PufferfishSkinBlock> COPPER_SKIN = registerSkin(PufferfishVariant.COPPER.get(0), MapColor.COLOR_ORANGE);
@@ -64,6 +68,7 @@ public final class PufferfishBlocks {
 
     static {
         ITEMS.registerSimpleBlockItem(CONDUIT);
+        ITEMS.registerSimpleBlockItem(ANCIENT_CONDUIT);
     }
 
     private PufferfishBlocks() {}

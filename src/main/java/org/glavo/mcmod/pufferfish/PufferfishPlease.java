@@ -85,6 +85,7 @@ public class PufferfishPlease {
                 .icon(() -> PufferfishColors.dye(new ItemStack(Items.PUFFERFISH_BUCKET), DyeColor.PURPLE))
                 .displayItems((parameters, output) -> {
                     output.accept(PufferfishBlocks.CONDUIT);
+                    output.accept(PufferfishBlocks.ANCIENT_CONDUIT);
                     PufferfishLamps.VARIANTS.values().forEach(variant -> output.accept(variant.block().get()));
                     if (ModList.get().isLoaded("create")) {
                         output.accept(CreateIntegration.ENGINE_ITEM.get());

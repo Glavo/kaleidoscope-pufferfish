@@ -75,6 +75,35 @@ public final class PufferfishTextures implements ResourceManagerReloadListener {
         });
     }
 
+    public static ResourceLocation ancientConduit() {
+        return MATERIAL_TEXTURES.computeIfAbsent("ancient_conduit", ignored -> {
+            var minecraft = Minecraft.getInstance();
+            var id = PufferfishPlease.id("textures/entity/ancient_pufferfish_conduit.png");
+            if (minecraft.getResourceManager().getResource(id).isPresent()) return id;
+            try (var stream = minecraft.getResourceManager().open(ORIGINAL)) {
+                var image = NativeImage.read(stream);
+                int[] stone = {0x182B30, 0x2F484A, 0x4F6867, 0x7E9290};
+                for (int y = 0; y < image.getHeight(); y++) for (int x = 0; x < image.getWidth(); x++) {
+                    int pixel = image.getPixelRGBA(x, y);
+                    if (pixel >>> 24 == 0) continue;
+                    int brightness = Math.max(pixel & 255, Math.max(pixel >>> 8 & 255, pixel >>> 16 & 255));
+                    int u = x * 32 / image.getWidth();
+                    int v = y % image.getWidth() * 32 / image.getWidth();
+                    int shade = brightness < 100 ? 0 : brightness < 170 ? 1 : brightness < 225 ? 2 : 3;
+                    boolean crack = (u + v / 3) % 11 == 4 && v % 9 < 7;
+                    int rgb = crack ? 0x111E24 : stone[shade];
+                    image.setPixelRGBA(x, y, net.minecraft.util.FastColor.ABGR32.fromArgb32(pixel & 0xFF000000 | rgb));
+                }
+                whiteEyes(image, true, 0xBD9ACD);
+                minecraft.getTextureManager().register(id, new DynamicTexture(image));
+                return id;
+            } catch (IOException exception) {
+                LogUtils.getLogger().error("Failed to load ancient pufferfish conduit texture", exception);
+                return ORIGINAL;
+            }
+        });
+    }
+
     /// Returns the heavy fish entity texture, loading a resource-pack replacement or generated steel-and-wind texture.
     public static ResourceLocation heavyEntity() {
         if (heavyTexture == null) {

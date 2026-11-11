@@ -53,7 +53,8 @@ public final class PufferfishConduitRenderer implements BlockEntityRenderer<Puff
         pose.translate(0, -(active ? 18.0F : 22.0F) / 16, 0);
         EntityModel<Entity> fish = active ? activeFish : inactiveFish;
         fish.setupAnim(null, 0, 0, age, 0, 0);
-        fish.renderToBuffer(pose, buffers.getBuffer(RenderType.entityCutoutNoCull(TEXTURE)), light, overlay);
+        var texture = entity.isAncient() ? PufferfishTextures.ancientConduit() : TEXTURE;
+        fish.renderToBuffer(pose, buffers.getBuffer(RenderType.entityCutoutNoCull(texture)), light, overlay);
         pose.popPose();
         if (active) {
             int axis = entity.tickCount / 66 % 3;
@@ -87,6 +88,7 @@ public final class PufferfishConduitRenderer implements BlockEntityRenderer<Puff
 
     private static final class ItemRenderer extends BlockEntityWithoutLevelRenderer {
         private final PufferfishConduitBlockEntity entity = new PufferfishConduitBlockEntity(BlockPos.ZERO, PufferfishBlocks.CONDUIT.get().defaultBlockState());
+        private final PufferfishConduitBlockEntity ancient = new PufferfishConduitBlockEntity(BlockPos.ZERO, PufferfishBlocks.ANCIENT_CONDUIT.get().defaultBlockState());
 
         private ItemRenderer() {
             super(Minecraft.getInstance().getBlockEntityRenderDispatcher(), Minecraft.getInstance().getEntityModels());
@@ -94,8 +96,9 @@ public final class PufferfishConduitRenderer implements BlockEntityRenderer<Puff
 
         @Override
         public void renderByItem(ItemStack stack, ItemDisplayContext context, PoseStack pose, MultiBufferSource buffers, int light, int overlay) {
-            var renderer = Minecraft.getInstance().getBlockEntityRenderDispatcher().getRenderer(entity);
-            if (renderer != null) renderer.render(entity, 0, pose, buffers, light, overlay);
+            var rendered = stack.is(PufferfishBlocks.ANCIENT_CONDUIT.get().asItem()) ? ancient : entity;
+            var renderer = Minecraft.getInstance().getBlockEntityRenderDispatcher().getRenderer(rendered);
+            if (renderer != null) renderer.render(rendered, 0, pose, buffers, light, overlay);
         }
     }
 }

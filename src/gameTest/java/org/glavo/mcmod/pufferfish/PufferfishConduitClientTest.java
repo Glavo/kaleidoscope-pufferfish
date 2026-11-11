@@ -35,38 +35,42 @@ public final class PufferfishConduitClientTest {
     private static final RenderType FISH = RenderType.entityCutoutNoCull(ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png"));
 
     public static void verify(Minecraft minecraft) {
-        var state = PufferfishBlocks.CONDUIT.get().defaultBlockState();
-        var entity = new PufferfishConduitBlockEntity(BlockPos.ZERO, state);
-        var renderer = minecraft.getBlockEntityRenderDispatcher().getRenderer(entity);
-        if (!(renderer instanceof PufferfishConduitRenderer)
-                || !(minecraft.getBlockEntityRenderDispatcher().getRenderer(new ConduitBlockEntity(BlockPos.ZERO, Blocks.CONDUIT.defaultBlockState())) instanceof ConduitRenderer)) {
-            throw new IllegalStateException("Pufferfish conduit renderer is missing or replaced vanilla conduit rendering");
-        }
-        var stack = new ItemStack(PufferfishBlocks.CONDUIT.get());
-        var model = minecraft.getItemRenderer().getModel(stack, null, null, 0);
-        if (!model.isCustomRenderer() || model == minecraft.getModelManager().getMissingModel()
-                || stack.getHoverName().getString().startsWith("block.")) {
-            throw new IllegalStateException("Pufferfish conduit item model or translation is missing");
-        }
-        for (boolean active : new boolean[] {false, true}) {
-            active(entity, active);
-            entity.tickCount = 33;
-            var capture = new Capture();
-            var pose = new PoseStack();
-            renderer.render(entity, 0, pose, capture, LIGHT, OverlayTexture.NO_OVERLAY);
-            var fish = capture.parts.get(FISH);
-            if (fish == null || fish.count < 100 || fish.minY < 0.05F || fish.maxY > 0.95F || !pose.clear()
-                    || capture.parts.size() != (active ? 2 : 1)) {
-                throw new IllegalStateException("Pufferfish conduit fish or active wind failed to render");
+        for (var block : java.util.List.of(PufferfishBlocks.CONDUIT.get(), PufferfishBlocks.ANCIENT_CONDUIT.get())) {
+            var state = block.defaultBlockState();
+            var entity = new PufferfishConduitBlockEntity(BlockPos.ZERO, state);
+            var renderer = minecraft.getBlockEntityRenderDispatcher().getRenderer(entity);
+            if (!(renderer instanceof PufferfishConduitRenderer)
+                    || !(minecraft.getBlockEntityRenderDispatcher().getRenderer(new ConduitBlockEntity(BlockPos.ZERO, Blocks.CONDUIT.defaultBlockState())) instanceof ConduitRenderer)) {
+                throw new IllegalStateException("Pufferfish conduit renderer is missing or replaced vanilla conduit rendering");
             }
+            var expectedTexture = block == PufferfishBlocks.ANCIENT_CONDUIT.get()
+                    ? RenderType.entityCutoutNoCull(org.glavo.mcmod.pufferfish.client.PufferfishTextures.ancientConduit()) : FISH;
+            var stack = new ItemStack(block);
+            var model = minecraft.getItemRenderer().getModel(stack, null, null, 0);
+            if (!model.isCustomRenderer() || model == minecraft.getModelManager().getMissingModel()
+                    || stack.getHoverName().getString().startsWith("block.")) {
+                throw new IllegalStateException("Pufferfish conduit item model or translation is missing");
+            }
+            for (boolean active : new boolean[] {false, true}) {
+                active(entity, active);
+                entity.tickCount = 33;
+                var capture = new Capture();
+                var pose = new PoseStack();
+                renderer.render(entity, 0, pose, capture, LIGHT, OverlayTexture.NO_OVERLAY);
+                var fish = capture.parts.get(expectedTexture);
+                if (fish == null || fish.count < 100 || fish.minY < 0.05F || fish.maxY > 0.95F || !pose.clear()
+                        || capture.parts.size() != (active ? 2 : 1)) {
+                    throw new IllegalStateException("Pufferfish conduit fish or active wind failed to render");
+                }
+            }
+            for (var context : ItemDisplayContext.values()) {
+                var capture = new Capture();
+                var pose = new PoseStack();
+                IClientItemExtensions.of(stack).getCustomRenderer().renderByItem(stack, context, pose, capture, LIGHT, OverlayTexture.NO_OVERLAY);
+                if (!capture.parts.containsKey(expectedTexture) || !pose.clear()) throw new IllegalStateException("Conduit item did not render: " + context);
+            }
+            preview(minecraft, entity);
         }
-        for (var context : ItemDisplayContext.values()) {
-            var capture = new Capture();
-            var pose = new PoseStack();
-            IClientItemExtensions.of(stack).getCustomRenderer().renderByItem(stack, context, pose, capture, LIGHT, OverlayTexture.NO_OVERLAY);
-            if (!capture.parts.containsKey(FISH) || !pose.clear()) throw new IllegalStateException("Conduit item did not render: " + context);
-        }
-        preview(minecraft, entity);
     }
 
     private static void active(PufferfishConduitBlockEntity entity, boolean active) {
@@ -108,7 +112,7 @@ public final class PufferfishConduitClientTest {
                 buffers.endBatch();
             }
             try (var image = Screenshot.takeScreenshot(target)) {
-                image.writeToFile(Path.of("pufferfish-conduit-preview.png"));
+                image.writeToFile(Path.of(entity.isAncient() ? "ancient-pufferfish-conduit-preview.png" : "pufferfish-conduit-preview.png"));
             }
         } catch (IOException exception) {
             throw new IllegalStateException("Could not save conduit preview", exception);
