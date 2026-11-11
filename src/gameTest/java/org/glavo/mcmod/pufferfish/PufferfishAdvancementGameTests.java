@@ -27,6 +27,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -38,6 +39,7 @@ import net.minecraft.world.level.levelgen.structure.pieces.PiecesContainer;
 import net.minecraft.world.phys.BlockHitResult;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.util.BlockSnapshot;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -47,6 +49,91 @@ import org.glavo.mcmod.pufferfish.worldgen.PufferfishRuinPiece;
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishAdvancementGameTests {
+    @GameTest(template = "empty")
+    public static void heavyFishAndBothFallingBlocksGrantTheDeathAdvancement(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var fish = PufferfishMobs.VARIANTS.get("heavy_pufferfish").entity().get().create(level);
+        var players = new java.util.ArrayList<ServerPlayer>();
+        var victim = player(helper);
+        victim.hurt(level.damageSources().mobAttack(fish), 100);
+        helper.assertTrue(victim.isDeadOrDying(), "Heavy pufferfish attack did not kill the player");
+        players.add(victim);
+        for (var block : List.of(PufferfishBlocks.PLACED_HEAVY_FISH.get(), PufferfishLamps.VARIANTS.get("heavy_pufferfish_lamp").block().get())) {
+            var falling = FallingBlockEntity.fall(level, helper.absolutePos(new BlockPos(2, 6, 2)), block.defaultBlockState());
+            var player = player(helper);
+            player.hurt(((HeavyPufferfishBlock) block).getFallDamageSource(falling), 100);
+            helper.assertTrue(player.isDeadOrDying(), "Falling heavy pufferfish did not kill the player");
+            players.add(player);
+            falling.discard();
+        }
+        helper.runAfterDelay(2, () -> {
+            for (var player : players) {
+                helper.assertTrue(done(player, "unbearable_weight"), "Heavy pufferfish death did not grant progress");
+                player.getAdvancements().stopListening();
+            }
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty")
+    public static void unrelatedDeathsDoNotGrantTheHeavyFishAdvancement(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var iron = PufferfishMobs.VARIANTS.get("iron_pufferfish").entity().get().create(level);
+        var anvil = FallingBlockEntity.fall(level, helper.absolutePos(new BlockPos(2, 6, 2)), Blocks.ANVIL.defaultBlockState());
+        var players = new java.util.ArrayList<ServerPlayer>();
+        for (var source : List.of(level.damageSources().mobAttack(iron), level.damageSources().anvil(anvil),
+                new net.minecraft.world.damagesource.DamageSource(level.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE)
+                        .getHolderOrThrow(PufferfishContactDamage.DAMAGE_TYPE)))) {
+            var player = player(helper);
+            player.hurt(source, 100);
+            helper.assertTrue(player.isDeadOrDying(), "Negative case did not kill the player");
+            players.add(player);
+        }
+        anvil.discard();
+        helper.runAfterDelay(2, () -> {
+            for (var player : players) {
+                helper.assertTrue(!done(player, "unbearable_weight"), "Unrelated death granted heavy pufferfish progress");
+                player.getAdvancements().stopListening();
+            }
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty")
+    public static void survivingHeavyFishDamageDoesNotGrantDeathProgress(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var fish = PufferfishMobs.VARIANTS.get("heavy_pufferfish").entity().get().create(level);
+        var source = level.damageSources().mobAttack(fish);
+        var injured = player(helper);
+        injured.hurt(source, 1);
+        helper.assertTrue(injured.getHealth() < injured.getMaxHealth() && !injured.isDeadOrDying(), "Nonlethal attack did not injure the player");
+        var saved = player(helper);
+        saved.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(Items.TOTEM_OF_UNDYING));
+        saved.hurt(source, 100);
+        helper.assertTrue(!saved.isDeadOrDying() && saved.getOffhandItem().isEmpty(), "Totem did not save the player");
+        var canceled = player(helper);
+        java.util.function.Consumer<LivingDeathEvent> cancelDeath = event -> {
+            if (event.getEntity() == canceled) {
+                event.setCanceled(true);
+                canceled.setHealth(1);
+            }
+        };
+        NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, cancelDeath);
+        try {
+            canceled.hurt(source, 100);
+        } finally {
+            NeoForge.EVENT_BUS.unregister(cancelDeath);
+        }
+        helper.assertTrue(!canceled.isDeadOrDying(), "Death cancellation did not save the player");
+        helper.runAfterDelay(2, () -> {
+            for (var player : List.of(injured, saved, canceled)) {
+                helper.assertTrue(!done(player, "unbearable_weight"), "Surviving a heavy pufferfish granted death progress");
+                player.getAdvancements().stopListening();
+            }
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty")
     public static void ordinaryAndDyedCapturesGrantOnlyTheFirstTrainerRank(GameTestHelper helper) {
         for (int color = -1; color < DyeColor.values().length; color++) {
@@ -273,6 +360,13 @@ public final class PufferfishAdvancementGameTests {
             @Override public void send(Packet<?> packet) {}
         };
         player.setGameMode(GameType.SURVIVAL);
+        try {
+            var field = ServerPlayer.class.getDeclaredField("spawnInvulnerableTime");
+            field.setAccessible(true);
+            field.setInt(player, 0);
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Could not remove spawn invulnerability", exception);
+        }
         player.setPos(helper.absolutePos(new BlockPos(2, 3, 2)).getCenter());
         return player;
     }

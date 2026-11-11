@@ -1,0 +1,28 @@
+{
+  "parent": "pufferfish_please:adventure/root",
+  "display": {
+    "icon": {
+      "id": "pufferfish_please:heavy_pufferfish"
+    },
+    "title": {
+      "translate": "advancements.pufferfish_please.unbearable_weight.title"
+    },
+    "description": {
+      "translate": "advancements.pufferfish_please.unbearable_weight.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "die": {
+      "trigger": "pufferfish_please:killed_by_heavy_pufferfish"
+    }
+  },
+  "requirements": [
+    [
+      "die"
+    ]
+  ]
+}
