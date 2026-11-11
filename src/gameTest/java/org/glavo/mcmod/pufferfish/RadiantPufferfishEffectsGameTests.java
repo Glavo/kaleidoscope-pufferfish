@@ -45,13 +45,17 @@ public final class RadiantPufferfishEffectsGameTests {
     }
 
     static void assertHit(GameTestHelper helper, net.minecraft.world.entity.LivingEntity target, int previous, long seed, int duration) {
+        assertHit(helper, target, previous, seed, duration, false);
+    }
+
+    private static void assertHit(GameTestHelper helper, net.minecraft.world.entity.LivingEntity target, int previous, long seed, int duration, boolean guaranteedWither) {
         var random = net.minecraft.util.RandomSource.create(seed);
         int expected = previous;
-        if (previous < 2 && random.nextFloat() < 0.6F) expected++;
+        if (previous < 2 && (guaranteedWither || random.nextFloat() < 0.6F)) expected++;
         var wither = target.getEffect(MobEffects.WITHER);
         helper.assertTrue(expected < 0 ? wither == null : wither != null
                         && wither.getAmplifier() == expected && wither.getDuration() == duration,
-                "Radiant hit did not roll a 60 percent increase or refresh existing wither: " + previous + ", seed=" + seed);
+                "Radiant hit did not apply its wither chance or refresh duration: " + previous + ", seed=" + seed);
         for (int i = 0; i < BONUS_EFFECTS.size(); i++) {
             boolean triggered = previous >= 2 && random.nextFloat() < 0.05F;
             var effect = target.getEffect(BONUS_EFFECTS.get(i));
@@ -96,7 +100,7 @@ public final class RadiantPufferfishEffectsGameTests {
         float health = target.getHealth();
         projectile.tick();
         helper.assertTrue(health - target.getHealth() == 8, "Radiant throws should deal eight base damage");
-        assertHit(helper, target, previous, seed);
+        assertHit(helper, target, previous, seed, 120, true);
         target.removeAllEffects();
         seed = seeds.nextLong();
         previous = prepareHit(target, player, seed);
@@ -105,6 +109,41 @@ public final class RadiantPufferfishEffectsGameTests {
         target.removeAllEffects();
         PufferfishCombat.hitEffects(new ItemStack(PufferfishItems.NETHERITE.get()), target, player, Vec3.ZERO);
         helper.assertTrue(!target.hasEffect(MobEffects.GLOWING), "Non-radiant attacks applied glowing");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void throwsGuaranteeWitherButKeepIndependentBonusChances(GameTestHelper helper) {
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        var target = helper.spawn(EntityType.VILLAGER, new BlockPos(3, 2, 2));
+        target.setNoAi(true);
+        target.getAttribute(Attributes.MAX_HEALTH).setBaseValue(1000);
+        var seeds = net.minecraft.util.RandomSource.create(921734);
+        for (int previous = -1; previous <= 2; previous++) {
+            for (int hit = 0; hit < 64; hit++) {
+                target.removeAllEffects();
+                target.setHealth(1000);
+                target.invulnerableTime = 0;
+                if (previous >= 0) target.addEffect(new MobEffectInstance(MobEffects.WITHER, 20, previous));
+                long seed = seeds.nextLong();
+                prepareHit(target, player, seed);
+                var projectile = new ThrownPufferfish(helper.getLevel(), player);
+                projectile.setItem(new ItemStack(PufferfishItems.RADIANT.get()));
+                projectile.setPos(target.getX() - 1, target.getY() + 0.5, target.getZ());
+                projectile.setDeltaMovement(2, 0, 0);
+                projectile.tick();
+                helper.assertTrue(target.getHealth() == 992, "Radiant projectile missed its target");
+                assertHit(helper, target, previous, seed, 120, true);
+            }
+        }
+        target.removeAllEffects();
+        target.setInvulnerable(true);
+        var projectile = new ThrownPufferfish(helper.getLevel(), player);
+        projectile.setItem(new ItemStack(PufferfishItems.RADIANT.get()));
+        projectile.setPos(target.getX() - 1, target.getY() + 0.5, target.getZ());
+        projectile.setDeltaMovement(2, 0, 0);
+        projectile.tick();
+        helper.assertTrue(target.getActiveEffects().isEmpty(), "Rejected radiant damage still applied guaranteed effects");
         helper.succeed();
     }
 

@@ -172,7 +172,7 @@ public class ThrownPufferfish extends ThrowableItemProjectile {
             };
             if (target.hurt(damage, PufferfishCombat.projectileDamage(server, getItem(), target, damage))) {
                 if (target instanceof LivingEntity living) {
-                    PufferfishCombat.hitEffects(getItem(), living, getEffectSource(), getDeltaMovement());
+                    PufferfishCombat.thrownHitEffects(getItem(), living, getEffectSource(), getDeltaMovement());
                 }
                 PufferfishChanneling.hitEntity(this, getItem(), target);
             }

@@ -98,6 +98,12 @@ public final class PufferfishCombat {
         hitEffects(stack, target, source, direction, true);
     }
 
+    /// Direct fish throws guarantee radiant wither while retaining normal bonus effects and Punch knockback.
+    public static void thrownHitEffects(ItemStack stack, LivingEntity target, Entity source, Vec3 direction) {
+        applyAttackEffect(stack, target, source, STATUS_EFFECT_DURATION_TICKS, true);
+        hitEffects(stack, target, source, direction, false);
+    }
+
     private static void hitEffects(ItemStack stack, LivingEntity target, Entity source, Vec3 direction, boolean applyEffect) {
         if (applyEffect) applyAttackEffect(stack, target, source);
         int punch = enchantmentLevel(stack, Enchantments.PUNCH);
@@ -115,17 +121,21 @@ public final class PufferfishCombat {
 
     /// Uses the supplied poison or wither duration without changing radiant bonus effect durations.
     public static void applyAttackEffect(ItemStack stack, LivingEntity target, Entity source, int duration) {
+        applyAttackEffect(stack, target, source, duration, false);
+    }
+
+    private static void applyAttackEffect(ItemStack stack, LivingEntity target, Entity source, int duration, boolean guaranteedWither) {
         if (PufferfishItems.isRadiant(stack)) {
             var current = target.getEffect(MobEffects.WITHER);
             var random = source.getRandom();
             if (current == null) {
-                if (random.nextFloat() < RADIANT_WITHER_CHANCE) {
+                if (guaranteedWither || random.nextFloat() < RADIANT_WITHER_CHANCE) {
                     target.addEffect(new MobEffectInstance(MobEffects.WITHER, duration), source);
                 }
             } else {
                 int amplifier = current.getAmplifier();
                 boolean capped = amplifier >= 2;
-                if (amplifier < 2 && random.nextFloat() < RADIANT_WITHER_CHANCE) amplifier++;
+                if (amplifier < 2 && (guaranteedWither || random.nextFloat() < RADIANT_WITHER_CHANCE)) amplifier++;
                 target.addEffect(new MobEffectInstance(MobEffects.WITHER, duration, amplifier), source);
                 // Only hits against an already capped effect roll the four independent debuffs.
                 if (capped) {
