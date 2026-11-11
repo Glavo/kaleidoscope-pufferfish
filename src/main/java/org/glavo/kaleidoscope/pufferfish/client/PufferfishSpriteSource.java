@@ -18,6 +18,10 @@ public final class PufferfishSpriteSource implements SpriteSource {
 
     @Override
     public void run(ResourceManager manager, Output output) {
+        var template = KaleidoscopePufferfish.id("item/pufferfish_upgrade_smithing_template");
+        var templateReplacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(template));
+        if (templateReplacement.isPresent()) output.add(template, templateReplacement.get());
+        else output.add(template, loader -> PufferfishUpgradeTemplateTexture.create(template));
         for (var name : org.glavo.kaleidoscope.pufferfish.PufferfishMobs.VARIANTS.keySet()) {
             var id = KaleidoscopePufferfish.id("item/" + name + "_bucket");
             var replacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(id));

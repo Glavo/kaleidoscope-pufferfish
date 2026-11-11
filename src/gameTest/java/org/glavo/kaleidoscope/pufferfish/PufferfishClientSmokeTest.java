@@ -75,9 +75,19 @@ public final class PufferfishClientSmokeTest {
         var upgradeTemplate = PufferfishItems.UPGRADE_TEMPLATE.toStack();
         var templateModel = minecraft.getItemRenderer().getModel(upgradeTemplate, null, null, 0);
         if (templateModel == minecraft.getModelManager().getMissingModel()
+                || !templateModel.getParticleIcon().contents().name().equals(KaleidoscopePufferfish.id("item/pufferfish_upgrade_smithing_template"))
                 || templateModel.getQuads(null, null, RandomSource.create()).isEmpty()
                 || upgradeTemplate.getHoverName().getString().startsWith("item.")) {
             throw new IllegalStateException("Missing pufferfish upgrade template model or translation");
+        }
+        var templateImage = templateModel.getParticleIcon().contents().getOriginalImage();
+        try (var preview = new com.mojang.blaze3d.platform.NativeImage(256, 256, true)) {
+            for (int y = 0; y < 256; y++) for (int x = 0; x < 256; x++) {
+                preview.setPixelRGBA(x, y, templateImage.getPixelRGBA(x * templateImage.getWidth() / 256, y * templateImage.getHeight() / 256));
+            }
+            preview.writeToFile(java.nio.file.Path.of("pufferfish-upgrade-template-preview.png"));
+        } catch (java.io.IOException exception) {
+            throw new IllegalStateException("Could not save pufferfish upgrade template preview", exception);
         }
         MaterialPufferfishClientTest.verify(minecraft);
         PufferfishMobClientTest.verify(minecraft);
