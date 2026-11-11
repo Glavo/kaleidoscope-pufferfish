@@ -9,6 +9,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureManager;
@@ -22,8 +23,10 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.StructurePiece;
 import net.minecraft.world.level.levelgen.structure.pieces.StructurePieceSerializationContext;
 import net.minecraft.world.level.storage.loot.LootTable;
+import net.neoforged.neoforge.event.EventHooks;
 import org.glavo.mcmod.pufferfish.AncientPrismarineBlockEntity;
 import org.glavo.mcmod.pufferfish.PufferfishBlocks;
+import org.glavo.mcmod.pufferfish.PufferfishMobs;
 import org.glavo.mcmod.pufferfish.PufferfishPlease;
 
 public final class PufferfishRuinPiece extends StructurePiece {
@@ -32,6 +35,7 @@ public final class PufferfishRuinPiece extends StructurePiece {
 
     private final boolean ancient;
     private final long decorationSeed;
+    private int spawnedGuards;
 
     public PufferfishRuinPiece(BlockPos floor, boolean ancient, long decorationSeed) {
         super(PufferfishRuins.PIECE.get(), 0, new BoundingBox(floor.getX() - 4, floor.getY() - 4, floor.getZ() - 4,
@@ -45,12 +49,14 @@ public final class PufferfishRuinPiece extends StructurePiece {
         super(PufferfishRuins.PIECE.get(), tag);
         ancient = tag.getBoolean("Ancient");
         decorationSeed = tag.getLong("DecorationSeed");
+        spawnedGuards = tag.getInt("SpawnedGuards");
     }
 
     @Override
     protected void addAdditionalSaveData(StructurePieceSerializationContext context, CompoundTag tag) {
         tag.putBoolean("Ancient", ancient);
         tag.putLong("DecorationSeed", decorationSeed);
+        tag.putInt("SpawnedGuards", spawnedGuards);
     }
 
     @Override
@@ -123,5 +129,26 @@ public final class PufferfishRuinPiece extends StructurePiece {
         }
         var core = ancient ? PufferfishBlocks.ANCIENT_CONDUIT.get() : PufferfishBlocks.CONDUIT.get();
         placeBlock(level, core.defaultBlockState().setValue(BlockStateProperties.WATERLOGGED, true), 4, 8, 4, box);
+        if (ancient) spawnGuards(level, box);
+    }
+
+    private void spawnGuards(WorldGenLevel level, BoundingBox box) {
+        var random = RandomSource.create(decorationSeed);
+        int count = 3 + random.nextInt(2);
+        for (int i = 0; i < count; i++) {
+            int roll = random.nextInt(10);
+            String variant = i == 0 ? "iron_pufferfish" : i == 1 ? "copper_pufferfish"
+                    : roll == 0 ? "diamond_pufferfish" : roll < 5 ? "copper_pufferfish" : "iron_pufferfish";
+            var pos = getWorldPos(3 + (i & 1) * 2, 8, 3 + (i >> 1) * 2);
+            if ((spawnedGuards & (1 << i)) != 0 || !box.isInside(pos)) continue;
+            spawnedGuards |= 1 << i;
+            var fish = PufferfishMobs.VARIANTS.get(variant).entity().get().create(level.getLevel());
+            if (fish == null) continue;
+            fish.moveTo(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 0, 0);
+            EventHooks.finalizeMobSpawn(fish, level, level.getCurrentDifficultyAt(pos), MobSpawnType.STRUCTURE, null);
+            if (fish.isSpawnCancelled()) continue;
+            fish.guard(getWorldPos(4, 8, 4));
+            level.addFreshEntityWithPassengers(fish);
+        }
     }
 }

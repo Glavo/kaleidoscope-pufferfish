@@ -3,6 +3,7 @@
 
 package org.glavo.mcmod.pufferfish.entity;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -17,6 +18,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.goal.MoveTowardsRestrictionGoal;
 import net.minecraft.world.entity.animal.Pufferfish;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.MobCategory;
@@ -57,6 +59,7 @@ public final class MaterialPufferfish extends Pufferfish {
     private int reinforcementCooldown;
     private int reinforcementCalls;
     private boolean reinforcement;
+    private BlockPos guardPos;
 
     public MaterialPufferfish(EntityType<? extends MaterialPufferfish> type, Level level, Item item) {
         super(type, level);
@@ -83,7 +86,7 @@ public final class MaterialPufferfish extends Pufferfish {
     public PufferfishMobConfig.Kind kind() { return PufferfishMobConfig.kind(fish()); }
     public PufferfishMobConfig.Settings settings() { return PufferfishMobConfig.settings(fish()); }
     public boolean hasActiveAttacks() { return kind() != PufferfishMobConfig.Kind.GOLDEN || reinforcement; }
-    public boolean isHostileToPlayers() { return kind() != PufferfishMobConfig.Kind.GOLDEN && kind() != PufferfishMobConfig.Kind.COPPER; }
+    public boolean isHostileToPlayers() { return guardPos != null || kind() != PufferfishMobConfig.Kind.GOLDEN && kind() != PufferfishMobConfig.Kind.COPPER; }
     public int attackPhase() { return entityData.get(ATTACK_PHASE); }
     public void setAttackPhase(int phase) {
         entityData.set(ATTACK_PHASE, phase);
@@ -113,6 +116,7 @@ public final class MaterialPufferfish extends Pufferfish {
     protected void registerGoals() {
         super.registerGoals();
         goalSelector.addGoal(-1, new MaterialPufferfishCombatGoal(this));
+        goalSelector.addGoal(0, new MoveTowardsRestrictionGoal(this, 1));
     }
 
     public boolean isAngryAt(LivingEntity entity) { return angerTicks > 0 && entity.getUUID().equals(provokerId); }
@@ -143,7 +147,8 @@ public final class MaterialPufferfish extends Pufferfish {
     public boolean validTarget(LivingEntity target) {
         double range = getAttributeValue(Attributes.FOLLOW_RANGE);
         return hasActiveAttacks() && canFight(target) && !isDisguisedFrom(target)
-                && (kind() != PufferfishMobConfig.Kind.COPPER || isHuntedHostile(target) || reinforcement && isAngryAt(target))
+                && (guardPos != null || kind() != PufferfishMobConfig.Kind.COPPER || isHuntedHostile(target) || reinforcement && isAngryAt(target))
+                && (guardPos == null || isWithinRestriction(target.blockPosition()))
                 && target.level() == level() && target.isInWater() && distanceToSqr(target) <= range * range && hasLineOfSight(target);
     }
 
@@ -177,6 +182,13 @@ public final class MaterialPufferfish extends Pufferfish {
     @Override
     public ItemStack getPickResult() { return getBucketItemStack(); }
 
+    /// Ruin guards remain near their core and retain their post through entity saves, but not bucket capture.
+    public void guard(BlockPos pos) {
+        guardPos = pos.immutable();
+        restrictTo(guardPos, 12);
+        setPersistenceRequired();
+    }
+
     public void joinReinforcement(LivingEntity attacker) {
         reinforcement = true;
         provokerId = attacker.getUUID();
@@ -197,6 +209,7 @@ public final class MaterialPufferfish extends Pufferfish {
         tag.put("Fish", fish().save(registryAccess()));
         tag.putInt("FishAttackCooldown", attackCooldown);
         saveReinforcements(tag);
+        if (guardPos != null) tag.putLong("FishGuardPos", guardPos.asLong());
         if (angerTicks > 0 && provokerId != null) {
             tag.putUUID("FishProvoker", provokerId);
             tag.putInt("FishAngerTicks", angerTicks);
@@ -207,6 +220,9 @@ public final class MaterialPufferfish extends Pufferfish {
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         loadFish(tag);
+        guardPos = null;
+        clearRestriction();
+        if (tag.contains("FishGuardPos")) guard(BlockPos.of(tag.getLong("FishGuardPos")));
         attackCooldown = Math.max(0, Math.min(1200, tag.getInt("FishAttackCooldown")));
         if (tag.hasUUID("FishProvoker")) {
             provokerId = tag.getUUID("FishProvoker");

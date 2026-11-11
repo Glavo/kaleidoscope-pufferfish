@@ -46,6 +46,7 @@ import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.glavo.mcmod.pufferfish.worldgen.PufferfishRuinPiece;
+import org.glavo.mcmod.pufferfish.entity.MaterialPufferfish;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
@@ -130,6 +131,7 @@ public final class PufferfishRuinGameTests {
         var cores = new ArrayList<BlockPos>();
         var frames = new ArrayList<List<BlockPos>>();
         var treasures = new ArrayList<BlockPos>();
+        var guards = new ArrayList<MaterialPufferfish>();
         for (boolean ancient : new boolean[] {false, true}) {
             var floor = helper.absolutePos(new BlockPos(2, ancient ? 54 : 30, 2));
             var piece = new PufferfishRuinPiece(floor, ancient, 74392L);
@@ -137,6 +139,11 @@ public final class PufferfishRuinGameTests {
             var box = piece.getBoundingBox();
             piece.postProcess(level, level.structureManager(), level.getChunkSource().getGenerator(), RandomSource.create(),
                     box, new ChunkPos(floor), floor);
+            if (ancient) {
+                guards.addAll(level.getEntitiesOfClass(MaterialPufferfish.class, AABB.of(box),
+                        fish -> fish.getRestrictCenter().equals(floor.above(4))));
+                guards.forEach(fish -> { fish.setNoAi(true); fish.setNoGravity(true); });
+            }
             var expectedFrame = new ArrayList<BlockPos>();
             PufferfishConduitBlockEntity.updateFrame(level, floor.above(4), expectedFrame);
             var context = StructurePieceSerializationContext.fromLevel(level);
@@ -205,6 +212,7 @@ public final class PufferfishRuinGameTests {
                 helper.assertTrue(PufferfishConduitSpawning.isInAncientRange(level, ancientPos.above(radius - 1))
                         && !PufferfishConduitSpawning.isInAncientRange(level, ancientPos.above(radius)),
                         "Brushing changed the ancient aura range");
+                guards.forEach(MaterialPufferfish::discard);
                 for (var piece : pieces) {
                     var box = piece.getBoundingBox();
                     for (var pos : BlockPos.betweenClosed(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ())) {
