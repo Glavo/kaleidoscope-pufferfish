@@ -91,6 +91,7 @@ public final class PufferfishClientSmokeTest {
             throw new IllegalStateException("Could not save pufferfish upgrade template preview", exception);
         }
         MaterialPufferfishClientTest.verify(minecraft);
+        PufferfishSpawnEggClientTest.verify(minecraft);
         PufferfishMobClientTest.verify(minecraft);
         verifySkin(minecraft, PufferfishBlocks.GOLDEN_SKIN.get(), "golden_pufferfish_skin");
         verifySkin(minecraft, PufferfishBlocks.NETHERITE_SKIN.get(), "netherite_pufferfish_skin");

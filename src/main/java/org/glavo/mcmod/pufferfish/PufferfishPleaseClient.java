@@ -53,8 +53,9 @@ public class PufferfishPleaseClient {
         bus.addListener(this::registerItemExtensions);
         bus.addListener((net.neoforged.neoforge.client.event.RegisterColorHandlersEvent.Item event) -> event.register((stack, tint) -> {
             var color = stack.get(PufferfishPlease.COLOR.get());
-            return color == null ? ((net.minecraft.world.item.SpawnEggItem) stack.getItem()).getColor(tint)
+            int rgb = color == null ? ((net.minecraft.world.item.SpawnEggItem) stack.getItem()).getColor(tint)
                     : tint == 0 ? color.getTextureDiffuseColor() : 0xFFF0D5;
+            return net.minecraft.util.FastColor.ARGB32.opaque(rgb);
         }, net.minecraft.world.item.Items.PUFFERFISH_SPAWN_EGG));
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishHeadRenderer::beforePlayer);
         NeoForge.EVENT_BUS.addListener(PufferfishHeadRenderer::afterPlayer);
