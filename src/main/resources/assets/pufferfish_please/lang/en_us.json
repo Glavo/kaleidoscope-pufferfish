@@ -441,6 +441,5 @@
   "gui.pufferfish_please.engine.dry": "Needs a bucket of water",
   "gui.pufferfish_please.engine.stopped": "Stopped by redstone",
   "gui.pufferfish_please.engine.running": "Running",
-  "message.pufferfish_please.capture_too_healthy": "This pufferfish is still too strong to capture.",
-  "message.pufferfish_please.split_fish_before_attack": "Inventory full. Separate one pufferfish before attacking."
+  "message.pufferfish_please.capture_too_healthy": "This pufferfish is still too strong to capture."
 }

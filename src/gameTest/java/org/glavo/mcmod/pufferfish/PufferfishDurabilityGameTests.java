@@ -22,6 +22,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
@@ -84,15 +85,13 @@ public final class PufferfishDurabilityGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void meleeSeparatesOneFishAndFullInventoriesCancelWithoutLoss(GameTestHelper helper) {
+    public static void meleeSeparatesOneFishWithoutDamagingTheReserve(GameTestHelper helper) {
         var target = helper.spawn(EntityType.COW, new BlockPos(2, 2, 3));
         target.setNoAi(true);
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         var stack = new ItemStack(Items.PUFFERFISH, 64);
         player.setItemInHand(InteractionHand.MAIN_HAND, stack);
         for (int i = 1; i < 36; i++) player.getInventory().setItem(i, new ItemStack(Items.STONE, 64));
-        player.attack(target);
-        helper.assertTrue(stack.getCount() == 64 && !stack.isDamaged() && target.getHealth() == target.getMaxHealth(), "Full inventory attack lost or damaged fish");
         player.getInventory().setItem(1, ItemStack.EMPTY);
         player.attack(target);
         helper.assertTrue(stack.getCount() == 1 && stack.getDamageValue() == 1 && player.getInventory().getItem(1).getCount() == 63
@@ -102,6 +101,43 @@ public final class PufferfishDurabilityGameTests {
         player.attack(target);
         helper.assertTrue(stack.isEmpty() && player.getInventory().countItem(Items.PUFFERFISH) == 63, "Breaking the active fish consumed the reserve stack");
         target.discard();
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void fullAndPartiallyFullInventoriesDropOnlyTheOverflow(GameTestHelper helper) {
+        for (var original : variants()) {
+            if (!PufferfishItems.isPufferfish(original)) continue;
+            original.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Keepsake"));
+            original.enchant(helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.MENDING), 1);
+            for (int space : new int[] {0, 4}) {
+                var player = player(helper);
+                var target = helper.spawn(EntityType.COW, new BlockPos(2, 2, 3));
+                target.setNoAi(true);
+                var stack = original.copyWithCount(64);
+                player.setItemInHand(InteractionHand.MAIN_HAND, stack);
+                for (int slot = 1; slot < 36; slot++) player.getInventory().setItem(slot, new ItemStack(Items.STONE, 64));
+                if (space > 0) player.getInventory().setItem(1, original.copyWithCount(64 - space));
+                player.attack(target);
+                helper.assertTrue(target.getHealth() < target.getMaxHealth() && stack.getCount() == 1 && stack.getDamageValue() == 1,
+                        "Inventory overflow blocked the attack or damaged more than one fish");
+                var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, player.getBoundingBox().inflate(2),
+                        item -> ItemStack.isSameItemSameComponents(item.getItem(), original));
+                helper.assertTrue(drops.size() == 1 && drops.getFirst().getItem().getCount() == 63 - space,
+                        "Overflow lost fish, duplicated fish, or changed their components");
+                var drop = drops.getFirst();
+                helper.assertTrue(Math.abs(drop.getY() - player.getY() - 0.1) < 0.0001
+                                && drop.getDeltaMovement().horizontalDistanceSqr() == 0,
+                        "Overflow was thrown instead of dropped at the player's feet");
+                int reserves = player.getInventory().countItem(original.getItem()) - 1;
+                helper.assertTrue(reserves == (space == 0 ? 0 : 64), "Inventory space was not filled before dropping overflow");
+                if (space > 0) helper.assertTrue(ItemStack.isSameItemSameComponents(player.getInventory().getItem(1), original),
+                        "Stored reserves lost their components or gained damage");
+                target.discard();
+                drop.discard();
+                player.getAdvancements().stopListening();
+            }
+        }
         helper.succeed();
     }
 

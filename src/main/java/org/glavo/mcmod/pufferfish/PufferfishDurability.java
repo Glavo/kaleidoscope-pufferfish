@@ -78,21 +78,17 @@ public final class PufferfishDurability {
         var stack = player.getMainHandItem();
         if (player.level().isClientSide || player.hasInfiniteMaterials() || !PufferfishItems.isPufferfish(stack)) return;
         if (stack.getCount() > 1) {
-            int capacity = 0;
-            for (var slot : player.getInventory().items) {
-                if (slot == stack) continue;
-                if (slot.isEmpty()) capacity += stack.getMaxStackSize();
-                else if (ItemStack.isSameItemSameComponents(slot, stack)) capacity += Math.max(0, slot.getMaxStackSize() - slot.getCount());
-            }
-            if (capacity < stack.getCount() - 1) {
-                event.setCanceled(true);
-                player.displayClientMessage(Component.translatable("message.pufferfish_please.split_fish_before_attack"), true);
-                return;
-            }
             var remainder = stack.copyWithCount(stack.getCount() - 1);
             stack.setCount(1);
             activate(stack);
             player.getInventory().add(remainder);
+            if (!remainder.isEmpty()) {
+                var drop = player.drop(remainder, false);
+                if (drop != null) {
+                    drop.setPos(player.getX(), player.getY() + 0.1, player.getZ());
+                    drop.setDeltaMovement(0, 0.1, 0);
+                }
+            }
         } else activate(stack);
     }
 
