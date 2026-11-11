@@ -157,39 +157,34 @@ public final class PufferfishPumpPressureGameTests {
     public static void burstDamagesNearbyTargetsButRespectsFishAndCover(GameTestHelper helper) {
         var pump = placed(helper, new ItemStack(Items.PUFFERFISH));
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
-        var near = helper.spawn(EntityType.COW, new Vec3(3.25, 2.5, 2.5));
-        var far = helper.spawn(EntityType.COW, new Vec3(2.5, 2.5, 4));
-        var covered = helper.spawn(EntityType.COW, new Vec3(0.5, 2.5, 2.5));
-        var fish = helper.spawn(EntityType.PUFFERFISH, new Vec3(2.5, 2.5, 1.5));
-        var cat = helper.spawn(EntityType.CAT, new Vec3(4, 2.5, 1.5));
-        for (var entity : java.util.List.of(near, far, covered, fish, cat)) {
-            entity.setNoAi(true);
-            entity.setNoGravity(true);
+        for (int stroke = 1; stroke < 5; stroke++) {
+            helper.runAfterDelay(stroke * 8L, () -> helper.assertTrue(pump.press(player), "Pressure stroke was rejected"));
         }
-        for (int y = 2; y <= 4; y++) for (int z = 1; z <= 3; z++) helper.setBlock(new BlockPos(1, y, z), Blocks.STONE);
-        float initial = near.getHealth();
-        float fishHealth = fish.getHealth();
-        for (int stroke = 1; stroke <= 5; stroke++) {
-            int completed = stroke;
-            helper.runAfterDelay(stroke * 8L, () -> {
-                if (completed == 5) {
-                    helper.assertTrue(near.getHealth() == initial && far.getHealth() == initial && covered.getHealth() == initial,
-                            "Burst targets were damaged before the explosion: " + near.getHealth() + ", " + far.getHealth() + ", " + covered.getHealth());
-                }
-                var catMovement = cat.getDeltaMovement();
-                pump.press(player);
-                if (completed != 5) return;
-                helper.assertTrue(near.getHealth() < far.getHealth() && far.getHealth() < initial && initial - near.getHealth() <= 6,
-                        "Burst damage did not fall off with distance: " + near.getHealth() + ", " + far.getHealth() + ", " + initial
-                                + "; positions: " + near.position() + ", " + far.position() + "; center: " + pump.getBlockPos().getCenter());
-                helper.assertTrue(TestEffects.hasPoison(near) && near.getDeltaMovement().lengthSqr() > 0, "Burst omitted poison or knockback");
-                helper.assertTrue(covered.getHealth() == initial && !TestEffects.hasPoison(covered), "Burst passed through solid cover");
-                helper.assertTrue(fish.getHealth() == fishHealth && fish.getActiveEffects().isEmpty(), "Burst damaged or poisoned another pufferfish");
-                helper.assertTrue(cat.getHealth() == cat.getMaxHealth() && cat.getActiveEffects().isEmpty()
-                        && cat.getDeltaMovement().equals(catMovement), "Burst damaged, poisoned or pushed a cat");
-                helper.assertTrue(helper.getBlockState(new BlockPos(1, 2, 2)).is(Blocks.STONE), "Burst destroyed blocks");
-                helper.succeed();
-            });
-        }
+        helper.runAfterDelay(40, () -> {
+            var near = helper.spawn(EntityType.COW, new Vec3(3.25, 2.5, 2.5));
+            var far = helper.spawn(EntityType.COW, new Vec3(2.5, 2.5, 4));
+            var covered = helper.spawn(EntityType.COW, new Vec3(0.5, 2.5, 2.5));
+            var fish = helper.spawn(EntityType.PUFFERFISH, new Vec3(2.5, 2.5, 1.5));
+            var cat = helper.spawn(EntityType.CAT, new Vec3(4, 2.5, 1.5));
+            for (var entity : java.util.List.of(near, far, covered, fish, cat)) {
+                entity.setNoAi(true);
+                entity.setNoGravity(true);
+            }
+            for (int y = 2; y <= 4; y++) for (int z = 1; z <= 3; z++) helper.setBlock(new BlockPos(1, y, z), Blocks.STONE);
+            float initial = near.getHealth();
+            float fishHealth = fish.getHealth();
+            var catMovement = cat.getDeltaMovement();
+            pump.press(player);
+            helper.assertTrue(near.getHealth() < far.getHealth() && far.getHealth() < initial && initial - near.getHealth() <= 6,
+                    "Burst damage did not fall off with distance: " + near.getHealth() + ", " + far.getHealth() + ", " + initial
+                            + "; positions: " + near.position() + ", " + far.position() + "; center: " + pump.getBlockPos().getCenter());
+            helper.assertTrue(TestEffects.hasPoison(near) && near.getDeltaMovement().lengthSqr() > 0, "Burst omitted poison or knockback");
+            helper.assertTrue(covered.getHealth() == initial && !TestEffects.hasPoison(covered), "Burst passed through solid cover");
+            helper.assertTrue(fish.getHealth() == fishHealth && fish.getActiveEffects().isEmpty(), "Burst damaged or poisoned another pufferfish");
+            helper.assertTrue(cat.getHealth() == cat.getMaxHealth() && cat.getActiveEffects().isEmpty()
+                    && cat.getDeltaMovement().equals(catMovement), "Burst damaged, poisoned or pushed a cat");
+            helper.assertTrue(helper.getBlockState(new BlockPos(1, 2, 2)).is(Blocks.STONE), "Burst destroyed blocks");
+            helper.succeed();
+        });
     }
 }

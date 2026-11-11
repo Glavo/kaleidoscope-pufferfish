@@ -32,7 +32,6 @@ import org.glavo.mcmod.pufferfish.client.PufferfishTooltips;
 
 @Mod(value = PufferfishPlease.MODID, dist = Dist.CLIENT)
 public class PufferfishPleaseClient {
-    /// The item renderer shared by both flail variants and refreshed with client resources.
     private PufferfishFlailItemRenderer flailRenderer;
     private org.glavo.mcmod.pufferfish.client.PufferfishLampItemRenderer lampRenderer;
     private org.glavo.mcmod.pufferfish.client.PufferfishShieldRenderer shieldRenderer;

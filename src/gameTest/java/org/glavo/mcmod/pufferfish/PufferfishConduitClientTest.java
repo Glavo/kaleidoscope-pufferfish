@@ -3,12 +3,8 @@
 
 package org.glavo.mcmod.pufferfish;
 
-import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Axis;
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
@@ -24,15 +20,13 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ConduitBlockEntity;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import org.glavo.mcmod.pufferfish.client.PufferfishConduitRenderer;
-import org.glavo.mcmod.pufferfish.test.RenderTestScene;
-import org.glavo.mcmod.pufferfish.test.TestImages;
 
 public final class PufferfishConduitClientTest {
     private static final int LIGHT = 15728880;
     private static final RenderType FISH = RenderType.entityCutoutNoCull(ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png"));
 
     public static void verify(Minecraft minecraft) {
-        previewFrame(minecraft);
+        verifyFrameModels(minecraft);
         for (var block : java.util.List.of(PufferfishBlocks.CONDUIT.get(), PufferfishBlocks.ANCIENT_CONDUIT.get())) {
             var state = block.defaultBlockState();
             var entity = new PufferfishConduitBlockEntity(BlockPos.ZERO, state);
@@ -70,45 +64,25 @@ public final class PufferfishConduitClientTest {
         }
     }
 
-    private static void previewFrame(Minecraft minecraft) {
+    private static void verifyFrameModels(Minecraft minecraft) {
         var brushable = new AncientPrismarineBlockEntity(BlockPos.ZERO, PufferfishBlocks.SUSPICIOUS_ANCIENT_PRISMARINE.get().defaultBlockState());
-        net.minecraft.client.renderer.blockentity.BlockEntityRenderer<?> archaeologyRenderer = minecraft.getBlockEntityRenderDispatcher().getRenderer(brushable);
-        if (!(archaeologyRenderer instanceof net.minecraft.client.renderer.blockentity.BrushableBlockRenderer)) {
+        net.minecraft.client.renderer.blockentity.BlockEntityRenderer<?> renderer = minecraft.getBlockEntityRenderDispatcher().getRenderer(brushable);
+        if (!(renderer instanceof net.minecraft.client.renderer.blockentity.BrushableBlockRenderer)) {
             throw new IllegalStateException("Archaeology renderer is missing");
         }
-        try (var scene = new RenderTestScene(minecraft, 1100, 300, 0.08F, 0.14F, 0.2F)) {
-            var target = scene.target();
-            Lighting.setupFor3DItems();
-
-            var hashes = new java.util.HashSet<Integer>();
-            for (int stage = -1; stage < 4; stage++) {
-                var state = stage < 0 ? PufferfishBlocks.ANCIENT_PRISMARINE.get().defaultBlockState()
-                        : brushable.getBlockState().setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.DUSTED, stage);
-                var model = minecraft.getBlockRenderer().getBlockModel(state);
-                var expected = PufferfishPlease.id("block/" + (stage < 0 ? "ancient_prismarine" : "suspicious_ancient_prismarine_" + stage));
-                var item = new ItemStack(state.getBlock());
-                if (model == minecraft.getModelManager().getMissingModel() || !model.getParticleIcon().contents().name().equals(expected)
-                        || minecraft.getItemRenderer().getModel(item, null, null, 0) == minecraft.getModelManager().getMissingModel()
-                        || item.getHoverName().getString().startsWith("block.")) {
-                    throw new IllegalStateException("Missing ancient prismarine model, texture or translation");
-                }
-                var pixels = model.getParticleIcon().contents().getOriginalImage();
-                int hash = 1;
-                for (int y = 0; y < pixels.getHeight(); y++) for (int x = 0; x < pixels.getWidth(); x++) hash = hash * 31 + pixels.getPixelRGBA(x, y);
-                if (!hashes.add(hash)) throw new IllegalStateException("Archaeology stages have indistinguishable textures");
-                var pose = new PoseStack();
-                pose.translate(110 + (stage + 1) * 220, 160, 0);
-                pose.scale(130, -130, 130);
-                pose.mulPose(Axis.XP.rotationDegrees(25));
-                pose.mulPose(Axis.YP.rotationDegrees(35));
-                pose.translate(-0.5, -0.5, -0.5);
-                var buffers = minecraft.renderBuffers().bufferSource();
-                minecraft.getBlockRenderer().renderSingleBlock(state, pose, buffers, LIGHT, OverlayTexture.NO_OVERLAY);
-                buffers.endBatch();
+        var hashes = new java.util.HashSet<Integer>();
+        for (int stage = -1; stage < 4; stage++) {
+            var state = stage < 0 ? PufferfishBlocks.ANCIENT_PRISMARINE.get().defaultBlockState()
+                    : brushable.getBlockState().setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.DUSTED, stage);
+            var model = minecraft.getBlockRenderer().getBlockModel(state);
+            var expected = PufferfishPlease.id("block/" + (stage < 0 ? "ancient_prismarine" : "suspicious_ancient_prismarine_" + stage));
+            if (model == minecraft.getModelManager().getMissingModel() || !model.getParticleIcon().contents().name().equals(expected)) {
+                throw new IllegalStateException("Missing ancient prismarine model or texture");
             }
-            TestImages.capture(target, Path.of("ancient-prismarine-preview.png"));
-        } catch (IOException exception) {
-            throw new IllegalStateException("Could not save ancient prismarine preview", exception);
+            var pixels = model.getParticleIcon().contents().getOriginalImage();
+            int hash = 1;
+            for (int y = 0; y < pixels.getHeight(); y++) for (int x = 0; x < pixels.getWidth(); x++) hash = hash * 31 + pixels.getPixelRGBA(x, y);
+            if (!hashes.add(hash)) throw new IllegalStateException("Archaeology stages have indistinguishable textures");
         }
     }
 

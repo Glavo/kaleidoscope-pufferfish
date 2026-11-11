@@ -6,7 +6,6 @@ package org.glavo.mcmod.pufferfish;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-import java.nio.file.Path;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -17,7 +16,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import org.glavo.mcmod.pufferfish.test.ClientTestLevel;
 import org.glavo.mcmod.pufferfish.test.RenderTestScene;
-import org.glavo.mcmod.pufferfish.test.TestImages;
 
 public final class PufferfishLampClientTest {
     public static void verify(Minecraft minecraft) {
@@ -63,10 +61,7 @@ public final class PufferfishLampClientTest {
                     }
                     if (visible < 100) throw new IllegalStateException("Falling fish is invisible");
                 }
-                TestImages.write(image, Path.of("pufferfish-lamps-preview.png"));
             }
-        } catch (java.io.IOException exception) {
-            throw new IllegalStateException("Could not save lamp preview", exception);
         }
     }
 }

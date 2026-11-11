@@ -4,13 +4,10 @@
 package org.glavo.mcmod.pufferfish;
 
 import com.mojang.authlib.GameProfile;
-import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexSorting;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -27,7 +24,6 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
@@ -41,11 +37,10 @@ import org.glavo.mcmod.pufferfish.client.PufferfishFlailHeadRenderer;
 import org.glavo.mcmod.pufferfish.client.PufferfishTextures;
 import org.glavo.mcmod.pufferfish.entity.PufferfishFlailHead;
 import org.glavo.mcmod.pufferfish.test.ClientTestLevel;
-import org.glavo.mcmod.pufferfish.test.TestImages;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
-/// Checks the complete third-person orbit against the body and previews the native player hand layer.
+/// Checks the complete third-person orbit against the body and native player hand layer.
 public final class PufferfishFlailOrbitClientTest {
     private static final int LIGHT = 15728880;
 
@@ -139,10 +134,6 @@ public final class PufferfishFlailOrbitClientTest {
                                 center.div(capture.head.size());
                                 min.min(center);
                                 max.max(center);
-                                if (!slim && arm == HumanoidArm.RIGHT && hand == InteractionHand.MAIN_HAND && !crouching
-                                        && ticks >= duration && ticks < duration + 12 && (ticks - duration) % 3 == 0) {
-                                    preview(minecraft, player, model, layer, ticks - duration, headRenderer, head);
-                                }
                             }
                             if (wristMax.y - wristMin.y < 0.90F || wristMax.z - wristMin.z < 0.90F) {
                                 throw new IllegalStateException("Flail grip rotated in place instead of orbiting the shoulder");
@@ -166,45 +157,6 @@ public final class PufferfishFlailOrbitClientTest {
             RenderSystem.applyModelViewMatrix();
             RenderSystem.restoreProjectionMatrix();
             NeoForge.EVENT_BUS.post(new RenderFrameEvent.Pre(DeltaTracker.ZERO));
-        }
-    }
-
-    private static void preview(Minecraft minecraft, AbstractClientPlayer player, PlayerModel<AbstractClientPlayer> model,
-            ItemInHandLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> layer, int frame,
-            PufferfishFlailHeadRenderer renderer, PufferfishFlailHead head) {
-        var target = new TextureTarget(1000, 440, true, Minecraft.ON_OSX);
-        target.setClearColor(0.12F, 0.15F, 0.18F, 1);
-        target.clear(Minecraft.ON_OSX);
-        target.bindWrite(true);
-        RenderSystem.backupProjectionMatrix();
-        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 1000, 440, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
-        var view = RenderSystem.getModelViewStack();
-        view.pushMatrix().identity();
-        RenderSystem.applyModelViewMatrix();
-        Lighting.setupFor3DItems();
-        try {
-            for (int panel = 0; panel < 2; panel++) {
-                view.identity().translate(250 + panel * 500, 360, 0).scale(170, -170, 170)
-                        .rotateY((float) Math.toRadians(panel == 0 ? 160 : 90));
-                RenderSystem.applyModelViewMatrix();
-                captureWorld(minecraft, new Matrix4f(view));
-                var pose = bodyPose(player);
-                var buffers = minecraft.renderBuffers().bufferSource();
-                model.renderToBuffer(pose, buffers.getBuffer(RenderType.entityCutoutNoCull(player.getSkin().texture())), LIGHT, OverlayTexture.NO_OVERLAY);
-                layer.render(pose, buffers, LIGHT, player, 0, 0, 0, 0, 0, 0);
-                renderHead(renderer, head, new PoseStack(), buffers);
-                buffers.endBatch();
-            }
-            TestImages.capture(target, Path.of("pufferfish-flail-side-orbit-" + frame + ".png"));
-        } catch (java.io.IOException exception) {
-            throw new IllegalStateException("Could not save side-orbit preview", exception);
-        } finally {
-            view.popMatrix();
-            RenderSystem.applyModelViewMatrix();
-            RenderSystem.restoreProjectionMatrix();
-            captureWorld(minecraft, new Matrix4f(RenderSystem.getModelViewMatrix()));
-            target.destroyBuffers();
-            minecraft.getMainRenderTarget().bindWrite(true);
         }
     }
 

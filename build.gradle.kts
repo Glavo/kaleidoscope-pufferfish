@@ -9,6 +9,7 @@ plugins {
 }
 
 val modId = providers.gradleProperty("mod_id").get()
+val clientSmokeTest = providers.gradleProperty("client_smoke_test").map(String::toBoolean).getOrElse(false)
 val dyeColors = listOf(
     "white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray",
     "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"
@@ -87,13 +88,13 @@ neoForge {
     runs {
         create("client") {
             client()
+            if (clientSmokeTest) gameDirectory.set(layout.buildDirectory.dir("test-runs/client"))
             programArguments.addAll(
                 "--width", providers.gradleProperty("clientWidth").getOrElse("1280"),
                 "--height", providers.gradleProperty("clientHeight").getOrElse("720")
             )
             systemProperty("neoforge.enabledGameTestNamespaces", modId)
-            systemProperty("pufferfish_please.clientSmokeTest", providers.gradleProperty("client_smoke_test").getOrElse("false"))
-            systemProperty("pufferfish_please.testImages", providers.gradleProperty("test_images").getOrElse("false"))
+            systemProperty("pufferfish_please.clientSmokeTest", clientSmokeTest.toString())
         }
         create("server") {
             server()
@@ -103,6 +104,7 @@ neoForge {
         create("gameTestServer") {
             type.set("gameTestServer")
             sourceSet.set(gameTest)
+            gameDirectory.set(layout.buildDirectory.dir("test-runs/server"))
             systemProperty("neoforge.enabledGameTestNamespaces", modId)
         }
         create("data") {

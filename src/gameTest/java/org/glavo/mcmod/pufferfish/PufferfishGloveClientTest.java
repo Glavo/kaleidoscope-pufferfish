@@ -4,12 +4,8 @@
 package org.glavo.mcmod.pufferfish;
 
 import com.mojang.authlib.GameProfile;
-import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Axis;
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,7 +20,6 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -35,8 +30,6 @@ import net.minecraft.world.item.Items;
 import org.glavo.mcmod.pufferfish.client.PufferfishGloveRenderer;
 import org.glavo.mcmod.pufferfish.client.PufferfishTextures;
 import org.glavo.mcmod.pufferfish.test.ClientTestLevel;
-import org.glavo.mcmod.pufferfish.test.RenderTestScene;
-import org.glavo.mcmod.pufferfish.test.TestImages;
 
 public final class PufferfishGloveClientTest {
     private static final int LIGHT = 15728880;
@@ -129,7 +122,6 @@ public final class PufferfishGloveClientTest {
                 throw new IllegalStateException("Non-pufferfish held item rendering changed");
             }
         }
-        renderPreview(minecraft, player, context, glove);
     }
 
     private static RenderType type(ItemStack stack) {
@@ -138,43 +130,6 @@ public final class PufferfishGloveClientTest {
                 : PufferfishItems.isNetherite(stack) ? PufferfishTextures.netheriteEntity()
                 : PufferfishItems.materialName(stack) != null ? PufferfishTextures.materialEntity(PufferfishItems.materialName(stack))
                 : color == null ? ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png") : PufferfishTextures.entity(color));
-    }
-
-    private static void renderPreview(Minecraft minecraft, AbstractClientPlayer player, EntityRendererProvider.Context context,
-            PufferfishGloveRenderer glove) {
-        try (var scene = new RenderTestScene(minecraft, 1200, 800, 0.12F, 0.15F, 0.18F)) {
-            var target = scene.target();
-            Lighting.setupFor3DItems();
-
-            var buffers = minecraft.renderBuffers().bufferSource();
-            for (int i = 0; i < 4; i++) {
-                var model = new PlayerRenderer(context, i % 2 == 1).getModel();
-                model.young = false;
-                model.rightArm.xRot = i >= 2 ? -1.3F : 0;
-                model.leftArm.xRot = i >= 2 ? -0.5F : 0;
-                var pose = new PoseStack();
-                pose.translate(150 + i * 300, 90, 0);
-                pose.scale(150, 150, -150);
-                pose.mulPose(Axis.YP.rotationDegrees(-25));
-                model.renderToBuffer(pose, buffers.getBuffer(RenderType.entityCutoutNoCull(player.getSkin().texture())), LIGHT, OverlayTexture.NO_OVERLAY);
-                glove.renderAttached(model, player, PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), DyeColor.RED), HumanoidArm.RIGHT,
-                        pose, buffers, LIGHT, 0);
-                glove.renderAttached(model, player, new ItemStack(i < 2 ? PufferfishItems.NETHERITE.get() : PufferfishItems.RADIANT.get()),
-                        HumanoidArm.LEFT, pose, buffers, LIGHT, 0);
-                buffers.endBatch();
-            }
-            for (int i = 0; i < 4; i++) {
-                var pose = new PoseStack();
-                pose.translate(150 + i * 300, 620, 0);
-                pose.scale(160, -160, 160);
-                glove.renderFirstPerson(player, new ItemStack(i < 2 ? Items.PUFFERFISH : PufferfishItems.RADIANT.get()), i % 2 == 0 ? HumanoidArm.RIGHT : HumanoidArm.LEFT,
-                        0, i < 2 ? 0 : 0.4F, pose, buffers, LIGHT);
-                buffers.endBatch();
-            }
-            TestImages.capture(target, Path.of("pufferfish-glove-preview.png"));
-        } catch (IOException exception) {
-            throw new IllegalStateException("Could not save glove preview", exception);
-        }
     }
 
     private static final class Capture implements MultiBufferSource {

@@ -94,10 +94,9 @@ public final class PufferfishDurability {
         result.set(DataComponents.MAX_STACK_SIZE, state.maxStackSize() == source.getItem().getDefaultInstance().getMaxStackSize()
                 ? result.getItem().getDefaultInstance().getMaxStackSize() : state.maxStackSize());
         if (damage > 0) {
-            int oldMaximum = source.getOrDefault(DataComponents.MAX_DAMAGE, maximum(source));
             activate(result);
-            result.setDamageValue(Math.min(maximum(result) - 1, (int) Math.ceil((double) damage * maximum(result) / oldMaximum)));
-        } else normalize(result);
+            result.setDamageValue(Math.min(maximum(result) - 1, (int) Math.ceil((double) damage * maximum(result) / state.maxDamage())));
+        }
         return result;
     }
 

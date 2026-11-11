@@ -34,6 +34,13 @@ public final class PufferfishResourcesClientTest {
                 throw new IllegalStateException("Missing item model, sprite or translation: " + id);
             }
         }
+        for (var name : PufferfishCatArmor.VARIANTS.keySet()) {
+            var texture = PufferfishPlease.id("entity/cat/" + name);
+            var sprite = minecraft.getTextureAtlas(net.minecraft.client.renderer.texture.TextureAtlas.LOCATION_BLOCKS).apply(texture);
+            if (sprite.contents().name().equals(net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.getLocation())) {
+                throw new IllegalStateException("Missing worn cat armor texture: " + texture);
+            }
+        }
         for (var color : DyeColor.values()) {
             for (boolean bucket : new boolean[] {false, true}) {
                 var stack = PufferfishColors.dye(new ItemStack(bucket ? Items.PUFFERFISH_BUCKET : Items.PUFFERFISH), color);

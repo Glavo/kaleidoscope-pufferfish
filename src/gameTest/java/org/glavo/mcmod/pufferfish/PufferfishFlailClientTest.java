@@ -30,12 +30,12 @@ import org.glavo.mcmod.pufferfish.test.ClientTestLevel;
 
 /// Checks flail item geometry and resource reloads.
 public final class PufferfishFlailClientTest {
-    /// Full-bright lighting used by geometry checks and previews.
+    /// Full-bright lighting used by geometry checks.
     private static final int LIGHT = 15728880;
 
     private PufferfishFlailClientTest() {}
 
-    /// Verifies all variants in every display context and saves inventory previews.
+    /// Verifies all variants in every display context.
     public static void verify(Minecraft minecraft) {
         for (var item : PufferfishItems.FLAIL_VARIANTS.stream().map(holder -> holder.get()).toList()) {
             var stack = new ItemStack(item);

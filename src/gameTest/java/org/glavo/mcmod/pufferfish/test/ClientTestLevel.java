@@ -34,6 +34,12 @@ public final class ClientTestLevel {
     private ClientTestLevel() {}
 
     private static ClientLevel level;
+    private static ClientPacketListener connection;
+
+    public static ClientPacketListener connection(Minecraft minecraft) {
+        level(minecraft);
+        return connection;
+    }
 
     private static <T> Registry<T> copyRegistry(HolderLookup.Provider lookup, ResourceKey<? extends Registry<T>> key) {
         var registry = new MappedRegistry<T>(key, Lifecycle.stable());
@@ -53,7 +59,7 @@ public final class ClientTestLevel {
             var cookie = new CommonListenerCookie(new GameProfile(UUID.randomUUID(), "client-test"), null,
                     access, FeatureFlags.DEFAULT_FLAGS, null, null, null, Map.of(), null, false, Map.of(),
                     ServerLinks.EMPTY, ConnectionType.NEOFORGE);
-            var connection = new ClientPacketListener(minecraft, new Connection(PacketFlow.CLIENTBOUND), cookie);
+            connection = new ClientPacketListener(minecraft, new Connection(PacketFlow.CLIENTBOUND), cookie);
             level = new ClientLevel(connection, new ClientLevel.ClientLevelData(Difficulty.NORMAL, false, false),
                     Level.OVERWORLD, access.registryOrThrow(Registries.DIMENSION_TYPE).getHolderOrThrow(BuiltinDimensionTypes.OVERWORLD),
                     2, 2, minecraft::getProfiler, minecraft.levelRenderer, false, 0);

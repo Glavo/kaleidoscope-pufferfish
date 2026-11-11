@@ -3,13 +3,11 @@
 
 package org.glavo.mcmod.pufferfish;
 
-import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexSorting;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.Camera;
@@ -17,8 +15,6 @@ import net.minecraft.client.CameraType;
 import net.minecraft.client.ClientRecipeBook;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.ItemInHandRenderer;
@@ -36,7 +32,6 @@ import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import org.glavo.mcmod.pufferfish.client.PufferfishFlailHeadRenderer;
 import org.glavo.mcmod.pufferfish.test.ClientTestLevel;
-import org.glavo.mcmod.pufferfish.test.TestImages;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -57,12 +52,9 @@ public final class PufferfishFlailFirstPersonClientTest {
         RenderSystem.backupProjectionMatrix();
         view.pushMatrix();
         LocalPlayer player = null;
-        TextureTarget target = null;
         try {
             var level = ClientTestLevel.level(minecraft);
-            var connectionField = ClientLevel.class.getDeclaredField("connection");
-            connectionField.setAccessible(true);
-            player = new LocalPlayer(minecraft, level, (ClientPacketListener) connectionField.get(level),
+            player = new LocalPlayer(minecraft, level, ClientTestLevel.connection(minecraft),
                     new StatsCounter(), new ClientRecipeBook(), false, false) {
                 @Override
                 public boolean isSpectator() { return false; }
@@ -82,8 +74,6 @@ public final class PufferfishFlailFirstPersonClientTest {
                     minecraft.getBlockRenderer(), minecraft.getEntityRenderDispatcher().getItemInHandRenderer(),
                     minecraft.getResourceManager(), minecraft.getEntityModels(), minecraft.font);
             var renderer = new PufferfishFlailHeadRenderer(context);
-            target = new TextureTarget(640, 360, true, Minecraft.ON_OSX);
-            target.setClearColor(0.35F, 0.55F, 0.8F, 1);
             Lighting.setupFor3DItems();
             for (var arm : HumanoidArm.values()) {
                 player.setMainArm(arm);
@@ -135,24 +125,6 @@ public final class PufferfishFlailFirstPersonClientTest {
                                     if (worldCapture.groups.size() != 1) {
                                         throw new IllegalStateException("First-person flail retained a second world-space chain");
                                     }
-                                    if (fov == 70 && pitch == -35 && hand == InteractionHand.MAIN_HAND && (swing == 0 || swing == 0.3F)) {
-                                        target.clear(Minecraft.ON_OSX);
-                                        target.bindWrite(true);
-                                        var buffers = minecraft.renderBuffers().bufferSource();
-                                        RenderSystem.setProjectionMatrix(worldProjection, VertexSorting.DISTANCE_TO_ORIGIN);
-                                        var headPose = new PoseStack();
-                                        var relative = head.position().subtract(camera.getPosition());
-                                        headPose.translate(relative.x, relative.y, relative.z);
-                                        renderer.render(head, 0, 0, headPose, buffers, LIGHT);
-                                        buffers.endBatch();
-                                        RenderSystem.clear(256, Minecraft.ON_OSX);
-                                        RenderSystem.setProjectionMatrix(handProjection, VertexSorting.DISTANCE_TO_ORIGIN);
-                                        renderHand(nativeRender, context.getItemInHandRenderer(), player, 0F, pitch, hand, swing, stack,
-                                                swing * 0.5F, pose, buffers, LIGHT);
-                                        buffers.endBatch();
-                                        TestImages.capture(target, Path.of("pufferfish-flail-first-person-" + (head.isShortCast() ? "short-" : "") + arm.name().toLowerCase(java.util.Locale.ROOT)
-                                                    + (swing == 0 ? "-idle.png" : "-swing.png")));
-                                    }
                                     NeoForge.EVENT_BUS.post(new RenderFrameEvent.Pre(DeltaTracker.ZERO));
                                     var stale = new Capture();
                                     renderHand(nativeRender, context.getItemInHandRenderer(), player, 0F, pitch, hand, swing, stack,
@@ -162,13 +134,13 @@ public final class PufferfishFlailFirstPersonClientTest {
                                         head.discard();
                                         NeoForge.EVENT_BUS.post(new RenderLevelStageEvent(RenderLevelStageEvent.Stage.AFTER_LEVEL,
                                                 minecraft.levelRenderer, null, rotation, worldProjection, 0, DeltaTracker.ZERO, camera, null));
-                                        verifyRelease(minecraft, player, nativeRender, pose, target, renderer, camera, worldProjection, handProjection);
+                                        verifyRelease(minecraft, player, nativeRender, pose);
                                     }
                                     if (fov == 70 && hand == InteractionHand.MAIN_HAND && swing == 0) {
                                         head.discard();
                                         NeoForge.EVENT_BUS.post(new RenderLevelStageEvent(RenderLevelStageEvent.Stage.AFTER_LEVEL,
                                                 minecraft.levelRenderer, null, rotation, worldProjection, 0, DeltaTracker.ZERO, camera, null));
-                                        verifyCharging(minecraft, player, nativeRender, pose, target, arm, renderer, camera, worldProjection, handProjection);
+                                        verifyCharging(minecraft, player, nativeRender, pose, arm, renderer, camera);
                                     }
                                 } finally {
                                     head.discard();
@@ -178,7 +150,7 @@ public final class PufferfishFlailFirstPersonClientTest {
                     }
                 }
             }
-        } catch (ReflectiveOperationException | java.io.IOException exception) {
+        } catch (ReflectiveOperationException exception) {
             throw new IllegalStateException("Could not verify native first-person flail rendering", exception);
         } finally {
             if (player != null) player.discard();
@@ -191,7 +163,6 @@ public final class PufferfishFlailFirstPersonClientTest {
             view.popMatrix();
             RenderSystem.applyModelViewMatrix();
             RenderSystem.restoreProjectionMatrix();
-            if (target != null) target.destroyBuffers();
             minecraft.getMainRenderTarget().bindWrite(true);
         }
     }
@@ -205,8 +176,7 @@ public final class PufferfishFlailFirstPersonClientTest {
     }
 
     private static void verifyRelease(Minecraft minecraft, LocalPlayer player, java.lang.reflect.Method nativeRender,
-            PoseStack pose, TextureTarget target, PufferfishFlailHeadRenderer renderer, Camera camera,
-            Matrix4f worldProjection, Matrix4f handProjection) throws ReflectiveOperationException, java.io.IOException {
+            PoseStack pose) throws ReflectiveOperationException {
         var stack = new ItemStack(PufferfishItems.FLAIL.get());
         player.setItemInHand(InteractionHand.MAIN_HAND, stack);
         stack.use(player.level(), player, InteractionHand.MAIN_HAND);
@@ -219,6 +189,7 @@ public final class PufferfishFlailFirstPersonClientTest {
         head.setOldPosAndRot();
         minecraft.level.addEntity(head);
         var beforeRelease = head.renderPosition(0);
+        long gameTime = minecraft.level.getGameTime();
         player.releaseUsingItem();
         if (!head.isQueued() || head.renderPosition(0).distanceTo(beforeRelease) > 0.001) {
             throw new IllegalStateException("Releasing input replaced or teleported the spinning head");
@@ -254,34 +225,17 @@ public final class PufferfishFlailFirstPersonClientTest {
                         InteractionHand.MAIN_HAND, 0F, stack, 0F, pose, capture, LIGHT);
                 if (capture.groups.size() != 4) throw new IllegalStateException("Release lost its arm, grip, or tether");
                 capture.verifyGrip();
-                if (player.getMainArm() == HumanoidArm.RIGHT) {
-                    target.clear(Minecraft.ON_OSX);
-                    target.bindWrite(true);
-                    var buffers = minecraft.renderBuffers().bufferSource();
-                    var headPose = new PoseStack();
-                    var relative = head.getPosition(0).subtract(camera.getPosition());
-                    headPose.translate(relative.x, relative.y, relative.z);
-                    RenderSystem.setProjectionMatrix(worldProjection, VertexSorting.DISTANCE_TO_ORIGIN);
-                    renderer.render(head, 0, 0, headPose, buffers, LIGHT);
-                    buffers.endBatch();
-                    RenderSystem.clear(256, Minecraft.ON_OSX);
-                    RenderSystem.setProjectionMatrix(handProjection, VertexSorting.DISTANCE_TO_ORIGIN);
-                    renderHand(nativeRender, minecraft.getEntityRenderDispatcher().getItemInHandRenderer(), player, 0F, 0F,
-                            InteractionHand.MAIN_HAND, 0F, stack, 0F, pose, buffers, LIGHT);
-                    buffers.endBatch();
-                    TestImages.capture(target, Path.of("pufferfish-flail-release-" + frame + ".png"));
-                }
             }
             if (!launched) throw new IllegalStateException("Queued client swing never released");
         } finally {
+            minecraft.level.setGameTime(gameTime);
             head.discard();
             player.stopUsingItem();
         }
     }
 
     private static void verifyCharging(Minecraft minecraft, LocalPlayer player, java.lang.reflect.Method nativeRender,
-            PoseStack pose, TextureTarget target, HumanoidArm arm, PufferfishFlailHeadRenderer renderer, Camera camera,
-            Matrix4f worldProjection, Matrix4f handProjection) throws ReflectiveOperationException, java.io.IOException {
+            PoseStack pose, HumanoidArm arm, PufferfishFlailHeadRenderer renderer, Camera camera) throws ReflectiveOperationException {
         var remaining = net.minecraft.world.entity.LivingEntity.class.getDeclaredField("useItemRemaining");
         remaining.setAccessible(true);
         for (var item : new PufferfishFlailItem[] {PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get()}) {
@@ -338,22 +292,6 @@ public final class PufferfishFlailFirstPersonClientTest {
                         center.div(previous.size());
                         minimum.min(center);
                         maximum.max(center);
-                    }
-                    if (arm == HumanoidArm.RIGHT && (ticks == 0 || ticks == duration / 4 || ticks == duration / 2
-                            || ticks >= duration && ticks < duration + 12 && (ticks - duration) % 3 == 0)) {
-                        target.clear(Minecraft.ON_OSX);
-                        target.bindWrite(true);
-                        var buffers = minecraft.renderBuffers().bufferSource();
-                        RenderSystem.setProjectionMatrix(worldProjection, VertexSorting.DISTANCE_TO_ORIGIN);
-                        renderer.render(head, 0, 0, headPose, buffers, LIGHT);
-                        buffers.endBatch();
-                        RenderSystem.clear(256, Minecraft.ON_OSX);
-                        RenderSystem.setProjectionMatrix(handProjection, VertexSorting.DISTANCE_TO_ORIGIN);
-                        renderHand(nativeRender, minecraft.getEntityRenderDispatcher().getItemInHandRenderer(), player, 0F, player.getXRot(),
-                                InteractionHand.MAIN_HAND, 0F, stack, 0F, pose, buffers, LIGHT);
-                        buffers.endBatch();
-                        TestImages.capture(target, Path.of("pufferfish-flail-charge-" + (item == PufferfishItems.FLAIL.get() ? "normal-"
-                                    : item == PufferfishItems.HEAVY_FLAIL.get() ? "heavy-" : "netherite-") + ticks + "-pitch-" + (int) player.getXRot() + ".png"));
                     }
                 }
                 if (wristMax.y - wristMin.y < 0.85F || wristMax.z - wristMin.z < 0.85F) {

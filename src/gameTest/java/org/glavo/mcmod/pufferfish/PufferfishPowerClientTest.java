@@ -7,8 +7,6 @@ import com.mojang.blaze3d.platform.NativeImage;
 import java.util.Arrays;
 import net.minecraft.client.ClientRecipeBook;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.stats.StatsCounter;
@@ -23,10 +21,8 @@ public final class PufferfishPowerClientTest {
         var light = minecraft.gameRenderer.lightTexture();
         try {
             var level = ClientTestLevel.level(minecraft);
-            var connection = ClientLevel.class.getDeclaredField("connection");
-            connection.setAccessible(true);
             var vision = new float[] {1};
-            var player = new LocalPlayer(minecraft, level, (ClientPacketListener) connection.get(level),
+            var player = new LocalPlayer(minecraft, level, ClientTestLevel.connection(minecraft),
                     new StatsCounter(), new ClientRecipeBook(), false, false) {
                 @Override
                 public float getWaterVision() { return vision[0]; }

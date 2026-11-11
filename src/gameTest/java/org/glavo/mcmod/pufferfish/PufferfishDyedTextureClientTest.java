@@ -30,7 +30,8 @@ final class PufferfishDyedTextureClientTest {
 
     static void enablePack(Minecraft minecraft) {
         try {
-            Path root = Files.createTempDirectory(Path.of("../build"), "dyed-texture-test-");
+            Path root = minecraft.gameDirectory.toPath().resolve("test-fixtures/dyed-texture-pack");
+            Files.createDirectories(root);
             Files.writeString(root.resolve("pack.mcmeta"),
                     "{\"pack\":{\"pack_format\":34,\"description\":\"Dyed pufferfish texture test\"}}");
             writeTexture(root, "item/red_pufferfish.png", 32);

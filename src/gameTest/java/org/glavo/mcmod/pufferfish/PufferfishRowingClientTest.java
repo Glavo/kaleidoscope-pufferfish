@@ -4,14 +4,11 @@
 package org.glavo.mcmod.pufferfish;
 
 import com.mojang.authlib.GameProfile;
-import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexSorting;
 import com.mojang.math.Axis;
-import java.nio.file.Path;
 import java.util.UUID;
 import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
@@ -19,17 +16,13 @@ import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.player.RemotePlayer;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.phys.Vec3;
-import org.glavo.mcmod.pufferfish.client.PufferfishBoatRenderer;
 import org.glavo.mcmod.pufferfish.client.PufferfishRowingAnimation;
 import org.glavo.mcmod.pufferfish.entity.PufferfishBoat;
 import org.glavo.mcmod.pufferfish.test.ClientTestLevel;
-import org.glavo.mcmod.pufferfish.test.RenderTestScene;
-import org.glavo.mcmod.pufferfish.test.TestImages;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -106,7 +99,6 @@ public final class PufferfishRowingClientTest {
                 player.stopUsingItem();
                 player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, net.minecraft.world.item.ItemStack.EMPTY);
             }
-            preview(minecraft, boat, player, phases);
             firstPerson(minecraft);
             player.stopRiding();
             if (PufferfishRowingAnimation.isRowing(player)) throw new IllegalStateException("Dismounted player retained rowing pose");
@@ -189,51 +181,12 @@ public final class PufferfishRowingClientTest {
         @Override public VertexConsumer setNormal(float x, float y, float z) { return this; }
     }
 
-    private static void preview(Minecraft minecraft, org.glavo.mcmod.pufferfish.entity.PufferfishBoat boat,
-            RemotePlayer player, float[] phases) {
-        boat.setPos(Vec3.ZERO);
-        boat.setYRot(0);
-        boat.setOldPosAndRot();
-        boat.positionRider(player);
-        player.setOldPosAndRot();
-        player.yBodyRot = player.yBodyRotO = 0;
-        boat.setPaddleState(true, true);
-        var model = new PlayerModel<RemotePlayer>(minecraft.getEntityModels().bakeLayer(ModelLayers.PLAYER), false);
-        model.riding = true;
-        model.young = false;
-        try (var scene = new RenderTestScene(minecraft, 960, 360, 0.16F, 0.18F, 0.21F)) {
-            var target = scene.target();
-            Lighting.setupForFlatItems();
-
-            for (int frame = 0; frame < 4; frame++) {
-                phases[0] = phases[1] = frame * (float) Math.PI / 4;
-                var pose = new PoseStack();
-                pose.translate(120 + frame * 240, 245, 0);
-                pose.scale(68, -68, 68);
-                pose.mulPose(Axis.XP.rotationDegrees(15));
-                pose.mulPose(Axis.YP.rotationDegrees(-45));
-                var buffers = minecraft.renderBuffers().bufferSource();
-                ((PufferfishBoatRenderer) minecraft.getEntityRenderDispatcher().getRenderer(boat)).render(boat, 0, 1, pose, buffers, 15728880);
-                pose.translate(player.getX(), player.getY(), player.getZ());
-                pose.mulPose(PufferfishRowingAnimation.playerTransform(player, 0));
-                model.setupAnim(player, 0, 0, frame, 0, 0);
-                PufferfishRowingAnimation.poseArms(model, player, 1, 0);
-                model.renderToBuffer(pose, buffers.getBuffer(RenderType.entityCutoutNoCull(player.getSkin().texture())), 15728880, OverlayTexture.NO_OVERLAY);
-                buffers.endBatch();
-            }
-            TestImages.capture(target, Path.of("pufferfish-rowing-preview.png"));
-        } catch (java.io.IOException exception) {
-            throw new IllegalStateException("Could not save rowing preview", exception);
-        }
-    }
-    private static void firstPerson(Minecraft minecraft) throws ReflectiveOperationException {
+    private static void firstPerson(Minecraft minecraft) {
         var oldLevel = minecraft.level;
         var oldPlayer = minecraft.player;
         var level = ClientTestLevel.level(minecraft);
-        var connection = net.minecraft.client.multiplayer.ClientLevel.class.getDeclaredField("connection");
-        connection.setAccessible(true);
         var player = new net.minecraft.client.player.LocalPlayer(minecraft, level,
-                (net.minecraft.client.multiplayer.ClientPacketListener) connection.get(level), new net.minecraft.stats.StatsCounter(),
+                ClientTestLevel.connection(minecraft), new net.minecraft.stats.StatsCounter(),
                 new net.minecraft.client.ClientRecipeBook(), false, false) {
             @Override public boolean isSpectator() { return false; }
             @Override protected net.minecraft.client.multiplayer.PlayerInfo getPlayerInfo() { return null; }
@@ -246,15 +199,11 @@ public final class PufferfishRowingClientTest {
         boat.setPaddleState(true, true);
         minecraft.level = level;
         minecraft.player = player;
-        var target = new TextureTarget(640, 360, true, Minecraft.ON_OSX);
         var view = RenderSystem.getModelViewStack();
         view.pushMatrix();
         RenderSystem.backupProjectionMatrix();
         try {
             for (int fov : new int[] {70, 110}) {
-                target.setClearColor(0.38F, 0.62F, 0.82F, 1);
-                target.clear(Minecraft.ON_OSX);
-                target.bindWrite(true);
                 var camera = new net.minecraft.client.Camera() {
                     void aim(Vec3 position) { setPosition(position); setRotation(0, 30); }
                 };
@@ -267,30 +216,20 @@ public final class PufferfishRowingClientTest {
                 net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.client.event.RenderLevelStageEvent(
                         net.neoforged.neoforge.client.event.RenderLevelStageEvent.Stage.AFTER_LEVEL,
                         minecraft.levelRenderer, null, rotation, projection, 0, net.minecraft.client.DeltaTracker.ZERO, camera, null));
-                var buffers = minecraft.renderBuffers().bufferSource();
-                var worldPose = new PoseStack();
-                var eye = player.getEyePosition();
-                worldPose.translate(-eye.x, -eye.y, -eye.z);
-                ((PufferfishBoatRenderer) minecraft.getEntityRenderDispatcher().getRenderer(boat)).render(boat, 0, 0, worldPose, buffers, 15728880);
-                buffers.endBatch();
-                RenderSystem.clear(256, Minecraft.ON_OSX);
+                var buffers = new org.glavo.mcmod.pufferfish.test.RenderCapture();
                 RenderSystem.setProjectionMatrix(new Matrix4f().perspective((float) Math.toRadians(70), 640F / 360, 0.05F, 256), VertexSorting.DISTANCE_TO_ORIGIN);
                 var pose = new PoseStack();
                 pose.mulPose(new Matrix4f(rotation).invert());
                 var event = new net.neoforged.neoforge.client.event.RenderHandEvent(net.minecraft.world.InteractionHand.MAIN_HAND,
                         pose, buffers, 15728880, 0, 30, 0, 0, net.minecraft.world.item.ItemStack.EMPTY);
                 net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(event);
-                if (!event.isCanceled()) throw new IllegalStateException("First-person rowing did not replace the static hand");
-                buffers.endBatch();
-                TestImages.capture(target, Path.of("pufferfish-rowing-first-person-" + fov + ".png"));
+                if (!event.isCanceled() || buffers.count() == 0 || !pose.clear()) throw new IllegalStateException("First-person rowing lost its hands or leaked its transform");
             }
             boat.setPaddleState(false, false);
             var idle = new net.neoforged.neoforge.client.event.RenderHandEvent(net.minecraft.world.InteractionHand.MAIN_HAND,
                     new PoseStack(), minecraft.renderBuffers().bufferSource(), 15728880, 0, 0, 0, 0, net.minecraft.world.item.ItemStack.EMPTY);
             net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(idle);
             if (idle.isCanceled()) throw new IllegalStateException("Stopped rowing retained custom first-person hands");
-        } catch (java.io.IOException exception) {
-            throw new IllegalStateException("Could not save first-person rowing preview", exception);
         } finally {
             player.stopRiding();
             minecraft.player = oldPlayer;
@@ -298,7 +237,6 @@ public final class PufferfishRowingClientTest {
             view.popMatrix();
             RenderSystem.applyModelViewMatrix();
             RenderSystem.restoreProjectionMatrix();
-            target.destroyBuffers();
             minecraft.getMainRenderTarget().bindWrite(true);
             net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.client.event.RenderFrameEvent.Pre(net.minecraft.client.DeltaTracker.ZERO));
         }

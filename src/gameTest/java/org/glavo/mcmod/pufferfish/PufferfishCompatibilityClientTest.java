@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.function.Consumer;
 import net.minecraft.client.ClientRecipeBook;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
@@ -51,10 +49,8 @@ public final class PufferfishCompatibilityClientTest {
         try {
             var constructor = RegisterClientExtensionsEvent.class.getDeclaredConstructor();
             constructor.setAccessible(true);
-            var register = PufferfishPleaseClient.class.getDeclaredMethod("registerItemRenderer",
-                    RegisterClientExtensionsEvent.class, IClientItemExtensions.class, Item[].class);
-            register.setAccessible(true);
-            register.invoke(null, constructor.newInstance(), previous, new Item[] {Items.PUFFERFISH});
+            net.neoforged.fml.ModList.get().getModContainerById(PufferfishPlease.MODID).orElseThrow()
+                    .getEventBus().post(constructor.newInstance());
             if (IClientItemExtensions.of(Items.PUFFERFISH) != external) {
                 throw new IllegalStateException("Existing item extensions were replaced");
             }
@@ -77,9 +73,7 @@ public final class PufferfishCompatibilityClientTest {
         var previousRenderers = field.get(dispatcher);
         var previousPlayer = minecraft.player;
         var level = ClientTestLevel.level(minecraft);
-        var connection = ClientLevel.class.getDeclaredField("connection");
-        connection.setAccessible(true);
-        var player = new LocalPlayer(minecraft, level, (ClientPacketListener) connection.get(level),
+        var player = new LocalPlayer(minecraft, level, ClientTestLevel.connection(minecraft),
                 new StatsCounter(), new ClientRecipeBook(), false, false) {
             @Override public boolean isSpectator() { return false; }
         };

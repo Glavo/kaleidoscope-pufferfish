@@ -40,7 +40,7 @@ public final class PufferfishClientSmokeTest {
         }
         PufferfishResourcesClientTest.verify(minecraft);
         PufferfishDyedTextureClientTest.verify(minecraft, phase == 1);
-        MaterialPufferfishClientTest.verify(minecraft);
+        RadiantPufferfishClientTest.verify(minecraft);
         PufferfishSpawnEggClientTest.verify(minecraft);
         PufferfishMobClientTest.verify(minecraft);
         PufferfishPowerClientTest.verify(minecraft);
