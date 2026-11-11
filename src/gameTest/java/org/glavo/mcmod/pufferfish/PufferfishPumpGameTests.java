@@ -12,11 +12,11 @@ import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.CraftingInput;
-import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import org.glavo.mcmod.pufferfish.test.TestItems;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
@@ -94,7 +94,7 @@ public final class PufferfishPumpGameTests {
     @GameTest(template = "empty")
     public static void landingPumpsOnceButWalkingAndDuplicateLandingsDoNot(GameTestHelper helper) {
         var pump = placed(helper);
-        var fish = PufferfishDurabilityGameTests.worn(new ItemStack(Items.PUFFERFISH));
+        var fish = TestItems.worn(new ItemStack(Items.PUFFERFISH));
         fish.setDamageValue(60);
         pump.setFish(fish);
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
@@ -122,7 +122,7 @@ public final class PufferfishPumpGameTests {
         var tool = PufferfishItems.PUMP.toStack();
         tool.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Workshop pump"));
         PufferfishBlocks.PUMP.get().setPlacedBy(helper.getLevel(), pump.getBlockPos(), pump.getBlockState(), player, tool);
-        var fish = PufferfishDurabilityGameTests.worn(PufferfishItems.HEAVY.toStack());
+        var fish = TestItems.worn(PufferfishItems.HEAVY.toStack());
         fish.setDamageValue(2000);
         var expected = fish.copy();
         player.setItemInHand(InteractionHand.MAIN_HAND, fish);
@@ -144,7 +144,7 @@ public final class PufferfishPumpGameTests {
         var tool = PufferfishItems.PUMP.toStack();
         tool.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Workshop pump"));
         pump.setPump(tool);
-        var fish = PufferfishDurabilityGameTests.worn(PufferfishItems.DIAMOND.toStack());
+        var fish = TestItems.worn(PufferfishItems.DIAMOND.toStack());
         pump.setFish(fish);
         var area = new net.minecraft.world.phys.AABB(pump.getBlockPos()).inflate(2);
         helper.getLevel().destroyBlock(pump.getBlockPos(), true);
@@ -162,7 +162,7 @@ public final class PufferfishPumpGameTests {
         tool.set(DataComponents.DAMAGE, 255);
         tool.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Old pump"));
         pump.setPump(tool);
-        pump.setFish(PufferfishDurabilityGameTests.worn(new ItemStack(Items.PUFFERFISH)));
+        pump.setFish(TestItems.worn(new ItemStack(Items.PUFFERFISH)));
         var saved = pump.saveWithoutMetadata(helper.getLevel().registryAccess());
         saved.put("Pump", tool.save(helper.getLevel().registryAccess()));
         pump.loadWithComponents(saved, helper.getLevel().registryAccess());

@@ -3,22 +3,14 @@
 
 package org.glavo.mcmod.pufferfish;
 
-import com.mojang.authlib.GameProfile;
 import java.util.List;
-import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.PacketFlow;
-import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.CommonListenerCookie;
-import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
@@ -35,6 +27,8 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import org.glavo.mcmod.pufferfish.test.TestEffects;
+import org.glavo.mcmod.pufferfish.test.TestPlayers;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
@@ -138,7 +132,7 @@ public final class PufferfishCatArmorGameTests {
             } else if (variant.waxed()) {
                 helper.assertTrue(attacker.getActiveEffects().isEmpty(), "Waxed armor applied an effect");
             } else {
-                helper.assertTrue(PufferfishEffectsGameTests.hasPoison(attacker), "Cat armor omitted its poison effect");
+                helper.assertTrue(TestEffects.hasPoison(attacker), "Cat armor omitted its poison effect");
             }
             cat.discard();
             attacker.discard();
@@ -193,13 +187,7 @@ public final class PufferfishCatArmorGameTests {
     }
 
     private static ServerPlayer player(GameTestHelper helper) {
-        var player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(),
-                new GameProfile(UUID.randomUUID(), "cat-armor-test"), ClientInformation.createDefault());
-        player.connection = new ServerGamePacketListenerImpl(helper.getLevel().getServer(), new Connection(PacketFlow.SERVERBOUND), player,
-                CommonListenerCookie.createInitial(player.getGameProfile(), false)) {
-            @Override public void send(Packet<?> packet) {}
-        };
-        player.setGameMode(GameType.SURVIVAL);
+        var player = TestPlayers.serverPlayer(helper);
         player.setPos(helper.absolutePos(new BlockPos(2, 3, 2)).getCenter());
         helper.getLevel().addFreshEntity(player);
         return player;

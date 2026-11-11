@@ -13,8 +13,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.Connection;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.level.ClientInformation;
@@ -35,6 +35,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import org.glavo.mcmod.pufferfish.test.TestEffects;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
@@ -130,24 +131,24 @@ public final class PufferfishHeadgearGameTests {
             player.setInvulnerable(false);
             player.getAbilities().invulnerable = false;
             player.setHealth(player.getMaxHealth());
-            PufferfishEffectsGameTests.clearPoison(player);
+            TestEffects.clearPoison(player);
             for (var color : colors()) {
                 fish = EntityType.PUFFERFISH.create(helper.getLevel());
                 fish.setPuffState(2);
                 player.setHealth(player.getMaxHealth());
-                PufferfishEffectsGameTests.clearPoison(player);
+                TestEffects.clearPoison(player);
                 player.setItemSlot(EquipmentSlot.HEAD, fish(color));
                 player.invulnerableTime = 0;
                 fish.playerTouch(player);
-                helper.assertTrue(player.getHealth() < player.getMaxHealth() && PufferfishEffectsGameTests.hasPoison(player), "Headgear prevented an inflated fish from stinging");
+                helper.assertTrue(player.getHealth() < player.getMaxHealth() && TestEffects.hasPoison(player), "Headgear prevented an inflated fish from stinging");
             }
             player.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
             player.invulnerableTime = 0;
             fish.playerTouch(player);
-            helper.assertTrue(player.getHealth() < player.getMaxHealth() && PufferfishEffectsGameTests.hasPoison(player), "Unequipped player remained immune");
+            helper.assertTrue(player.getHealth() < player.getMaxHealth() && TestEffects.hasPoison(player), "Unequipped player remained immune");
         } finally {
             player.setItemSlot(EquipmentSlot.HEAD, previousHead);
-            PufferfishEffectsGameTests.clearPoison(player);
+            TestEffects.clearPoison(player);
             player.setHealth(player.getMaxHealth());
             player.invulnerableTime = 0;
         }
@@ -168,9 +169,9 @@ public final class PufferfishHeadgearGameTests {
                 wearer.invulnerableTime = 0;
                 attacker.setHealth(attacker.getMaxHealth());
                 attacker.invulnerableTime = 0;
-                PufferfishEffectsGameTests.clearPoison(attacker);
+                TestEffects.clearPoison(attacker);
                 helper.assertTrue(wearer.hurt(wearer.damageSources().mobAttack(attacker), 1), "Attack did not hit wearer");
-                var poison = PufferfishEffectsGameTests.poison(attacker);
+                var poison = TestEffects.poison(attacker);
                 helper.assertTrue(attacker.getHealth() < attacker.getMaxHealth()
                         ? poison != null && poison.getDuration() == 120 && poison.getAmplifier() == 0 : poison == null,
                         "Poison did not match successful thorns damage");
@@ -199,7 +200,7 @@ public final class PufferfishHeadgearGameTests {
             NeoForge.EVENT_BUS.addListener(cancel);
             try {
                 target.hurt(target.damageSources().thorns(wearer), 2);
-                helper.assertTrue(!PufferfishEffectsGameTests.hasPoison(target), "Canceled thorns applied equipment poison");
+                helper.assertTrue(!TestEffects.hasPoison(target), "Canceled thorns applied equipment poison");
             } finally {
                 NeoForge.EVENT_BUS.unregister(cancel);
             }
@@ -207,18 +208,18 @@ public final class PufferfishHeadgearGameTests {
             target.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_ABSORPTION).setBaseValue(4);
             target.setAbsorptionAmount(4);
             target.hurt(target.damageSources().thorns(wearer), 2);
-            var poison = PufferfishEffectsGameTests.poison(target);
+            var poison = TestEffects.poison(target);
             helper.assertTrue(target.getHealth() == target.getMaxHealth() && target.getAbsorptionAmount() == 2
                     && poison != null && poison.getAmplifier() == 1 && poison.getDuration() == 120,
                     "Absorbed thorns did not apply material poison");
             target.removeAllEffects();
             target.invulnerableTime = 0;
             target.hurt(target.damageSources().playerAttack(wearer), 1);
-            helper.assertTrue(!PufferfishEffectsGameTests.hasPoison(target), "Ordinary damage triggered equipment poison");
+            helper.assertTrue(!TestEffects.hasPoison(target), "Ordinary damage triggered equipment poison");
             target.addEffect(new MobEffectInstance(MobEffects.POISON, 600, 2));
             target.invulnerableTime = 0;
             target.hurt(target.damageSources().thorns(wearer), 1);
-            helper.assertTrue(PufferfishEffectsGameTests.poison(target).getAmplifier() == 2,
+            helper.assertTrue(TestEffects.poison(target).getAmplifier() == 2,
                     "Equipment poison replaced an existing stronger effect");
         }
         helper.succeed();
@@ -238,13 +239,13 @@ public final class PufferfishHeadgearGameTests {
         NeoForge.EVENT_BUS.addListener(cancel);
         try {
             wearer.hurt(wearer.damageSources().playerAttack(attacker), 2);
-            helper.assertTrue(!PufferfishEffectsGameTests.hasPoison(attacker) && attacker.getHealth() == attacker.getMaxHealth(), "Canceled attack triggered retaliation");
+            helper.assertTrue(!TestEffects.hasPoison(attacker) && attacker.getHealth() == attacker.getMaxHealth(), "Canceled attack triggered retaliation");
         } finally {
             NeoForge.EVENT_BUS.unregister(cancel);
         }
         wearer.invulnerableTime = 0;
         wearer.hurt(wearer.damageSources().thorns(attacker), 1);
-        helper.assertTrue(!PufferfishEffectsGameTests.hasPoison(attacker) && attacker.getHealth() == attacker.getMaxHealth(), "Thorns recursively triggered retaliation");
+        helper.assertTrue(!TestEffects.hasPoison(attacker) && attacker.getHealth() == attacker.getMaxHealth(), "Thorns recursively triggered retaliation");
         wearer.invulnerableTime = 0;
         wearer.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_ABSORPTION).setBaseValue(4);
         wearer.setAbsorptionAmount(4);
@@ -255,18 +256,18 @@ public final class PufferfishHeadgearGameTests {
             wearer.getItemBySlot(EquipmentSlot.HEAD).setDamageValue(0);
             attacker.invulnerableTime = 0;
             attacker.setHealth(attacker.getMaxHealth());
-            PufferfishEffectsGameTests.clearPoison(attacker);
+            TestEffects.clearPoison(attacker);
             wearer.hurt(wearer.damageSources().playerAttack(attacker), 1);
             if (attacker.getHealth() < attacker.getMaxHealth()) reflected++;
-            helper.assertTrue(PufferfishEffectsGameTests.hasPoison(attacker) == (attacker.getHealth() < attacker.getMaxHealth()),
+            helper.assertTrue(TestEffects.hasPoison(attacker) == (attacker.getHealth() < attacker.getMaxHealth()),
                     "Absorbed incoming damage bypassed the thorns poison condition");
         }
         helper.assertTrue(reflected > 0, "Absorption prevented retaliation");
-        PufferfishEffectsGameTests.clearPoison(attacker);
+        TestEffects.clearPoison(attacker);
         wearer.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
         wearer.invulnerableTime = 0;
         wearer.hurt(wearer.damageSources().playerAttack(attacker), 1);
-        helper.assertTrue(!PufferfishEffectsGameTests.hasPoison(attacker), "Retaliation persisted after removal");
+        helper.assertTrue(!TestEffects.hasPoison(attacker), "Retaliation persisted after removal");
         helper.succeed();
     }
 }

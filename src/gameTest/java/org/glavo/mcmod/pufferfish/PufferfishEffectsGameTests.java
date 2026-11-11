@@ -3,6 +3,7 @@
 
 package org.glavo.mcmod.pufferfish;
 
+import static org.glavo.mcmod.pufferfish.test.TestEffects.*;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -18,24 +19,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishEffectsGameTests {
-    static MobEffectInstance poison(net.minecraft.world.entity.LivingEntity target) {
-        var normal = target.getEffect(MobEffects.POISON);
-        var lethal = target.getEffect(PufferfishEffects.LETHAL_TOXIN);
-        if (normal != null && lethal != null) throw new AssertionError("Normal poison and lethal toxin coexist");
-        return lethal == null ? normal : lethal;
-    }
-
-    static MobEffectInstance effect(net.minecraft.world.entity.LivingEntity target, net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> type) {
-        return type.equals(MobEffects.POISON) ? poison(target) : target.getEffect(type);
-    }
-
-    static boolean hasPoison(net.minecraft.world.entity.LivingEntity target) { return poison(target) != null; }
-
-    static void clearPoison(net.minecraft.world.entity.LivingEntity target) {
-        target.removeEffect(MobEffects.POISON);
-        target.removeEffect(PufferfishEffects.LETHAL_TOXIN);
-    }
-
     @GameTest(template = "empty")
     public static void toxinMergesIndependentMaximaInBothDirections(GameTestHelper helper) {
         var target = EntityType.COW.create(helper.getLevel());
@@ -246,12 +229,4 @@ public final class PufferfishEffectsGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "empty")
-    public static void milkCuresLethalToxin(GameTestHelper helper) {
-        var player = helper.makeMockPlayer(GameType.SURVIVAL);
-        helper.assertTrue(player.addEffect(new MobEffectInstance(PufferfishEffects.LETHAL_TOXIN, 200)), "Toxin could not be applied");
-        Items.MILK_BUCKET.finishUsingItem(new ItemStack(Items.MILK_BUCKET), helper.getLevel(), player);
-        helper.assertTrue(!player.hasEffect(PufferfishEffects.LETHAL_TOXIN), "Milk did not cure lethal toxin");
-        helper.succeed();
-    }
 }

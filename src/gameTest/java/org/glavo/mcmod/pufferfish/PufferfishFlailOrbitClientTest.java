@@ -10,20 +10,13 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexSorting;
-import com.mojang.math.Axis;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
-import net.minecraft.world.entity.Pose;
-import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.client.event.RenderFrameEvent;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
-import net.neoforged.neoforge.common.NeoForge;
-import net.minecraft.client.Screenshot;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.multiplayer.PlayerInfo;
@@ -38,10 +31,17 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.item.ItemStack;
-import org.glavo.mcmod.pufferfish.client.PufferfishTextures;
+import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.client.event.RenderFrameEvent;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+import net.neoforged.neoforge.common.NeoForge;
 import org.glavo.mcmod.pufferfish.client.PufferfishFlailHeadRenderer;
+import org.glavo.mcmod.pufferfish.client.PufferfishTextures;
 import org.glavo.mcmod.pufferfish.entity.PufferfishFlailHead;
+import org.glavo.mcmod.pufferfish.test.ClientTestLevel;
+import org.glavo.mcmod.pufferfish.test.TestImages;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -53,7 +53,7 @@ public final class PufferfishFlailOrbitClientTest {
 
     public static void verify(Minecraft minecraft) {
         var oldLevel = minecraft.level;
-        var level = PufferfishHeadgearClientTest.level(minecraft);
+        var level = ClientTestLevel.level(minecraft);
         var player = new RemotePlayer(level, new GameProfile(UUID.randomUUID(), "flail-orbit-test")) {
             @Override
             protected PlayerInfo getPlayerInfo() { return null; }
@@ -195,9 +195,7 @@ public final class PufferfishFlailOrbitClientTest {
                 renderHead(renderer, head, new PoseStack(), buffers);
                 buffers.endBatch();
             }
-            try (var image = Screenshot.takeScreenshot(target)) {
-                image.writeToFile(Path.of("pufferfish-flail-side-orbit-" + frame + ".png"));
-            }
+            TestImages.capture(target, Path.of("pufferfish-flail-side-orbit-" + frame + ".png"));
         } catch (java.io.IOException exception) {
             throw new IllegalStateException("Could not save side-orbit preview", exception);
         } finally {

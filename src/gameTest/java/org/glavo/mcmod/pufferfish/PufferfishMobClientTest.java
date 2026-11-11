@@ -11,11 +11,12 @@ import com.mojang.blaze3d.vertex.VertexSorting;
 import com.mojang.math.Axis;
 import java.nio.file.Path;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.Screenshot;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import org.glavo.mcmod.pufferfish.client.MaterialPufferfishRenderer;
+import org.glavo.mcmod.pufferfish.test.ClientTestLevel;
+import org.glavo.mcmod.pufferfish.test.TestImages;
 import org.joml.Matrix4f;
 
 public final class PufferfishMobClientTest {
@@ -36,7 +37,7 @@ public final class PufferfishMobClientTest {
                 event.setCanRender(net.neoforged.neoforge.common.util.TriState.FALSE);
         net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(hideNames);
         try {
-            var level = PufferfishHeadgearClientTest.level(minecraft);
+            var level = ClientTestLevel.level(minecraft);
             var buffers = minecraft.renderBuffers().bufferSource();
             int index = 0;
             for (var variant : PufferfishMobs.VARIANTS.values()) {
@@ -75,7 +76,7 @@ public final class PufferfishMobClientTest {
                 }
                 index++;
             }
-            try (var image = Screenshot.takeScreenshot(target)) { image.writeToFile(Path.of("pufferfish-mobs-preview.png")); }
+            TestImages.capture(target, Path.of("pufferfish-mobs-preview.png"));
         } catch (java.io.IOException exception) {
             throw new IllegalStateException("Could not save material fish entity preview", exception);
         } finally {

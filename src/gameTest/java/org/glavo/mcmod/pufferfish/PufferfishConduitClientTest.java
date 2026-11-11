@@ -3,19 +3,15 @@
 
 package org.glavo.mcmod.pufferfish;
 
-import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.Lighting;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.VertexSorting;
 import com.mojang.math.Axis;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.Screenshot;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.ConduitRenderer;
@@ -28,7 +24,8 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ConduitBlockEntity;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import org.glavo.mcmod.pufferfish.client.PufferfishConduitRenderer;
-import org.joml.Matrix4f;
+import org.glavo.mcmod.pufferfish.test.RenderTestScene;
+import org.glavo.mcmod.pufferfish.test.TestImages;
 
 public final class PufferfishConduitClientTest {
     private static final int LIGHT = 15728880;
@@ -70,7 +67,6 @@ public final class PufferfishConduitClientTest {
                 IClientItemExtensions.of(stack).getCustomRenderer().renderByItem(stack, context, pose, capture, LIGHT, OverlayTexture.NO_OVERLAY);
                 if (!capture.parts.containsKey(expectedTexture) || !pose.clear()) throw new IllegalStateException("Conduit item did not render: " + context);
             }
-            preview(minecraft, entity);
         }
     }
 
@@ -80,18 +76,10 @@ public final class PufferfishConduitClientTest {
         if (!(archaeologyRenderer instanceof net.minecraft.client.renderer.blockentity.BrushableBlockRenderer)) {
             throw new IllegalStateException("Archaeology renderer is missing");
         }
-        var target = new TextureTarget(1100, 300, true, Minecraft.ON_OSX);
-        target.setClearColor(0.08F, 0.14F, 0.2F, 1);
-        target.clear(Minecraft.ON_OSX);
-        target.bindWrite(true);
-        RenderSystem.backupProjectionMatrix();
-        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 1100, 300, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
-        var view = RenderSystem.getModelViewStack();
-        view.pushMatrix().identity();
-        RenderSystem.applyModelViewMatrix();
-        Lighting.setupFor3DItems();
-        RenderSystem.setShaderColor(1, 1, 1, 1);
-        try {
+        try (var scene = new RenderTestScene(minecraft, 1100, 300, 0.08F, 0.14F, 0.2F)) {
+            var target = scene.target();
+            Lighting.setupFor3DItems();
+
             var hashes = new java.util.HashSet<Integer>();
             for (int stage = -1; stage < 4; stage++) {
                 var state = stage < 0 ? PufferfishBlocks.ANCIENT_PRISMARINE.get().defaultBlockState()
@@ -118,17 +106,9 @@ public final class PufferfishConduitClientTest {
                 minecraft.getBlockRenderer().renderSingleBlock(state, pose, buffers, LIGHT, OverlayTexture.NO_OVERLAY);
                 buffers.endBatch();
             }
-            try (var image = Screenshot.takeScreenshot(target)) {
-                image.writeToFile(Path.of("ancient-prismarine-preview.png"));
-            }
+            TestImages.capture(target, Path.of("ancient-prismarine-preview.png"));
         } catch (IOException exception) {
             throw new IllegalStateException("Could not save ancient prismarine preview", exception);
-        } finally {
-            view.popMatrix();
-            RenderSystem.applyModelViewMatrix();
-            RenderSystem.restoreProjectionMatrix();
-            target.destroyBuffers();
-            minecraft.getMainRenderTarget().bindWrite(true);
         }
     }
 
@@ -140,47 +120,6 @@ public final class PufferfishConduitClientTest {
             field.setBoolean(entity, active);
         } catch (ReflectiveOperationException exception) {
             throw new IllegalStateException("Could not prepare conduit render fixture", exception);
-        }
-    }
-
-    private static void preview(Minecraft minecraft, PufferfishConduitBlockEntity entity) {
-        var target = new TextureTarget(900, 440, true, Minecraft.ON_OSX);
-        target.setClearColor(0.08F, 0.14F, 0.2F, 1);
-        target.clear(Minecraft.ON_OSX);
-        target.bindWrite(true);
-        RenderSystem.backupProjectionMatrix();
-        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 900, 440, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
-        var view = RenderSystem.getModelViewStack();
-        view.pushMatrix().identity();
-        RenderSystem.applyModelViewMatrix();
-        Lighting.setupFor3DItems();
-        RenderSystem.setShaderColor(1, 1, 1, 1);
-        try {
-            var renderer = minecraft.getBlockEntityRenderDispatcher().getRenderer(entity);
-            var buffers = minecraft.renderBuffers().bufferSource();
-            for (int i = 0; i < 2; i++) {
-                active(entity, i == 1);
-                entity.tickCount = 24;
-                var pose = new PoseStack();
-                pose.translate(230 + i * 440, 220, 0);
-                pose.scale(270, -270, 270);
-                pose.mulPose(Axis.XP.rotationDegrees(20));
-                pose.mulPose(Axis.YP.rotationDegrees(35));
-                pose.translate(-0.5, -0.5, -0.5);
-                renderer.render(entity, 0, pose, buffers, LIGHT, OverlayTexture.NO_OVERLAY);
-                buffers.endBatch();
-            }
-            try (var image = Screenshot.takeScreenshot(target)) {
-                image.writeToFile(Path.of(entity.isAncient() ? "ancient-pufferfish-conduit-preview.png" : "pufferfish-conduit-preview.png"));
-            }
-        } catch (IOException exception) {
-            throw new IllegalStateException("Could not save conduit preview", exception);
-        } finally {
-            view.popMatrix();
-            RenderSystem.applyModelViewMatrix();
-            RenderSystem.restoreProjectionMatrix();
-            target.destroyBuffers();
-            minecraft.getMainRenderTarget().bindWrite(true);
         }
     }
 

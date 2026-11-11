@@ -3,18 +3,16 @@
 
 package org.glavo.mcmod.pufferfish;
 
-import net.minecraft.core.BlockPos;
+import static org.glavo.mcmod.pufferfish.test.CuttingAssertions.fish;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.level.GameType;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.phys.AABB;
+import net.minecraft.world.level.GameType;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -30,7 +28,6 @@ import org.glavo.mcmod.pufferfish.compat.cooking.FarmersDelightCuttingGameTests;
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishCuttingGameTests {
-    /// Prevents construction of the test holder.
     private PufferfishCuttingGameTests() {}
 
     /// Registers board tests only when their respective optional mods are loaded.
@@ -101,20 +98,4 @@ public final class PufferfishCuttingGameTests {
         helper.succeed();
     }
 
-    /// Creates two fish of the supplied color so consumption can be checked independently.
-    public static ItemStack fish(DyeColor color) {
-        var stack = new ItemStack(Items.PUFFERFISH, 2);
-        return color == null ? stack : PufferfishColors.dye(stack, color);
-    }
-
-    /// Checks for exactly one sashimi and one matching skin, then removes the dropped entities.
-    public static void verifyDrops(GameTestHelper helper, BlockPos pos, PufferfishSkinBlock skin) {
-        var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(2));
-        helper.assertTrue(drops.size() == 2
-                && drops.stream().allMatch(entity -> entity.getItem().getCount() == 1)
-                && drops.stream().anyMatch(entity -> entity.getItem().is(PufferfishItems.SASHIMI.get()))
-                && drops.stream().anyMatch(entity -> entity.getItem().is(skin.asItem())),
-                "Cutting must drop exactly one sashimi and one matching skin");
-        drops.forEach(ItemEntity::discard);
-    }
 }

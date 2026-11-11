@@ -3,15 +3,13 @@
 
 package org.glavo.mcmod.pufferfish;
 
+import static org.glavo.mcmod.pufferfish.test.TestItems.enchant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -20,8 +18,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
@@ -29,6 +25,8 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import org.glavo.mcmod.pufferfish.test.TestEffects;
+import org.glavo.mcmod.pufferfish.test.TestItems;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
@@ -62,11 +60,6 @@ public final class PufferfishMeleeGameTests {
         return target;
     }
 
-    private static void enchant(GameTestHelper helper, ItemStack stack, ResourceKey<Enchantment> key, int rank) {
-        var holder = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(key);
-        EnchantmentHelper.updateEnchantments(stack, enchantments -> enchantments.set(holder, rank));
-    }
-
     @GameTest(template = "empty")
     public static void everyOrdinaryFishHasConfiguredWeaponDamageSpeedAndPoison(GameTestHelper helper) {
         for (var stack : variants()) {
@@ -78,11 +71,11 @@ public final class PufferfishMeleeGameTests {
             player.getRandom().setSeed(4096);
             player.attack(target);
             helper.assertTrue(target.getHealth() == 20 - (netherite ? 6 : 1), "Charged melee damage does not match the configured base damage");
-            var poison = PufferfishEffectsGameTests.poison(target);
+            var poison = TestEffects.poison(target);
             helper.assertTrue(poison != null && poison.getDuration() == 120 && poison.getAmplifier() == (netherite ? 1 : 0),
                     "Melee poison differs from throwing");
             helper.assertTrue(player.getMainHandItem().getCount() == 1 && player.getInventory().countItem(stack.getItem()) == 4
-                    && ItemStack.isSameItemSameComponents(PufferfishDurabilityGameTests.worn(stack), player.getMainHandItem()),
+                    && ItemStack.isSameItemSameComponents(TestItems.worn(stack), player.getMainHandItem()),
                     "Melee did not separate and wear exactly one fish");
             target.discard();
         }
@@ -145,7 +138,7 @@ public final class PufferfishMeleeGameTests {
                 "Offhand pufferfish granted mainhand attack attributes");
         target = target(helper);
         player.attack(target);
-        helper.assertTrue(target.getHealth() == 19 && !PufferfishEffectsGameTests.hasPoison(target), "Offhand fish poisoned an empty-handed attack");
+        helper.assertTrue(target.getHealth() == 19 && !TestEffects.hasPoison(target), "Offhand fish poisoned an empty-handed attack");
         target.discard();
         helper.succeed();
     }
@@ -176,7 +169,7 @@ public final class PufferfishMeleeGameTests {
         NeoForge.EVENT_BUS.addListener(cancel);
         try {
             player.attack(target);
-            helper.assertTrue(target.getHealth() == 20 && !PufferfishEffectsGameTests.hasPoison(target) && target.getDeltaMovement().equals(Vec3.ZERO),
+            helper.assertTrue(target.getHealth() == 20 && !TestEffects.hasPoison(target) && target.getDeltaMovement().equals(Vec3.ZERO),
                     "Canceled melee hit applied damage, poison, or Punch");
         } finally {
             NeoForge.EVENT_BUS.unregister(cancel);

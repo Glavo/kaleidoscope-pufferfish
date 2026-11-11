@@ -3,6 +3,7 @@
 
 package org.glavo.mcmod.pufferfish;
 
+import static org.glavo.mcmod.pufferfish.test.TestItems.enchant;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -30,11 +31,12 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
-import org.glavo.mcmod.pufferfish.entity.ThrownPufferfish;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.living.LivingBreatheEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import org.glavo.mcmod.pufferfish.entity.ThrownPufferfish;
+import org.glavo.mcmod.pufferfish.test.TestItems;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
@@ -44,12 +46,6 @@ public final class PufferfishEnchantmentGameTests {
             Enchantments.WIND_BURST, Enchantments.SMITE, Enchantments.BANE_OF_ARTHROPODS,
             Enchantments.VANISHING_CURSE, Enchantments.BINDING_CURSE, Enchantments.THORNS, Enchantments.CHANNELING,
             Enchantments.UNBREAKING, Enchantments.MENDING);
-
-    private static ItemStack enchant(GameTestHelper helper, ItemStack stack, ResourceKey<Enchantment> key, int level) {
-        var holder = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(key);
-        EnchantmentHelper.updateEnchantments(stack, enchantments -> enchantments.set(holder, level));
-        return stack;
-    }
 
     private static int level(GameTestHelper helper, ItemStack stack, ResourceKey<Enchantment> key) {
         var holder = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(key);
@@ -301,7 +297,7 @@ public final class PufferfishEnchantmentGameTests {
                 restored.setOwner(player);
                 helper.getLevel().addFreshEntity(restored);
                 for (int tick = 0; tick < 200 && !restored.isRemoved(); tick++) restored.tick();
-                helper.assertTrue(restored.isRemoved() && ItemStack.matches(player.getInventory().getItem(0), PufferfishDurabilityGameTests.worn(stack)),
+                helper.assertTrue(restored.isRemoved() && ItemStack.matches(player.getInventory().getItem(0), TestItems.worn(stack)),
                         "Combined enchantments were lost during impact, save, or return");
                 clearDrops(helper, target);
             }

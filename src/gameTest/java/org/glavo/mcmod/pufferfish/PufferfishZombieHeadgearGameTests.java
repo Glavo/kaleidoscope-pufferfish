@@ -5,7 +5,6 @@ package org.glavo.mcmod.pufferfish;
 
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.MobSpawnType;
@@ -16,6 +15,7 @@ import net.neoforged.neoforge.event.EventHooks;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import org.glavo.mcmod.pufferfish.test.TestEffects;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
@@ -121,7 +121,7 @@ public final class PufferfishZombieHeadgearGameTests {
             attacker.invulnerableTime = 0;
             attacker.removeAllEffects();
             helper.assertTrue(zombie.hurt(zombie.damageSources().mobAttack(attacker), 1), "Attack did not hit zombie");
-            var poison = PufferfishEffectsGameTests.poison(attacker);
+            var poison = TestEffects.poison(attacker);
             if (attacker.getHealth() < attacker.getMaxHealth()) reflected++;
             helper.assertTrue(attacker.getHealth() < attacker.getMaxHealth()
                     ? poison != null && poison.getDuration() == 120 && poison.getAmplifier() == 0 : poison == null,

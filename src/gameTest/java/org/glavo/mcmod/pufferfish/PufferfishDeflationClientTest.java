@@ -3,31 +3,17 @@
 
 package org.glavo.mcmod.pufferfish;
 
-import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.platform.Lighting;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexSorting;
-import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.Screenshot;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import org.glavo.mcmod.pufferfish.client.DeflatingPufferfishModel;
-import org.glavo.mcmod.pufferfish.client.PufferfishFlailModel;
-import org.glavo.mcmod.pufferfish.client.PufferfishTextures;
-import org.joml.Matrix4f;
+import org.glavo.mcmod.pufferfish.test.TestItems;
 
 public final class PufferfishDeflationClientTest {
     public static void verify(Minecraft minecraft) {
         var geometry = new DeflatingPufferfishModel<Entity>(minecraft.getEntityModels());
-        for (var original : PufferfishPlacementGameTests.variants()) {
+        for (var original : TestItems.fishVariants()) {
             for (int stage = 0; stage < 4; stage++) {
                 var stack = worn(original, stage);
                 var model = minecraft.getItemRenderer().getModel(stack, null, null, 0);
@@ -57,7 +43,6 @@ public final class PufferfishDeflationClientTest {
                 || pump.getHoverName().getString().startsWith("block.")) {
             throw new IllegalStateException("Pump model or translation is missing");
         }
-        preview(minecraft, geometry);
     }
 
     private static ItemStack worn(ItemStack original, int stage) {
@@ -67,68 +52,4 @@ public final class PufferfishDeflationClientTest {
         return stack;
     }
 
-    private static void preview(Minecraft minecraft, DeflatingPufferfishModel<Entity> fish) {
-        var target = new TextureTarget(1000, 800, true, Minecraft.ON_OSX);
-        target.setClearColor(0.12F, 0.15F, 0.18F, 1);
-        target.clear(Minecraft.ON_OSX);
-        target.bindWrite(true);
-        RenderSystem.backupProjectionMatrix();
-        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 1000, 800, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
-        var view = RenderSystem.getModelViewStack();
-        view.pushMatrix().identity();
-        RenderSystem.applyModelViewMatrix();
-        Lighting.setupFor3DItems();
-        RenderSystem.setShaderColor(1, 1, 1, 1);
-        try {
-            var buffers = minecraft.renderBuffers().bufferSource();
-            var flail = new PufferfishFlailModel();
-            for (int stage = 0; stage < 4; stage++) {
-                for (int row = 0; row < 2; row++) {
-                    var stack = worn(row == 0 ? new ItemStack(Items.PUFFERFISH) : PufferfishItems.HEAVY.toStack(), stage);
-                    var pose = new PoseStack();
-                    pose.translate(125 + stage * 250, 120 + row * 200, 0);
-                    pose.scale(240, -240, 240);
-                    pose.mulPose(Axis.XP.rotationDegrees(15));
-                    pose.mulPose(Axis.YP.rotationDegrees(25));
-                    pose.scale(1, -1, -1);
-                    pose.translate(0, -18.0F / 16, 0);
-                    fish.prepare(stack);
-                    fish.setupAnim(null, 0, 0, 0, 0, 0);
-                    var texture = row == 0 ? ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png") : PufferfishTextures.heavyEntity();
-                    fish.renderToBuffer(pose, buffers.getBuffer(RenderType.entityCutoutNoCull(texture)), 15728880, OverlayTexture.NO_OVERLAY);
-                }
-                var pose = new PoseStack();
-                pose.translate(125 + stage * 250, 510, 0);
-                pose.scale(250, -250, 250);
-                pose.mulPose(Axis.YP.rotationDegrees(25));
-                flail.renderHead(worn(PufferfishItems.FLAIL.toStack(), stage), pose, buffers, 15728880, OverlayTexture.NO_OVERLAY, 0);
-                buffers.endBatch();
-                for (int size : new int[] {16, 64}) {
-                    pose = new PoseStack();
-                    pose.translate(90 + stage * 250 + size, 630, 0);
-                    pose.scale(size, -size, size);
-                    minecraft.getItemRenderer().renderStatic(worn(new ItemStack(Items.PUFFERFISH), stage), ItemDisplayContext.GUI,
-                            15728880, OverlayTexture.NO_OVERLAY, pose, buffers, null, 0);
-                    buffers.endBatch();
-                }
-            }
-            for (int size : new int[] {16, 32, 80}) {
-                var pose = new PoseStack();
-                pose.translate(100 + size * 5, 735, 0);
-                pose.scale(size, -size, size);
-                minecraft.getItemRenderer().renderStatic(PufferfishItems.PUMP.toStack(), ItemDisplayContext.GUI,
-                        15728880, OverlayTexture.NO_OVERLAY, pose, buffers, null, 0);
-                buffers.endBatch();
-            }
-            try (var image = Screenshot.takeScreenshot(target)) { image.writeToFile(java.nio.file.Path.of("pufferfish-deflation-preview.png")); }
-        } catch (java.io.IOException exception) {
-            throw new IllegalStateException("Could not save fish deflation preview", exception);
-        } finally {
-            view.popMatrix();
-            RenderSystem.applyModelViewMatrix();
-            RenderSystem.restoreProjectionMatrix();
-            target.destroyBuffers();
-            minecraft.getMainRenderTarget().bindWrite(true);
-        }
-    }
 }

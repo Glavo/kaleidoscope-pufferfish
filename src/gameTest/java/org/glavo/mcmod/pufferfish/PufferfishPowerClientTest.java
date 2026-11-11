@@ -5,15 +5,16 @@ package org.glavo.mcmod.pufferfish;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import java.util.Arrays;
+import net.minecraft.client.ClientRecipeBook;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.ClientRecipeBook;
 import net.minecraft.stats.StatsCounter;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import org.glavo.mcmod.pufferfish.test.ClientTestLevel;
 
 public final class PufferfishPowerClientTest {
     public static void verify(Minecraft minecraft) {
@@ -21,7 +22,7 @@ public final class PufferfishPowerClientTest {
         var oldPlayer = minecraft.player;
         var light = minecraft.gameRenderer.lightTexture();
         try {
-            var level = PufferfishHeadgearClientTest.level(minecraft);
+            var level = ClientTestLevel.level(minecraft);
             var connection = ClientLevel.class.getDeclaredField("connection");
             connection.setAccessible(true);
             var vision = new float[] {1};

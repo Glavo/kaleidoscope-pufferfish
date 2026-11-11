@@ -18,6 +18,8 @@ import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.glavo.mcmod.pufferfish.client.PufferfishCurseParticle;
+import org.glavo.mcmod.pufferfish.test.ClientTestLevel;
+import org.glavo.mcmod.pufferfish.test.TestImages;
 import org.joml.Matrix4f;
 
 public final class PufferfishCurseClientTest {
@@ -33,7 +35,7 @@ public final class PufferfishCurseClientTest {
             for (int y = 0; y < 216; y++) for (int x = 0; x < 216; x++) {
                 iconPreview.setPixelRGBA(x, y, icon.getPixelRGBA(x / 12, y / 12));
             }
-            iconPreview.writeToFile(Path.of("pufferfish-curse-icon-preview.png"));
+            TestImages.write(iconPreview, Path.of("pufferfish-curse-icon-preview.png"));
         } catch (IOException exception) {
             throw new IllegalStateException("Could not save curse icon preview", exception);
         }
@@ -47,7 +49,7 @@ public final class PufferfishCurseClientTest {
         RenderSystem.applyModelViewMatrix();
         Lighting.setupFor3DItems();
         RenderSystem.setShaderColor(1, 1, 1, 1);
-        minecraft.particleEngine.setLevel(PufferfishHeadgearClientTest.level(minecraft));
+        minecraft.particleEngine.setLevel(ClientTestLevel.level(minecraft));
         try (var preview = new NativeImage(1920, 240, true)) {
             var particle = minecraft.particleEngine.createParticle(
                     new ItemParticleOption(PufferfishEffects.CURSE_APPEARANCE.get(), new ItemStack(Items.PUFFERFISH)), 0, 0, 0, 0, 0, 0);
@@ -73,7 +75,7 @@ public final class PufferfishCurseClientTest {
             }
             particle.tick();
             if (particle.isAlive()) throw new IllegalStateException("Curse apparition did not expire");
-            preview.writeToFile(Path.of("pufferfish-curse-preview.png"));
+            TestImages.write(preview, Path.of("pufferfish-curse-preview.png"));
             previewVariants(minecraft, target, camera);
         } catch (IOException exception) {
             throw new IllegalStateException("Could not save curse preview", exception);
@@ -114,7 +116,7 @@ public final class PufferfishCurseClientTest {
                 index++;
             }
             if (hashes.size() < 10) throw new IllegalStateException("Distinct material apparitions share the wrong texture");
-            preview.writeToFile(Path.of("pufferfish-curse-variants-preview.png"));
+            TestImages.write(preview, Path.of("pufferfish-curse-variants-preview.png"));
         }
     }
 }

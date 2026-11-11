@@ -11,12 +11,12 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.CraftingInput;
@@ -28,6 +28,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import org.glavo.mcmod.pufferfish.test.TestEffects;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
@@ -101,16 +102,16 @@ public final class CopperPufferfishGameTests {
             helper.assertTrue(target.hurt(target.damageSources().playerAttack(player), 1), "Melee damage failed");
             assertPoison(helper, target, stage);
 
-            PufferfishEffectsGameTests.clearPoison(target);
+            TestEffects.clearPoison(target);
             PufferfishCombat.hitEffects(fish, target, player, Vec3.ZERO);
             assertPoison(helper, target, stage);
 
-            PufferfishEffectsGameTests.clearPoison(target);
+            TestEffects.clearPoison(target);
             player.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
             player.setItemSlot(EquipmentSlot.HEAD, fish);
             target.invulnerableTime = 0;
             helper.assertTrue(target.hurt(target.damageSources().thorns(player), 1), "Thorns damage failed");
-            var poison = PufferfishEffectsGameTests.poison(target);
+            var poison = TestEffects.poison(target);
             helper.assertTrue(stage >= 4 ? poison == null
                     : poison != null && poison.getAmplifier() == new int[] {0, 0, 1, 1}[stage] && poison.getDuration() == 120,
                     "Copper headgear did not apply its oxidation poison tier and duration");
@@ -125,10 +126,10 @@ public final class CopperPufferfishGameTests {
         var fish = new ItemStack(PufferfishItems.COPPER_VARIANTS.get(7).get());
         target.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 2));
         PufferfishCombat.hitEffects(fish, target, player, Vec3.ZERO);
-        var poison = PufferfishEffectsGameTests.poison(target);
+        var poison = TestEffects.poison(target);
         helper.assertTrue(poison != null && poison.getDuration() == 200 && poison.getAmplifier() == 2,
                 "Wax changed an existing poison effect");
-        PufferfishEffectsGameTests.clearPoison(target);
+        TestEffects.clearPoison(target);
         player.setItemSlot(EquipmentSlot.HEAD, fish);
         player.getRandom().setSeed(4291);
         int reflected = 0;
@@ -139,14 +140,14 @@ public final class CopperPufferfishGameTests {
             target.setHealth(target.getMaxHealth());
             player.hurt(player.damageSources().mobAttack(target), 1);
             if (target.getHealth() < target.getMaxHealth()) reflected++;
-            helper.assertTrue(!PufferfishEffectsGameTests.hasPoison(target), "Waxed headgear poisoned its attacker");
+            helper.assertTrue(!TestEffects.hasPoison(target), "Waxed headgear poisoned its attacker");
         }
         helper.assertTrue(reflected > 0, "Wax disabled thorns retaliation");
         helper.succeed();
     }
 
     private static void assertPoison(GameTestHelper helper, LivingEntity target, int stage) {
-        var poison = PufferfishEffectsGameTests.poison(target);
+        var poison = TestEffects.poison(target);
         if (stage >= 4) {
             helper.assertTrue(poison == null, "Waxed copper applied poison");
         } else {

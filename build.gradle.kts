@@ -93,6 +93,7 @@ neoForge {
             )
             systemProperty("neoforge.enabledGameTestNamespaces", modId)
             systemProperty("pufferfish_please.clientSmokeTest", providers.gradleProperty("client_smoke_test").getOrElse("false"))
+            systemProperty("pufferfish_please.testImages", providers.gradleProperty("test_images").getOrElse("false"))
         }
         create("server") {
             server()

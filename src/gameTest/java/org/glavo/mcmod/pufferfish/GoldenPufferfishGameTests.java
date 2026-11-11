@@ -32,7 +32,6 @@ import org.glavo.mcmod.pufferfish.entity.ThrownPufferfish;
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class GoldenPufferfishGameTests {
-    /// Prevents construction of the test holder.
     private GoldenPufferfishGameTests() {}
 
     /// Builds a crafting grid with the supplied fish surrounded by eight gold ingots.

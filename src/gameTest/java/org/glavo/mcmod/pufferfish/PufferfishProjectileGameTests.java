@@ -17,7 +17,6 @@ import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -36,6 +35,8 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.glavo.mcmod.pufferfish.entity.ThrownPufferfish;
+import org.glavo.mcmod.pufferfish.test.TestEffects;
+import org.glavo.mcmod.pufferfish.test.TestItems;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
@@ -354,13 +355,13 @@ public class PufferfishProjectileGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void collisionDealsOneDamageAndThreeSecondsOfPoison(GameTestHelper helper) {
+    public static void collisionAppliesConfiguredDamageAndPoison(GameTestHelper helper) {
         var target = helper.spawn(EntityType.PIG, new BlockPos(2, 1, 3));
         target.setNoAi(true);
         float health = target.getHealth();
         var projectile = hit(helper, target);
         helper.assertTrue(target.getHealth() == health - 1.0F, "Impact did not deal exactly one base damage");
-        var effect = PufferfishEffectsGameTests.poison(target);
+        var effect = TestEffects.poison(target);
         helper.assertTrue(effect != null && effect.getDuration() == 120 && effect.getAmplifier() == 0,
                 "Impact did not apply Poison I for 60 ticks");
         helper.assertTrue(projectile.isRemoved(), "Projectile survived its impact");
@@ -375,13 +376,13 @@ public class PufferfishProjectileGameTests {
         target.setInvulnerable(true);
         float health = target.getHealth();
         var projectile = hit(helper, target);
-        helper.assertTrue(target.getHealth() == health && !PufferfishEffectsGameTests.hasPoison(target), "Invulnerable target was damaged or poisoned");
+        helper.assertTrue(target.getHealth() == health && !TestEffects.hasPoison(target), "Invulnerable target was damaged or poisoned");
         helper.assertTrue(projectile.isRemoved(), "Blocked projectile was not removed");
         target.discard();
         var zombie = helper.spawn(EntityType.ZOMBIE, new BlockPos(2, 1, 3));
         float zombieHealth = zombie.getHealth();
         hit(helper, zombie);
-        helper.assertTrue(zombie.getHealth() < zombieHealth && !PufferfishEffectsGameTests.hasPoison(zombie), "Undead poison immunity was bypassed");
+        helper.assertTrue(zombie.getHealth() < zombieHealth && !TestEffects.hasPoison(zombie), "Undead poison immunity was bypassed");
         zombie.discard();
         helper.succeed();
     }
@@ -421,7 +422,7 @@ public class PufferfishProjectileGameTests {
         helper.assertTrue(projectile.isRemoved(), "Projectile survived a block impact");
         var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(4))
                 .stream().filter(drop -> drop.getItem().is(Items.PUFFERFISH)).toList();
-        helper.assertTrue(drops.size() == 1 && ItemStack.isSameItemSameComponents(drops.getFirst().getItem(), PufferfishDurabilityGameTests.worn(stack)),
+        helper.assertTrue(drops.size() == 1 && ItemStack.isSameItemSameComponents(drops.getFirst().getItem(), TestItems.worn(stack)),
                 "Block impact did not recover exactly one matching fish");
         helper.assertTrue(helper.getLevel().getBlockState(drops.getFirst().blockPosition()).isAir(),
                 "Recovered fish was embedded in the block");
@@ -441,12 +442,12 @@ public class PufferfishProjectileGameTests {
                     .stream().filter(drop -> drop.getItem().is(Items.PUFFERFISH)).toList();
             helper.assertTrue(projectile.isRemoved() && drops.size() == 1, "Impact did not recover exactly one fish");
             var recovered = drops.getFirst();
-            helper.assertTrue(recovered.getItem().getCount() == 1 && ItemStack.isSameItemSameComponents(recovered.getItem(), PufferfishDurabilityGameTests.worn(stack)),
+            helper.assertTrue(recovered.getItem().getCount() == 1 && ItemStack.isSameItemSameComponents(recovered.getItem(), TestItems.worn(stack)),
                     "Recovered fish lost its color or name");
             var player = helper.makeMockPlayer(GameType.SURVIVAL);
             recovered.setNoPickUpDelay();
             recovered.playerTouch(player);
-            helper.assertTrue(recovered.isRemoved() && ItemStack.isSameItemSameComponents(player.getInventory().getItem(0), PufferfishDurabilityGameTests.worn(stack)),
+            helper.assertTrue(recovered.isRemoved() && ItemStack.isSameItemSameComponents(player.getInventory().getItem(0), TestItems.worn(stack)),
                     "Recovered fish could not be picked up");
             target.discard();
         }

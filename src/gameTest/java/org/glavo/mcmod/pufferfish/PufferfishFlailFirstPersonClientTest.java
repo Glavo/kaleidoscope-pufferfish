@@ -14,9 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
+import net.minecraft.client.ClientRecipeBook;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.Screenshot;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -25,7 +25,6 @@ import net.minecraft.client.renderer.ItemInHandRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.client.ClientRecipeBook;
 import net.minecraft.stats.StatsCounter;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
@@ -36,6 +35,8 @@ import net.neoforged.neoforge.client.event.RenderHandEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import org.glavo.mcmod.pufferfish.client.PufferfishFlailHeadRenderer;
+import org.glavo.mcmod.pufferfish.test.ClientTestLevel;
+import org.glavo.mcmod.pufferfish.test.TestImages;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -58,7 +59,7 @@ public final class PufferfishFlailFirstPersonClientTest {
         LocalPlayer player = null;
         TextureTarget target = null;
         try {
-            var level = PufferfishHeadgearClientTest.level(minecraft);
+            var level = ClientTestLevel.level(minecraft);
             var connectionField = ClientLevel.class.getDeclaredField("connection");
             connectionField.setAccessible(true);
             player = new LocalPlayer(minecraft, level, (ClientPacketListener) connectionField.get(level),
@@ -149,10 +150,8 @@ public final class PufferfishFlailFirstPersonClientTest {
                                         renderHand(nativeRender, context.getItemInHandRenderer(), player, 0F, pitch, hand, swing, stack,
                                                 swing * 0.5F, pose, buffers, LIGHT);
                                         buffers.endBatch();
-                                        try (var image = Screenshot.takeScreenshot(target)) {
-                                            image.writeToFile(Path.of("pufferfish-flail-first-person-" + (head.isShortCast() ? "short-" : "") + arm.name().toLowerCase(java.util.Locale.ROOT)
+                                        TestImages.capture(target, Path.of("pufferfish-flail-first-person-" + (head.isShortCast() ? "short-" : "") + arm.name().toLowerCase(java.util.Locale.ROOT)
                                                     + (swing == 0 ? "-idle.png" : "-swing.png")));
-                                        }
                                     }
                                     NeoForge.EVENT_BUS.post(new RenderFrameEvent.Pre(DeltaTracker.ZERO));
                                     var stale = new Capture();
@@ -270,9 +269,7 @@ public final class PufferfishFlailFirstPersonClientTest {
                     renderHand(nativeRender, minecraft.getEntityRenderDispatcher().getItemInHandRenderer(), player, 0F, 0F,
                             InteractionHand.MAIN_HAND, 0F, stack, 0F, pose, buffers, LIGHT);
                     buffers.endBatch();
-                    try (var image = Screenshot.takeScreenshot(target)) {
-                        image.writeToFile(Path.of("pufferfish-flail-release-" + frame + ".png"));
-                    }
+                    TestImages.capture(target, Path.of("pufferfish-flail-release-" + frame + ".png"));
                 }
             }
             if (!launched) throw new IllegalStateException("Queued client swing never released");
@@ -355,10 +352,8 @@ public final class PufferfishFlailFirstPersonClientTest {
                         renderHand(nativeRender, minecraft.getEntityRenderDispatcher().getItemInHandRenderer(), player, 0F, player.getXRot(),
                                 InteractionHand.MAIN_HAND, 0F, stack, 0F, pose, buffers, LIGHT);
                         buffers.endBatch();
-                        try (var image = Screenshot.takeScreenshot(target)) {
-                            image.writeToFile(Path.of("pufferfish-flail-charge-" + (item == PufferfishItems.FLAIL.get() ? "normal-"
+                        TestImages.capture(target, Path.of("pufferfish-flail-charge-" + (item == PufferfishItems.FLAIL.get() ? "normal-"
                                     : item == PufferfishItems.HEAVY_FLAIL.get() ? "heavy-" : "netherite-") + ticks + "-pitch-" + (int) player.getXRot() + ".png"));
-                        }
                     }
                 }
                 if (wristMax.y - wristMin.y < 0.85F || wristMax.z - wristMin.z < 0.85F) {

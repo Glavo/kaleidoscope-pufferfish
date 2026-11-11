@@ -3,14 +3,10 @@
 
 package org.glavo.mcmod.pufferfish;
 
-import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.Lighting;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexSorting;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.Screenshot;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -18,11 +14,13 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.glavo.mcmod.pufferfish.client.PufferfishPumpBlockRenderer;
-import org.joml.Matrix4f;
+import org.glavo.mcmod.pufferfish.test.ClientTestLevel;
+import org.glavo.mcmod.pufferfish.test.RenderTestScene;
+import org.glavo.mcmod.pufferfish.test.TestImages;
 
 public final class PufferfishPumpClientTest {
     public static void verify(Minecraft minecraft) {
-        var level = PufferfishHeadgearClientTest.level(minecraft);
+        var level = ClientTestLevel.level(minecraft);
         var state = PufferfishBlocks.PUMP.get().defaultBlockState().setValue(PufferfishPumpBlock.FACING, Direction.SOUTH);
         var entity = new PufferfishPumpBlockEntity(BlockPos.ZERO, state);
         entity.setLevel(level);
@@ -35,18 +33,10 @@ public final class PufferfishPumpClientTest {
                 || entity.compression(4) != 0.5F || entity.compression(8) != 0) {
             throw new IllegalStateException("Pedal did not compress and rebound after a synchronized block event");
         }
-        var target = new TextureTarget(1600, 700, true, Minecraft.ON_OSX);
-        target.setClearColor(0.12F, 0.15F, 0.18F, 1);
-        target.clear(Minecraft.ON_OSX);
-        target.bindWrite(true);
-        RenderSystem.backupProjectionMatrix();
-        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 1600, 700, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
-        var view = RenderSystem.getModelViewStack();
-        view.pushMatrix().identity();
-        RenderSystem.applyModelViewMatrix();
-        Lighting.setupFor3DItems();
-        RenderSystem.setShaderColor(1, 1, 1, 1);
-        try {
+        try (var scene = new RenderTestScene(minecraft, 1600, 700, 0.12F, 0.15F, 0.18F)) {
+            var target = scene.target();
+            Lighting.setupFor3DItems();
+
             var buffers = minecraft.renderBuffers().bufferSource();
             for (int i = 0; i < 4; i++) {
                 var displayed = new PufferfishPumpBlockEntity(BlockPos.ZERO, state);
@@ -81,33 +71,20 @@ public final class PufferfishPumpClientTest {
                         15728880, OverlayTexture.NO_OVERLAY, pose, buffers, null, 0);
                 buffers.endBatch();
             }
-            try (var image = Screenshot.takeScreenshot(target)) { image.writeToFile(java.nio.file.Path.of("pufferfish-foot-pump-preview.png")); }
+            TestImages.capture(target, java.nio.file.Path.of("pufferfish-foot-pump-preview.png"));
         } catch (java.io.IOException exception) {
             throw new IllegalStateException("Could not save foot pump preview", exception);
-        } finally {
-            view.popMatrix();
-            RenderSystem.applyModelViewMatrix();
-            RenderSystem.restoreProjectionMatrix();
-            target.destroyBuffers();
-            minecraft.getMainRenderTarget().bindWrite(true);
         }
         verifyPressure(minecraft);
     }
 
     private static void verifyPressure(Minecraft minecraft) {
-        var level = PufferfishHeadgearClientTest.level(minecraft);
+        var level = ClientTestLevel.level(minecraft);
         var geometry = new org.glavo.mcmod.pufferfish.client.DeflatingPufferfishModel<net.minecraft.world.entity.Entity>(minecraft.getEntityModels());
-        var target = new TextureTarget(1600, 700, true, Minecraft.ON_OSX);
-        target.setClearColor(0.12F, 0.15F, 0.18F, 1);
-        target.clear(Minecraft.ON_OSX);
-        target.bindWrite(true);
-        RenderSystem.backupProjectionMatrix();
-        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 1600, 700, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
-        var view = RenderSystem.getModelViewStack();
-        view.pushMatrix().identity();
-        RenderSystem.applyModelViewMatrix();
-        Lighting.setupFor3DItems();
-        try {
+        try (var scene = new RenderTestScene(minecraft, 1600, 700, 0.12F, 0.15F, 0.18F)) {
+            var target = scene.target();
+            Lighting.setupFor3DItems();
+
             var buffers = minecraft.renderBuffers().bufferSource();
             for (int row = 0; row < 2; row++) for (int pressure = 0; pressure <= 4; pressure++) {
                 var fish = row == 0 ? new ItemStack(Items.PUFFERFISH) : PufferfishItems.NETHERITE.toStack();
@@ -145,15 +122,9 @@ public final class PufferfishPumpClientTest {
             if (geometry.root().getChild("body").xScale != 1 || geometry.root().getChild("left_blue_fin").x != 4) {
                 throw new IllegalStateException("Overpressure leaked into ordinary fish rendering");
             }
-            try (var image = Screenshot.takeScreenshot(target)) { image.writeToFile(java.nio.file.Path.of("pufferfish-pump-pressure-preview.png")); }
+            TestImages.capture(target, java.nio.file.Path.of("pufferfish-pump-pressure-preview.png"));
         } catch (java.io.IOException exception) {
             throw new IllegalStateException("Could not save pump pressure preview", exception);
-        } finally {
-            view.popMatrix();
-            RenderSystem.applyModelViewMatrix();
-            RenderSystem.restoreProjectionMatrix();
-            target.destroyBuffers();
-            minecraft.getMainRenderTarget().bindWrite(true);
         }
     }
 }

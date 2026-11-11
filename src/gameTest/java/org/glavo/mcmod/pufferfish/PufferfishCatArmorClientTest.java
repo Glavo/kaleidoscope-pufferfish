@@ -11,13 +11,14 @@ import com.mojang.blaze3d.vertex.VertexSorting;
 import com.mojang.math.Axis;
 import java.nio.file.Path;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.Screenshot;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemDisplayContext;
+import org.glavo.mcmod.pufferfish.test.ClientTestLevel;
+import org.glavo.mcmod.pufferfish.test.TestImages;
 import org.joml.Matrix4f;
 
 public final class PufferfishCatArmorClientTest {
@@ -36,7 +37,7 @@ public final class PufferfishCatArmorClientTest {
                 event.setCanRender(net.neoforged.neoforge.common.util.TriState.FALSE);
         net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(hideNames);
         try {
-            var level = PufferfishHeadgearClientTest.level(minecraft);
+            var level = ClientTestLevel.level(minecraft);
             var buffers = minecraft.renderBuffers().bufferSource();
             int index = 0;
             for (var entry : PufferfishCatArmor.VARIANTS.entrySet()) {
@@ -83,7 +84,7 @@ public final class PufferfishCatArmorClientTest {
                 }
                 index++;
             }
-            try (var image = Screenshot.takeScreenshot(target)) { image.writeToFile(Path.of("pufferfish-cat-armor-preview.png")); }
+            TestImages.capture(target, Path.of("pufferfish-cat-armor-preview.png"));
         } catch (java.io.IOException exception) {
             throw new IllegalStateException("Could not save cat armor preview", exception);
         } finally {

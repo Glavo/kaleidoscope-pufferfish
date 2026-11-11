@@ -4,12 +4,9 @@
 package org.glavo.mcmod.pufferfish;
 
 import com.mojang.authlib.GameProfile;
-import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.Lighting;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.VertexSorting;
 import com.mojang.math.Axis;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -18,7 +15,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.Screenshot;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -38,13 +34,15 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.glavo.mcmod.pufferfish.client.PufferfishGloveRenderer;
 import org.glavo.mcmod.pufferfish.client.PufferfishTextures;
-import org.joml.Matrix4f;
+import org.glavo.mcmod.pufferfish.test.ClientTestLevel;
+import org.glavo.mcmod.pufferfish.test.RenderTestScene;
+import org.glavo.mcmod.pufferfish.test.TestImages;
 
 public final class PufferfishGloveClientTest {
     private static final int LIGHT = 15728880;
 
     public static void verify(Minecraft minecraft) {
-        var player = new RemotePlayer(PufferfishHeadgearClientTest.level(minecraft), new GameProfile(UUID.randomUUID(), "glove-test")) {
+        var player = new RemotePlayer(ClientTestLevel.level(minecraft), new GameProfile(UUID.randomUUID(), "glove-test")) {
             @Override
             protected PlayerInfo getPlayerInfo() { return null; }
         };
@@ -144,18 +142,10 @@ public final class PufferfishGloveClientTest {
 
     private static void renderPreview(Minecraft minecraft, AbstractClientPlayer player, EntityRendererProvider.Context context,
             PufferfishGloveRenderer glove) {
-        var target = new TextureTarget(1200, 800, true, Minecraft.ON_OSX);
-        target.setClearColor(0.12F, 0.15F, 0.18F, 1);
-        target.clear(Minecraft.ON_OSX);
-        target.bindWrite(true);
-        RenderSystem.backupProjectionMatrix();
-        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 1200, 800, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
-        var view = RenderSystem.getModelViewStack();
-        view.pushMatrix().identity();
-        RenderSystem.applyModelViewMatrix();
-        Lighting.setupFor3DItems();
-        RenderSystem.setShaderColor(1, 1, 1, 1);
-        try {
+        try (var scene = new RenderTestScene(minecraft, 1200, 800, 0.12F, 0.15F, 0.18F)) {
+            var target = scene.target();
+            Lighting.setupFor3DItems();
+
             var buffers = minecraft.renderBuffers().bufferSource();
             for (int i = 0; i < 4; i++) {
                 var model = new PlayerRenderer(context, i % 2 == 1).getModel();
@@ -181,17 +171,9 @@ public final class PufferfishGloveClientTest {
                         0, i < 2 ? 0 : 0.4F, pose, buffers, LIGHT);
                 buffers.endBatch();
             }
-            try (var image = Screenshot.takeScreenshot(target)) {
-                image.writeToFile(Path.of("pufferfish-glove-preview.png"));
-            }
+            TestImages.capture(target, Path.of("pufferfish-glove-preview.png"));
         } catch (IOException exception) {
             throw new IllegalStateException("Could not save glove preview", exception);
-        } finally {
-            view.popMatrix();
-            RenderSystem.applyModelViewMatrix();
-            RenderSystem.restoreProjectionMatrix();
-            target.destroyBuffers();
-            minecraft.getMainRenderTarget().bindWrite(true);
         }
     }
 

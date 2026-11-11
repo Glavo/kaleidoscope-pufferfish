@@ -3,11 +3,8 @@
 
 package org.glavo.mcmod.pufferfish;
 
-import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.Lighting;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexSorting;
 import com.mojang.math.Axis;
 import java.nio.file.Path;
 import net.minecraft.client.Minecraft;
@@ -18,22 +15,16 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.FallingBlockEntity;
-import org.joml.Matrix4f;
+import org.glavo.mcmod.pufferfish.test.ClientTestLevel;
+import org.glavo.mcmod.pufferfish.test.RenderTestScene;
+import org.glavo.mcmod.pufferfish.test.TestImages;
 
 public final class PufferfishLampClientTest {
     public static void verify(Minecraft minecraft) {
-        var target = new TextureTarget(1200, 180, true, Minecraft.ON_OSX);
-        target.setClearColor(0.08F, 0.14F, 0.2F, 1);
-        target.clear(Minecraft.ON_OSX);
-        target.bindWrite(true);
-        RenderSystem.backupProjectionMatrix();
-        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 1200, 180, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
-        var view = RenderSystem.getModelViewStack();
-        view.pushMatrix().identity();
-        RenderSystem.applyModelViewMatrix();
-        Lighting.setupFor3DItems();
-        RenderSystem.setShaderColor(1, 1, 1, 1);
-        try {
+        try (var scene = new RenderTestScene(minecraft, 1200, 180, 0.08F, 0.14F, 0.2F)) {
+            var target = scene.target();
+            Lighting.setupFor3DItems();
+
             var names = new String[] {"copper", "exposed_copper", "weathered_copper", "oxidized_copper", "heavy", "heavy", "heavy", "heavy"};
             var buffers = minecraft.renderBuffers().bufferSource();
             for (int index = 0; index < names.length; index++) {
@@ -46,7 +37,7 @@ public final class PufferfishLampClientTest {
                 pose.mulPose(Axis.XP.rotationDegrees(20));
                 pose.mulPose(Axis.YP.rotationDegrees(30));
                 if (index == 5 || index == 7) {
-                    var falling = new FallingBlockEntity(EntityType.FALLING_BLOCK, PufferfishHeadgearClientTest.level(minecraft));
+                    var falling = new FallingBlockEntity(EntityType.FALLING_BLOCK, ClientTestLevel.level(minecraft));
                     var data = new CompoundTag();
                     data.put("BlockState", NbtUtils.writeBlockState(state));
                     falling.load(data);
@@ -72,16 +63,10 @@ public final class PufferfishLampClientTest {
                     }
                     if (visible < 100) throw new IllegalStateException("Falling fish is invisible");
                 }
-                image.writeToFile(Path.of("pufferfish-lamps-preview.png"));
+                TestImages.write(image, Path.of("pufferfish-lamps-preview.png"));
             }
         } catch (java.io.IOException exception) {
             throw new IllegalStateException("Could not save lamp preview", exception);
-        } finally {
-            view.popMatrix();
-            RenderSystem.applyModelViewMatrix();
-            RenderSystem.restoreProjectionMatrix();
-            target.destroyBuffers();
-            minecraft.getMainRenderTarget().bindWrite(true);
         }
     }
 }

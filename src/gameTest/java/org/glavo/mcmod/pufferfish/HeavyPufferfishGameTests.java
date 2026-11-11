@@ -13,7 +13,6 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -21,10 +20,10 @@ import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.inventory.SmithingMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SmithingRecipeInput;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.common.NeoForge;
@@ -33,12 +32,12 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.glavo.mcmod.pufferfish.entity.ThrownPufferfish;
+import org.glavo.mcmod.pufferfish.test.TestEffects;
 
 /// Verifies heavy fish upgrading, configurable combat, equipment penalties, and retained pufferfish behavior.
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class HeavyPufferfishGameTests {
-    /// Prevents construction of the test holder.
     private HeavyPufferfishGameTests() {}
 
     /// Verifies template-gated smithing, preserved components, ingredient consumption, and recipe synchronization.
@@ -114,7 +113,7 @@ public final class HeavyPufferfishGameTests {
                     "Heavy fish did not use configured damage and heavy attack speed");
             helper.assertTrue(Math.abs(player.getCurrentItemAttackStrengthDelay() - 20 / 0.6) < 0.001,
                     "Heavy fish did not have the expected attack recharge time");
-            var poison = PufferfishEffectsGameTests.poison(target);
+            var poison = TestEffects.poison(target);
             helper.assertTrue(poison != null && poison.getAmplifier() == 1 && poison.getDuration() == 120,
                     "Heavy fish lost pufferfish poison effects");
             helper.assertTrue(stack.getCount() == 1 && stack.getDamageValue() == 1, "Heavy fish attack did not spend exactly one durability");

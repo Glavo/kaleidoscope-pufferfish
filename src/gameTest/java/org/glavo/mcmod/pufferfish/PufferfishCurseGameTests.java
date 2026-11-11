@@ -9,14 +9,10 @@ import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.game.ClientboundLevelParticlesPacket;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.CommonListenerCookie;
-import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffectUtil;
 import net.minecraft.world.effect.MobEffects;
@@ -31,6 +27,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.living.MobEffectEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import org.glavo.mcmod.pufferfish.test.TestPlayers;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
@@ -232,17 +229,8 @@ public final class PufferfishCurseGameTests {
                 new GameProfile(UUID.randomUUID(), "curse-test"), ClientInformation.createDefault()) {
             @Override public boolean isInWaterOrRain() { return true; }
         };
-        player.connection = new ServerGamePacketListenerImpl(helper.getLevel().getServer(), new Connection(PacketFlow.SERVERBOUND),
-                player, CommonListenerCookie.createInitial(player.getGameProfile(), false)) {
-            @Override public void send(Packet<?> packet) { packets.add(packet); }
-        };
-        try {
-            var field = ServerPlayer.class.getDeclaredField("spawnInvulnerableTime");
-            field.setAccessible(true);
-            field.setInt(player, 0);
-        } catch (ReflectiveOperationException exception) {
-            throw new IllegalStateException("Could not remove spawn invulnerability", exception);
-        }
+        TestPlayers.connect(player, packets::add);
+        TestPlayers.allowDamage(player);
         player.setGameMode(GameType.SURVIVAL);
         player.setNoGravity(true);
         player.setPos(helper.absolutePos(new BlockPos(2, 82, 2)).getCenter());

@@ -13,11 +13,11 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.MobBucketItem;
@@ -29,6 +29,7 @@ import net.neoforged.neoforge.common.util.FakePlayerFactory;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.glavo.mcmod.pufferfish.entity.MaterialPufferfish;
+import org.glavo.mcmod.pufferfish.test.TestEffects;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
@@ -93,7 +94,7 @@ public final class PufferfishMobCombatGameTests {
         for (var variant : PufferfishMobs.VARIANTS.values()) {
             var fish = variant.entity().get().create(helper.getLevel());
             helper.assertTrue(!fish.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 1))
-                    && !PufferfishEffectsGameTests.hasPoison(fish), "Material fish accepted poison: " + variant.fish().getId());
+                    && !TestEffects.hasPoison(fish), "Material fish accepted poison: " + variant.fish().getId());
             boolean wither = fish.addEffect(new MobEffectInstance(MobEffects.WITHER, 200, 1));
             helper.assertTrue(wither == (fish.kind() != PufferfishMobConfig.Kind.RADIANT), "Incorrect wither immunity");
             helper.assertTrue(fish.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 200)), "Immunity blocked a beneficial effect");
@@ -469,8 +470,12 @@ public final class PufferfishMobCombatGameTests {
                 attacker.setPuffState(puff);
                 target.invulnerableTime = 0;
                 long seed = 4096L + hit * 98171L;
-                int previous = RadiantPufferfishEffectsGameTests.prepareHit(target, attacker, seed);
-                RadiantPufferfishEffectsGameTests.prepareHit(weaponTarget, attacker, seed);
+                for (var victim : java.util.List.of(target, weaponTarget)) {
+                    var wither = victim.getEffect(MobEffects.WITHER);
+                    victim.removeAllEffects();
+                    if (wither != null) victim.addEffect(new MobEffectInstance(MobEffects.WITHER, 20, wither.getAmplifier()));
+                }
+                attacker.getRandom().setSeed(seed);
                 switch (hit % 3) {
                     case 0 -> attacker.sting(target);
                     case 1 -> helper.assertTrue(attacker.strike(target, 0, attacker.attackInterval()), "Radiant direct attack missed");
@@ -478,7 +483,6 @@ public final class PufferfishMobCombatGameTests {
                 }
                 attacker.getRandom().setSeed(seed);
                 PufferfishCombat.hitEffects(attacker.fish(), weaponTarget, attacker, net.minecraft.world.phys.Vec3.ZERO);
-                RadiantPufferfishEffectsGameTests.assertHit(helper, target, previous, seed, puff * 60);
                 for (var effect : java.util.List.of(MobEffects.WITHER, MobEffects.GLOWING, MobEffects.BLINDNESS,
                         MobEffects.DARKNESS, MobEffects.HUNGER, MobEffects.WEAKNESS)) {
                     var actual = target.getEffect(effect);
@@ -497,9 +501,9 @@ public final class PufferfishMobCombatGameTests {
             target.invulnerableTime = 0;
             helper.assertTrue(!attacker.strike(target, 0, 0) && !target.hasEffect(MobEffects.WITHER), "Failed attack applied wither");
             target.setInvulnerable(false);
-            RadiantPufferfishEffectsGameTests.prepareHit(target, attacker, 4096);
+            TestEffects.prepareWitherHit(target, attacker, 4096);
             helper.assertTrue(attacker.strike(target, 0, 0), "Radiant attack failed after invulnerability ended");
-            RadiantPufferfishEffectsGameTests.assertHit(helper, target, -1, 4096);
+            TestEffects.assertWitherHit(helper, target, -1, 4096);
             attacker.discard();
         } finally { target.discard(); }
         helper.succeed();

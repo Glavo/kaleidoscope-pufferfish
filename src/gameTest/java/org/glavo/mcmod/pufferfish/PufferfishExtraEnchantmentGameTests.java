@@ -3,29 +3,20 @@
 
 package org.glavo.mcmod.pufferfish;
 
-import com.mojang.authlib.GameProfile;
+import static org.glavo.mcmod.pufferfish.test.TestItems.enchant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.network.Connection;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.PacketFlow;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.CommonListenerCookie;
-import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.LightningBolt;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.inventory.AnvilMenu;
@@ -33,8 +24,6 @@ import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
@@ -46,28 +35,17 @@ import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.glavo.mcmod.pufferfish.entity.PufferfishFlailHead;
 import org.glavo.mcmod.pufferfish.entity.ThrownPufferfish;
+import org.glavo.mcmod.pufferfish.test.TestItems;
+import org.glavo.mcmod.pufferfish.test.TestPlayers;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishExtraEnchantmentGameTests {
     /// Uses server-side enchantment damage and death drops, which mock Player omits.
     private static ServerPlayer serverPlayer(GameTestHelper helper) {
-        var player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(),
-                new GameProfile(UUID.randomUUID(), "enchantment-test-player"), ClientInformation.createDefault());
-        player.connection = new ServerGamePacketListenerImpl(helper.getLevel().getServer(), new Connection(PacketFlow.SERVERBOUND),
-                player, CommonListenerCookie.createInitial(player.getGameProfile(), false)) {
-            @Override
-            public void send(Packet<?> packet) {}
-        };
-        player.setGameMode(GameType.SURVIVAL);
+        var player = TestPlayers.serverPlayer(helper);
         player.setPos(Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(2, 2, 0))));
         return player;
-    }
-
-    private static ItemStack enchant(GameTestHelper helper, ItemStack stack, ResourceKey<Enchantment> key, int rank) {
-        var holder = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(key);
-        EnchantmentHelper.updateEnchantments(stack, entries -> entries.set(holder, rank));
-        return stack;
     }
 
     private static List<ItemStack> fish() {
@@ -279,12 +257,12 @@ public final class PufferfishExtraEnchantmentGameTests {
                             if (loyal) {
                                 helper.assertTrue(projectile.isReturning(), "Channeling prevented Loyalty return");
                                 for (int tick = 0; tick < 100 && !projectile.isRemoved(); tick++) projectile.tick();
-                                helper.assertTrue(projectile.isRemoved() && ItemStack.isSameItemSameComponents(owner.getInventory().getItem(0), PufferfishDurabilityGameTests.worn(stack)),
+                                helper.assertTrue(projectile.isRemoved() && ItemStack.isSameItemSameComponents(owner.getInventory().getItem(0), TestItems.worn(stack)),
                                         "Loyalty lost the fish or its enchantments");
                             }
                             var drops = level.getEntitiesOfClass(ItemEntity.class, target.getBoundingBox().inflate(4));
                             helper.assertTrue(loyal ? drops.isEmpty() : drops.size() == 1
-                                            && ItemStack.isSameItemSameComponents(drops.getFirst().getItem(), PufferfishDurabilityGameTests.worn(stack)),
+                                            && ItemStack.isSameItemSameComponents(drops.getFirst().getItem(), TestItems.worn(stack)),
                                     "Channeling changed immediate fish recovery");
                             drops.forEach(ItemEntity::discard);
                             target.discard();

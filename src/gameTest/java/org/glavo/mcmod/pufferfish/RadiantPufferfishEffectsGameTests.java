@@ -19,53 +19,13 @@ import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.glavo.mcmod.pufferfish.entity.ThrownPufferfish;
+import org.glavo.mcmod.pufferfish.test.TestEffects;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class RadiantPufferfishEffectsGameTests {
-    private static void assertGlowing(GameTestHelper helper, net.minecraft.world.entity.LivingEntity target) {
-        var glow = target.getEffect(MobEffects.GLOWING);
-        helper.assertTrue(glow != null && glow.getDuration() == 200 && glow.getAmplifier() == 0, "Radiant damage did not apply ten seconds of glowing");
-    }
-
     private static final java.util.List<net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect>> BONUS_EFFECTS =
             java.util.List.of(MobEffects.BLINDNESS, MobEffects.DARKNESS, MobEffects.HUNGER, MobEffects.WEAKNESS);
-
-    static int prepareHit(net.minecraft.world.entity.LivingEntity target, net.minecraft.world.entity.Entity source, long seed) {
-        var current = target.getEffect(MobEffects.WITHER);
-        int previous = current == null ? -1 : current.getAmplifier();
-        target.removeAllEffects();
-        if (previous >= 0) target.addEffect(new MobEffectInstance(MobEffects.WITHER, 20, previous));
-        source.getRandom().setSeed(seed);
-        return previous;
-    }
-
-    static void assertHit(GameTestHelper helper, net.minecraft.world.entity.LivingEntity target, int previous, long seed) {
-        assertHit(helper, target, previous, seed, 120);
-    }
-
-    static void assertHit(GameTestHelper helper, net.minecraft.world.entity.LivingEntity target, int previous, long seed, int duration) {
-        assertHit(helper, target, previous, seed, duration, false);
-    }
-
-    private static void assertHit(GameTestHelper helper, net.minecraft.world.entity.LivingEntity target, int previous, long seed, int duration, boolean guaranteedWither) {
-        var random = net.minecraft.util.RandomSource.create(seed);
-        int expected = previous;
-        if (previous < 2 && (guaranteedWither || random.nextFloat() < 0.6F)) expected++;
-        var wither = target.getEffect(MobEffects.WITHER);
-        helper.assertTrue(expected < 0 ? wither == null : wither != null
-                        && wither.getAmplifier() == expected && wither.getDuration() == duration,
-                "Radiant hit did not apply its wither chance or refresh duration: " + previous + ", seed=" + seed);
-        for (int i = 0; i < BONUS_EFFECTS.size(); i++) {
-            boolean triggered = previous >= 2 && random.nextFloat() < 0.05F;
-            var effect = target.getEffect(BONUS_EFFECTS.get(i));
-            helper.assertTrue(triggered ? effect != null && effect.getAmplifier() == 0 && effect.getDuration() == (i < 2 ? 100 : 200) : effect == null,
-                    "Capped radiant hit did not independently roll bonus effect " + i + ", seed=" + seed);
-        }
-        assertGlowing(helper, target);
-        helper.assertTrue(!PufferfishEffectsGameTests.hasPoison(target), "Radiant attack applied poison");
-    }
-
     @GameTest(template = "empty")
     public static void meleeEscalatesWitherAndProjectilesContinueIt(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
@@ -82,11 +42,11 @@ public final class RadiantPufferfishEffectsGameTests {
             target.invulnerableTime = 0;
             for (int tick = 0; tick < 25; tick++) player.tick();
             long seed = seeds.nextLong();
-            int previous = prepareHit(target, player, seed);
+            int previous = TestEffects.prepareWitherHit(target, player, seed);
             float health = target.getHealth();
             player.attack(target);
             helper.assertTrue(health - target.getHealth() == 8, "Radiant melee should deal eight base damage");
-            assertHit(helper, target, previous, seed);
+            TestEffects.assertWitherHit(helper, target, previous, seed);
         }
         target.removeAllEffects();
         target.addEffect(new MobEffectInstance(MobEffects.WITHER, 20, 1));
@@ -96,16 +56,16 @@ public final class RadiantPufferfishEffectsGameTests {
         projectile.setPos(target.getX() - 1, target.getY() + 0.5, target.getZ());
         projectile.setDeltaMovement(2, 0, 0);
         long seed = seeds.nextLong();
-        int previous = prepareHit(target, player, seed);
+        int previous = TestEffects.prepareWitherHit(target, player, seed);
         float health = target.getHealth();
         projectile.tick();
         helper.assertTrue(health - target.getHealth() == 8, "Radiant throws should deal eight base damage");
-        assertHit(helper, target, previous, seed, 120, true);
+        TestEffects.assertWitherHit(helper, target, previous, seed, 120, true);
         target.removeAllEffects();
         seed = seeds.nextLong();
-        previous = prepareHit(target, player, seed);
+        previous = TestEffects.prepareWitherHit(target, player, seed);
         PufferfishCombat.hitEffects(new ItemStack(PufferfishItems.RADIANT_FLAIL.get()), target, player, Vec3.ZERO);
-        assertHit(helper, target, previous, seed);
+        TestEffects.assertWitherHit(helper, target, previous, seed);
         target.removeAllEffects();
         PufferfishCombat.hitEffects(new ItemStack(PufferfishItems.NETHERITE.get()), target, player, Vec3.ZERO);
         helper.assertTrue(!target.hasEffect(MobEffects.GLOWING), "Non-radiant attacks applied glowing");
@@ -126,14 +86,14 @@ public final class RadiantPufferfishEffectsGameTests {
                 target.invulnerableTime = 0;
                 if (previous >= 0) target.addEffect(new MobEffectInstance(MobEffects.WITHER, 20, previous));
                 long seed = seeds.nextLong();
-                prepareHit(target, player, seed);
+                TestEffects.prepareWitherHit(target, player, seed);
                 var projectile = new ThrownPufferfish(helper.getLevel(), player);
                 projectile.setItem(new ItemStack(PufferfishItems.RADIANT.get()));
                 projectile.setPos(target.getX() - 1, target.getY() + 0.5, target.getZ());
                 projectile.setDeltaMovement(2, 0, 0);
                 projectile.tick();
                 helper.assertTrue(target.getHealth() == 992, "Radiant projectile missed its target");
-                assertHit(helper, target, previous, seed, 120, true);
+                TestEffects.assertWitherHit(helper, target, previous, seed, 120, true);
             }
         }
         target.removeAllEffects();
@@ -159,9 +119,9 @@ public final class RadiantPufferfishEffectsGameTests {
                     target.removeAllEffects();
                     if (previous >= 0) target.addEffect(new MobEffectInstance(MobEffects.WITHER, 20, previous));
                     long seed = seeds.nextLong();
-                    prepareHit(target, player, seed);
+                    TestEffects.prepareWitherHit(target, player, seed);
                     PufferfishCombat.hitEffects(new ItemStack(item), target, player, Vec3.ZERO);
-                    assertHit(helper, target, previous, seed);
+                    TestEffects.assertWitherHit(helper, target, previous, seed);
                     var wither = target.getEffect(MobEffects.WITHER);
                     if (wither != null && wither.getAmplifier() > previous) advanced++;
                 }
@@ -185,7 +145,7 @@ public final class RadiantPufferfishEffectsGameTests {
                 long seed = seeds.nextLong();
                 target.removeAllEffects();
                 target.addEffect(new MobEffectInstance(MobEffects.WITHER, 20, 2));
-                prepareHit(target, player, seed);
+                TestEffects.prepareWitherHit(target, player, seed);
                 var stack = new ItemStack(weapon);
                 PufferfishCombat.applyPassiveEffect(stack, target, player);
                 helper.assertTrue(BONUS_EFFECTS.stream().noneMatch(target::hasEffect), "Passive radiant effects rolled bonus debuffs");
@@ -200,7 +160,7 @@ public final class RadiantPufferfishEffectsGameTests {
                     projectile.setDeltaMovement(2, 0, 0);
                     projectile.tick();
                 }
-                assertHit(helper, target, 2, seed);
+                TestEffects.assertWitherHit(helper, target, 2, seed);
                 int mask = 0;
                 for (int i = 0; i < BONUS_EFFECTS.size(); i++) if (target.hasEffect(BONUS_EFFECTS.get(i))) mask |= 1 << i;
                 combinations.add(mask);
@@ -246,7 +206,7 @@ public final class RadiantPufferfishEffectsGameTests {
                 player.hurt(player.damageSources().mobAttack(attacker), 2);
                 if (attacker.getHealth() < 1000) {
                     reflected++;
-                    assertGlowing(helper, attacker);
+                    TestEffects.assertGlowing(helper, attacker);
                     var wither = attacker.getEffect(MobEffects.WITHER);
                     helper.assertTrue(wither != null && wither.getAmplifier() == 0 && wither.getDuration() == 120,
                             "Successful radiant thorns did not apply six seconds of Wither I: " + variant);
@@ -254,7 +214,7 @@ public final class RadiantPufferfishEffectsGameTests {
                     helper.assertTrue(!attacker.hasEffect(MobEffects.WITHER) && !attacker.hasEffect(MobEffects.GLOWING),
                             "Radiant effects triggered without thorns damage: " + variant);
                 }
-                helper.assertTrue(!PufferfishEffectsGameTests.hasPoison(attacker), "Radiant equipment applied poison");
+                helper.assertTrue(!TestEffects.hasPoison(attacker), "Radiant equipment applied poison");
             }
             helper.assertTrue(reflected > 0 && reflected < 64, "Radiant retaliation did not roll thorns: " + variant);
             attacker.removeAllEffects();
@@ -281,7 +241,7 @@ public final class RadiantPufferfishEffectsGameTests {
                 helper.assertTrue(attacker.getHealth() == 1000 && attacker.getAbsorptionAmount() == 3 - hit
                         && attacker.getEffect(MobEffects.WITHER) != null && attacker.getEffect(MobEffects.WITHER).getAmplifier() == 0,
                         "Absorbed radiant thorns failed to apply fixed Wither I");
-                assertGlowing(helper, attacker);
+                TestEffects.assertGlowing(helper, attacker);
             }
             attacker.setAbsorptionAmount(0);
         }
@@ -301,9 +261,9 @@ public final class RadiantPufferfishEffectsGameTests {
                 target.tickCount = tick;
                 target.invulnerableTime = 0;
                 NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(target));
-                assertGlowing(helper, target);
+                TestEffects.assertGlowing(helper, target);
                 helper.assertTrue(target.hasEffect(MobEffects.WITHER) && target.getEffect(MobEffects.WITHER).getAmplifier() == 0 && target.getEffect(MobEffects.WITHER).getDuration() == 120
-                        && !PufferfishEffectsGameTests.hasPoison(target), "Contact should apply fixed wither one");
+                        && !TestEffects.hasPoison(target), "Contact should apply fixed wither one");
             }
         }
         helper.succeed();

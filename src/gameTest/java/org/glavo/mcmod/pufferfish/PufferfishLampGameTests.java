@@ -13,7 +13,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.FallingBlockEntity;
@@ -34,6 +33,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import org.glavo.mcmod.pufferfish.test.TestEffects;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
@@ -168,7 +168,7 @@ public final class PufferfishLampGameTests {
             var entity = (PlacedPufferfishBlockEntity) level.getBlockEntity(pos);
             helper.assertTrue(ItemStack.matches(entity.fish(), fish) && level.getBlockState(pos) == state,
                     "Falling lamp lost its fish or orientation");
-            var poison = PufferfishEffectsGameTests.poison(target);
+            var poison = TestEffects.poison(target);
             helper.assertTrue(target.getHealth() < target.getMaxHealth() && poison != null && poison.getAmplifier() == 1,
                     "Falling lamp did not damage and poison its target");
             helper.succeed();
@@ -192,7 +192,7 @@ public final class PufferfishLampGameTests {
                 falling.causeFallDamage(distance, 1, level.damageSources().fall());
                 float damage = distance < 1 ? 0 : distance == 5 ? 8 : 40;
                 helper.assertTrue(target.getHealth() == 100 - damage, "Incorrect falling lamp damage or damage cap");
-                var poison = PufferfishEffectsGameTests.poison(target);
+                var poison = TestEffects.poison(target);
                 if (block instanceof HeavyPufferfishBlock && damage > 0) {
                     helper.assertTrue(poison != null && poison.getAmplifier() == 1 && poison.getDuration() == 120, "Incorrect impact poison");
                     var source = target.getLastDamageSource();
@@ -200,7 +200,7 @@ public final class PufferfishLampGameTests {
                             instanceof TranslatableContents message && message.getKey().equals("death.attack.pufferfish_please.falling_pufferfish"),
                             "Heavy fish or lamp used the anvil death message");
                 } else helper.assertTrue(poison == null, "Non-damaging fall or vanilla anvil applied poison");
-                helper.assertTrue(!PufferfishEffectsGameTests.hasPoison(immune), "Invulnerable target was poisoned");
+                helper.assertTrue(!TestEffects.hasPoison(immune), "Invulnerable target was poisoned");
                 target.discard();
                 immune.discard();
                 falling.discard();

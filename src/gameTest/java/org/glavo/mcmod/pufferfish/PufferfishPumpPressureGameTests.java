@@ -10,7 +10,6 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
@@ -22,6 +21,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import org.glavo.mcmod.pufferfish.test.TestEffects;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
@@ -182,8 +182,8 @@ public final class PufferfishPumpPressureGameTests {
                 helper.assertTrue(near.getHealth() < far.getHealth() && far.getHealth() < initial && initial - near.getHealth() <= 6,
                         "Burst damage did not fall off with distance: " + near.getHealth() + ", " + far.getHealth() + ", " + initial
                                 + "; positions: " + near.position() + ", " + far.position() + "; center: " + pump.getBlockPos().getCenter());
-                helper.assertTrue(PufferfishEffectsGameTests.hasPoison(near) && near.getDeltaMovement().lengthSqr() > 0, "Burst omitted poison or knockback");
-                helper.assertTrue(covered.getHealth() == initial && !PufferfishEffectsGameTests.hasPoison(covered), "Burst passed through solid cover");
+                helper.assertTrue(TestEffects.hasPoison(near) && near.getDeltaMovement().lengthSqr() > 0, "Burst omitted poison or knockback");
+                helper.assertTrue(covered.getHealth() == initial && !TestEffects.hasPoison(covered), "Burst passed through solid cover");
                 helper.assertTrue(fish.getHealth() == fishHealth && fish.getActiveEffects().isEmpty(), "Burst damaged or poisoned another pufferfish");
                 helper.assertTrue(cat.getHealth() == cat.getMaxHealth() && cat.getActiveEffects().isEmpty()
                         && cat.getDeltaMovement().equals(catMovement), "Burst damaged, poisoned or pushed a cat");

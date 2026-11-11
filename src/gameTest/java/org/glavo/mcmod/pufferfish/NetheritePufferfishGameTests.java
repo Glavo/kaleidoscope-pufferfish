@@ -14,15 +14,14 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.inventory.SmithingMenu;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SmithingRecipeInput;
 import net.minecraft.world.level.GameType;
@@ -33,6 +32,8 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.glavo.mcmod.pufferfish.entity.ThrownPufferfish;
+import org.glavo.mcmod.pufferfish.test.TestEffects;
+import org.glavo.mcmod.pufferfish.test.TestItems;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
@@ -117,8 +118,6 @@ public final class NetheritePufferfishGameTests {
         helper.succeed();
     }
 
-
-
     @GameTest(template = "empty")
     public static void netheriteHeadgearAddsAndRemovesArmor(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
@@ -160,9 +159,9 @@ public final class NetheritePufferfishGameTests {
                 wearer.invulnerableTime = 0;
                 attacker.setHealth(attacker.getMaxHealth());
                 attacker.invulnerableTime = 0;
-                PufferfishEffectsGameTests.clearPoison(attacker);
+                TestEffects.clearPoison(attacker);
                 wearer.hurt(wearer.damageSources().mobAttack(attacker), 1);
-                var poison = PufferfishEffectsGameTests.poison(attacker);
+                var poison = TestEffects.poison(attacker);
                 helper.assertTrue(attacker.getHealth() < attacker.getMaxHealth()
                         ? poison != null && poison.getDuration() == 120 && poison.getAmplifier() == tier : poison == null,
                         "Retaliation did not condition material poison on successful thorns");
@@ -200,11 +199,11 @@ public final class NetheritePufferfishGameTests {
         float health = target.getHealth();
         projectile.tick();
         helper.assertTrue(target.getHealth() == health - 6, "Netherite projectile did not deal exactly 6 base damage");
-        var poison = PufferfishEffectsGameTests.poison(target);
+        var poison = TestEffects.poison(target);
         helper.assertTrue(poison != null && poison.getDuration() == 120 && poison.getAmplifier() == 1, "Netherite projectile did not apply six seconds of Poison II");
         var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, target.getBoundingBox().inflate(3));
         helper.assertTrue(projectile.isRemoved() && drops.size() == 1 && drops.getFirst().getItem().getCount() == 1
-                && ItemStack.isSameItemSameComponents(drops.getFirst().getItem(), PufferfishDurabilityGameTests.worn(stack)), "Recovered projectile lost its netherite identity or name");
+                && ItemStack.isSameItemSameComponents(drops.getFirst().getItem(), TestItems.worn(stack)), "Recovered projectile lost its netherite identity or name");
         drops.forEach(ItemEntity::discard);
         target.discard();
         helper.succeed();

@@ -14,9 +14,9 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
-import org.glavo.mcmod.pufferfish.PufferfishCuttingGameTests;
 import org.glavo.mcmod.pufferfish.PufferfishBlocks;
 import org.glavo.mcmod.pufferfish.PufferfishItems;
+import org.glavo.mcmod.pufferfish.test.CuttingAssertions;
 import vectorwing.farmersdelight.common.block.entity.CuttingBoardBlockEntity;
 import vectorwing.farmersdelight.common.registry.ModBlocks;
 import vectorwing.farmersdelight.common.registry.ModItems;
@@ -24,7 +24,6 @@ import vectorwing.farmersdelight.common.registry.ModItems;
 /// Exercises Farmer's Delight's actual cutting and output-spawning behavior.
 @PrefixGameTestTemplate(false)
 public final class FarmersDelightCuttingGameTests {
-    /// Prevents construction of the test holder.
     private FarmersDelightCuttingGameTests() {}
 
     /// Verifies all skin colors, knife requirements, consumption, and empty-board behavior.
@@ -38,12 +37,12 @@ public final class FarmersDelightCuttingGameTests {
         var board = (CuttingBoardBlockEntity) level.getBlockEntity(pos);
         for (int index = -1; index < 16; index++) {
             var color = index < 0 ? null : DyeColor.byId(index);
-            helper.assertTrue(board.addItem(PufferfishCuttingGameTests.fish(color)).isEmpty(), "Board must accept the fish stack");
+            helper.assertTrue(board.addItem(CuttingAssertions.fish(color)).isEmpty(), "Board must accept the fish stack");
             helper.assertTrue(!board.processStoredItemUsingTool(new ItemStack(Items.STICK), player), "Stick cut a fish");
             for (int remaining = 1; remaining >= 0; remaining--) {
                 helper.assertTrue(board.processStoredItemUsingTool(knife, player)
                         && board.getStoredItem().getCount() == remaining, "Each cut must consume exactly one fish");
-                PufferfishCuttingGameTests.verifyDrops(helper, pos, PufferfishBlocks.skin(color));
+                CuttingAssertions.verifyDrops(helper, pos, PufferfishBlocks.skin(color));
             }
             helper.assertTrue(!board.processStoredItemUsingTool(knife, player), "Empty board produced repeated output");
         }
@@ -51,7 +50,7 @@ public final class FarmersDelightCuttingGameTests {
             board.addItem(new ItemStack(Items.PUFFERFISH));
             var kitchenKnife = new ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.parse("kaleidoscope_cookery:iron_kitchen_knife")));
             helper.assertTrue(board.processStoredItemUsingTool(kitchenKnife, player), "Cookery knife could not cut on Farmer's Delight board");
-            PufferfishCuttingGameTests.verifyDrops(helper, pos, PufferfishBlocks.skin(null));
+            CuttingAssertions.verifyDrops(helper, pos, PufferfishBlocks.skin(null));
         }
         for (var entry : java.util.Map.of(PufferfishItems.GOLDEN.get(), PufferfishBlocks.GOLDEN_SKIN.get(),
                 PufferfishItems.NETHERITE.get(), PufferfishBlocks.NETHERITE_SKIN.get(),
@@ -65,7 +64,7 @@ public final class FarmersDelightCuttingGameTests {
             for (int remaining = 1; remaining >= 0; remaining--) {
                 helper.assertTrue(board.processStoredItemUsingTool(knife, player) && board.getStoredItem().getCount() == remaining,
                         "Special cutting did not consume exactly one fish");
-                PufferfishCuttingGameTests.verifyDrops(helper, pos, entry.getValue());
+                CuttingAssertions.verifyDrops(helper, pos, entry.getValue());
             }
             helper.assertTrue(!board.processStoredItemUsingTool(knife, player), "Special fish produced repeated output");
         }

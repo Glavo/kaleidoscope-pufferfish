@@ -3,17 +3,11 @@
 
 package org.glavo.mcmod.pufferfish;
 
-import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.platform.Lighting;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.VertexSorting;
-import com.mojang.authlib.GameProfile;
-import java.nio.file.Path;
 import java.util.UUID;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.Screenshot;
 import net.minecraft.client.player.RemotePlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -22,13 +16,13 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
-import org.joml.Matrix4f;
+import org.glavo.mcmod.pufferfish.test.ClientTestLevel;
 
 public final class PufferfishShieldClientTest {
     private static final int LIGHT = 15728880;
 
     public static void verify(Minecraft minecraft) {
-        var level = PufferfishHeadgearClientTest.level(minecraft);
+        var level = ClientTestLevel.level(minecraft);
         var player = new RemotePlayer(level, new GameProfile(UUID.randomUUID(), "shield-render-test")) {
             @Override
             public boolean isUsingItem() { return !getUseItem().isEmpty(); }
@@ -52,45 +46,6 @@ public final class PufferfishShieldClientTest {
                 IClientItemExtensions.of(stack).getCustomRenderer().renderByItem(stack, context, pose, capture, LIGHT, OverlayTexture.NO_OVERLAY);
                 if (capture.vertices != (PufferfishItems.isRadiant(stack) ? 180 : 52) || !pose.clear()) throw new IllegalStateException("Shield frame, grip, skin or radiant trails did not render");
             }
-        }
-        preview(minecraft);
-    }
-
-    private static void preview(Minecraft minecraft) {
-        var target = new TextureTarget(720, 480, true, Minecraft.ON_OSX);
-        target.setClearColor(0.55F, 0.55F, 0.55F, 1);
-        target.clear(Minecraft.ON_OSX);
-        target.bindWrite(true);
-        RenderSystem.backupProjectionMatrix();
-        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 720, 480, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
-        var view = RenderSystem.getModelViewStack();
-        view.pushMatrix().identity();
-        RenderSystem.applyModelViewMatrix();
-        Lighting.setupForFlatItems();
-        RenderSystem.setShaderColor(1, 1, 1, 1);
-        try {
-            int index = 0;
-            for (var item : PufferfishShields.VARIANTS.values()) {
-                var pose = new PoseStack();
-                pose.translate(60 + index % 6 * 120, 55 + index / 6 * 120, 0);
-                pose.scale(72, -72, 72);
-                var buffers = minecraft.renderBuffers().bufferSource();
-                minecraft.getItemRenderer().renderStatic(new ItemStack(item.get()), ItemDisplayContext.GUI, LIGHT,
-                        OverlayTexture.NO_OVERLAY, pose, buffers, null, 0);
-                buffers.endBatch();
-                index++;
-            }
-            try (var image = Screenshot.takeScreenshot(target)) {
-                image.writeToFile(Path.of("pufferfish-skin-shields-preview.png"));
-            }
-        } catch (java.io.IOException exception) {
-            throw new IllegalStateException("Could not save shield preview", exception);
-        } finally {
-            view.popMatrix();
-            RenderSystem.applyModelViewMatrix();
-            RenderSystem.restoreProjectionMatrix();
-            target.destroyBuffers();
-            minecraft.getMainRenderTarget().bindWrite(true);
         }
     }
 

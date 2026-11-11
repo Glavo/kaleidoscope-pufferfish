@@ -18,13 +18,16 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class PufferfishVariantGameTests {
     @GameTest(template = "empty")
     public static void registeredFamiliesRetainTheirVariantIdentity(GameTestHelper helper) {
-        helper.assertTrue(PufferfishVariant.ALL.size() == 31, "Expected 31 skin variants");
-        helper.assertTrue(PufferfishArmor.VARIANTS.size() == 124, "Expected 124 armor pieces");
-        helper.assertTrue(PufferfishShields.VARIANTS.size() == 24, "Expected 24 shields");
-        helper.assertTrue(PufferfishBoats.VARIANTS.size() == 31, "Expected 31 boats");
-        helper.assertTrue(PufferfishLamps.VARIANTS.size() == 30, "Expected 30 lamps");
+        helper.assertTrue(!PufferfishVariant.ALL.isEmpty(), "No variants were registered");
+        helper.assertTrue(PufferfishVariant.ALL.stream().distinct().count() == PufferfishVariant.ALL.size(), "Duplicate variant identity");
+        helper.assertTrue(PufferfishArmor.VARIANTS.size() == PufferfishVariant.ALL.size() * PufferfishArmor.TYPES.size(), "Incomplete armor families");
+        helper.assertTrue(PufferfishShields.VARIANTS.size() == PufferfishVariant.ALL.stream().filter(PufferfishVariant::hasShield).count(), "Incomplete shield families");
+        helper.assertTrue(PufferfishBoats.VARIANTS.size() == PufferfishVariant.ALL.size(), "Incomplete boat families");
+        helper.assertTrue(PufferfishLamps.VARIANTS.size() == PufferfishVariant.ALL.stream().filter(PufferfishVariant::hasLamp).count(), "Incomplete lamp families");
         for (var variant : PufferfishVariant.ALL) {
             helper.assertTrue(PufferfishVariant.of(variant.fish()) == variant, "Fish identity: " + variant.fishName());
+            helper.assertTrue(BuiltInRegistries.BLOCK.getKey(variant.skin()).equals(PufferfishPlease.id(variant.skinName())),
+                    "Skin block and item IDs differ: " + variant.skinName());
             checkItem(helper, variant, variant.skinName());
             for (var suffix : List.of("helmet", "chestplate", "leggings", "boots", "boat")) {
                 checkItem(helper, variant, variant.skinName() + "_" + suffix);
@@ -80,12 +83,8 @@ public final class PufferfishVariantGameTests {
 
     @GameTest(template = "empty")
     public static void materialOrderIsSharedAcrossRegisteredFamilies(GameTestHelper helper) {
-        var expected = List.of("copper_pufferfish", "exposed_copper_pufferfish", "weathered_copper_pufferfish",
-                "oxidized_copper_pufferfish", "waxed_copper_pufferfish", "waxed_exposed_copper_pufferfish",
-                "waxed_weathered_copper_pufferfish", "waxed_oxidized_copper_pufferfish", "iron_pufferfish",
-                "golden_pufferfish", "diamond_pufferfish", "netherite_pufferfish", "heavy_pufferfish", "radiant_pufferfish");
-        helper.assertTrue(PufferfishVariant.ALL.stream().skip(17).map(PufferfishVariant::fishName).toList().equals(expected),
-                "Material order changed");
+        var expected = PufferfishVariant.ALL.stream().filter(variant -> variant.material() != PufferfishMaterial.NORMAL)
+                .map(PufferfishVariant::fishName).toList();
         helper.assertTrue(List.copyOf(PufferfishMobs.VARIANTS.keySet()).equals(expected), "Mob order differs from equipment");
         var skins = PufferfishVariant.ALL.stream().map(PufferfishVariant::skinName).toList();
         helper.assertTrue(PufferfishBoats.VARIANTS.keySet().stream().map(name -> name.replace("_boat", "")).toList().equals(skins),

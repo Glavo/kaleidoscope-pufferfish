@@ -17,7 +17,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishDishGameTests {
-    /// Prevents construction of the test holder.
     private PufferfishDishGameTests() {}
 
     @GameTest(template = "empty")

@@ -13,7 +13,6 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -25,18 +24,19 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.ModConfigSpec;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import org.glavo.mcmod.pufferfish.test.TestEffects;
+import org.glavo.mcmod.pufferfish.test.TestItems;
 
 /// Exercises pufferfish smash damage through player attacks and the native successful-hit hooks.
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishSmashGameTests {
-    /// Prevents construction of the test holder.
     private PufferfishSmashGameTests() {}
 
     /// Creates a fully charged player holding the supplied stack and falling the specified distance.
@@ -79,11 +79,11 @@ public final class PufferfishSmashGameTests {
                 float expected = (PufferfishItems.isNetherite(stack) ? 6 : 1) * (distance > 0 ? 1.5F : 1);
                 helper.assertTrue(Math.abs(1000 - target.getHealth() - expected) < 0.001F, "Ordinary fish gained falling damage at distance " + distance);
                 helper.assertTrue(player.fallDistance == distance && !PufferfishCombat.canSmash(player, stack), "Fall distance reset without a successful smash");
-                helper.assertTrue(ItemStack.matches(player.getMainHandItem(), PufferfishDurabilityGameTests.worn(stack)),
+                helper.assertTrue(ItemStack.matches(player.getMainHandItem(), TestItems.worn(stack)),
                         "Attack changed fish components unexpectedly: " + stack + ", distance=" + distance);
                 helper.assertTrue(player.getInventory().countItem(stack.getItem()) == 4,
                         "Attack changed the total fish count: " + player.getInventory().countItem(stack.getItem()));
-                helper.assertTrue(PufferfishEffectsGameTests.hasPoison(target), "Seeded melee hit failed to apply poison");
+                helper.assertTrue(TestEffects.hasPoison(target), "Seeded melee hit failed to apply poison");
                 target.discard();
             }
         }
@@ -197,7 +197,7 @@ public final class PufferfishSmashGameTests {
         try {
             player.attack(target);
             helper.assertTrue(target.getHealth() == 1000 && player.fallDistance == 6
-                    && !PufferfishEffectsGameTests.hasPoison(target), "Canceled hit granted smash effects");
+                    && !TestEffects.hasPoison(target), "Canceled hit granted smash effects");
         } finally {
             NeoForge.EVENT_BUS.unregister(cancel);
             target.discard();

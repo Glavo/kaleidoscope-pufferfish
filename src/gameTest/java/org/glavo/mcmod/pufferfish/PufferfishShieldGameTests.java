@@ -23,6 +23,7 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import org.glavo.mcmod.pufferfish.test.TestEffects;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
@@ -51,7 +52,7 @@ public final class PufferfishShieldGameTests {
                 player.invulnerableTime = 0;
                 shield.setDamageValue(0);
                 player.hurt(player.damageSources().mobAttack(attacker), 6);
-                var poison = PufferfishEffectsGameTests.effect(attacker, PufferfishItems.isRadiant(shield) ? net.minecraft.world.effect.MobEffects.WITHER : net.minecraft.world.effect.MobEffects.POISON);
+                var poison = TestEffects.effect(attacker, PufferfishItems.isRadiant(shield) ? net.minecraft.world.effect.MobEffects.WITHER : net.minecraft.world.effect.MobEffects.POISON);
                 String name = item.getId().getPath();
                 int duration = 120;
                 int amplifier = name.startsWith("oxidized_copper_") || name.startsWith("weathered_copper_")
@@ -99,7 +100,7 @@ public final class PufferfishShieldGameTests {
                 net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.HIGH, intercept);
                 try {
                     player.hurt(player.damageSources().mobAttack(attacker), 6);
-                    helper.assertTrue(attacker.getHealth() == 20 && !PufferfishEffectsGameTests.hasPoison(attacker)
+                    helper.assertTrue(attacker.getHealth() == 20 && !TestEffects.hasPoison(attacker)
                                 && !attacker.hasEffect(net.minecraft.world.effect.MobEffects.WITHER)
                                 && !attacker.hasEffect(net.minecraft.world.effect.MobEffects.GLOWING),
                             "Invalid shield block retaliated: scenario=" + scenario);

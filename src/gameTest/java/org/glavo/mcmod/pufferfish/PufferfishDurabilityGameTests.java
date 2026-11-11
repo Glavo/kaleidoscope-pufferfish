@@ -3,21 +3,14 @@
 
 package org.glavo.mcmod.pufferfish;
 
-import com.mojang.authlib.GameProfile;
+import static org.glavo.mcmod.pufferfish.test.TestItems.worn;
 import java.util.ArrayList;
-import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.network.Connection;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.PacketFlow;
-import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.CommonListenerCookie;
-import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -31,35 +24,21 @@ import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import org.glavo.mcmod.pufferfish.test.TestItems;
+import org.glavo.mcmod.pufferfish.test.TestPlayers;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishDurabilityGameTests {
-    public static ItemStack worn(ItemStack original) {
-        var result = original.copyWithCount(1);
-        result.set(DataComponents.MAX_STACK_SIZE, 1);
-        result.set(DataComponents.MAX_DAMAGE, PufferfishDurability.maximum(original));
-        result.set(DataComponents.DAMAGE, original.getOrDefault(DataComponents.DAMAGE, 0) + 1);
-        return result;
-    }
 
     private static ArrayList<ItemStack> variants() {
-        var stacks = new ArrayList<ItemStack>();
-        stacks.add(new ItemStack(Items.PUFFERFISH));
-        for (var color : DyeColor.values()) stacks.add(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
-        PufferfishMobs.VARIANTS.values().forEach(variant -> stacks.add(variant.fish().toStack()));
+        var stacks = new ArrayList<>(TestItems.fishVariants());
         PufferfishItems.FLAIL_VARIANTS.forEach(item -> stacks.add(item.toStack()));
         return stacks;
     }
 
     private static ServerPlayer player(GameTestHelper helper) {
-        var player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(),
-                new GameProfile(UUID.randomUUID(), "durability-test"), ClientInformation.createDefault());
-        player.connection = new ServerGamePacketListenerImpl(helper.getLevel().getServer(), new Connection(PacketFlow.SERVERBOUND),
-                player, CommonListenerCookie.createInitial(player.getGameProfile(), false)) {
-            @Override public void send(Packet<?> packet) {}
-        };
-        player.setGameMode(GameType.SURVIVAL);
+        var player = TestPlayers.serverPlayer(helper);
         player.setNoGravity(true);
         player.setPos(helper.absolutePos(new BlockPos(2, 2, 2)).getCenter());
         return player;

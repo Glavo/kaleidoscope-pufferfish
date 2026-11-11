@@ -3,20 +3,20 @@
 
 package org.glavo.mcmod.pufferfish.compat.cooking;
 
+import com.github.ysbbbbbb.kaleidoscopecookery.api.blockentity.IStockpot;
 import com.github.ysbbbbbb.kaleidoscopecookery.blockentity.kitchen.ChoppingBoardBlockEntity;
 import com.github.ysbbbbbb.kaleidoscopecookery.blockentity.kitchen.StockpotBlockEntity;
-import com.github.ysbbbbbb.kaleidoscopecookery.api.blockentity.IStockpot;
+import com.github.ysbbbbbb.kaleidoscopecookery.crafting.container.StockpotInput;
+import com.github.ysbbbbbb.kaleidoscopecookery.crafting.recipe.FlexStockpotRecipe;
+import com.github.ysbbbbbb.kaleidoscopecookery.crafting.recipe.StockpotRecipe;
 import com.github.ysbbbbbb.kaleidoscopecookery.init.ModBlocks;
 import com.github.ysbbbbbb.kaleidoscopecookery.init.ModItems;
-import com.github.ysbbbbbb.kaleidoscopecookery.crafting.container.StockpotInput;
-import com.github.ysbbbbbb.kaleidoscopecookery.crafting.recipe.StockpotRecipe;
-import com.github.ysbbbbbb.kaleidoscopecookery.crafting.recipe.FlexStockpotRecipe;
 import com.github.ysbbbbbb.kaleidoscopecookery.init.ModRecipes;
-import net.minecraft.core.NonNullList;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
@@ -25,15 +25,14 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
-import org.glavo.mcmod.pufferfish.PufferfishCuttingGameTests;
-import org.glavo.mcmod.pufferfish.PufferfishPlease;
 import org.glavo.mcmod.pufferfish.PufferfishBlocks;
 import org.glavo.mcmod.pufferfish.PufferfishItems;
+import org.glavo.mcmod.pufferfish.PufferfishPlease;
+import org.glavo.mcmod.pufferfish.test.CuttingAssertions;
 
 /// Exercises Cookery's real board, including saved progress and input cancellation.
 @PrefixGameTestTemplate(false)
 public final class CookeryCuttingGameTests {
-    /// Prevents construction of the test holder.
     private CookeryCuttingGameTests() {}
 
     @GameTest(template = "empty", templateNamespace = "pufferfish_please", timeoutTicks = 380)
@@ -82,7 +81,7 @@ public final class CookeryCuttingGameTests {
         var sashimiFlex = (FlexStockpotRecipe) manager.byKey(PufferfishPlease.id("compat/cookery/pufferfish_soup_from_sashimi_flexible"))
                 .orElseThrow().value();
         for (int index = -1; index < 16; index++) {
-            var whole = PufferfishCuttingGameTests.fish(index < 0 ? null : DyeColor.byId(index)).copyWithCount(1);
+            var whole = CuttingAssertions.fish(index < 0 ? null : DyeColor.byId(index)).copyWithCount(1);
             var sashimi = new ItemStack(PufferfishItems.SASHIMI.get());
             for (int mode = 0; mode < 3; mode++) {
                 var stacks = NonNullList.withSize(StockpotRecipe.RECIPES_SIZE, ItemStack.EMPTY);
@@ -120,7 +119,7 @@ public final class CookeryCuttingGameTests {
         var board = (ChoppingBoardBlockEntity) level.getBlockEntity(pos);
         for (int index = -1; index < 16; index++) {
             var color = index < 0 ? null : DyeColor.byId(index);
-            var fish = PufferfishCuttingGameTests.fish(color);
+            var fish = CuttingAssertions.fish(color);
             helper.assertTrue(board.onPutItem(level, player, fish) && fish.getCount() == 1, "Board must consume one fish");
             helper.assertTrue(!board.onCutItem(level, player, new ItemStack(Items.STICK)), "Stick cut a fish");
             helper.assertTrue(board.onCutItem(level, player, knife), "First knife cut failed");
@@ -134,7 +133,7 @@ public final class CookeryCuttingGameTests {
             for (int cut = 1; cut < 3; cut++) helper.assertTrue(board.onCutItem(level, player, knife), "Knife cut failed");
             helper.assertTrue(level.getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(2)).isEmpty(), "Products dropped before collection");
             helper.assertTrue(board.onCutItem(level, player, knife), "Output collection failed");
-            PufferfishCuttingGameTests.verifyDrops(helper, pos, PufferfishBlocks.skin(color));
+            CuttingAssertions.verifyDrops(helper, pos, PufferfishBlocks.skin(color));
             helper.assertTrue(!board.onCutItem(level, player, knife), "Empty board produced repeated output");
         }
         for (var entry : java.util.Map.of(PufferfishItems.GOLDEN.get(), PufferfishBlocks.GOLDEN_SKIN.get(),
@@ -157,13 +156,13 @@ public final class CookeryCuttingGameTests {
             for (int cut = 1; cut < 3; cut++) helper.assertTrue(board.onCutItem(level, player, knife), "Special fish cutting failed");
             helper.assertTrue(level.getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(2)).isEmpty(), "Special products dropped before collection");
             helper.assertTrue(board.onCutItem(level, player, knife), "Special output collection failed");
-            PufferfishCuttingGameTests.verifyDrops(helper, pos, entry.getValue());
+            CuttingAssertions.verifyDrops(helper, pos, entry.getValue());
             helper.assertTrue(!board.onCutItem(level, player, knife), "Special fish produced repeated output");
         }
         for (var item : new net.minecraft.world.item.Item[] {PufferfishItems.SASHIMI.get(), PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get()}) {
             helper.assertTrue(!board.onPutItem(level, player, new ItemStack(item)), "Special fish was accepted for cutting");
         }
-        var fish = PufferfishCuttingGameTests.fish(DyeColor.RED);
+        var fish = CuttingAssertions.fish(DyeColor.RED);
         helper.assertTrue(board.onPutItem(level, player, fish) && board.onTakeOut(level, player), "Uncut fish could not be retrieved");
         helper.assertTrue(!board.onCutItem(level, player, knife)
                 && level.getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(2)).isEmpty(), "Cancelled input produced cutting outputs");

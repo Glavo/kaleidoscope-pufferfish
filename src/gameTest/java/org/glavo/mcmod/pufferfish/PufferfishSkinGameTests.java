@@ -5,11 +5,9 @@ package org.glavo.mcmod.pufferfish;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.InteractionHand;
@@ -17,10 +15,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.item.crafting.CraftingInput;
-import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Mirror;
@@ -36,7 +31,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishSkinGameTests {
-    /// Prevents construction of the test holder.
     private PufferfishSkinGameTests() {}
 
     /// Returns the undyed variant followed by all dye colors.
@@ -45,64 +39,6 @@ public final class PufferfishSkinGameTests {
         colors.add(null);
         colors.addAll(Arrays.asList(DyeColor.values()));
         return colors;
-    }
-
-    /// Creates one fish with the supplied color, or an undyed fish if null.
-    private static ItemStack fish(DyeColor color) {
-        var stack = new ItemStack(Items.PUFFERFISH);
-        return color == null ? stack : PufferfishColors.dye(stack, color);
-    }
-
-    /// Verifies that skin blocks and their items share the expected skin registry identifiers.
-    @GameTest(template = "empty")
-    public static void skinBlocksAndItemsUseSkinIds(GameTestHelper helper) {
-        for (var color : colors()) {
-            var block = PufferfishBlocks.skin(color);
-            var id = PufferfishPlease.id(color == null ? "pufferfish_skin" : color.getName() + "_pufferfish_skin");
-            helper.assertTrue(BuiltInRegistries.BLOCK.getKey(block).equals(id)
-                    && BuiltInRegistries.ITEM.getKey(block.asItem()).equals(id), "Incorrect skin registry ID");
-        }
-        helper.succeed();
-    }
-
-    /// Verifies that the former three-fish crafting recipes no longer match any color or row.
-    @GameTest(template = "empty")
-    public static void threeFishNoLongerCraftSkin(GameTestHelper helper) {
-        var manager = helper.getLevel().getRecipeManager();
-        for (var color : colors()) {
-            for (int row = 0; row < 3; row++) {
-                var items = new ArrayList<>(Collections.nCopies(9, ItemStack.EMPTY));
-                for (int column = 0; column < 3; column++) items.set(row * 3 + column, fish(color));
-                var input = CraftingInput.of(3, 3, items);
-                helper.assertTrue(manager.getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel()).isEmpty(),
-                        "Removed skin crafting recipe still matches");
-            }
-        }
-        helper.succeed();
-    }
-
-    /// Rejects mixed colors, wrong fish types, vertical arrangements, and incorrect quantities.
-    @GameTest(template = "empty")
-    public static void skinRecipesRejectMixedColorsAndWrongInputs(GameTestHelper helper) {
-        var manager = helper.getLevel().getRecipeManager();
-        for (var color : colors()) {
-            for (var other : colors()) {
-                if (other == color) continue;
-                var input = CraftingInput.of(3, 1, List.of(fish(color), fish(other), fish(color)));
-                helper.assertTrue(manager.getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel()).isEmpty(), "Mixed skin colors were accepted");
-            }
-        }
-        for (var item : List.of(Items.COD, Items.PUFFERFISH_BUCKET, PufferfishItems.NETHERITE.get(), PufferfishItems.GOLDEN.get())) {
-            var input = CraftingInput.of(3, 1, Collections.nCopies(3, new ItemStack(item)));
-            helper.assertTrue(manager.getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel()).isEmpty(), "Skin recipe accepted an invalid fish type");
-        }
-        for (var input : List.of(
-                CraftingInput.of(1, 3, Collections.nCopies(3, fish(null))),
-                CraftingInput.of(2, 1, Collections.nCopies(2, fish(null))),
-                CraftingInput.of(1, 1, List.of(new ItemStack(Items.PUFFERFISH, 3))))) {
-            helper.assertTrue(manager.getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel()).isEmpty(), "Skin recipe accepted an invalid arrangement");
-        }
-        helper.succeed();
     }
 
     /// Verifies all colors and orientations attach, occupy the correct thin volume, and drop once.

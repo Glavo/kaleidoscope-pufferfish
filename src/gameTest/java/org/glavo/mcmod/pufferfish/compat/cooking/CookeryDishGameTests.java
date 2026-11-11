@@ -28,14 +28,13 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
-import org.glavo.mcmod.pufferfish.PufferfishPlease;
-import org.glavo.mcmod.pufferfish.PufferfishCuttingGameTests;
 import org.glavo.mcmod.pufferfish.PufferfishItems;
+import org.glavo.mcmod.pufferfish.PufferfishPlease;
+import org.glavo.mcmod.pufferfish.test.CuttingAssertions;
 
 /// Exercises stir-frying, rice soup, and Cookery's rice bowl crafting and container behavior.
 @PrefixGameTestTemplate(false)
 public final class CookeryDishGameTests {
-    /// Prevents construction of the test holder.
     private CookeryDishGameTests() {}
 
     @GameTest(template = "empty", templateNamespace = "pufferfish_please")
@@ -143,7 +142,7 @@ public final class CookeryDishGameTests {
                         int index = 0;
                         if (!bucket) {
                             for (int i = 0; i < 2; i++) stacks.set(index++, i < sliced ? new ItemStack(PufferfishItems.SASHIMI.get())
-                                    : PufferfishCuttingGameTests.fish(color < 0 ? null : DyeColor.byId(color)).copyWithCount(1));
+                                    : CuttingAssertions.fish(color < 0 ? null : DyeColor.byId(color)).copyWithCount(1));
                         }
                         for (int i = 0; i < 3; i++) stacks.set(index++, new ItemStack(ModItems.LETTUCE.get()));
                         stacks.set(index, new ItemStack(BuiltInRegistries.ITEM.get(location)));
@@ -181,7 +180,7 @@ public final class CookeryDishGameTests {
             for (int sliced = 0; sliced <= 4; sliced++) {
                 var inputs = NonNullList.withSize(9, ItemStack.EMPTY);
                 for (int i = 0; i < 4; i++) inputs.set(i, i < sliced ? new ItemStack(PufferfishItems.SASHIMI.get())
-                        : PufferfishCuttingGameTests.fish(color < 0 ? null : DyeColor.byId(color)).copyWithCount(1));
+                        : CuttingAssertions.fish(color < 0 ? null : DyeColor.byId(color)).copyWithCount(1));
                 var input = new SimpleInput(inputs);
                 var selected = level.getRecipeManager().getRecipeFor(ModRecipes.POT_RECIPE, input, level).orElseThrow();
                 helper.assertTrue(selected.value().assemble(input, level.registryAccess()).is(PufferfishItems.BRAISED.get()), "Mixed fish produced the wrong dish");
@@ -202,7 +201,7 @@ public final class CookeryDishGameTests {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         var oil = new ItemStack(ModItems.OIL.get());
         helper.assertTrue(pot.onPlaceOil(level, player, oil) && oil.isEmpty(), "Pot did not consume cooking oil");
-        var whole = PufferfishCuttingGameTests.fish(DyeColor.BLUE);
+        var whole = CuttingAssertions.fish(DyeColor.BLUE);
         var sliced = new ItemStack(PufferfishItems.SASHIMI.get(), 2);
         for (var stack : List.of(whole, whole, sliced, sliced)) helper.assertTrue(pot.addIngredient(level, player, stack), "Pot rejected fish ingredients");
         helper.assertTrue(whole.isEmpty() && sliced.isEmpty(), "Pot did not consume four fish");

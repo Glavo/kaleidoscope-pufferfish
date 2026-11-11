@@ -31,10 +31,10 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
-import org.glavo.mcmod.pufferfish.PufferfishPlease;
-import org.glavo.mcmod.pufferfish.PufferfishCuttingGameTests;
 import org.glavo.mcmod.pufferfish.PufferfishItems;
+import org.glavo.mcmod.pufferfish.PufferfishPlease;
 import org.glavo.mcmod.pufferfish.compat.cookery.CookeryFoodIntegration;
+import org.glavo.mcmod.pufferfish.test.CuttingAssertions;
 
 @PrefixGameTestTemplate(false)
 public final class CookeryPieGameTests {
@@ -47,7 +47,7 @@ public final class CookeryPieGameTests {
         for (int color = -1; color < 16; color++) {
             var items = NonNullList.withSize(9, ItemStack.EMPTY);
             items.set(0, new ItemStack(Items.PUMPKIN_PIE));
-            for (int i = 1; i <= 5; i++) items.set(i, PufferfishCuttingGameTests.fish(color < 0 ? null : DyeColor.byId(color)).copyWithCount(1));
+            for (int i = 1; i <= 5; i++) items.set(i, CuttingAssertions.fish(color < 0 ? null : DyeColor.byId(color)).copyWithCount(1));
             var input = new SimpleInput(items);
             var recipe = manager.getRecipeFor(ModRecipes.POT_RECIPE, input, level).orElseThrow();
             helper.assertTrue(recipe.id().equals(PufferfishPlease.id("compat/cookery/pufferfish_stargazy_pie"))
@@ -84,7 +84,7 @@ public final class CookeryPieGameTests {
         helper.assertTrue(pot.onPlaceOil(level, player, new ItemStack(ModItems.OIL.get())), "Pot rejected oil");
         helper.assertTrue(pot.addIngredient(level, player, new ItemStack(Items.PUMPKIN_PIE)), "Pot rejected pumpkin pie");
         for (int i = 0; i < 5; i++) {
-            var fish = PufferfishCuttingGameTests.fish(DyeColor.byId(i)).copyWithCount(1);
+            var fish = CuttingAssertions.fish(DyeColor.byId(i)).copyWithCount(1);
             helper.assertTrue(pot.addIngredient(level, player, fish) && fish.isEmpty(), "Pot did not consume a colored fish");
         }
         for (int i = 0; i < 3; i++) pot.onShovelHit(level, player, new ItemStack(ModItems.KITCHEN_SHOVEL.get()));

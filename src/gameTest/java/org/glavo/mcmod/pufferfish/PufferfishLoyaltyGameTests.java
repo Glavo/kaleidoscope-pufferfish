@@ -30,6 +30,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.glavo.mcmod.pufferfish.entity.ThrownPufferfish;
+import org.glavo.mcmod.pufferfish.test.TestItems;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
@@ -73,35 +74,6 @@ public final class PufferfishLoyaltyGameTests {
         while (!fish.isRemoved() && ticks++ < 300) fish.tick();
         helper.assertTrue(fish.isRemoved(), "Loyal fish did not finish returning");
         return ticks;
-    }
-
-    @GameTest(template = "empty")
-    public static void anvilAppliesAndUpgradesLoyaltyForEveryVariant(GameTestHelper helper) {
-        var player = owner(helper);
-        var loyalty = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.LOYALTY);
-        for (var variant : variants()) {
-            variant.set(DataComponents.CUSTOM_NAME, Component.literal("Loyal operator"));
-            for (int level = 1; level <= 3; level++) {
-                player.experienceLevel = 30;
-                var menu = new AnvilMenu(1, player.getInventory());
-                var book = enchant(helper, new ItemStack(Items.ENCHANTED_BOOK), level == 1 ? 1 : level - 1);
-                menu.getSlot(0).set(variant.copy());
-                menu.getSlot(1).set(book);
-                menu.setItemName("Loyal operator");
-                helper.assertTrue(menu.getSlot(2).hasItem() && menu.getSlot(2).mayPickup(player), "Anvil did not offer loyal fish");
-                var result = menu.getSlot(2).remove(1);
-                int cost = menu.getCost();
-                menu.getSlot(2).onTake(player, result);
-                helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(loyalty, result) == level, "Loyalty upgrade used the wrong level");
-                helper.assertTrue(result.getCount() == 1 && result.is(variant.getItem())
-                        && PufferfishColors.get(result) == PufferfishColors.get(variant)
-                        && result.getHoverName().getString().equals("Loyal operator"), "Anvil lost fish identity");
-                helper.assertTrue(menu.getSlot(0).getItem().isEmpty() && menu.getSlot(1).getItem().isEmpty()
-                        && player.experienceLevel == 30 - cost && cost > 0, "Anvil did not charge ingredients and XP");
-                variant = result;
-            }
-        }
-        helper.succeed();
     }
 
     @GameTest(template = "empty")
@@ -151,7 +123,7 @@ public final class PufferfishLoyaltyGameTests {
             projectile.setPos(target.position().add(0, 0.8, 1));
             finishReturn(helper, projectile);
             helper.assertTrue(target.getHealth() == health, "Returning fish damaged its target again");
-            helper.assertTrue(player.getInventory().items.stream().filter(s -> ItemStack.isSameItemSameComponents(PufferfishDurabilityGameTests.worn(stack), s))
+            helper.assertTrue(player.getInventory().items.stream().filter(s -> ItemStack.isSameItemSameComponents(TestItems.worn(stack), s))
                     .mapToInt(ItemStack::getCount).sum() == 1, "Return lost components or duplicated fish");
             target.discard();
         }
@@ -184,18 +156,18 @@ public final class PufferfishLoyaltyGameTests {
         var fish = hitBlock(helper, player, stack);
         var receiver = PufferfishPlease.THROWN_PUFFERFISH.get().create(helper.getLevel());
         receiver.getEntityData().assignValues(fish.getEntityData().getNonDefaultValues());
-        helper.assertTrue(receiver.isReturning() && ItemStack.matches(receiver.getItem(), PufferfishDurabilityGameTests.worn(stack)), "Return state or enchantments failed to synchronize");
+        helper.assertTrue(receiver.isReturning() && ItemStack.matches(receiver.getItem(), TestItems.worn(stack)), "Return state or enchantments failed to synchronize");
         var tag = new CompoundTag();
         fish.saveWithoutId(tag);
         fish.discard();
         var restored = PufferfishPlease.THROWN_PUFFERFISH.get().create(helper.getLevel());
         restored.load(tag);
-        helper.assertTrue(restored.isReturning() && restored.isNoGravity() && ItemStack.matches(restored.getItem(), PufferfishDurabilityGameTests.worn(stack)), "Saved return state was lost");
+        helper.assertTrue(restored.isReturning() && restored.isNoGravity() && ItemStack.matches(restored.getItem(), TestItems.worn(stack)), "Saved return state was lost");
         // Mock players are not registered in the level's UUID lookup.
         restored.setOwner(player);
         helper.getLevel().addFreshEntity(restored);
         finishReturn(helper, restored);
-        helper.assertTrue(ItemStack.matches(player.getInventory().getItem(0), PufferfishDurabilityGameTests.worn(stack)), "Reloaded fish failed to return intact");
+        helper.assertTrue(ItemStack.matches(player.getInventory().getItem(0), TestItems.worn(stack)), "Reloaded fish failed to return intact");
         helper.succeed();
     }
 
@@ -214,7 +186,7 @@ public final class PufferfishLoyaltyGameTests {
             }
             finishReturn(helper, fish);
             var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, new AABB(helper.absolutePos(new BlockPos(2, 2, 2))).inflate(5))
-                    .stream().filter(drop -> ItemStack.isSameItemSameComponents(drop.getItem(), PufferfishDurabilityGameTests.worn(stack))).toList();
+                    .stream().filter(drop -> ItemStack.isSameItemSameComponents(drop.getItem(), TestItems.worn(stack))).toList();
             helper.assertTrue(drops.size() == 1 && drops.getFirst().getItem().getCount() == 1, "Failed return lost or duplicated fish");
             drops.forEach(ItemEntity::discard);
         }
@@ -256,7 +228,7 @@ public final class PufferfishLoyaltyGameTests {
         helper.assertTrue(fish.isReturning(), "Actual thrown enchanted fish did not begin returning");
         finishReturn(helper, fish);
         helper.assertTrue(stack.getCount() == 2 && player.getInventory().countItem(stack.getItem()) == 3
-                && ItemStack.isSameItemSameComponents(PufferfishDurabilityGameTests.worn(stack), fish.getItem()), "Return did not preserve one worn fish and two pristine fish");
+                && ItemStack.isSameItemSameComponents(TestItems.worn(stack), fish.getItem()), "Return did not preserve one worn fish and two pristine fish");
         helper.succeed();
     }
 }

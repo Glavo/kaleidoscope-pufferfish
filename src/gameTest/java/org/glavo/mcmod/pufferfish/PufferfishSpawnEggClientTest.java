@@ -19,6 +19,7 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.SpawnEggItem;
+import org.glavo.mcmod.pufferfish.test.TestImages;
 import org.joml.Matrix4f;
 
 final class PufferfishSpawnEggClientTest {
@@ -75,7 +76,7 @@ final class PufferfishSpawnEggClientTest {
                     }
                     if (visible < 100) throw new IllegalStateException("Spawn egg rendered transparent: " + eggs.get(i));
                 }
-                image.writeToFile(java.nio.file.Path.of("pufferfish-spawn-eggs-preview.png"));
+                TestImages.write(image, java.nio.file.Path.of("pufferfish-spawn-eggs-preview.png"));
             }
         } catch (java.io.IOException exception) {
             throw new IllegalStateException("Could not save spawn egg preview", exception);

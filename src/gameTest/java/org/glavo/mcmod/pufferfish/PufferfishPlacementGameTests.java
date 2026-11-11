@@ -3,7 +3,6 @@
 
 package org.glavo.mcmod.pufferfish;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
@@ -16,7 +15,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
@@ -30,18 +28,11 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import org.glavo.mcmod.pufferfish.test.TestItems;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishPlacementGameTests {
-    public static List<ItemStack> variants() {
-        var fish = new ArrayList<ItemStack>();
-        fish.add(new ItemStack(Items.PUFFERFISH));
-        for (var color : DyeColor.values()) fish.add(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
-        for (var item : List.of(PufferfishItems.COPPER, PufferfishItems.IRON, PufferfishItems.DIAMOND,
-                PufferfishItems.GOLDEN, PufferfishItems.NETHERITE, PufferfishItems.HEAVY)) fish.add(new ItemStack(item.get()));
-        return fish;
-    }
 
     private static PlayerInteractEvent.RightClickBlock use(Player player, BlockPos floor) {
         var event = new PlayerInteractEvent.RightClickBlock(player, InteractionHand.MAIN_HAND, floor,
@@ -66,7 +57,7 @@ public final class PufferfishPlacementGameTests {
         var pos = floor.above();
         level.setBlockAndUpdate(floor, Blocks.STONE.defaultBlockState());
         var player = player(helper, GameType.SURVIVAL);
-        for (var stack : variants()) {
+        for (var stack : TestItems.fishVariants()) {
             stack.set(DataComponents.CUSTOM_NAME, Component.literal("Display fish"));
             stack.enchant(level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.RESPIRATION), 3);
             stack.setCount(2);

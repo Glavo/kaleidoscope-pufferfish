@@ -3,44 +3,36 @@
 
 package org.glavo.mcmod.pufferfish;
 
-import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.platform.Lighting;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.VertexSorting;
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import com.mojang.authlib.GameProfile;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.RemotePlayer;
-import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.client.Screenshot;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import org.glavo.mcmod.pufferfish.client.PufferfishFlailHeadRenderer;
 import org.glavo.mcmod.pufferfish.client.PufferfishFlailModel;
 import org.glavo.mcmod.pufferfish.entity.PufferfishFlailHead;
-import org.joml.Matrix4f;
+import org.glavo.mcmod.pufferfish.test.ClientTestLevel;
 
 /// Checks flail item geometry and resource reloads.
 public final class PufferfishFlailClientTest {
     /// Full-bright lighting used by geometry checks and previews.
     private static final int LIGHT = 15728880;
 
-    /// Prevents construction of the test holder.
     private PufferfishFlailClientTest() {}
 
     /// Verifies all variants in every display context and saves inventory previews.
@@ -81,56 +73,11 @@ public final class PufferfishFlailClientTest {
             }
         }
         verifyFlight(minecraft);
-        preview(minecraft);
-        previewSlots(minecraft);
-    }
-
-    /// Renders at native inventory resolutions rather than shrinking a large preview.
-    private static void previewSlots(Minecraft minecraft) {
-        var target = new TextureTarget(480, 180, true, Minecraft.ON_OSX);
-        target.setClearColor(0.55F, 0.55F, 0.55F, 1);
-        target.clear(Minecraft.ON_OSX);
-        target.bindWrite(true);
-        RenderSystem.backupProjectionMatrix();
-        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 480, 180, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
-        var view = RenderSystem.getModelViewStack();
-        view.pushMatrix().identity();
-        RenderSystem.applyModelViewMatrix();
-        Lighting.setupForFlatItems();
-        RenderSystem.setShaderColor(1, 1, 1, 1);
-        try {
-            var red = new ItemStack(PufferfishItems.FLAIL.get());
-            red.set(PufferfishPlease.COLOR.get(), DyeColor.RED);
-            var stacks = new ItemStack[] {new ItemStack(PufferfishItems.FLAIL.get()), red, new ItemStack(PufferfishItems.NETHERITE_FLAIL.get()), new ItemStack(PufferfishItems.HEAVY_FLAIL.get())};
-            for (int row = 0; row < 3; row++) {
-                int size = 16 << row;
-                for (int column = 0; column < stacks.length; column++) {
-                    var pose = new PoseStack();
-                    pose.translate(60 + column * 120, new int[] {20, 60, 130}[row], 0);
-                    pose.scale(size, -size, size);
-                    var buffers = minecraft.renderBuffers().bufferSource();
-                    minecraft.getItemRenderer().renderStatic(stacks[column], ItemDisplayContext.GUI, LIGHT, OverlayTexture.NO_OVERLAY,
-                            pose, buffers, null, 0);
-                    buffers.endBatch();
-                }
-            }
-            try (var image = Screenshot.takeScreenshot(target)) {
-                image.writeToFile(Path.of("pufferfish-flail-slots-preview.png"));
-            }
-        } catch (IOException exception) {
-            throw new IllegalStateException("Could not save flail slot preview", exception);
-        } finally {
-            view.popMatrix();
-            RenderSystem.applyModelViewMatrix();
-            RenderSystem.restoreProjectionMatrix();
-            target.destroyBuffers();
-            minecraft.getMainRenderTarget().bindWrite(true);
-        }
     }
 
     private static void verifyFlight(Minecraft minecraft) {
         var previousLevel = minecraft.level;
-        var level = PufferfishHeadgearClientTest.level(minecraft);
+        var level = ClientTestLevel.level(minecraft);
         var player = new RemotePlayer(level, new GameProfile(UUID.randomUUID(), "flail-render-test")) {
             @Override
             public boolean isSpectator() { return false; }
@@ -213,46 +160,6 @@ public final class PufferfishFlailClientTest {
     private static void verifyTautChain(Capture capture) {
         if (capture.tetherVertices == 0 || capture.tetherDeviation > 0.034) {
             throw new IllegalStateException("Moving flail chain is too thick or sags under tension: " + capture.tetherDeviation);
-        }
-    }
-
-    /// Saves ordinary, dyed, netherite, and heavy flails using their actual GUI display transforms.
-    private static void preview(Minecraft minecraft) {
-        var target = new TextureTarget(1200, 440, true, Minecraft.ON_OSX);
-        target.setClearColor(0.08F, 0.14F, 0.2F, 1);
-        target.clear(Minecraft.ON_OSX);
-        target.bindWrite(true);
-        RenderSystem.backupProjectionMatrix();
-        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 1200, 440, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
-        var view = RenderSystem.getModelViewStack();
-        view.pushMatrix().identity();
-        RenderSystem.applyModelViewMatrix();
-        Lighting.setupFor3DItems();
-        RenderSystem.setShaderColor(1, 1, 1, 1);
-        try {
-            var red = new ItemStack(PufferfishItems.FLAIL.get());
-            red.set(PufferfishPlease.COLOR.get(), DyeColor.RED);
-            var stacks = new ItemStack[] {new ItemStack(PufferfishItems.FLAIL.get()), red, new ItemStack(PufferfishItems.NETHERITE_FLAIL.get()), new ItemStack(PufferfishItems.HEAVY_FLAIL.get())};
-            for (int i = 0; i < stacks.length; i++) {
-                var pose = new PoseStack();
-                pose.translate(150 + i * 300, 220, 0);
-                pose.scale(260, -260, 260);
-                var buffers = minecraft.renderBuffers().bufferSource();
-                minecraft.getItemRenderer().renderStatic(stacks[i], ItemDisplayContext.GUI, LIGHT, OverlayTexture.NO_OVERLAY,
-                        pose, buffers, null, 0);
-                buffers.endBatch();
-            }
-            try (var image = Screenshot.takeScreenshot(target)) {
-                image.writeToFile(Path.of("pufferfish-flail-preview.png"));
-            }
-        } catch (IOException exception) {
-            throw new IllegalStateException("Could not save flail preview", exception);
-        } finally {
-            view.popMatrix();
-            RenderSystem.applyModelViewMatrix();
-            RenderSystem.restoreProjectionMatrix();
-            target.destroyBuffers();
-            minecraft.getMainRenderTarget().bindWrite(true);
         }
     }
 

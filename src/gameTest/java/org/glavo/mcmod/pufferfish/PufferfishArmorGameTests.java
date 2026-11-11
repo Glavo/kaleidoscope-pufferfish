@@ -8,9 +8,9 @@ import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
@@ -18,34 +18,18 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import org.glavo.mcmod.pufferfish.test.TestEffects;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishArmorGameTests {
-    @GameTest(template = "empty")
-    public static void everySkinHasACompleteArmorSet(GameTestHelper helper) {
-        int skins = 0;
-        for (var block : BuiltInRegistries.BLOCK) {
-            if (!(block instanceof PufferfishSkinBlock)) continue;
-            var id = BuiltInRegistries.BLOCK.getKey(block);
-            if (!id.getNamespace().equals(PufferfishPlease.MODID)) continue;
-            for (var type : PufferfishArmor.TYPES) {
-                helper.assertTrue(PufferfishArmor.VARIANTS.containsKey(id.getPath() + "_" + type.getName()),
-                        "Missing armor for skin: " + id);
-            }
-            skins++;
-        }
-        helper.assertTrue(PufferfishArmor.VARIANTS.size() == skins * 4, "Skin and armor variants do not match");
-        helper.succeed();
-    }
 
     @GameTest(template = "empty")
     public static void mixedArmorUsesStrongestUnwaxedPoisonAfterThorns(GameTestHelper helper) {
@@ -56,7 +40,7 @@ public final class PufferfishArmorGameTests {
         player.setItemSlot(EquipmentSlot.LEGS, new ItemStack(PufferfishArmor.VARIANTS.get("pufferfish_skin_leggings").get()));
         player.setItemSlot(EquipmentSlot.FEET, new ItemStack(PufferfishArmor.VARIANTS.get("oxidized_copper_pufferfish_skin_boots").get()));
         attacker.hurt(attacker.damageSources().thorns(player), 1);
-        var poison = PufferfishEffectsGameTests.poison(attacker);
+        var poison = TestEffects.poison(attacker);
         helper.assertTrue(poison != null && poison.getDuration() == 120 && poison.getAmplifier() == 1 && poison.is(PufferfishEffects.LETHAL_TOXIN),
                 "Mixed armor did not use the strongest unwaxed poison");
         player.setItemSlot(EquipmentSlot.FEET, ItemStack.EMPTY);
@@ -64,7 +48,7 @@ public final class PufferfishArmorGameTests {
         attacker.removeAllEffects();
         attacker.invulnerableTime = 0;
         attacker.hurt(attacker.damageSources().thorns(player), 1);
-        poison = PufferfishEffectsGameTests.poison(attacker);
+        poison = TestEffects.poison(attacker);
         helper.assertTrue(poison != null && poison.getDuration() == 120 && poison.getAmplifier() == 1,
                 "Waxed armor suppressed another piece's poison");
         helper.succeed();
@@ -210,7 +194,7 @@ public final class PufferfishArmorGameTests {
                 attacker.removeAllEffects();
                 armor.setDamageValue(0);
                 player.hurt(player.damageSources().mobAttack(attacker), 2);
-                var poison = PufferfishEffectsGameTests.effect(attacker, PufferfishItems.isRadiant(armor) ? MobEffects.WITHER : MobEffects.POISON);
+                var poison = TestEffects.effect(attacker, PufferfishItems.isRadiant(armor) ? MobEffects.WITHER : MobEffects.POISON);
                 String name = item.getId().getPath();
                 int duration = 120;
                 int amplifier = name.startsWith("oxidized_copper_") || name.startsWith("weathered_copper_")
@@ -229,7 +213,7 @@ public final class PufferfishArmorGameTests {
             attacker.removeAllEffects();
             attacker.setHealth(20);
             player.hurt(player.damageSources().mobAttack(attacker), 2);
-            helper.assertTrue(!PufferfishEffectsGameTests.hasPoison(attacker) && attacker.getHealth() == 20, "Held armor retaliated");
+            helper.assertTrue(!TestEffects.hasPoison(attacker) && attacker.getHealth() == 20, "Held armor retaliated");
             attacker.discard();
         }
         helper.assertTrue(reflected > 0 && reflected < attempts, "Armor thorns did not use a chance roll");

@@ -3,24 +3,14 @@
 
 package org.glavo.mcmod.pufferfish;
 
-import com.mojang.authlib.GameProfile;
+import static org.glavo.mcmod.pufferfish.test.TestItems.enchant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.network.Connection;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.PacketFlow;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.CommonListenerCookie;
-import net.minecraft.server.network.ServerGamePacketListenerImpl;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -28,8 +18,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.GameType;
@@ -41,15 +29,13 @@ import net.neoforged.neoforge.event.level.ExplosionEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.glavo.mcmod.pufferfish.entity.ThrownPufferfish;
+import org.glavo.mcmod.pufferfish.test.TestEffects;
+import org.glavo.mcmod.pufferfish.test.TestItems;
+import org.glavo.mcmod.pufferfish.test.TestPlayers;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishWindBurstGameTests {
-    private static ItemStack enchant(GameTestHelper helper, ItemStack stack, ResourceKey<Enchantment> key, int rank) {
-        var holder = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(key);
-        EnchantmentHelper.updateEnchantments(stack, entries -> entries.set(holder, rank));
-        return stack;
-    }
 
     private static List<ItemStack> fish() {
         var stacks = new ArrayList<ItemStack>();
@@ -104,7 +90,7 @@ public final class PufferfishWindBurstGameTests {
                     helper.assertTrue(bursts[0] - before == (rank > 0 ? 1 : 0) && projectile.isRemoved(),
                             "An impact did not trigger exactly one gust and recover the fish");
                     helper.assertTrue(target.getHealth() == 20 - PufferfishCombat.damage(stack)
-                            && PufferfishEffectsGameTests.poison(target) != null && nearby.getHealth() == 20,
+                            && TestEffects.poison(target) != null && nearby.getHealth() == 20,
                             "Gust changed direct damage, poison, or bystander health");
                     double speed = nearby.getDeltaMovement().length();
                     helper.assertTrue(rank == 0 ? speed == 0 : speed > previous,
@@ -115,7 +101,7 @@ public final class PufferfishWindBurstGameTests {
                     helper.assertTrue(distant.getDeltaMovement().lengthSqr() == 0, "Higher gust levels enlarged the range");
                     previous = speed;
                     var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, target.getBoundingBox().inflate(4));
-                    helper.assertTrue(drops.size() == 1 && ItemStack.isSameItemSameComponents(drops.getFirst().getItem(), PufferfishDurabilityGameTests.worn(stack)),
+                    helper.assertTrue(drops.size() == 1 && ItemStack.isSameItemSameComponents(drops.getFirst().getItem(), TestItems.worn(stack)),
                             "Gust lost or changed the recovered fish");
                     drops.forEach(ItemEntity::discard);
                     target.discard(); nearby.discard(); distant.discard();
@@ -128,17 +114,9 @@ public final class PufferfishWindBurstGameTests {
     }
 
     private static ServerPlayer serverPlayer(GameTestHelper helper, Vec3 position) {
-        var player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(),
-                new GameProfile(UUID.randomUUID(), "gust-test-player"), ClientInformation.createDefault());
-        player.connection = new ServerGamePacketListenerImpl(helper.getLevel().getServer(), new Connection(PacketFlow.SERVERBOUND),
-                player, CommonListenerCookie.createInitial(player.getGameProfile(), false)) {
-            @Override
-            public void send(Packet<?> packet) {}
-        };
-        player.setGameMode(GameType.SURVIVAL);
+        var player = TestPlayers.serverPlayer(helper);
         player.setPos(position);
-        for (int tick = 0; tick < 61; tick++) player.tick();
-        player.setPos(position);
+        TestPlayers.allowDamage(player);
         helper.getLevel().addFreshEntity(player);
         return player;
     }
@@ -199,7 +177,7 @@ public final class PufferfishWindBurstGameTests {
                 bolts.forEach(LightningBolt::discard);
                 for (int tick = 0; tick < 100 && !projectile.isRemoved(); tick++) projectile.tick();
                 helper.assertTrue(projectile.isRemoved() && bursts[0] == before + 1
-                        && ItemStack.isSameItemSameComponents(owner.getInventory().getItem(0), PufferfishDurabilityGameTests.worn(stack)),
+                        && ItemStack.isSameItemSameComponents(owner.getInventory().getItem(0), TestItems.worn(stack)),
                         "Return flight repeated the gust or lost enchanted fish");
                 target.discard();
                 clearDrops(helper, target.position());

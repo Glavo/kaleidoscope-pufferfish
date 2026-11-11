@@ -18,15 +18,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
-import org.glavo.mcmod.pufferfish.PufferfishPlease;
 import org.glavo.mcmod.pufferfish.PufferfishBlocks;
 import org.glavo.mcmod.pufferfish.PufferfishColors;
 import org.glavo.mcmod.pufferfish.PufferfishItems;
+import org.glavo.mcmod.pufferfish.PufferfishPlease;
 
 /// Verifies the mechanical press processes fish into skins without losing their colors.
 @PrefixGameTestTemplate(false)
 public final class PufferfishSkinPressingGameTests {
-    /// Prevents construction of the test holder.
     private PufferfishSkinPressingGameTests() {}
 
     /// Verifies recipe lookup, simulation, and actual world-item processing for all skin variants.

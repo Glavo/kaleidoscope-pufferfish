@@ -30,6 +30,7 @@ import net.neoforged.neoforge.event.entity.living.FinalizeSpawnEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.glavo.mcmod.pufferfish.entity.MaterialPufferfish;
+import org.glavo.mcmod.pufferfish.test.TestEffects;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
@@ -131,15 +132,15 @@ public final class PufferfishMobGameTests {
             fish.aiStep();
             var expected = PufferfishCombat.passiveEffect(fish.fish());
             helper.assertTrue(target.getHealth() < target.getMaxHealth(), "Inflated material fish did not sting nearby mobs");
-            if (expected == null) helper.assertTrue(!PufferfishEffectsGameTests.hasPoison(target), "Waxed fish poisoned a mob");
+            if (expected == null) helper.assertTrue(!TestEffects.hasPoison(target), "Waxed fish poisoned a mob");
             else {
-                var actual = PufferfishEffectsGameTests.effect(target, expected.getEffect());
+                var actual = TestEffects.effect(target, expected.getEffect());
                 int amplifier = PufferfishItems.isRadiant(fish.fish()) ? 0 : expected.getAmplifier();
                 helper.assertTrue(PufferfishItems.isRadiant(fish.fish()) && actual == null
                                 || actual != null && actual.getAmplifier() == amplifier && actual.getDuration() == expected.getDuration(),
                         "Material fish applied the wrong attack status effect");
             }
-            if (PufferfishItems.isRadiant(fish.fish())) helper.assertTrue(target.hasEffect(MobEffects.GLOWING) && !PufferfishEffectsGameTests.hasPoison(target), "Radiant sting lost glowing or applied poison");
+            if (PufferfishItems.isRadiant(fish.fish())) helper.assertTrue(target.hasEffect(MobEffects.GLOWING) && !TestEffects.hasPoison(target), "Radiant sting lost glowing or applied poison");
         }
         helper.succeed();
     }
@@ -160,7 +161,7 @@ public final class PufferfishMobGameTests {
                     else helper.assertTrue(fish.strike(target, 0, 0), "Material fish attack failed");
                     int copper = CopperPufferfish.index(fish.fish());
                     int amplifier = copper > 0 && copper < 4 ? Math.min(1, copper - 1) : PufferfishItems.hasNetheriteCombat(fish.fish()) ? 1 : 0;
-                    var poison = PufferfishEffectsGameTests.poison(target);
+                    var poison = TestEffects.poison(target);
                     helper.assertTrue(puff == 0 || copper >= 4 ? poison == null
                                     : poison != null && poison.getDuration() == puff * 60 && poison.getAmplifier() == amplifier,
                             "Living fish poison did not follow inflation: " + variant.fish().getId() + ", puff=" + puff + ", contact=" + contact);
