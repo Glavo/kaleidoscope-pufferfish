@@ -87,11 +87,12 @@ public final class PufferfishTextures implements ResourceManagerReloadListener {
 
     private static ResourceLocation loadEntityTexture(String variant, int color) {
         Minecraft minecraft = Minecraft.getInstance();
+        ResourceLocation location = KaleidoscopePufferfish.id("textures/entity/" + variant + "_pufferfish.png");
+        if (minecraft.getResourceManager().getResource(location).isPresent()) return location;
         try (var stream = minecraft.getResourceManager().open(ORIGINAL)) {
             NativeImage image = NativeImage.read(stream);
             recolor(image, color);
             if (variant.equals("netherite")) whiteEyes(image, true, NETHERITE_EYE_COLOR);
-            ResourceLocation location = KaleidoscopePufferfish.id("textures/entity/" + variant + "_pufferfish.png");
             minecraft.getTextureManager().register(location, new DynamicTexture(image));
             return location;
         } catch (IOException exception) {

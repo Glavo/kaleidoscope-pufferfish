@@ -48,7 +48,7 @@ public final class PufferfishClientSmokeTest {
     @SubscribeEvent
     public static void tick(ClientTickEvent.Post event) {
         Minecraft minecraft = Minecraft.getInstance();
-        if (!Boolean.getBoolean("kaleidoscope_pufferfish.clientSmokeTest") || phase == 2
+        if (!Boolean.getBoolean("kaleidoscope_pufferfish.clientSmokeTest") || phase == 3
                 || minecraft.screen == null || minecraft.getOverlay() != null) {
             return;
         }
@@ -71,6 +71,7 @@ public final class PufferfishClientSmokeTest {
                 throw new IllegalStateException("Missing dyed pufferfish entity texture: " + color);
             }
         }
+        PufferfishDyedTextureClientTest.verify(minecraft, phase == 1);
         verifySkin(minecraft, null);
         var upgradeTemplate = PufferfishItems.UPGRADE_TEMPLATE.toStack();
         var templateModel = minecraft.getItemRenderer().getModel(upgradeTemplate, null, null, 0);
@@ -156,7 +157,9 @@ public final class PufferfishClientSmokeTest {
             throw new IllegalStateException("Projectile renderer registration was not checked");
         }
         phase++;
-        if (phase == 1) {
+        if (phase < 3) {
+            if (phase == 1) PufferfishDyedTextureClientTest.enablePack(minecraft);
+            else PufferfishDyedTextureClientTest.disablePack(minecraft);
             projectileRendererChecked = false;
             minecraft.reloadResourcePacks();
         } else {

@@ -18,10 +18,6 @@ public final class PufferfishSpriteSource implements SpriteSource {
 
     @Override
     public void run(ResourceManager manager, Output output) {
-        var template = KaleidoscopePufferfish.id("item/pufferfish_upgrade_smithing_template");
-        var templateReplacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(template));
-        if (templateReplacement.isPresent()) output.add(template, templateReplacement.get());
-        else output.add(template, loader -> PufferfishUpgradeTemplateTexture.create(template));
         for (var name : org.glavo.kaleidoscope.pufferfish.PufferfishMobs.VARIANTS.keySet()) {
             var id = KaleidoscopePufferfish.id("item/" + name + "_bucket");
             var replacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(id));
@@ -44,15 +40,16 @@ public final class PufferfishSpriteSource implements SpriteSource {
         }
         for (boolean bucket : new boolean[] {false, true}) {
             ResourceLocation original = ResourceLocation.withDefaultNamespace(bucket ? "item/pufferfish_bucket" : "item/pufferfish");
-            manager.getResource(TEXTURE_ID_CONVERTER.idToFile(original)).ifPresent(resource -> {
-                for (DyeColor color : DyeColor.values()) {
-                    ResourceLocation id = PufferfishTextures.item(color, bucket);
-                    output.add(id, loader -> loader.loadSprite(id, resource, (name, size, image, metadata) -> {
-                        PufferfishTextures.recolor(image, color);
-                        return new SpriteContents(name, size, image, metadata);
-                    }));
-                }
-            });
+            for (DyeColor color : DyeColor.values()) {
+                ResourceLocation id = PufferfishTextures.item(color, bucket);
+                var replacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(id));
+                if (replacement.isPresent()) output.add(id, replacement.get());
+                else manager.getResource(TEXTURE_ID_CONVERTER.idToFile(original))
+                        .ifPresent(resource -> output.add(id, loader -> loader.loadSprite(id, resource, (name, size, image, metadata) -> {
+                            PufferfishTextures.recolor(image, color);
+                            return new SpriteContents(name, size, image, metadata);
+                        })));
+            }
         }
         addSashimi(manager, output);
         addDish(manager, output, false);
