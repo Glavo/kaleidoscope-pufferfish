@@ -35,11 +35,10 @@ public final class PufferfishCurseEffect extends MobEffect {
                 || !event.getSource().is(DamageTypes.MOB_ATTACK)
                 || !(event.getSource().getDirectEntity() instanceof Pufferfish fish)
                 || event.getNewDamage() + event.getReduction(DamageContainer.Reduction.ABSORPTION) <= 0) return;
-        var power = player.getEffect(PufferfishEffects.PUFFERFISH_POWER);
         if (!PufferfishConduitSpawning.isInAncientRange(player.level(), player.blockPosition())) return;
         boolean alreadyCursed = player.hasEffect(PufferfishEffects.PUFFERFISH_CURSE);
-        if (!player.addEffect(new MobEffectInstance(PufferfishEffects.PUFFERFISH_CURSE, power == null ? 260 : power.getDuration(), 0,
-                power == null || power.isAmbient(), true), event.getSource().getEntity())) return;
+        if (!player.addEffect(new MobEffectInstance(PufferfishEffects.PUFFERFISH_CURSE, 260, 0, true, true),
+                event.getSource().getEntity())) return;
         player.removeEffect(PufferfishEffects.PUFFERFISH_POWER);
         if (!alreadyCursed && player instanceof ServerPlayer serverPlayer) {
             var appearance = fish instanceof MaterialPufferfish material ? material.fish() : new ItemStack(Items.PUFFERFISH);

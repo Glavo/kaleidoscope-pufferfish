@@ -45,7 +45,7 @@ public final class PufferfishCurseGameTests {
             player.addEffect(new MobEffectInstance(PufferfishEffects.PUFFERFISH_POWER, 123));
             player.hurt(player.damageSources().mobAttack(fish), 1);
             var curse = player.getEffect(PufferfishEffects.PUFFERFISH_CURSE);
-            helper.assertTrue(curse != null && curse.getDuration() == 123 && curse.getAmplifier() == 0
+            helper.assertTrue(curse != null && curse.getDuration() == 260 && curse.getAmplifier() == 0 && curse.isAmbient()
                     && !player.hasEffect(PufferfishEffects.PUFFERFISH_POWER), "Rare fish did not convert power: " + variant.fish().getId());
             helper.assertTrue(!MobEffectUtil.hasWaterBreathing(player) && !MobEffectUtil.hasDigSpeed(player),
                     "Cursed player retained conduit abilities");
@@ -161,12 +161,17 @@ public final class PufferfishCurseGameTests {
         helper.getLevel().addFreshEntity(player);
         var pos = player.blockPosition();
         for (int i = 0; i < 3; i++) {
+            player.getEffect(PufferfishEffects.PUFFERFISH_CURSE).tick(player, () -> {});
+            helper.assertTrue(player.getEffect(PufferfishEffects.PUFFERFISH_CURSE).getDuration() < 260, "Curse did not count down");
             PufferfishConduitBlockEntity.applyPower(helper.getLevel(), pos, 16);
             helper.assertTrue(player.getEffect(PufferfishEffects.PUFFERFISH_CURSE).getDuration() == 260
                     && !player.hasEffect(PufferfishEffects.PUFFERFISH_POWER), "Core restored power instead of renewing curse");
         }
+        player.getEffect(PufferfishEffects.PUFFERFISH_CURSE).tick(player, () -> {});
         player.invulnerableTime = 0;
         player.hurt(player.damageSources().mobAttack(fish), 1);
+        helper.assertTrue(player.getEffect(PufferfishEffects.PUFFERFISH_CURSE).getDuration() == 260,
+                "Repeated attack did not refresh the curse to thirteen seconds");
         helper.assertTrue(apparitions(packets) == 1, "Refresh or repeated attack replayed the apparition");
         Items.MILK_BUCKET.finishUsingItem(new ItemStack(Items.MILK_BUCKET), helper.getLevel(), player);
         PufferfishConduitBlockEntity.applyPower(helper.getLevel(), pos, 16);
@@ -178,7 +183,7 @@ public final class PufferfishCurseGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void canceledCursePreservesPowerAndInfinitePowerStaysInfinite(GameTestHelper helper) {
+    public static void canceledCursePreservesPowerAndAttacksUseFixedDuration(GameTestHelper helper) {
         var ancient = ancientAura(helper);
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         player.setPos(helper.absolutePos(new BlockPos(2, 82, 2)).getCenter());
@@ -197,9 +202,15 @@ public final class PufferfishCurseGameTests {
         } finally {
             NeoForge.EVENT_BUS.unregister(listener);
         }
-        player.invulnerableTime = 0;
-        player.hurt(player.damageSources().mobAttack(fish), 1);
-        helper.assertTrue(player.getEffect(PufferfishEffects.PUFFERFISH_CURSE).isInfiniteDuration(), "Infinite power lost its duration");
+        for (int duration : new int[] {-1, 1200}) {
+            player.removeAllEffects();
+            player.addEffect(new MobEffectInstance(PufferfishEffects.PUFFERFISH_POWER, duration));
+            player.invulnerableTime = 0;
+            player.hurt(player.damageSources().mobAttack(fish), 1);
+            var curse = player.getEffect(PufferfishEffects.PUFFERFISH_CURSE);
+            helper.assertTrue(curse != null && curse.getDuration() == 260 && curse.isAmbient()
+                    && !player.hasEffect(PufferfishEffects.PUFFERFISH_POWER), "Curse inherited power duration or retained power");
+        }
         helper.getLevel().removeBlock(ancient, false);
         helper.succeed();
     }
