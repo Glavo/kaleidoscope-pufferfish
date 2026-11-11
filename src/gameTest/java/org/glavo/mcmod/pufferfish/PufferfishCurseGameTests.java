@@ -37,7 +37,8 @@ public final class PufferfishCurseGameTests {
     @GameTest(template = "empty")
     public static void everyRareFishConvertsPowerOnlyOnSuccessfulAttacks(GameTestHelper helper) {
         for (var variant : PufferfishMobs.VARIANTS.values()) {
-            var player = helper.makeMockPlayer(GameType.SURVIVAL);
+            var packets = new ArrayList<Packet<?>>();
+            var player = player(helper, packets);
             var fish = variant.entity().get().create(helper.getLevel());
             player.addEffect(new MobEffectInstance(PufferfishEffects.PUFFERFISH_POWER, 123));
             player.hurt(player.damageSources().mobAttack(fish), 1);
@@ -46,6 +47,19 @@ public final class PufferfishCurseGameTests {
                     && !player.hasEffect(PufferfishEffects.PUFFERFISH_POWER), "Rare fish did not convert power: " + variant.fish().getId());
             helper.assertTrue(!MobEffectUtil.hasWaterBreathing(player) && !MobEffectUtil.hasDigSpeed(player),
                     "Cursed player retained conduit abilities");
+            var packet = packets.stream().filter(value -> value instanceof ClientboundLevelParticlesPacket particle
+                    && particle.getParticle().getType() == PufferfishEffects.CURSE_APPEARANCE.get()).findFirst().orElseThrow();
+            var options = (net.minecraft.core.particles.ItemParticleOption) ((ClientboundLevelParticlesPacket) packet).getParticle();
+            var buffer = new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(), helper.getLevel().registryAccess());
+            try {
+                var codec = PufferfishEffects.CURSE_APPEARANCE.get().streamCodec();
+                codec.encode(buffer, options);
+                var decoded = codec.decode(buffer);
+                helper.assertTrue(ItemStack.isSameItemSameComponents(fish.fish(), decoded.getItem()),
+                        "Apparition packet lost its attacking fish variant: " + variant.fish().getId());
+            } finally {
+                buffer.release();
+            }
         }
         var fish = PufferfishMobs.VARIANTS.get("copper_pufferfish").entity().get().create(helper.getLevel());
         var player = helper.makeMockPlayer(GameType.SURVIVAL);

@@ -47,7 +47,7 @@ public class PufferfishPleaseClient {
         bus.addListener(this::registerSprites);
         bus.addListener((net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent event) ->
                 event.registerSpecial(PufferfishEffects.CURSE_APPEARANCE.get(),
-                        (type, level, x, y, z, dx, dy, dz) -> new org.glavo.mcmod.pufferfish.client.PufferfishCurseParticle(level, x, y, z)));
+                        (options, level, x, y, z, dx, dy, dz) -> new org.glavo.mcmod.pufferfish.client.PufferfishCurseParticle(level, x, y, z, options.getItem())));
         bus.addListener(this::clientSetup);
         bus.addListener(this::registerModels);
         bus.addListener(EventPriority.LOWEST, this::wrapModels);
@@ -126,6 +126,7 @@ public class PufferfishPleaseClient {
 
     private void registerSprites(RegisterSpriteSourceTypesEvent event) {
         event.register(PufferfishPlease.id("dyed_pufferfish"), PufferfishSpriteSource.TYPE);
+        event.register(PufferfishPlease.id("pufferfish_effects"), org.glavo.mcmod.pufferfish.client.PufferfishEffectSpriteSource.TYPE);
     }
 
     private void registerModels(ModelEvent.RegisterAdditional event) {

@@ -3,6 +3,7 @@
 
 package org.glavo.mcmod.pufferfish;
 
+import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -29,7 +30,7 @@ public final class PufferfishCurseEffect extends MobEffect {
     public static void onAttack(LivingDamageEvent.Post event) {
         if (!(event.getEntity() instanceof Player player) || player.level().isClientSide || !player.isAlive()
                 || !event.getSource().is(DamageTypes.MOB_ATTACK)
-                || !(event.getSource().getDirectEntity() instanceof MaterialPufferfish)
+                || !(event.getSource().getDirectEntity() instanceof MaterialPufferfish fish)
                 || event.getNewDamage() + event.getReduction(DamageContainer.Reduction.ABSORPTION) <= 0) return;
         var power = player.getEffect(PufferfishEffects.PUFFERFISH_POWER);
         if (power == null) return;
@@ -38,7 +39,8 @@ public final class PufferfishCurseEffect extends MobEffect {
                 power.isAmbient(), true), event.getSource().getEntity())) return;
         player.removeEffect(PufferfishEffects.PUFFERFISH_POWER);
         if (!alreadyCursed && player instanceof ServerPlayer serverPlayer) {
-            serverPlayer.serverLevel().sendParticles(serverPlayer, PufferfishEffects.CURSE_APPEARANCE.get(), true,
+            serverPlayer.serverLevel().sendParticles(serverPlayer,
+                    new ItemParticleOption(PufferfishEffects.CURSE_APPEARANCE.get(), fish.fish()), true,
                     player.getX(), player.getEyeY(), player.getZ(), 1, 0, 0, 0, 0);
             serverPlayer.playNotifySound(SoundEvents.ELDER_GUARDIAN_CURSE, SoundSource.HOSTILE, 0.6F, 1.2F);
         }

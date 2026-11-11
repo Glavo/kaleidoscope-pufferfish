@@ -5,7 +5,10 @@ package org.glavo.mcmod.pufferfish;
 
 import net.minecraft.core.registries.Registries;
 import net.minecraft.core.particles.ParticleType;
-import net.minecraft.core.particles.SimpleParticleType;
+import net.minecraft.core.particles.ItemParticleOption;
+import com.mojang.serialization.MapCodec;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffect;
@@ -27,7 +30,16 @@ public final class PufferfishEffects {
     public static final DeferredHolder<MobEffect, MobEffect> LETHAL_TOXIN = EFFECTS.register("lethal_toxin", LethalToxinEffect::new);
     public static final DeferredHolder<MobEffect, MobEffect> PUFFERFISH_POWER = EFFECTS.register("pufferfish_power", PufferfishPowerEffect::new);
     public static final DeferredHolder<MobEffect, MobEffect> PUFFERFISH_CURSE = EFFECTS.register("pufferfish_curse", PufferfishCurseEffect::new);
-    public static final DeferredHolder<ParticleType<?>, SimpleParticleType> CURSE_APPEARANCE = PARTICLES.register("pufferfish_curse", () -> new SimpleParticleType(true));
+    public static final DeferredHolder<ParticleType<?>, ParticleType<ItemParticleOption>> CURSE_APPEARANCE =
+            PARTICLES.register("pufferfish_curse", () -> new ParticleType<ItemParticleOption>(true) {
+                @Override
+                public MapCodec<ItemParticleOption> codec() { return ItemParticleOption.codec(this); }
+
+                @Override
+                public StreamCodec<? super RegistryFriendlyByteBuf, ItemParticleOption> streamCodec() {
+                    return ItemParticleOption.streamCodec(this);
+                }
+            });
 
     private PufferfishEffects() {}
 

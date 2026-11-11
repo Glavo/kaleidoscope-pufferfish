@@ -42,10 +42,7 @@ public final class MaterialPufferfishRenderer extends PufferfishRenderer {
 
     @Override
     public ResourceLocation getTextureLocation(Pufferfish entity) {
-        var stack = ((MaterialPufferfish) entity).fish();
-        if (PufferfishItems.isNetherite(stack)) return PufferfishTextures.netheriteEntity();
-        if (PufferfishItems.isHeavy(stack)) return PufferfishTextures.heavyEntity();
-        return PufferfishTextures.materialEntity(PufferfishItems.materialName(stack));
+        return PufferfishTextures.entity(((MaterialPufferfish) entity).fish());
     }
 
     @Override

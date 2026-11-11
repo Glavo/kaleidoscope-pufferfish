@@ -1,9 +1,7 @@
 {
   "sources": [
     {
-      "type": "minecraft:single",
-      "resource": "minecraft:mob_effect/mining_fatigue",
-      "sprite": "pufferfish_please:pufferfish_curse"
+      "type": "pufferfish_please:pufferfish_effects"
     },
     {
       "type": "minecraft:single",

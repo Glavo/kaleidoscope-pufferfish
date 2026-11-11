@@ -15,20 +15,20 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.animal.Pufferfish;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 
 /// A camera-locked apparition, shown only to the cursed player.
 public final class PufferfishCurseParticle extends Particle {
     private final PufferfishBigModel<Pufferfish> model;
-    private final RenderType renderType = RenderType.entityTranslucent(
-            ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png"));
+    private final RenderType renderType;
 
-    public PufferfishCurseParticle(ClientLevel level, double x, double y, double z) {
+    public PufferfishCurseParticle(ClientLevel level, double x, double y, double z, ItemStack fish) {
         super(level, x, y, z);
+        renderType = RenderType.entityTranslucent(PufferfishTextures.entity(fish));
         model = new PufferfishBigModel<>(Minecraft.getInstance().getEntityModels().bakeLayer(ModelLayers.PUFFERFISH_BIG));
         gravity = 0;
         lifetime = 30;

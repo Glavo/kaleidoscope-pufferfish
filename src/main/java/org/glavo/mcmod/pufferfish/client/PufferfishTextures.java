@@ -14,6 +14,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.ItemStack;
+import org.glavo.mcmod.pufferfish.PufferfishColors;
+import org.glavo.mcmod.pufferfish.PufferfishItems;
 import org.glavo.mcmod.pufferfish.PufferfishPlease;
 
 public final class PufferfishTextures implements ResourceManagerReloadListener {
@@ -33,6 +36,15 @@ public final class PufferfishTextures implements ResourceManagerReloadListener {
 
     public static ResourceLocation entity(DyeColor color) {
         return ENTITY_TEXTURES.computeIfAbsent(color, PufferfishTextures::loadEntityTexture);
+    }
+
+    public static ResourceLocation entity(ItemStack fish) {
+        if (PufferfishItems.isHeavy(fish)) return heavyEntity();
+        if (PufferfishItems.isNetherite(fish)) return netheriteEntity();
+        var material = PufferfishItems.materialName(fish);
+        if (material != null) return materialEntity(material);
+        var color = PufferfishColors.get(fish);
+        return color == null ? ORIGINAL : entity(color);
     }
 
     private static ResourceLocation loadEntityTexture(DyeColor color) {
