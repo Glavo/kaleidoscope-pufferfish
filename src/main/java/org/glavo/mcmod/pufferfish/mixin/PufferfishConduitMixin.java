@@ -21,8 +21,7 @@ public abstract class PufferfishConduitMixin {
     private static void pufferfishPlease$ancientActivation(Level level, BlockPos pos, List<BlockPos> frame,
             CallbackInfoReturnable<Boolean> callback) {
         if (level.getBlockState(pos).is(PufferfishBlocks.ANCIENT_CONDUIT.get())) {
-            frame.clear();
-            callback.setReturnValue(PufferfishConduitBlockEntity.isSubmerged(level, pos));
+            callback.setReturnValue(PufferfishConduitBlockEntity.updateAncientFrame(level, pos, frame));
         }
     }
 

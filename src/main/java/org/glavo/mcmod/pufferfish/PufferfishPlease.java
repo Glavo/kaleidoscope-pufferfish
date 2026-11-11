@@ -86,6 +86,8 @@ public class PufferfishPlease {
                 .displayItems((parameters, output) -> {
                     output.accept(PufferfishBlocks.CONDUIT);
                     output.accept(PufferfishBlocks.ANCIENT_CONDUIT);
+                    output.accept(PufferfishBlocks.ANCIENT_PRISMARINE);
+                    output.accept(PufferfishBlocks.SUSPICIOUS_ANCIENT_PRISMARINE);
                     PufferfishLamps.VARIANTS.values().forEach(variant -> output.accept(variant.block().get()));
                     if (ModList.get().isLoaded("create")) {
                         output.accept(CreateIntegration.ENGINE_ITEM.get());

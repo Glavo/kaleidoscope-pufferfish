@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "dusted=0": {
+      "model": "pufferfish_please:block/suspicious_ancient_prismarine_0"
+    },
+    "dusted=1": {
+      "model": "pufferfish_please:block/suspicious_ancient_prismarine_1"
+    },
+    "dusted=2": {
+      "model": "pufferfish_please:block/suspicious_ancient_prismarine_2"
+    },
+    "dusted=3": {
+      "model": "pufferfish_please:block/suspicious_ancient_prismarine_3"
+    }
+  }
+}

@@ -6,6 +6,8 @@
     {
       "id": "pufferfish_please:pufferfish_engine",
       "required": false
-    }
+    },
+    "pufferfish_please:ancient_prismarine",
+    "pufferfish_please:suspicious_ancient_prismarine"
   ]
 }

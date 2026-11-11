@@ -98,6 +98,8 @@ public class PufferfishPleaseClient {
         event.registerEntityRenderer(PufferfishPlease.THROWN_PUFFERFISH.get(), ThrownItemRenderer::new);
         event.registerEntityRenderer(PufferfishPlease.FLAIL_HEAD.get(), PufferfishFlailHeadRenderer::new);
         event.registerBlockEntityRenderer(PufferfishBlocks.CONDUIT_ENTITY.get(), PufferfishConduitRenderer::new);
+        event.registerBlockEntityRenderer(PufferfishBlocks.ANCIENT_PRISMARINE_ENTITY.get(),
+                net.minecraft.client.renderer.blockentity.BrushableBlockRenderer::new);
         event.registerBlockEntityRenderer(PufferfishBlocks.PUMP_ENTITY.get(), org.glavo.mcmod.pufferfish.client.PufferfishPumpBlockRenderer::new);
         event.registerBlockEntityRenderer(PufferfishBlocks.PLACED_FISH_ENTITY.get(), org.glavo.mcmod.pufferfish.client.PlacedPufferfishRenderer::new);
     }
@@ -126,6 +128,7 @@ public class PufferfishPleaseClient {
     }
 
     private void registerSprites(RegisterSpriteSourceTypesEvent event) {
+        event.register(PufferfishPlease.id("ancient_prismarine"), org.glavo.mcmod.pufferfish.client.AncientPrismarineSpriteSource.TYPE);
         event.register(PufferfishPlease.id("dyed_pufferfish"), PufferfishSpriteSource.TYPE);
         event.register(PufferfishPlease.id("pufferfish_effects"), org.glavo.mcmod.pufferfish.client.PufferfishEffectSpriteSource.TYPE);
     }

@@ -22,7 +22,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class AncientPufferfishConduitGameTests {
     @GameTest(template = "empty", timeoutTicks = 210)
-    public static void waterAloneActivatesAncientConduitWithFixedRange(GameTestHelper helper) {
+    public static void ancientFrameActivatesConduitWithFixedRange(GameTestHelper helper) {
         var level = helper.getLevel();
         var pos = helper.absolutePos(new BlockPos(2, 82, 2));
         var normalPos = pos.east(8);
@@ -33,6 +33,12 @@ public final class AncientPufferfishConduitGameTests {
         }
         level.setBlockAndUpdate(pos, PufferfishBlocks.ANCIENT_CONDUIT.get().defaultBlockState());
         level.setBlockAndUpdate(normalPos, PufferfishBlocks.CONDUIT.get().defaultBlockState());
+        for (int x = -2; x <= 2; x++) for (int y = -2; y <= 2; y++) {
+            if (Math.abs(x) == 2 || Math.abs(y) == 2) {
+                level.setBlockAndUpdate(pos.offset(x, y, 0), PufferfishBlocks.ANCIENT_PRISMARINE.get().defaultBlockState());
+                level.setBlockAndUpdate(normalPos.offset(x, y, 0), PufferfishBlocks.ANCIENT_PRISMARINE.get().defaultBlockState());
+            }
+        }
         var ancient = (PufferfishConduitBlockEntity) level.getBlockEntity(pos);
         var normal = (PufferfishConduitBlockEntity) level.getBlockEntity(normalPos);
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
@@ -50,7 +56,7 @@ public final class AncientPufferfishConduitGameTests {
         distant.setNoGravity(true);
         level.addFreshEntity(distant);
         helper.runAfterDelay(45, () -> {
-            helper.assertTrue(ancient.isActive() && !normal.isActive(), "Frameless activation affected the wrong conduit");
+            helper.assertTrue(ancient.isActive() && !normal.isActive(), "Ancient frame activated the wrong conduit");
             helper.assertTrue(PufferfishConduitSpawning.isInAncientRange(level, pos.north(31))
                     && !PufferfishConduitSpawning.isInAncientRange(level, pos.above(32)), "Ancient range is not thirty-two blocks");
             helper.assertTrue(player.hasEffect(PufferfishEffects.PUFFERFISH_POWER)
@@ -71,7 +77,7 @@ public final class AncientPufferfishConduitGameTests {
             for (var offset : BlockPos.betweenClosed(-2, -2, -2, 2, 2, 2)) {
                 int x = Math.abs(offset.getX()), y = Math.abs(offset.getY()), z = Math.abs(offset.getZ());
                 if (x == 0 && (y == 2 || z == 2) || y == 0 && (x == 2 || z == 2) || z == 0 && (x == 2 || y == 2)) {
-                    level.setBlockAndUpdate(pos.offset(offset), Blocks.PRISMARINE.defaultBlockState());
+                    level.setBlockAndUpdate(pos.offset(offset), PufferfishBlocks.ANCIENT_PRISMARINE.get().defaultBlockState());
                 }
             }
             helper.runAfterDelay(45, () -> {

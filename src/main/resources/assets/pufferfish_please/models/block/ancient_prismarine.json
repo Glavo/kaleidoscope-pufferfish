@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "pufferfish_please:block/ancient_prismarine"
+  }
+}

@@ -10,6 +10,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -48,6 +49,15 @@ public final class PufferfishBlocks {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PufferfishConduitBlockEntity>> CONDUIT_ENTITY =
             BLOCK_ENTITIES.register("pufferfish_conduit", () -> BlockEntityType.Builder.of(PufferfishConduitBlockEntity::new,
                     CONDUIT.get(), ANCIENT_CONDUIT.get()).build(null));
+    public static final DeferredBlock<Block> ANCIENT_PRISMARINE = BLOCKS.registerBlock("ancient_prismarine",
+            Block::new, BlockBehaviour.Properties.ofFullCopy(Blocks.OBSIDIAN).mapColor(MapColor.COLOR_CYAN));
+    public static final DeferredBlock<SuspiciousAncientPrismarineBlock> SUSPICIOUS_ANCIENT_PRISMARINE =
+            BLOCKS.registerBlock("suspicious_ancient_prismarine", SuspiciousAncientPrismarineBlock::new,
+                    BlockBehaviour.Properties.ofFullCopy(Blocks.OBSIDIAN).mapColor(MapColor.COLOR_CYAN)
+                            .noLootTable().pushReaction(net.minecraft.world.level.material.PushReaction.BLOCK));
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<AncientPrismarineBlockEntity>> ANCIENT_PRISMARINE_ENTITY =
+            BLOCK_ENTITIES.register("suspicious_ancient_prismarine", () -> BlockEntityType.Builder.of(
+                    AncientPrismarineBlockEntity::new, SUSPICIOUS_ANCIENT_PRISMARINE.get()).build(null));
     private static final DeferredBlock<PufferfishSkinBlock> PLAIN_SKIN = registerSkin(PufferfishVariant.NORMAL, MapColor.COLOR_YELLOW);
     private static final Map<DyeColor, DeferredBlock<PufferfishSkinBlock>> COLORED_SKINS = registerColoredSkins();
     public static final DeferredBlock<PufferfishSkinBlock> COPPER_SKIN = registerSkin(PufferfishVariant.COPPER.get(0), MapColor.COLOR_ORANGE);
@@ -69,6 +79,8 @@ public final class PufferfishBlocks {
     static {
         ITEMS.registerSimpleBlockItem(CONDUIT);
         ITEMS.registerSimpleBlockItem(ANCIENT_CONDUIT);
+        ITEMS.registerSimpleBlockItem(ANCIENT_PRISMARINE);
+        ITEMS.registerSimpleBlockItem(SUSPICIOUS_ANCIENT_PRISMARINE);
     }
 
     private PufferfishBlocks() {}

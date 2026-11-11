@@ -3,12 +3,16 @@
 
 package org.glavo.mcmod.pufferfish;
 
+import java.util.List;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.Pufferfish;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.ConduitBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -16,6 +20,8 @@ import net.minecraft.world.phys.AABB;
 
 public final class PufferfishConduitBlockEntity extends ConduitBlockEntity {
     public static final int ANCIENT_RADIUS = 32;
+    public static final TagKey<Block> ANCIENT_FRAME = TagKey.create(Registries.BLOCK,
+            PufferfishPlease.id("ancient_conduit_frame"));
     public PufferfishConduitBlockEntity(BlockPos pos, BlockState state) { super(pos, state); }
 
     @Override
@@ -28,6 +34,23 @@ public final class PufferfishConduitBlockEntity extends ConduitBlockEntity {
             if (!level.isWaterAt(water)) return false;
         }
         return true;
+    }
+
+    public static boolean updateAncientFrame(Level level, BlockPos pos, List<BlockPos> frame) {
+        frame.clear();
+        if (!isSubmerged(level, pos)) return false;
+        for (var offset : BlockPos.betweenClosed(-2, -2, -2, 2, 2, 2)) {
+            if (isFrameOffset(offset)) {
+                var framePos = pos.offset(offset);
+                if (level.getBlockState(framePos).is(ANCIENT_FRAME)) frame.add(framePos);
+            }
+        }
+        return frame.size() >= 16;
+    }
+
+    private static boolean isFrameOffset(BlockPos offset) {
+        int x = Math.abs(offset.getX()), y = Math.abs(offset.getY()), z = Math.abs(offset.getZ());
+        return x == 0 && (y == 2 || z == 2) || y == 0 && (x == 2 || z == 2) || z == 0 && (x == 2 || y == 2);
     }
 
     public static void applyPower(Level level, BlockPos pos, int frameSize) {
@@ -54,11 +77,7 @@ public final class PufferfishConduitBlockEntity extends ConduitBlockEntity {
         int frameSize = 0;
         if (entity.isActive() && !entity.isAncient()) {
             for (var offset : BlockPos.betweenClosed(-2, -2, -2, 2, 2, 2)) {
-                int x = Math.abs(offset.getX());
-                int y = Math.abs(offset.getY());
-                int z = Math.abs(offset.getZ());
-                if ((x == 0 && (y == 2 || z == 2)) || (y == 0 && (x == 2 || z == 2))
-                        || (z == 0 && (x == 2 || y == 2))) {
+                if (isFrameOffset(offset)) {
                     var framePos = pos.offset(offset);
                     if (level.getBlockState(framePos).isConduitFrame(level, framePos, pos)) frameSize++;
                 }

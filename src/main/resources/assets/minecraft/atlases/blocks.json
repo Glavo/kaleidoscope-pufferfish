@@ -2,6 +2,9 @@
   "sources": [
     {
       "type": "pufferfish_please:dyed_pufferfish"
+    },
+    {
+      "type": "pufferfish_please:ancient_prismarine"
     }
   ]
 }
