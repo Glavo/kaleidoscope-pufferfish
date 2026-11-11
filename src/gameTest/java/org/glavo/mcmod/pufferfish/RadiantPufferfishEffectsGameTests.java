@@ -41,12 +41,16 @@ public final class RadiantPufferfishEffectsGameTests {
     }
 
     static void assertHit(GameTestHelper helper, net.minecraft.world.entity.LivingEntity target, int previous, long seed) {
+        assertHit(helper, target, previous, seed, 120);
+    }
+
+    static void assertHit(GameTestHelper helper, net.minecraft.world.entity.LivingEntity target, int previous, long seed, int duration) {
         var random = net.minecraft.util.RandomSource.create(seed);
         int expected = previous;
         if (previous < 2 && random.nextFloat() < 0.6F) expected++;
         var wither = target.getEffect(MobEffects.WITHER);
         helper.assertTrue(expected < 0 ? wither == null : wither != null
-                        && wither.getAmplifier() == expected && wither.getDuration() == 100,
+                        && wither.getAmplifier() == expected && wither.getDuration() == duration,
                 "Radiant hit did not roll a 60 percent increase or refresh existing wither: " + previous + ", seed=" + seed);
         for (int i = 0; i < BONUS_EFFECTS.size(); i++) {
             boolean triggered = previous >= 2 && random.nextFloat() < 0.05F;
@@ -259,7 +263,7 @@ public final class RadiantPufferfishEffectsGameTests {
                 target.invulnerableTime = 0;
                 NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(target));
                 assertGlowing(helper, target);
-                helper.assertTrue(target.hasEffect(MobEffects.WITHER) && target.getEffect(MobEffects.WITHER).getAmplifier() == 0 && target.getEffect(MobEffects.WITHER).getDuration() == 100
+                helper.assertTrue(target.hasEffect(MobEffects.WITHER) && target.getEffect(MobEffects.WITHER).getAmplifier() == 0 && target.getEffect(MobEffects.WITHER).getDuration() == 120
                         && !target.hasEffect(MobEffects.POISON), "Contact should apply fixed wither one");
             }
         }

@@ -47,9 +47,9 @@ public final class PufferfishRetaliation {
     public static MobEffectInstance effect(ItemStack stack) {
         var variant = PufferfishVariant.of(stack);
         if (variant == null || variant.waxed()) return null;
-        if (variant.material() == PufferfishMaterial.RADIANT) return new MobEffectInstance(MobEffects.WITHER, 120, 0);
+        if (variant.material() == PufferfishMaterial.RADIANT) return new MobEffectInstance(MobEffects.WITHER, PufferfishCombat.STATUS_EFFECT_DURATION_TICKS, 0);
         int oxidation = variant.oxidation();
-        return new MobEffectInstance(MobEffects.POISON, PufferfishCombat.POISON_DURATION_TICKS, Math.max(0, oxidation - 1));
+        return new MobEffectInstance(MobEffects.POISON, PufferfishCombat.STATUS_EFFECT_DURATION_TICKS, Math.max(0, oxidation - 1));
     }
 
     @javax.annotation.Nullable

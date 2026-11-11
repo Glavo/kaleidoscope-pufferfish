@@ -303,14 +303,9 @@ public final class MaterialPufferfish extends Pufferfish {
         if (getPuffState() > 0 && attackPhase() == IDLE) strike(target, 0, attackInterval());
     }
 
-    /// Living fish poison lasts three seconds per inflation stage; radiant attacks retain their wither rules.
+    /// Living fish poison and wither last three seconds per inflation stage.
     private void applyAttackEffect(LivingEntity target) {
-        if (kind() == PufferfishMobConfig.Kind.RADIANT) {
-            PufferfishCombat.applyAttackEffect(fish(), target, this);
-        } else if (getPuffState() > 0) {
-            var poison = PufferfishCombat.passiveEffect(fish());
-            if (poison != null) target.addEffect(new MobEffectInstance(MobEffects.POISON, 60 * getPuffState(), poison.getAmplifier()), this);
-        }
+        if (getPuffState() > 0) PufferfishCombat.applyAttackEffect(fish(), target, this, 60 * getPuffState());
     }
 
     private DamageSource attackDamageSource() {

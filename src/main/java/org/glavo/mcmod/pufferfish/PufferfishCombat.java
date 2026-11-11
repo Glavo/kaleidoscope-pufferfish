@@ -28,8 +28,7 @@ import net.neoforged.neoforge.common.damagesource.DamageContainer;
 
 /// Calculates pufferfish weapon damage and applies shared melee and projectile effects.
 public final class PufferfishCombat {
-    public static final int POISON_DURATION_TICKS = 120;
-    public static final int RADIANT_WITHER_DURATION_TICKS = 100;
+    public static final int STATUS_EFFECT_DURATION_TICKS = 120;
     public static final int RADIANT_GLOW_DURATION_TICKS = 200;
     private static final float RADIANT_WITHER_CHANCE = 0.6F;
     private static final float RADIANT_DEBUFF_CHANCE = 0.05F;
@@ -104,18 +103,23 @@ public final class PufferfishCombat {
 
     /// Radiant hits roll Wither I or an upgrade to III; existing wither always refreshes.
     public static void applyAttackEffect(ItemStack stack, LivingEntity target, Entity source) {
+        applyAttackEffect(stack, target, source, STATUS_EFFECT_DURATION_TICKS);
+    }
+
+    /// Uses the supplied poison or wither duration without changing radiant bonus effect durations.
+    public static void applyAttackEffect(ItemStack stack, LivingEntity target, Entity source, int duration) {
         if (PufferfishItems.isRadiant(stack)) {
             var current = target.getEffect(MobEffects.WITHER);
             var random = source.getRandom();
             if (current == null) {
                 if (random.nextFloat() < RADIANT_WITHER_CHANCE) {
-                    target.addEffect(new MobEffectInstance(MobEffects.WITHER, RADIANT_WITHER_DURATION_TICKS), source);
+                    target.addEffect(new MobEffectInstance(MobEffects.WITHER, duration), source);
                 }
             } else {
                 int amplifier = current.getAmplifier();
                 boolean capped = amplifier >= 2;
                 if (amplifier < 2 && random.nextFloat() < RADIANT_WITHER_CHANCE) amplifier++;
-                target.addEffect(new MobEffectInstance(MobEffects.WITHER, RADIANT_WITHER_DURATION_TICKS, amplifier), source);
+                target.addEffect(new MobEffectInstance(MobEffects.WITHER, duration, amplifier), source);
                 // Only hits against an already capped effect roll the four independent debuffs.
                 if (capped) {
                     if (random.nextFloat() < RADIANT_DEBUFF_CHANCE) target.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 100), source);
@@ -126,7 +130,8 @@ public final class PufferfishCombat {
             }
             applyRadiantGlow(target, source);
         } else {
-            applyPassiveEffect(stack, target, source);
+            var poison = passiveEffect(stack);
+            if (poison != null) target.addEffect(new MobEffectInstance(MobEffects.POISON, duration, poison.getAmplifier()), source);
         }
     }
 
@@ -144,11 +149,11 @@ public final class PufferfishCombat {
     @javax.annotation.Nullable
     public static MobEffectInstance passiveEffect(ItemStack stack) {
         stack = PufferfishItems.flailFish(stack);
-        if (PufferfishItems.isRadiant(stack)) return new MobEffectInstance(MobEffects.WITHER, RADIANT_WITHER_DURATION_TICKS, 0);
+        if (PufferfishItems.isRadiant(stack)) return new MobEffectInstance(MobEffects.WITHER, STATUS_EFFECT_DURATION_TICKS, 0);
         int copper = CopperPufferfish.index(stack);
         if (copper >= 4) return null;
         int amplifier = copper > 0 ? copper - 1 : PufferfishItems.hasNetheriteCombat(stack) ? 1 : 0;
-        return new MobEffectInstance(MobEffects.POISON, POISON_DURATION_TICKS, amplifier);
+        return new MobEffectInstance(MobEffects.POISON, STATUS_EFFECT_DURATION_TICKS, amplifier);
     }
 
     /// Returns the stored level of the specified enchantment, or zero when absent.

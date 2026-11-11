@@ -465,30 +465,34 @@ public final class PufferfishMobCombatGameTests {
         try {
             for (int hit = 0; hit < 12; hit++) {
                 var attacker = fish(helper, "radiant");
+                int puff = hit % 2 + 1;
+                attacker.setPuffState(puff);
                 target.invulnerableTime = 0;
                 long seed = 4096L + hit * 98171L;
                 int previous = RadiantPufferfishEffectsGameTests.prepareHit(target, attacker, seed);
                 RadiantPufferfishEffectsGameTests.prepareHit(weaponTarget, attacker, seed);
                 switch (hit % 3) {
-                    case 0 -> { attacker.setPuffState(2); attacker.sting(target); }
+                    case 0 -> attacker.sting(target);
                     case 1 -> helper.assertTrue(attacker.strike(target, 0, attacker.attackInterval()), "Radiant direct attack missed");
                     case 2 -> attacker.pulse();
                 }
                 attacker.getRandom().setSeed(seed);
                 PufferfishCombat.hitEffects(attacker.fish(), weaponTarget, attacker, net.minecraft.world.phys.Vec3.ZERO);
-                RadiantPufferfishEffectsGameTests.assertHit(helper, target, previous, seed);
+                RadiantPufferfishEffectsGameTests.assertHit(helper, target, previous, seed, puff * 60);
                 for (var effect : java.util.List.of(MobEffects.WITHER, MobEffects.GLOWING, MobEffects.BLINDNESS,
                         MobEffects.DARKNESS, MobEffects.HUNGER, MobEffects.WEAKNESS)) {
                     var actual = target.getEffect(effect);
                     var expected = weaponTarget.getEffect(effect);
                     helper.assertTrue(actual == null ? expected == null : expected != null
-                                    && actual.getAmplifier() == expected.getAmplifier() && actual.getDuration() == expected.getDuration(),
+                                    && actual.getAmplifier() == expected.getAmplifier()
+                                    && actual.getDuration() == (effect.equals(MobEffects.WITHER) ? puff * 60 : expected.getDuration()),
                             "Living radiant fish effects diverged from weapon effects");
                 }
                 attacker.discard();
             }
             target.removeAllEffects();
             var attacker = fish(helper, "radiant");
+            attacker.setPuffState(2);
             target.setInvulnerable(true);
             target.invulnerableTime = 0;
             helper.assertTrue(!attacker.strike(target, 0, 0) && !target.hasEffect(MobEffects.WITHER), "Failed attack applied wither");
@@ -572,6 +576,7 @@ public final class PufferfishMobCombatGameTests {
     public static void radiantPulseHasRangeCoverAndSharedAttackCooldown(GameTestHelper helper) {
         pool(helper);
         var fish = fish(helper, "radiant");
+        fish.setPuffState(2);
         var near = helper.spawn(EntityType.COW, new BlockPos(7, 3, 7));
         var far = helper.spawn(EntityType.COW, new BlockPos(10, 3, 7));
         var covered = helper.spawn(EntityType.COW, new BlockPos(5, 3, 9));
@@ -584,7 +589,7 @@ public final class PufferfishMobCombatGameTests {
                         && message.getKey().equals("death.attack.pufferfish_please.radiant_pufferfish"),
                 "Radiant pulse did not use its variant death message");
         helper.assertTrue(near.getHealth() < near.getMaxHealth() && near.hasEffect(MobEffects.GLOWING)
-                && near.getEffect(MobEffects.WITHER).getAmplifier() == 0 && near.getEffect(MobEffects.WITHER).getDuration() == 100,
+                && near.getEffect(MobEffects.WITHER).getAmplifier() == 0 && near.getEffect(MobEffects.WITHER).getDuration() == 120,
                 "Radiant pulse did not apply initial Wither I and glowing");
         helper.assertTrue(far.getHealth() == far.getMaxHealth() && covered.getHealth() == covered.getMaxHealth(),
                 "Pulse passed through cover or exceeded its radius");
