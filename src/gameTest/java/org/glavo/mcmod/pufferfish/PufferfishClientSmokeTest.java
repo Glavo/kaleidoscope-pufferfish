@@ -76,7 +76,13 @@ public final class PufferfishClientSmokeTest {
                 || PufferfishEffects.LETHAL_TOXIN.get().getDisplayName().getString().startsWith("effect.")) {
             throw new IllegalStateException("Missing lethal toxin sprite or translation");
         }
+        var powerSprite = minecraft.getMobEffectTextures().get(PufferfishEffects.PUFFERFISH_POWER);
+        if (!powerSprite.contents().name().equals(PufferfishEffects.PUFFERFISH_POWER.getId())
+                || PufferfishEffects.PUFFERFISH_POWER.get().getDisplayName().getString().startsWith("effect.")) {
+            throw new IllegalStateException("Missing pufferfish power sprite or translation");
+        }
         PufferfishDyedTextureClientTest.verify(minecraft, phase == 1);
+        PufferfishPowerClientTest.verify(minecraft);
         verifySkin(minecraft, null);
         var upgradeTemplate = PufferfishItems.UPGRADE_TEMPLATE.toStack();
         var templateModel = minecraft.getItemRenderer().getModel(upgradeTemplate, null, null, 0);

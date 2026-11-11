@@ -4,16 +4,32 @@
 package org.glavo.mcmod.pufferfish;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.Pufferfish;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.ConduitBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 
 public final class PufferfishConduitBlockEntity extends ConduitBlockEntity {
     public PufferfishConduitBlockEntity(BlockPos pos, BlockState state) { super(pos, state); }
 
     @Override
     public BlockEntityType<?> getType() { return PufferfishBlocks.CONDUIT_ENTITY.get(); }
+
+    public static void applyPower(Level level, BlockPos pos, int frameSize) {
+        int radius = frameSize / 7 * 16;
+        var bounds = new AABB(pos).inflate(radius).expandTowards(0, level.getHeight(), 0);
+        for (var target : level.getEntitiesOfClass(LivingEntity.class, bounds,
+                target -> target instanceof Pufferfish || target instanceof Player && target.isInWaterOrRain())) {
+            if (pos.closerThan(target.blockPosition(), radius)) {
+                target.addEffect(new MobEffectInstance(PufferfishEffects.PUFFERFISH_POWER, 260, 0, true, true));
+            }
+        }
+    }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, PufferfishConduitBlockEntity entity) {
         ConduitBlockEntity.serverTick(level, pos, state, entity);

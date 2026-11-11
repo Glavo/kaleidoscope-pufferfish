@@ -160,9 +160,10 @@ public final class PufferfishConduitGameTests {
             checkSpawns(helper, pos, true);
             checkSpawns(helper, pos.north(31), true);
             checkSpawns(helper, pos.north(32), false);
-            var power = wet.getEffect(MobEffects.CONDUIT_POWER);
-            helper.assertTrue(power != null && power.getAmplifier() == 0 && power.getDuration() > 200, "Wet player did not receive vanilla conduit power");
-            helper.assertTrue(!dry.hasEffect(MobEffects.CONDUIT_POWER), "Dry player received conduit power");
+            var power = wet.getEffect(PufferfishEffects.PUFFERFISH_POWER);
+            helper.assertTrue(power != null && power.getAmplifier() == 0 && power.getDuration() > 200, "Wet player did not receive pufferfish power");
+            helper.assertTrue(!wet.hasEffect(MobEffects.CONDUIT_POWER), "Pufferfish conduit also applied vanilla conduit power");
+            helper.assertTrue(!dry.hasEffect(PufferfishEffects.PUFFERFISH_POWER), "Dry player received pufferfish power");
             wet.discard();
             dry.discard();
             helper.setBlock(CENTER.offset(2, 0, 0), Blocks.AIR);

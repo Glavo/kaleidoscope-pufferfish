@@ -3,6 +3,8 @@
   "package": "org.glavo.mcmod.pufferfish.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "PufferfishConduitMixin",
+    "PufferfishPowerMixin",
     "LethalToxinMixin",
     "PufferfishBoatBuoyancyMixin",
     "LegacyPufferfishDataMixin",
@@ -16,6 +18,7 @@
     "PufferfishSmashMixin"
   ],
   "client": [
+    "PufferfishPowerLightMixin",
     "FallingPufferfishRendererMixin",
     "PufferfishBoatSpeedMixin",
     "PufferfishRendererMixin",

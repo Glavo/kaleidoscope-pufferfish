@@ -22,6 +22,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public final class PufferfishEffects {
     private static final DeferredRegister<MobEffect> EFFECTS = DeferredRegister.create(Registries.MOB_EFFECT, PufferfishPlease.MODID);
     public static final DeferredHolder<MobEffect, MobEffect> LETHAL_TOXIN = EFFECTS.register("lethal_toxin", LethalToxinEffect::new);
+    public static final DeferredHolder<MobEffect, MobEffect> PUFFERFISH_POWER = EFFECTS.register("pufferfish_power", PufferfishPowerEffect::new);
 
     private PufferfishEffects() {}
 
@@ -29,6 +30,8 @@ public final class PufferfishEffects {
         EFFECTS.register(bus);
         NeoForge.EVENT_BUS.addListener(PufferfishEffects::immunity);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishEffects::mergeAddedToxin);
+        NeoForge.EVENT_BUS.addListener(PufferfishPowerEffect::strength);
+        NeoForge.EVENT_BUS.addListener(PufferfishPowerEffect::resistance);
     }
 
     public static boolean isPoison(MobEffectInstance effect) {
