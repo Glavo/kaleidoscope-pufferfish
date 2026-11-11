@@ -1,0 +1,14 @@
+{
+  "structures": [
+    { "structure": "pufferfish_please:pufferfish_ruin", "weight": 3 },
+    { "structure": "pufferfish_please:ancient_pufferfish_ruin", "weight": 1 }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "spacing": 48,
+    "separation": 24,
+    "spread_type": "triangular",
+    "frequency": 0.5,
+    "salt": 186437295
+  }
+}

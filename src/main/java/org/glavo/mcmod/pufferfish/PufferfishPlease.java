@@ -149,6 +149,7 @@ public class PufferfishPlease {
         PufferfishBoats.register(bus);
         PufferfishLamps.register(bus);
         PufferfishBlocks.register(bus);
+        org.glavo.mcmod.pufferfish.worldgen.PufferfishRuins.register(bus);
         COMPONENTS.register(bus);
         ATTACHMENTS.register(bus);
         ENTITIES.register(bus);
