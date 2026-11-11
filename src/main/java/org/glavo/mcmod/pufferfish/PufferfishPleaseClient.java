@@ -45,6 +45,9 @@ public class PufferfishPleaseClient {
             CreateClientIntegration.register(bus);
         }
         bus.addListener(this::registerSprites);
+        bus.addListener((net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent event) ->
+                event.registerSpecial(PufferfishEffects.CURSE_APPEARANCE.get(),
+                        (type, level, x, y, z, dx, dy, dz) -> new org.glavo.mcmod.pufferfish.client.PufferfishCurseParticle(level, x, y, z)));
         bus.addListener(this::clientSetup);
         bus.addListener(this::registerModels);
         bus.addListener(EventPriority.LOWEST, this::wrapModels);

@@ -26,7 +26,10 @@ public final class PufferfishConduitBlockEntity extends ConduitBlockEntity {
         for (var target : level.getEntitiesOfClass(LivingEntity.class, bounds,
                 target -> target instanceof Pufferfish || target instanceof Player && target.isInWaterOrRain())) {
             if (pos.closerThan(target.blockPosition(), radius)) {
-                target.addEffect(new MobEffectInstance(PufferfishEffects.PUFFERFISH_POWER, 260, 0, true, true));
+                boolean cursed = target instanceof Player && target.hasEffect(PufferfishEffects.PUFFERFISH_CURSE);
+                if (cursed) target.removeEffect(PufferfishEffects.PUFFERFISH_POWER);
+                target.addEffect(new MobEffectInstance(cursed ? PufferfishEffects.PUFFERFISH_CURSE : PufferfishEffects.PUFFERFISH_POWER,
+                        260, 0, true, true));
             }
         }
     }

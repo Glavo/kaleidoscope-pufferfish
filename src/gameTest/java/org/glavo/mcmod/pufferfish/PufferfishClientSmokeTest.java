@@ -83,6 +83,7 @@ public final class PufferfishClientSmokeTest {
         }
         PufferfishDyedTextureClientTest.verify(minecraft, phase == 1);
         PufferfishPowerClientTest.verify(minecraft);
+        PufferfishCurseClientTest.verify(minecraft);
         verifySkin(minecraft, null);
         var upgradeTemplate = PufferfishItems.UPGRADE_TEMPLATE.toStack();
         var templateModel = minecraft.getItemRenderer().getModel(upgradeTemplate, null, null, 0);

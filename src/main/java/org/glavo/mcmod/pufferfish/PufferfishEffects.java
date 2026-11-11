@@ -4,6 +4,8 @@
 package org.glavo.mcmod.pufferfish;
 
 import net.minecraft.core.registries.Registries;
+import net.minecraft.core.particles.ParticleType;
+import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffect;
@@ -21,17 +23,22 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 
 public final class PufferfishEffects {
     private static final DeferredRegister<MobEffect> EFFECTS = DeferredRegister.create(Registries.MOB_EFFECT, PufferfishPlease.MODID);
+    private static final DeferredRegister<ParticleType<?>> PARTICLES = DeferredRegister.create(Registries.PARTICLE_TYPE, PufferfishPlease.MODID);
     public static final DeferredHolder<MobEffect, MobEffect> LETHAL_TOXIN = EFFECTS.register("lethal_toxin", LethalToxinEffect::new);
     public static final DeferredHolder<MobEffect, MobEffect> PUFFERFISH_POWER = EFFECTS.register("pufferfish_power", PufferfishPowerEffect::new);
+    public static final DeferredHolder<MobEffect, MobEffect> PUFFERFISH_CURSE = EFFECTS.register("pufferfish_curse", PufferfishCurseEffect::new);
+    public static final DeferredHolder<ParticleType<?>, SimpleParticleType> CURSE_APPEARANCE = PARTICLES.register("pufferfish_curse", () -> new SimpleParticleType(true));
 
     private PufferfishEffects() {}
 
     public static void register(IEventBus bus) {
         EFFECTS.register(bus);
+        PARTICLES.register(bus);
         NeoForge.EVENT_BUS.addListener(PufferfishEffects::immunity);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishEffects::mergeAddedToxin);
         NeoForge.EVENT_BUS.addListener(PufferfishPowerEffect::strength);
         NeoForge.EVENT_BUS.addListener(PufferfishPowerEffect::resistance);
+        NeoForge.EVENT_BUS.addListener(PufferfishCurseEffect::onAttack);
     }
 
     public static boolean isPoison(MobEffectInstance effect) {
