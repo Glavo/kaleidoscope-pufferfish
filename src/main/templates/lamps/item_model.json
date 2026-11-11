@@ -1,50 +1,10 @@
 {
   "parent": "minecraft:builtin/entity",
+  "gui_light": "front",
   "textures": {
     "particle": "${fishTexture}"
   },
   "display": {
-    "gui": {
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "translation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ]
-    },
-    "ground": {
-      "translation": [
-        0,
-        3,
-        0
-      ],
-      "scale": [
-        0.5,
-        0.5,
-        0.5
-      ]
-    },
-    "fixed": {
-      "rotation": [
-        0,
-        180,
-        -35
-      ],
-      "scale": [
-        0.7,
-        0.7,
-        0.7
-      ]
-    },
     "thirdperson_righthand": {
       "rotation": [
         0,
@@ -112,7 +72,47 @@
         0.8,
         0.8
       ]
+    },
+    "gui": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    "ground": {
+      "translation": [
+        0,
+        3,
+        0
+      ],
+      "scale": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "fixed": {
+      "rotation": [
+        0,
+        180,
+        -35
+      ],
+      "scale": [
+        0.7,
+        0.7,
+        0.7
+      ]
     }
-  },
-  "gui_light": "front"
+  }
 }

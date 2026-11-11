@@ -7,11 +7,11 @@
     "C  "
   ],
   "key": {
-    "F": {
-      "item": "pufferfish_please:netherite_pufferfish"
-    },
     "C": {
       "item": "minecraft:chain"
+    },
+    "F": {
+      "item": "pufferfish_please:netherite_pufferfish"
     }
   },
   "result": {

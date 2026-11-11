@@ -7,11 +7,11 @@
     "C  "
   ],
   "key": {
-    "F": {
-      "item": "minecraft:pufferfish"
-    },
     "C": {
       "item": "minecraft:chain"
+    },
+    "F": {
+      "item": "minecraft:pufferfish"
     }
   },
   "result": {

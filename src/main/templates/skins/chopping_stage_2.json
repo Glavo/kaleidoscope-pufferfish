@@ -1,8 +1,8 @@
 {
   "textures": {
     "fish": "${fishTexture}",
-    "skin": "${modId}:block/${blockName}",
-    "sashimi": "${sashimiTexture}"
+    "sashimi": "${sashimiTexture}",
+    "skin": "${modId}:block/${blockName}"
   },
   "elements": [
     {

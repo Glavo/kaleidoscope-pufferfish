@@ -1,15 +1,15 @@
 {
   "parent": "minecraft:block/block",
   "textures": {
-    "pie": "${modId}:block/pufferfish_stargazy_pie",
-    "particle": "${modId}:block/pufferfish_stargazy_pie"
+    "particle": "${modId}:block/pufferfish_stargazy_pie",
+    "pie": "${modId}:block/pufferfish_stargazy_pie"
   },
   "display": {
+    "thirdperson_righthand": {"rotation": [75, 45, 0], "translation": [0, 2.5, 0], "scale": [0.375, 0.375, 0.375]},
+    "firstperson_righthand": {"rotation": [0, 45, 0], "scale": [0.4, 0.4, 0.4]},
     "gui": {"rotation": [40, 225, 0], "translation": [0, 1, 0], "scale": [0.8, 0.8, 0.8]},
     "ground": {"translation": [0, 3, 0], "scale": [0.5, 0.5, 0.5]},
-    "fixed": {"rotation": [0, 0, 0], "scale": [0.7, 0.7, 0.7]},
-    "thirdperson_righthand": {"rotation": [75, 45, 0], "translation": [0, 2.5, 0], "scale": [0.375, 0.375, 0.375]},
-    "firstperson_righthand": {"rotation": [0, 45, 0], "scale": [0.4, 0.4, 0.4]}
+    "fixed": {"rotation": [0, 0, 0], "scale": [0.7, 0.7, 0.7]}
   },
   "elements": ${elements}
 }

@@ -416,14 +416,14 @@ val generatePieModels = tasks.register<Sync>("generatePieModels") {
     fun uv(tile: Int) = listOf(tile % 4 * 4, tile / 4 * 4, tile % 4 * 4 + 4, tile / 4 * 4 + 4)
     fun box(x: Double, y: Double, z: Double, width: Double, height: Double, depth: Double, tile: Int, top: Int = tile): Map<String, Any> = mapOf(
         "from" to listOf(x, y, z), "to" to listOf(x + width, y + height, z + depth),
-        "faces" to listOf("north", "south", "east", "west", "up", "down").associateWith {
-            mapOf("texture" to "#pie", "uv" to uv(if (it == "up") top else tile))
+        "faces" to listOf("down", "up", "north", "south", "west", "east").associateWith {
+            mapOf("uv" to uv(if (it == "up") top else tile), "texture" to "#pie")
         }
     )
     fun fish(x: Double, z: Double): List<Map<String, Any>> {
         val body = box(x - 1.8, 3.8, z - 1.8, 3.6, 3.6, 3.6, 1, 0).toMutableMap()
-        body["faces"] = mapOf("north" to 1, "south" to 6, "east" to 7, "west" to 8, "up" to 0, "down" to 1)
-            .mapValues { (_, tile) -> mapOf("texture" to "#pie", "uv" to uv(tile)) }
+        body["faces"] = mapOf("down" to 1, "up" to 0, "north" to 1, "south" to 6, "west" to 8, "east" to 7)
+            .mapValues { (_, tile) -> mapOf("uv" to uv(tile), "texture" to "#pie") }
         val fins = listOf(box(x - 2.8, 6.2, z - 0.6, 1.0, 0.3, 1.2, 5),
             box(x + 1.8, 6.2, z - 0.6, 1.0, 0.3, 1.2, 5))
         val spines = listOf(-1.0, 1.0).flatMap { side ->
@@ -459,8 +459,8 @@ val generateAspicModels = tasks.register<Sync>("generateAspicModels") {
     into(layout.buildDirectory.dir("generated/resources/pufferfishAspic"))
     fun box(x: Double, y: Double, z: Double, w: Double, h: Double, d: Double, tile: Int) = mapOf(
         "from" to listOf(x, y, z), "to" to listOf(x + w, y + h, z + d),
-        "faces" to listOf("north", "south", "east", "west", "up", "down").associateWith {
-            mapOf("texture" to "#food", "uv" to listOf(tile % 4 * 4, tile / 4 * 4, tile % 4 * 4 + 4, tile / 4 * 4 + 4))
+        "faces" to listOf("down", "up", "north", "south", "west", "east").associateWith {
+            mapOf("uv" to listOf(tile % 4 * 4, tile / 4 * 4, tile % 4 * 4 + 4, tile / 4 * 4 + 4), "texture" to "#food")
         }
     )
     val bowl = listOf(

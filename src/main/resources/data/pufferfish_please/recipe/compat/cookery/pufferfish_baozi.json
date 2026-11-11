@@ -9,9 +9,9 @@
   "ingredient": {
     "item": "pufferfish_please:raw_pufferfish_baozi"
   },
+  "cook_tick": 1200,
   "result": {
     "id": "pufferfish_please:pufferfish_baozi",
     "count": 1
-  },
-  "cook_tick": 1200
+  }
 }

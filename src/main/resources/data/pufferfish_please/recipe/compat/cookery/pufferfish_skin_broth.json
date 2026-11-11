@@ -9,7 +9,7 @@
     {"tag": "pufferfish_please:edible_pufferfish_skins"}
   ],
   "soup_base": "minecraft:water",
-  "result": {"id": "pufferfish_please:pufferfish_skin_broth", "count": 1},
+  "carrier": {"item": "minecraft:bowl"},
   "time": 1200,
-  "carrier": {"item": "minecraft:bowl"}
+  "result": {"id": "pufferfish_please:pufferfish_skin_broth", "count": 1}
 }

@@ -1,12 +1,12 @@
 {
   "variants": {
-    "facing=north": {
-      "model": "pufferfish_please:block/pufferfish_engine",
-      "y": 0
-    },
     "facing=east": {
       "model": "pufferfish_please:block/pufferfish_engine",
       "y": 90
+    },
+    "facing=north": {
+      "model": "pufferfish_please:block/pufferfish_engine",
+      "y": 0
     },
     "facing=south": {
       "model": "pufferfish_please:block/pufferfish_engine",

@@ -3,8 +3,8 @@
   "category": "misc",
   "pattern": ["PPP", "PHP", "PPP"],
   "key": {
-    "P": {"tag": "pufferfish_please:pufferfish"},
-    "H": {"item": "minecraft:heart_of_the_sea"}
+    "H": {"item": "minecraft:heart_of_the_sea"},
+    "P": {"tag": "pufferfish_please:pufferfish"}
   },
   "result": {"id": "pufferfish_please:pufferfish_conduit", "count": 1}
 }

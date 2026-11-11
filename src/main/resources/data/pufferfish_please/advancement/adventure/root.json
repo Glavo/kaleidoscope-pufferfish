@@ -9,11 +9,11 @@
     "description": {
       "translate": "advancements.pufferfish_please.root.description"
     },
+    "background": "minecraft:textures/block/prismarine.png",
     "frame": "task",
     "show_toast": false,
     "announce_to_chat": false,
-    "hidden": false,
-    "background": "minecraft:textures/block/prismarine.png"
+    "hidden": false
   },
   "criteria": {
     "capture": {

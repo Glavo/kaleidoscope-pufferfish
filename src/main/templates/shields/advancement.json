@@ -1,6 +1,12 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
+    "has_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "${modId}:${shieldName}"
+      }
+    },
     "has_skin": {
       "trigger": "minecraft:inventory_changed",
       "conditions": {
@@ -9,12 +15,6 @@
             "items": "${modId}:${skinName}"
           }
         ]
-      }
-    },
-    "has_recipe": {
-      "trigger": "minecraft:recipe_unlocked",
-      "conditions": {
-        "recipe": "${modId}:${shieldName}"
       }
     }
   },

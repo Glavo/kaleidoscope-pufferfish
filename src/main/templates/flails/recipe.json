@@ -7,11 +7,11 @@
     "C  "
   ],
   "key": {
-    "F": {
-      "item": "${modId}:${fishName}"
-    },
     "C": {
       "item": "minecraft:chain"
+    },
+    "F": {
+      "item": "${modId}:${fishName}"
     }
   },
   "result": {

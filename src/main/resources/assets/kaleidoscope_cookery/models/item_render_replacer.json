@@ -1,10 +1,10 @@
 {
-  "pot": {},
-  "stockpot_cooking": {},
-  "stockpot_finished": {},
   "millstone": {},
+  "pot": {},
   "steamer": {
     "pufferfish_please:pufferfish_baozi": "pufferfish_please:item/pufferfish_baozi_steamer",
     "pufferfish_please:raw_pufferfish_baozi": "pufferfish_please:item/raw_pufferfish_baozi_steamer"
-  }
+  },
+  "stockpot_cooking": {},
+  "stockpot_finished": {}
 }

@@ -1,13 +1,13 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_template": {
-      "trigger": "minecraft:inventory_changed",
-      "conditions": {"items": [{"items": "pufferfish_please:pufferfish_upgrade_smithing_template"}]}
-    },
     "has_nether_star": {
       "trigger": "minecraft:inventory_changed",
       "conditions": {"items": [{"items": "minecraft:nether_star"}]}
+    },
+    "has_template": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {"items": [{"items": "pufferfish_please:pufferfish_upgrade_smithing_template"}]}
     },
     "has_the_recipe": {
       "trigger": "minecraft:recipe_unlocked",

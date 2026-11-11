@@ -1,13 +1,13 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_template": {
-      "trigger": "minecraft:inventory_changed",
-      "conditions": {"items": [{"items": "pufferfish_please:pufferfish_upgrade_smithing_template"}]}
-    },
     "has_heavy_core": {
       "trigger": "minecraft:inventory_changed",
       "conditions": {"items": [{"items": "minecraft:heavy_core"}]}
+    },
+    "has_template": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {"items": [{"items": "pufferfish_please:pufferfish_upgrade_smithing_template"}]}
     },
     "has_the_recipe": {
       "trigger": "minecraft:recipe_unlocked",

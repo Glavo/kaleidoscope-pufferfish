@@ -4,10 +4,10 @@
   "textures": {
     "particle": "minecraft:block/copper_block",
     "copper": "minecraft:block/copper_block",
-    "frame": "minecraft:block/polished_andesite",
-    "iron": "minecraft:block/iron_block",
-    "glass": "minecraft:block/glass",
     "dark": "minecraft:block/deepslate_tiles",
+    "frame": "minecraft:block/polished_andesite",
+    "glass": "minecraft:block/glass",
+    "iron": "minecraft:block/iron_block",
     "water": "minecraft:block/water_still"
   },
   "elements": [

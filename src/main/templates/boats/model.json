@@ -3,10 +3,10 @@
   "gui_light": "front",
   "textures": {"particle": "${modId}:block/${skinName}"},
   "display": {
-    "ground": {"translation": [0, 2, 0], "scale": [0.6, 0.6, 0.6]},
     "thirdperson_righthand": {"rotation": [0, 0, -20], "translation": [0, 2, 0], "scale": [0.7, 0.7, 0.7]},
     "thirdperson_lefthand": {"rotation": [0, 0, 20], "translation": [0, 2, 0], "scale": [0.7, 0.7, 0.7]},
     "firstperson_righthand": {"rotation": [0, -15, -15], "scale": [0.7, 0.7, 0.7]},
-    "firstperson_lefthand": {"rotation": [0, 15, 15], "scale": [0.7, 0.7, 0.7]}
+    "firstperson_lefthand": {"rotation": [0, 15, 15], "scale": [0.7, 0.7, 0.7]},
+    "ground": {"translation": [0, 2, 0], "scale": [0.6, 0.6, 0.6]}
   }
 }

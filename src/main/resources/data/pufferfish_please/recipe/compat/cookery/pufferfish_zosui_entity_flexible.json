@@ -19,9 +19,9 @@
       }
     ]
   ],
+  "soup_base": "minecraft:pufferfish_bucket",
   "result": {
     "id": "pufferfish_please:pufferfish_zosui",
     "count": 1
-  },
-  "soup_base": "minecraft:pufferfish_bucket"
+  }
 }

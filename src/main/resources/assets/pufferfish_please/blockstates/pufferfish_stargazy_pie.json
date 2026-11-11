@@ -1,12 +1,12 @@
 {
   "variants": {
-    "bites=0,facing=north": {
-      "model": "pufferfish_please:block/pufferfish_stargazy_pie_0",
-      "y": 0
-    },
     "bites=0,facing=east": {
       "model": "pufferfish_please:block/pufferfish_stargazy_pie_0",
       "y": 90
+    },
+    "bites=0,facing=north": {
+      "model": "pufferfish_please:block/pufferfish_stargazy_pie_0",
+      "y": 0
     },
     "bites=0,facing=south": {
       "model": "pufferfish_please:block/pufferfish_stargazy_pie_0",
@@ -16,13 +16,13 @@
       "model": "pufferfish_please:block/pufferfish_stargazy_pie_0",
       "y": 270
     },
-    "bites=1,facing=north": {
-      "model": "pufferfish_please:block/pufferfish_stargazy_pie_1",
-      "y": 0
-    },
     "bites=1,facing=east": {
       "model": "pufferfish_please:block/pufferfish_stargazy_pie_1",
       "y": 90
+    },
+    "bites=1,facing=north": {
+      "model": "pufferfish_please:block/pufferfish_stargazy_pie_1",
+      "y": 0
     },
     "bites=1,facing=south": {
       "model": "pufferfish_please:block/pufferfish_stargazy_pie_1",
@@ -32,13 +32,13 @@
       "model": "pufferfish_please:block/pufferfish_stargazy_pie_1",
       "y": 270
     },
-    "bites=2,facing=north": {
-      "model": "pufferfish_please:block/pufferfish_stargazy_pie_2",
-      "y": 0
-    },
     "bites=2,facing=east": {
       "model": "pufferfish_please:block/pufferfish_stargazy_pie_2",
       "y": 90
+    },
+    "bites=2,facing=north": {
+      "model": "pufferfish_please:block/pufferfish_stargazy_pie_2",
+      "y": 0
     },
     "bites=2,facing=south": {
       "model": "pufferfish_please:block/pufferfish_stargazy_pie_2",
@@ -48,13 +48,13 @@
       "model": "pufferfish_please:block/pufferfish_stargazy_pie_2",
       "y": 270
     },
-    "bites=3,facing=north": {
-      "model": "pufferfish_please:block/pufferfish_stargazy_pie_3",
-      "y": 0
-    },
     "bites=3,facing=east": {
       "model": "pufferfish_please:block/pufferfish_stargazy_pie_3",
       "y": 90
+    },
+    "bites=3,facing=north": {
+      "model": "pufferfish_please:block/pufferfish_stargazy_pie_3",
+      "y": 0
     },
     "bites=3,facing=south": {
       "model": "pufferfish_please:block/pufferfish_stargazy_pie_3",
@@ -64,13 +64,13 @@
       "model": "pufferfish_please:block/pufferfish_stargazy_pie_3",
       "y": 270
     },
-    "bites=4,facing=north": {
-      "model": "pufferfish_please:block/pufferfish_stargazy_pie_4",
-      "y": 0
-    },
     "bites=4,facing=east": {
       "model": "pufferfish_please:block/pufferfish_stargazy_pie_4",
       "y": 90
+    },
+    "bites=4,facing=north": {
+      "model": "pufferfish_please:block/pufferfish_stargazy_pie_4",
+      "y": 0
     },
     "bites=4,facing=south": {
       "model": "pufferfish_please:block/pufferfish_stargazy_pie_4",
