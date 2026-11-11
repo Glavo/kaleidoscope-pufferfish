@@ -148,7 +148,7 @@ public final class MaterialPufferfish extends Pufferfish {
         double range = getAttributeValue(Attributes.FOLLOW_RANGE);
         return hasActiveAttacks() && canFight(target) && !isDisguisedFrom(target)
                 && (guardPos != null || kind() != PufferfishMobConfig.Kind.COPPER || isHuntedHostile(target) || reinforcement && isAngryAt(target))
-                && (guardPos == null || isWithinRestriction(target.blockPosition()))
+                && isWithinRestriction(target.blockPosition())
                 && target.level() == level() && target.isInWater() && distanceToSqr(target) <= range * range && hasLineOfSight(target);
     }
 
@@ -182,11 +182,16 @@ public final class MaterialPufferfish extends Pufferfish {
     @Override
     public ItemStack getPickResult() { return getBucketItemStack(); }
 
-    /// Ruin guards remain near their core and retain their post through entity saves, but not bucket capture.
+    /// Ruin residents remain near their home without natural despawning; bucket capture releases them from it.
+    public void setHome(BlockPos pos) {
+        restrictTo(pos.immutable(), 12);
+        setPersistenceRequired();
+    }
+
+    /// Guards also defend their home against players.
     public void guard(BlockPos pos) {
         guardPos = pos.immutable();
-        restrictTo(guardPos, 12);
-        setPersistenceRequired();
+        setHome(guardPos);
     }
 
     public void joinReinforcement(LivingEntity attacker) {
@@ -210,6 +215,7 @@ public final class MaterialPufferfish extends Pufferfish {
         tag.putInt("FishAttackCooldown", attackCooldown);
         saveReinforcements(tag);
         if (guardPos != null) tag.putLong("FishGuardPos", guardPos.asLong());
+        else if (hasRestriction()) tag.putLong("FishHomePos", getRestrictCenter().asLong());
         if (angerTicks > 0 && provokerId != null) {
             tag.putUUID("FishProvoker", provokerId);
             tag.putInt("FishAngerTicks", angerTicks);
@@ -223,6 +229,7 @@ public final class MaterialPufferfish extends Pufferfish {
         guardPos = null;
         clearRestriction();
         if (tag.contains("FishGuardPos")) guard(BlockPos.of(tag.getLong("FishGuardPos")));
+        else if (tag.contains("FishHomePos")) setHome(BlockPos.of(tag.getLong("FishHomePos")));
         attackCooldown = Math.max(0, Math.min(1200, tag.getInt("FishAttackCooldown")));
         if (tag.hasUUID("FishProvoker")) {
             provokerId = tag.getUUID("FishProvoker");

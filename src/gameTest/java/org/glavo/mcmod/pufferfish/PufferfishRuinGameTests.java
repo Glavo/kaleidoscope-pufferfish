@@ -139,11 +139,9 @@ public final class PufferfishRuinGameTests {
             var box = piece.getBoundingBox();
             piece.postProcess(level, level.structureManager(), level.getChunkSource().getGenerator(), RandomSource.create(),
                     box, new ChunkPos(floor), floor);
-            if (ancient) {
-                guards.addAll(level.getEntitiesOfClass(MaterialPufferfish.class, AABB.of(box),
-                        fish -> fish.getRestrictCenter().equals(floor.above(4))));
-                guards.forEach(fish -> { fish.setNoAi(true); fish.setNoGravity(true); });
-            }
+            guards.addAll(level.getEntitiesOfClass(MaterialPufferfish.class, AABB.of(box),
+                    fish -> fish.getRestrictCenter().equals(floor.above(4))));
+            guards.forEach(fish -> { fish.setNoAi(true); fish.setNoGravity(true); });
             var expectedFrame = new ArrayList<BlockPos>();
             PufferfishConduitBlockEntity.updateFrame(level, floor.above(4), expectedFrame);
             var context = StructurePieceSerializationContext.fromLevel(level);
@@ -237,6 +235,8 @@ public final class PufferfishRuinGameTests {
             piece.postProcess(level, level.structureManager(), level.getChunkSource().getGenerator(), RandomSource.create(),
                     box, new ChunkPos(floor), floor);
             var pots = new HashMap<BlockPos, CompoundTag>();
+            level.getEntitiesOfClass(MaterialPufferfish.class, AABB.of(box),
+                    fish -> fish.getRestrictCenter().equals(floor.above(4))).forEach(MaterialPufferfish::discard);
             for (var pos : BlockPos.betweenClosed(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ())) {
                 if (level.getBlockEntity(pos) instanceof DecoratedPotBlockEntity pot) {
                     helper.assertTrue(pot.getBlockState().getValue(BlockStateProperties.WATERLOGGED)

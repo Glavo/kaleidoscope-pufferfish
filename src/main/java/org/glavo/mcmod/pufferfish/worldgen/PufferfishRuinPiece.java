@@ -35,7 +35,7 @@ public final class PufferfishRuinPiece extends StructurePiece {
 
     private final boolean ancient;
     private final long decorationSeed;
-    private int spawnedGuards;
+    private int spawnedFish;
 
     public PufferfishRuinPiece(BlockPos floor, boolean ancient, long decorationSeed) {
         super(PufferfishRuins.PIECE.get(), 0, new BoundingBox(floor.getX() - 4, floor.getY() - 4, floor.getZ() - 4,
@@ -49,14 +49,14 @@ public final class PufferfishRuinPiece extends StructurePiece {
         super(PufferfishRuins.PIECE.get(), tag);
         ancient = tag.getBoolean("Ancient");
         decorationSeed = tag.getLong("DecorationSeed");
-        spawnedGuards = tag.getInt("SpawnedGuards");
+        spawnedFish = tag.getInt(ancient ? "SpawnedGuards" : "SpawnedFish");
     }
 
     @Override
     protected void addAdditionalSaveData(StructurePieceSerializationContext context, CompoundTag tag) {
         tag.putBoolean("Ancient", ancient);
         tag.putLong("DecorationSeed", decorationSeed);
-        tag.putInt("SpawnedGuards", spawnedGuards);
+        tag.putInt(ancient ? "SpawnedGuards" : "SpawnedFish", spawnedFish);
     }
 
     @Override
@@ -126,17 +126,18 @@ public final class PufferfishRuinPiece extends StructurePiece {
         }
         var core = ancient ? PufferfishBlocks.ANCIENT_CONDUIT.get() : PufferfishBlocks.CONDUIT.get();
         placeBlock(level, core.defaultBlockState().setValue(BlockStateProperties.WATERLOGGED, true), 4, 8, 4, box);
-        if (ancient) spawnGuards(level, box);
+        spawnFish(level, box);
     }
 
-    private void spawnGuards(WorldGenLevel level, BoundingBox box) {
+    private void spawnFish(WorldGenLevel level, BoundingBox box) {
         var random = RandomSource.create(decorationSeed);
-        int count = 3 + random.nextInt(2);
+        int count = ancient ? 3 + random.nextInt(2) : 1 + random.nextInt(4);
         for (int i = 0; i < count; i++) {
             int roll = random.nextInt(10);
-            String variant = i == 0 ? "iron_pufferfish" : i == 1 ? "copper_pufferfish"
+            String variant = !ancient ? (roll < 8 ? "copper_pufferfish" : "golden_pufferfish")
+                    : i == 0 ? "iron_pufferfish" : i == 1 ? "copper_pufferfish"
                     : roll == 0 ? "diamond_pufferfish" : roll < 5 ? "copper_pufferfish" : "iron_pufferfish";
-            if (variant.equals("copper_pufferfish")) {
+            if (ancient && variant.equals("copper_pufferfish")) {
                 variant = switch (random.nextInt(3)) {
                     case 0 -> "exposed_copper_pufferfish";
                     case 1 -> "weathered_copper_pufferfish";
@@ -144,14 +145,15 @@ public final class PufferfishRuinPiece extends StructurePiece {
                 };
             }
             var pos = getWorldPos(3 + (i & 1) * 2, 8, 3 + (i >> 1) * 2);
-            if ((spawnedGuards & (1 << i)) != 0 || !box.isInside(pos)) continue;
-            spawnedGuards |= 1 << i;
+            if ((spawnedFish & (1 << i)) != 0 || !box.isInside(pos)) continue;
+            spawnedFish |= 1 << i;
             var fish = PufferfishMobs.VARIANTS.get(variant).entity().get().create(level.getLevel());
             if (fish == null) continue;
             fish.moveTo(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 0, 0);
             EventHooks.finalizeMobSpawn(fish, level, level.getCurrentDifficultyAt(pos), MobSpawnType.STRUCTURE, null);
             if (fish.isSpawnCancelled()) continue;
-            fish.guard(getWorldPos(4, 8, 4));
+            if (ancient) fish.guard(getWorldPos(4, 8, 4));
+            else fish.setHome(getWorldPos(4, 8, 4));
             level.addFreshEntityWithPassengers(fish);
         }
     }

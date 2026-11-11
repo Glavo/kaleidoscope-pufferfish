@@ -28,45 +28,55 @@ import org.glavo.mcmod.pufferfish.worldgen.PufferfishRuinPiece;
 public final class PufferfishRuinGuardGameTests {
     @GameTest(template = "empty")
     public static void ancientGuardsGenerateOnceAcrossChunksAndReloads(GameTestHelper helper) {
+        checkRuinFishGeneration(helper, true);
+    }
+
+    @GameTest(template = "empty")
+    public static void ordinaryFishGenerateOnceAcrossChunksAndReloads(GameTestHelper helper) {
+        checkRuinFishGeneration(helper, false);
+    }
+
+    private static void checkRuinFishGeneration(GameTestHelper helper, boolean ancient) {
         var level = helper.getLevel();
         var floor = helper.absolutePos(new BlockPos(2, 40, 2));
         var context = StructurePieceSerializationContext.fromLevel(level);
-        int diamonds = 0, total = 0;
+        int diamonds = 0, golden = 0, total = 0;
         var copperStages = new java.util.HashSet<Integer>();
-        boolean three = false, four = false;
+        var counts = new java.util.HashSet<Integer>();
         var seeds = RandomSource.create(74392L);
         for (int sample = 0; sample < 32; sample++) {
             long seed = seeds.nextLong();
-            var piece = new PufferfishRuinPiece(floor, true, seed);
+            var piece = new PufferfishRuinPiece(floor, ancient, seed);
             var initial = piece.createTag(context);
             var box = piece.getBoundingBox();
             piece.postProcess(level, level.structureManager(), level.getChunkSource().getGenerator(), RandomSource.create(),
                     box, new ChunkPos(floor), floor);
             var expected = new HashMap<BlockPos, EntityType<?>>();
             var guards = level.getEntitiesOfClass(MaterialPufferfish.class, AABB.of(box));
-            helper.assertTrue(guards.size() >= 3 && guards.size() <= 4, "Ancient ruin must generate three or four guards");
-            three |= guards.size() == 3;
-            four |= guards.size() == 4;
+            helper.assertTrue(guards.size() >= (ancient ? 3 : 1) && guards.size() <= 4, "Unexpected ruin fish count");
+            counts.add(guards.size());
             boolean copper = false, iron = false;
             for (var fish : guards) {
                 helper.assertTrue(fish.isPersistenceRequired() && fish.getRestrictCenter().equals(floor.above(4))
-                        && fish.getRestrictRadius() == 12 && fish.isHostileToPlayers(), "Guard lost its post or hostility");
+                        && fish.getRestrictRadius() == 12 && fish.isHostileToPlayers() == ancient, "Ruin fish lost its home or temperament");
                 helper.assertTrue(level.isWaterAt(fish.blockPosition()) && level.noCollision(fish), "Guard spawned outside open water");
-                helper.assertTrue(fish.kind() == PufferfishMobConfig.Kind.COPPER || fish.kind() == PufferfishMobConfig.Kind.IRON
-                        || fish.kind() == PufferfishMobConfig.Kind.DIAMOND, "Unexpected ruin guard variant");
+                helper.assertTrue(fish.kind() == PufferfishMobConfig.Kind.COPPER || (ancient
+                        ? fish.kind() == PufferfishMobConfig.Kind.IRON || fish.kind() == PufferfishMobConfig.Kind.DIAMOND
+                        : fish.kind() == PufferfishMobConfig.Kind.GOLDEN), "Unexpected ruin fish variant");
                 copper |= fish.kind() == PufferfishMobConfig.Kind.COPPER;
                 if (fish.kind() == PufferfishMobConfig.Kind.COPPER) {
                     int stage = CopperPufferfish.index(fish.fish());
-                    helper.assertTrue(stage >= 1 && stage <= 3, "Copper guard spawned fresh or waxed");
+                    helper.assertTrue(ancient ? stage >= 1 && stage <= 3 : stage == 0, "Ruin copper fish has the wrong oxidation stage");
                     copperStages.add(stage);
                 }
                 iron |= fish.kind() == PufferfishMobConfig.Kind.IRON;
                 if (fish.kind() == PufferfishMobConfig.Kind.DIAMOND) diamonds++;
+                if (fish.kind() == PufferfishMobConfig.Kind.GOLDEN) golden++;
                 total++;
                 expected.put(fish.blockPosition(), fish.getType());
                 fish.discard();
             }
-            helper.assertTrue(copper && iron, "Ancient ruin lacks its copper or iron guard");
+            if (ancient) helper.assertTrue(copper && iron, "Ancient ruin lacks its copper or iron guard");
             piece = new PufferfishRuinPiece(initial);
             for (var clip : List.of(new BoundingBox(floor.getX() + 1, box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ()),
                     new BoundingBox(box.minX(), box.minY(), box.minZ(), floor.getX(), box.maxY(), box.maxZ()))) {
@@ -90,16 +100,39 @@ public final class PufferfishRuinGuardGameTests {
                 level.removeBlock(pos, false);
             }
         }
-        helper.assertTrue(three && four && diamonds > 0 && diamonds < total / 5, "Guard counts or rare diamond variants did not vary");
-        helper.assertTrue(copperStages.size() == 3, "An aged copper guard variant is missing");
-        var normal = new PufferfishRuinPiece(floor, false, 74392L);
-        normal.postProcess(level, level.structureManager(), level.getChunkSource().getGenerator(), RandomSource.create(),
-                normal.getBoundingBox(), new ChunkPos(floor), floor);
-        helper.assertTrue(level.getEntitiesOfClass(MaterialPufferfish.class, AABB.of(normal.getBoundingBox())).isEmpty(),
-                "Ordinary ruin generated guards");
-        var box = normal.getBoundingBox();
-        for (var pos : BlockPos.betweenClosed(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ())) {
-            level.removeBlock(pos, false);
+        helper.assertTrue(counts.size() == (ancient ? 2 : 4), "Ruin fish counts did not vary across the full range");
+        if (ancient) {
+            helper.assertTrue(diamonds > 0 && diamonds < total / 5, "Rare diamond guards are missing or too common");
+            helper.assertTrue(copperStages.size() == 3, "An aged copper guard variant is missing");
+        } else {
+            helper.assertTrue(golden > 0 && golden < total / 2, "Ordinary ruins lack golden fish or favor them over copper");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "combat_pool")
+    public static void ordinaryResidentsStayNeutralAcrossSavingAndCapture(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var home = helper.absolutePos(new BlockPos(2, 3, 7));
+        level.setBlock(home.east(), Blocks.WATER.defaultBlockState(), 2);
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setPos(home.east().getCenter());
+        player.tick();
+        for (String variant : List.of("copper_pufferfish", "golden_pufferfish")) {
+            var type = PufferfishMobs.VARIANTS.get(variant).entity().get();
+            var fish = type.create(level);
+            fish.setPos(home.getCenter());
+            fish.setHome(home);
+            var loaded = type.create(level);
+            loaded.load(fish.saveWithoutId(new CompoundTag()));
+            helper.assertTrue(loaded.isPersistenceRequired() && loaded.getRestrictCenter().equals(home)
+                    && loaded.getRestrictRadius() == 12 && !loaded.isHostileToPlayers() && !loaded.validTarget(player),
+                    "Ordinary resident lost its home or became hostile after loading");
+            var bucket = loaded.getBucketItemStack();
+            loaded.saveToBucketTag(bucket);
+            var released = type.create(level);
+            released.loadFromBucketTag(bucket.get(DataComponents.BUCKET_ENTITY_DATA).copyTag());
+            helper.assertTrue(!released.hasRestriction() && !released.isHostileToPlayers(), "Captured resident retained its home or became hostile");
         }
         helper.succeed();
     }
