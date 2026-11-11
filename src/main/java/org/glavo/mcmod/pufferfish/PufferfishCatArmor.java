@@ -42,12 +42,22 @@ public final class PufferfishCatArmor {
             var kind = variant.material();
             var material = MATERIALS.register(name, () -> {
                 var protection = kind.armorMaterial().value();
-                return new ArmorMaterial(Map.of(ArmorItem.Type.BODY, protection.defense().get(ArmorItem.Type.CHESTPLATE)),
+                return new ArmorMaterial(Map.of(ArmorItem.Type.BODY, protection.defense().get(ArmorItem.Type.BODY)),
                         0, SoundEvents.ARMOR_EQUIP_LEATHER, () -> Ingredient.of(variant.skin()), List.of(),
                         protection.toughness(), kind == PufferfishMaterial.HEAVY ? 0.15F : 0);
             });
             variants.put(name, ITEMS.register(name, () -> {
-                var properties = new Item.Properties().durability(kind == PufferfishMaterial.HEAVY ? 888 : 80);
+                int durability = switch (kind) {
+                    case NORMAL -> 64;
+                    case COPPER -> 80;
+                    case IRON -> 160;
+                    case GOLDEN -> 96;
+                    case DIAMOND -> 320;
+                    case NETHERITE -> 480;
+                    case HEAVY -> 888;
+                    case RADIANT -> 640;
+                };
+                var properties = new Item.Properties().durability(durability);
                 if (kind.fireResistant()) properties.fireResistant();
                 return variant.bind(new PufferfishCatArmorItem(material, properties));
             }));
