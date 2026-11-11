@@ -172,7 +172,7 @@ public final class PufferfishHeadgearGameTests {
                 helper.assertTrue(wearer.hurt(wearer.damageSources().mobAttack(attacker), 1), "Attack did not hit wearer");
                 var poison = attacker.getEffect(MobEffects.POISON);
                 helper.assertTrue(attacker.getHealth() < attacker.getMaxHealth()
-                        ? poison != null && poison.getDuration() == 60 && poison.getAmplifier() == 0 : poison == null,
+                        ? poison != null && poison.getDuration() == 120 && poison.getAmplifier() == 0 : poison == null,
                         "Poison did not match successful thorns damage");
                 float damage = attacker.getMaxHealth() - attacker.getHealth();
                 if (damage > 0) {
@@ -209,7 +209,7 @@ public final class PufferfishHeadgearGameTests {
             target.hurt(target.damageSources().thorns(wearer), 2);
             var poison = target.getEffect(MobEffects.POISON);
             helper.assertTrue(target.getHealth() == target.getMaxHealth() && target.getAbsorptionAmount() == 2
-                    && poison != null && poison.getAmplifier() == 0 && poison.getDuration() == 100,
+                    && poison != null && poison.getAmplifier() == 0 && poison.getDuration() == 120,
                     "Absorbed thorns did not apply Poison I");
             target.removeAllEffects();
             target.invulnerableTime = 0;

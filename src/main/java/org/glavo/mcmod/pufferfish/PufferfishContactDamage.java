@@ -54,8 +54,10 @@ public final class PufferfishContactDamage {
             if (effects.containsKey(MobEffects.WITHER)) PufferfishCombat.applyRadiantGlow(living, null);
             for (var effect : effects.values()) {
                 var current = living.getEffect(effect.getEffect());
+                // Late poison refreshes allow damage ticks to fall outside the contact hurt cooldown.
+                int refreshThreshold = effect.is(MobEffects.POISON) ? 20 : effect.getDuration() / 2;
                 if (current == null || !current.isInfiniteDuration() && (current.getAmplifier() < effect.getAmplifier()
-                        || current.getAmplifier() == effect.getAmplifier() && current.getDuration() <= effect.getDuration() / 2)) {
+                        || current.getAmplifier() == effect.getAmplifier() && current.getDuration() <= refreshThreshold)) {
                     living.addEffect(effect);
                 }
             }
@@ -66,9 +68,10 @@ public final class PufferfishContactDamage {
     private static MobEffectInstance poison(Level level, BlockPos pos, BlockState state) {
         if (state.getBlock() instanceof PufferfishSkinBlock) {
             int copper = CopperPufferfish.skinIndex(state.getBlock().asItem().getDefaultInstance());
-            if (copper >= 0) return copper >= 4 ? null : new MobEffectInstance(MobEffects.POISON, 120, Math.max(0, copper - 1));
+            if (copper >= 0) return copper >= 4 ? null : new MobEffectInstance(MobEffects.POISON, PufferfishCombat.POISON_DURATION_TICKS, Math.max(0, copper - 1));
             boolean radiant = state.is(PufferfishBlocks.RADIANT_SKIN.get());
-            return new MobEffectInstance(radiant ? MobEffects.WITHER : MobEffects.POISON, radiant ? PufferfishCombat.RADIANT_WITHER_DURATION_TICKS : 120, 0);
+            return new MobEffectInstance(radiant ? MobEffects.WITHER : MobEffects.POISON,
+                    radiant ? PufferfishCombat.RADIANT_WITHER_DURATION_TICKS : PufferfishCombat.POISON_DURATION_TICKS, 0);
         }
         if (level.getBlockEntity(pos) instanceof PlacedPufferfishBlockEntity placed && !placed.fish().isEmpty()) {
             return PufferfishCombat.passiveEffect(placed.fish());

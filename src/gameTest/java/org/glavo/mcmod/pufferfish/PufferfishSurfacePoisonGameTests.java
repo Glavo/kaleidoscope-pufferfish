@@ -127,6 +127,7 @@ public final class PufferfishSurfacePoisonGameTests {
     public static void poisonRefreshPreservesStrongerEffects(GameTestHelper helper) {
         var entity = stand(helper, PufferfishBlocks.skin(null).defaultBlockState());
         for (var effect : new MobEffectInstance[] {
+                new MobEffectInstance(MobEffects.POISON, 60, 0),
                 new MobEffectInstance(MobEffects.POISON, 20, 1), new MobEffectInstance(MobEffects.POISON, -1, 0)}) {
             entity.addEffect(effect);
             entity.invulnerableTime = 0;
@@ -135,7 +136,7 @@ public final class PufferfishSurfacePoisonGameTests {
                     && entity.getEffect(MobEffects.POISON).getAmplifier() == effect.getAmplifier(), "Existing poison was overwritten");
             entity.removeEffect(MobEffects.POISON);
         }
-        entity.addEffect(new MobEffectInstance(MobEffects.POISON, 60, 0));
+        entity.addEffect(new MobEffectInstance(MobEffects.POISON, 20, 0));
         entity.invulnerableTime = 0;
         NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
         helper.assertTrue(entity.getEffect(MobEffects.POISON).getDuration() == 120, "Short poison was not refreshed");

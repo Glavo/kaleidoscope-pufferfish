@@ -91,7 +91,7 @@ public final class PufferfishContactDamageGameTests {
         for (var variant : PufferfishLamps.VARIANTS.values()) {
             var fish = variant.fish().get();
             int copper = CopperPufferfish.index(fish);
-            int duration = copper > 0 && copper < 4 ? new int[] {60, 120, 240, 360}[copper] : 60;
+            int duration = 120;
             int amplifier = copper > 0 && copper < 4 ? copper - 1 : PufferfishItems.hasNetheriteCombat(fish) ? 1 : 0;
             var poison = copper >= 4 ? null : new MobEffectInstance(MobEffects.POISON, duration, amplifier);
             for (var block : new PlacedPufferfishBlock[] {PufferfishItems.isHeavy(fish)
@@ -177,7 +177,7 @@ public final class PufferfishContactDamageGameTests {
                 entity.tickCount = 20;
                 NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
                 var poison = entity.getEffect(MobEffects.POISON);
-                helper.assertTrue(poison != null && poison.getDuration() == 360 && poison.getAmplifier() == 2,
+                helper.assertTrue(poison != null && poison.getDuration() == 120 && poison.getAmplifier() == 2,
                         "Contact order hid or weakened the strongest poison");
                 helper.assertTrue(entity.getHealth() == entity.getMaxHealth() - 1, "Poisonous contacts stacked prick damage");
                 for (var existing : new MobEffectInstance[] {
@@ -196,7 +196,7 @@ public final class PufferfishContactDamageGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "empty", timeoutTicks = 200)
+    @GameTest(template = "empty", timeoutTicks = 250)
     public static void lampPoisonDealsDamageAndExpiresAfterLeaving(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 2, 2), PufferfishLamps.VARIANTS.get("copper_pufferfish_lamp").block().get());
         helper.setBlock(new BlockPos(3, 2, 2), PufferfishLamps.VARIANTS.get("waxed_copper_pufferfish_lamp").block().get());
@@ -217,7 +217,7 @@ public final class PufferfishContactDamageGameTests {
                     && poisonHits[0] > 0, "Contact poison did not damage or was continuously reset");
             poisoned.setPos(poisoned.position().add(0, 2, 0));
         });
-        helper.runAfterDelay(165, () -> {
+        helper.runAfterDelay(225, () -> {
             helper.assertTrue(!poisoned.hasEffect(MobEffects.POISON), "Lamp poison did not expire after leaving");
             helper.succeed();
         });

@@ -145,6 +145,33 @@ public final class PufferfishMobGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void materialPoisonDurationFollowsInflation(GameTestHelper helper) {
+        for (var variant : PufferfishMobs.VARIANTS.values()) {
+            for (int puff = 0; puff <= 2; puff++) {
+                for (boolean contact : new boolean[] {false, true}) {
+                    var fish = variant.entity().get().create(helper.getLevel());
+                    if (PufferfishItems.isRadiant(fish.fish())) continue;
+                    fish.setNoAi(true);
+                    fish.setPuffState(puff);
+                    fish.setPos(helper.absoluteVec(new net.minecraft.world.phys.Vec3(2, 2, 2)));
+                    var target = EntityType.COW.create(helper.getLevel());
+                    target.setPos(helper.absoluteVec(new net.minecraft.world.phys.Vec3(2, 2, 3)));
+                    if (contact) fish.sting(target);
+                    else helper.assertTrue(fish.strike(target, 0, 0), "Material fish attack failed");
+                    int copper = CopperPufferfish.index(fish.fish());
+                    int amplifier = copper > 0 && copper < 4 ? copper - 1 : PufferfishItems.hasNetheriteCombat(fish.fish()) ? 1 : 0;
+                    var poison = target.getEffect(MobEffects.POISON);
+                    helper.assertTrue(puff == 0 || copper >= 4 ? poison == null
+                                    : poison != null && poison.getDuration() == puff * 60 && poison.getAmplifier() == amplifier,
+                            "Living fish poison did not follow inflation: " + variant.fish().getId() + ", puff=" + puff + ", contact=" + contact);
+                    if (contact && puff == 0) helper.assertTrue(target.getHealth() == target.getMaxHealth(), "Deflated fish stung a target");
+                }
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void materialFishDropTheirCurrentVariant(GameTestHelper helper) {
         var level = helper.getLevel();
         var pos = helper.absolutePos(new BlockPos(2, 2, 2));

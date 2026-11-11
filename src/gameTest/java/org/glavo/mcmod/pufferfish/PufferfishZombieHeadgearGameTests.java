@@ -124,7 +124,7 @@ public final class PufferfishZombieHeadgearGameTests {
             var poison = attacker.getEffect(MobEffects.POISON);
             if (attacker.getHealth() < attacker.getMaxHealth()) reflected++;
             helper.assertTrue(attacker.getHealth() < attacker.getMaxHealth()
-                    ? poison != null && poison.getDuration() == 60 && poison.getAmplifier() == 0 : poison == null,
+                    ? poison != null && poison.getDuration() == 120 && poison.getAmplifier() == 0 : poison == null,
                     "Zombie headgear poison did not follow successful thorns");
             helper.assertTrue(fish.getDamageValue() >= 1, "Zombie headgear did not lose durability");
         }

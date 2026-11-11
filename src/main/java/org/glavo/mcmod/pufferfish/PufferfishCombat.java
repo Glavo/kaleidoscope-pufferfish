@@ -28,7 +28,7 @@ import net.neoforged.neoforge.common.damagesource.DamageContainer;
 
 /// Calculates pufferfish weapon damage and applies shared melee and projectile effects.
 public final class PufferfishCombat {
-    public static final int POISON_DURATION_TICKS = 60;
+    public static final int POISON_DURATION_TICKS = 120;
     public static final int RADIANT_WITHER_DURATION_TICKS = 100;
     public static final int RADIANT_GLOW_DURATION_TICKS = 200;
     private static final float RADIANT_WITHER_CHANCE = 0.6F;
@@ -147,9 +147,8 @@ public final class PufferfishCombat {
         if (PufferfishItems.isRadiant(stack)) return new MobEffectInstance(MobEffects.WITHER, RADIANT_WITHER_DURATION_TICKS, 0);
         int copper = CopperPufferfish.index(stack);
         if (copper >= 4) return null;
-        int duration = copper > 0 ? copper * 120 : POISON_DURATION_TICKS;
         int amplifier = copper > 0 ? copper - 1 : PufferfishItems.hasNetheriteCombat(stack) ? 1 : 0;
-        return new MobEffectInstance(MobEffects.POISON, duration, amplifier);
+        return new MobEffectInstance(MobEffects.POISON, POISON_DURATION_TICKS, amplifier);
     }
 
     /// Returns the stored level of the specified enchantment, or zero when absent.

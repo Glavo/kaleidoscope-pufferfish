@@ -194,7 +194,7 @@ public final class PufferfishLampGameTests {
                 helper.assertTrue(target.getHealth() == 100 - damage, "Incorrect falling lamp damage or damage cap");
                 var poison = target.getEffect(MobEffects.POISON);
                 if (block instanceof HeavyPufferfishBlock && damage > 0) {
-                    helper.assertTrue(poison != null && poison.getAmplifier() == 1 && poison.getDuration() == 60, "Incorrect impact poison");
+                    helper.assertTrue(poison != null && poison.getAmplifier() == 1 && poison.getDuration() == 120, "Incorrect impact poison");
                     var source = target.getLastDamageSource();
                     helper.assertTrue(source != null && source.getLocalizedDeathMessage(helper.makeMockPlayer(GameType.SURVIVAL)).getContents()
                             instanceof TranslatableContents message && message.getKey().equals("death.attack.pufferfish_please.falling_pufferfish"),

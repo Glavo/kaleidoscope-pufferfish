@@ -111,7 +111,7 @@ public final class CopperPufferfishGameTests {
             helper.assertTrue(target.hurt(target.damageSources().thorns(player), 1), "Thorns damage failed");
             var poison = target.getEffect(MobEffects.POISON);
             helper.assertTrue(stage >= 4 ? poison == null
-                    : poison != null && poison.getAmplifier() == new int[] {0, 0, 1, 2}[stage] && poison.getDuration() == new int[] {60, 120, 240, 360}[stage],
+                    : poison != null && poison.getAmplifier() == new int[] {0, 0, 1, 2}[stage] && poison.getDuration() == 120,
                     "Copper headgear did not apply its oxidation poison tier and duration");
         }
         helper.succeed();
@@ -149,7 +149,7 @@ public final class CopperPufferfishGameTests {
         if (stage >= 4) {
             helper.assertTrue(poison == null, "Waxed copper applied poison");
         } else {
-            int duration = new int[] {60, 120, 240, 360}[stage];
+            int duration = 120;
             int amplifier = new int[] {0, 0, 1, 2}[stage];
             helper.assertTrue(poison != null && poison.getDuration() == duration
                     && poison.getAmplifier() == amplifier, "Incorrect oxidation poison strength");

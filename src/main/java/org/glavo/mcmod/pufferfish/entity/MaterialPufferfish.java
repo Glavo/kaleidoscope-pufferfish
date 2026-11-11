@@ -303,6 +303,16 @@ public final class MaterialPufferfish extends Pufferfish {
         if (getPuffState() > 0 && attackPhase() == IDLE) strike(target, 0, attackInterval());
     }
 
+    /// Living fish poison lasts three seconds per inflation stage; radiant attacks retain their wither rules.
+    private void applyAttackEffect(LivingEntity target) {
+        if (kind() == PufferfishMobConfig.Kind.RADIANT) {
+            PufferfishCombat.applyAttackEffect(fish(), target, this);
+        } else if (getPuffState() > 0) {
+            var poison = PufferfishCombat.passiveEffect(fish());
+            if (poison != null) target.addEffect(new MobEffectInstance(MobEffects.POISON, 60 * getPuffState(), poison.getAmplifier()), this);
+        }
+    }
+
     private DamageSource attackDamageSource() {
         var source = damageSources().mobAttack(this);
         String message = switch (kind()) {
@@ -327,7 +337,7 @@ public final class MaterialPufferfish extends Pufferfish {
         if (level().isClientSide || !isAlive() || !readyToAttack() || !canFight(target) || !hasLineOfSight(target)) return false;
         attackCooldown = cooldown;
         if (target.hurt(attackDamageSource(), (float) getAttributeValue(Attributes.ATTACK_DAMAGE))) {
-            PufferfishCombat.applyAttackEffect(fish(), target, this);
+            applyAttackEffect(target);
             if (knockback > 0) target.knockback(knockback, getX() - target.getX(), getZ() - target.getZ());
             playSound(SoundEvents.PUFFER_FISH_STING, 1, 1);
             return true;
@@ -350,7 +360,7 @@ public final class MaterialPufferfish extends Pufferfish {
         for (var target : level().getEntitiesOfClass(LivingEntity.class, getBoundingBox().inflate(3), this::canFight)) {
             if (distanceToSqr(target) <= 9 && hasLineOfSight(target)
                     && target.hurt(attackDamageSource(), (float) getAttributeValue(Attributes.ATTACK_DAMAGE))) {
-                PufferfishCombat.applyAttackEffect(fish(), target, this);
+                applyAttackEffect(target);
                 target.knockback(0.6, getX() - target.getX(), getZ() - target.getZ());
             }
         }

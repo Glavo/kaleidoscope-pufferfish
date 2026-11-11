@@ -361,7 +361,7 @@ public class PufferfishProjectileGameTests {
         var projectile = hit(helper, target);
         helper.assertTrue(target.getHealth() == health - 1.0F, "Impact did not deal exactly one base damage");
         var effect = target.getEffect(MobEffects.POISON);
-        helper.assertTrue(effect != null && effect.getDuration() == 60 && effect.getAmplifier() == 0,
+        helper.assertTrue(effect != null && effect.getDuration() == 120 && effect.getAmplifier() == 0,
                 "Impact did not apply Poison I for 60 ticks");
         helper.assertTrue(projectile.isRemoved(), "Projectile survived its impact");
         helper.assertTrue(target.getLastHurtByMob() == projectile.getOwner(), "Damage was not attributed to the thrower");

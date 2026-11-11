@@ -53,9 +53,7 @@ public final class PufferfishShieldGameTests {
                 player.hurt(player.damageSources().mobAttack(attacker), 6);
                 var poison = attacker.getEffect(PufferfishItems.isRadiant(shield) ? net.minecraft.world.effect.MobEffects.WITHER : net.minecraft.world.effect.MobEffects.POISON);
                 String name = item.getId().getPath();
-                int duration = PufferfishItems.isRadiant(shield) ? 120 : name.startsWith("oxidized_copper_") ? 360
-                        : name.startsWith("weathered_copper_") ? 240 : name.startsWith("exposed_copper_") ? 120
-                        : name.startsWith("netherite_") || name.startsWith("heavy_") ? 100 : 60;
+                int duration = 120;
                 int amplifier = name.startsWith("oxidized_copper_") ? 2 : name.startsWith("weathered_copper_") ? 1 : 0;
                 helper.assertTrue(name.startsWith("waxed_") ? poison == null
                         : poison != null && poison.getDuration() == duration && poison.getAmplifier() == amplifier,
