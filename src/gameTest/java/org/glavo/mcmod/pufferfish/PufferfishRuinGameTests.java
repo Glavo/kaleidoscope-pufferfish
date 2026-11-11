@@ -287,15 +287,15 @@ public final class PufferfishRuinGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void potLootContainsSmallStacksOfOrdinarySupplies(GameTestHelper helper) {
+    public static void potLootContainsSmallSupplyStacksAndRareUpgradeTemplates(GameTestHelper helper) {
         var level = helper.getLevel();
         var params = new LootParams.Builder(level).withParameter(LootContextParams.ORIGIN,
                 helper.absolutePos(new BlockPos(2, 2, 2)).getCenter()).create(LootContextParamSets.CHEST);
         var table = level.getServer().reloadableRegistries().getLootTable(PufferfishRuinPiece.POT_LOOT_TABLE);
         var random = RandomSource.create(74392L);
         var seen = new java.util.HashSet<net.minecraft.world.item.Item>();
-        int gold = 0;
-        for (int i = 0; i < 256; i++) {
+        int gold = 0, templates = 0;
+        for (int i = 0; i < 2048; i++) {
             var items = table.getRandomItems(params, random);
             helper.assertTrue(items.size() == 1, "Pot loot must fit its single inventory slot");
             var stack = items.getFirst();
@@ -303,12 +303,15 @@ public final class PufferfishRuinGameTests {
                     || stack.is(Items.PRISMARINE_CRYSTALS) && stack.getCount() >= 1 && stack.getCount() <= 3
                     || stack.is(Items.KELP) && stack.getCount() >= 3 && stack.getCount() <= 6
                     || stack.is(Items.PUFFERFISH) && stack.getCount() >= 1 && stack.getCount() <= 2
-                    || stack.is(Items.GOLD_NUGGET) && stack.getCount() >= 1 && stack.getCount() <= 3;
-            helper.assertTrue(valid, "Pot loot contains excessive supplies or exclusive treasure");
+                    || stack.is(Items.GOLD_NUGGET) && stack.getCount() >= 1 && stack.getCount() <= 3
+                    || stack.is(PufferfishItems.UPGRADE_TEMPLATE) && stack.getCount() == 1;
+            helper.assertTrue(valid, "Pot loot contains excessive supplies or unexpected treasure");
             seen.add(stack.getItem());
             if (stack.is(Items.GOLD_NUGGET)) gold++;
+            if (stack.is(PufferfishItems.UPGRADE_TEMPLATE)) templates++;
         }
-        helper.assertTrue(seen.size() == 5 && gold > 0 && gold < 32, "Supply variety or rare gold loot is missing");
+        helper.assertTrue(seen.size() == 6 && gold > 0 && gold < 160, "Supply variety or rare gold loot is missing");
+        helper.assertTrue(templates > 0 && templates < 50, "Upgrade templates are missing or too common");
         helper.succeed();
     }
 }
