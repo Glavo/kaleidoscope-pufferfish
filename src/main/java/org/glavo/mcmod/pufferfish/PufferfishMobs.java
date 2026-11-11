@@ -6,8 +6,12 @@ package org.glavo.mcmod.pufferfish;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.MobSpawnType;
@@ -18,20 +22,24 @@ import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ItemUtils;
 import net.minecraft.world.item.MobBucketItem;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.material.Fluids;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.DeferredSpawnEggItem;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
 import net.neoforged.neoforge.event.entity.living.FinalizeSpawnEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.glavo.mcmod.pufferfish.entity.MaterialPufferfish;
 
 public final class PufferfishMobs {
+    public static final TagKey<Item> FOOD = TagKey.create(Registries.ITEM, PufferfishPlease.id("pufferfish_food"));
     private static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(Registries.ENTITY_TYPE, PufferfishPlease.MODID);
     private static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(PufferfishPlease.MODID);
     public static final Map<String, Variant> VARIANTS;
@@ -111,6 +119,29 @@ public final class PufferfishMobs {
                 && event.getEntity() instanceof Pufferfish fish && fish.getRandom().nextInt(4) == 0) {
             PufferfishColors.set(fish, DyeColor.byId(fish.getRandom().nextInt(16)));
         }
+    }
+
+    public static void feed(PlayerInteractEvent.EntityInteract event) {
+        var player = event.getEntity();
+        if (!(event.getTarget() instanceof Pufferfish fish) || !fish.isAlive() || fish.getHealth() >= fish.getMaxHealth()
+                || player.isSpectator() || !player.mayBuild()) return;
+        var stack = event.getItemStack();
+        if (!stack.is(FOOD)) return;
+        var food = stack.getFoodProperties(fish);
+        if (food == null || food.nutrition() <= 0) return;
+        if (fish.level() instanceof ServerLevel level) {
+            fish.heal(food.nutrition());
+            fish.setPersistenceRequired();
+            if (!player.hasInfiniteMaterials()) {
+                var remainder = food.usingConvertsTo().orElseGet(stack::getCraftingRemainingItem).copy();
+                player.setItemInHand(event.getHand(), ItemUtils.createFilledResult(stack, player, remainder));
+            }
+            fish.playSound(SoundEvents.GENERIC_EAT, 1, 1);
+            fish.gameEvent(GameEvent.EAT);
+            level.sendParticles(ParticleTypes.HEART, fish.getX(), fish.getY(0.5), fish.getZ(), 3, 0.15, 0.15, 0.15, 0);
+        }
+        event.setCancellationResult(InteractionResult.sidedSuccess(fish.level().isClientSide));
+        event.setCanceled(true);
     }
 
     public record Variant(DeferredItem<? extends Item> fish, DeferredHolder<EntityType<?>, EntityType<MaterialPufferfish>> entity,

@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "#c:foods/raw_fish",
+    {"id": "#c:raw_fishes", "required": false},
+    {"id": "#c:foods/raw_shrimp", "required": false},
+    {"id": "#c:foods/raw_crab", "required": false},
+    {"id": "#c:foods/raw_shellfish", "required": false},
+    {"id": "kaleidoscope_chinesefood:yellow_croaker", "required": false}
+  ]
+}
