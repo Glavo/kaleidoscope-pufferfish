@@ -135,7 +135,8 @@ public final class PufferfishMobGameTests {
             else {
                 var actual = target.getEffect(expected.getEffect());
                 int amplifier = PufferfishItems.isRadiant(fish.fish()) ? 0 : expected.getAmplifier();
-                helper.assertTrue(actual != null && actual.getAmplifier() == amplifier && actual.getDuration() == expected.getDuration(),
+                helper.assertTrue(PufferfishItems.isRadiant(fish.fish()) && actual == null
+                                || actual != null && actual.getAmplifier() == amplifier && actual.getDuration() == expected.getDuration(),
                         "Material fish applied the wrong attack status effect");
             }
             if (PufferfishItems.isRadiant(fish.fish())) helper.assertTrue(target.hasEffect(MobEffects.GLOWING) && !target.hasEffect(MobEffects.POISON), "Radiant sting lost glowing or applied poison");

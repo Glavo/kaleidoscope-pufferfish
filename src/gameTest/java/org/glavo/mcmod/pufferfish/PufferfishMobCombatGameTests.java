@@ -466,23 +466,25 @@ public final class PufferfishMobCombatGameTests {
             for (int hit = 0; hit < 12; hit++) {
                 var attacker = fish(helper, "radiant");
                 target.invulnerableTime = 0;
+                long seed = 4096L + hit * 98171L;
+                int previous = RadiantPufferfishEffectsGameTests.prepareHit(target, attacker, seed);
+                RadiantPufferfishEffectsGameTests.prepareHit(weaponTarget, attacker, seed);
                 switch (hit % 3) {
                     case 0 -> { attacker.setPuffState(2); attacker.sting(target); }
                     case 1 -> helper.assertTrue(attacker.strike(target, 0, attacker.attackInterval()), "Radiant direct attack missed");
                     case 2 -> attacker.pulse();
                 }
+                attacker.getRandom().setSeed(seed);
                 PufferfishCombat.hitEffects(attacker.fish(), weaponTarget, attacker, net.minecraft.world.phys.Vec3.ZERO);
-                var wither = target.getEffect(MobEffects.WITHER);
-                helper.assertTrue(wither != null && wither.getAmplifier() == Math.min(hit, 9) && wither.getDuration() == 100,
-                        "Mob attack did not stack and refresh wither correctly: " + hit);
-                for (var effect : java.util.List.of(MobEffects.WITHER, MobEffects.GLOWING, MobEffects.BLINDNESS)) {
+                RadiantPufferfishEffectsGameTests.assertHit(helper, target, previous, seed);
+                for (var effect : java.util.List.of(MobEffects.WITHER, MobEffects.GLOWING, MobEffects.BLINDNESS,
+                        MobEffects.DARKNESS, MobEffects.HUNGER, MobEffects.WEAKNESS)) {
                     var actual = target.getEffect(effect);
                     var expected = weaponTarget.getEffect(effect);
                     helper.assertTrue(actual == null ? expected == null : expected != null
                                     && actual.getAmplifier() == expected.getAmplifier() && actual.getDuration() == expected.getDuration(),
                             "Living radiant fish effects diverged from weapon effects");
                 }
-                helper.assertTrue(target.hasEffect(MobEffects.BLINDNESS) == (hit >= 10), "Blindness triggered before or after the expected threshold");
                 attacker.discard();
             }
             target.removeAllEffects();
@@ -491,8 +493,9 @@ public final class PufferfishMobCombatGameTests {
             target.invulnerableTime = 0;
             helper.assertTrue(!attacker.strike(target, 0, 0) && !target.hasEffect(MobEffects.WITHER), "Failed attack applied wither");
             target.setInvulnerable(false);
-            helper.assertTrue(attacker.strike(target, 0, 0) && target.getEffect(MobEffects.WITHER).getAmplifier() == 0,
-                    "Wither did not restart at level one after the previous effect ended");
+            RadiantPufferfishEffectsGameTests.prepareHit(target, attacker, 4096);
+            helper.assertTrue(attacker.strike(target, 0, 0), "Radiant attack failed after invulnerability ended");
+            RadiantPufferfishEffectsGameTests.assertHit(helper, target, -1, 4096);
             attacker.discard();
         } finally { target.discard(); }
         helper.succeed();
@@ -574,6 +577,7 @@ public final class PufferfishMobCombatGameTests {
         var covered = helper.spawn(EntityType.COW, new BlockPos(5, 3, 9));
         for (var target : java.util.List.of(near, far, covered)) { target.setNoAi(true); target.setNoGravity(true); }
         for (int x = 4; x <= 6; x++) for (int y = 2; y <= 5; y++) helper.setBlock(new BlockPos(x, y, 8), Blocks.STONE);
+        fish.getRandom().setSeed(4096);
         fish.pulse();
         helper.assertTrue(near.getLastDamageSource().getLocalizedDeathMessage(near).getContents()
                         instanceof net.minecraft.network.chat.contents.TranslatableContents message

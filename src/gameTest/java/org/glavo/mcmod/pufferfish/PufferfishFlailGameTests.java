@@ -130,13 +130,16 @@ public final class PufferfishFlailGameTests {
             player.attack(target);
             var head = PufferfishFlailItem.activeHead(player);
             helper.assertTrue(target.getHealth() == 20 && head != null && head.isShortCast(), "Left click dealt direct melee damage or failed to cast");
+            if (PufferfishItems.isRadiant(stack)) RadiantPufferfishEffectsGameTests.prepareHit(target, player, 4096);
             for (int tick = 0; tick < 8 && !head.isReturning(); tick++) { head.tickCount++; head.tick(); }
             var poison = target.getEffect(PufferfishItems.isRadiant(stack) ? MobEffects.WITHER : MobEffects.POISON);
             int copper = CopperPufferfish.index(PufferfishItems.flailFish(stack));
             int duration = PufferfishItems.isRadiant(stack) ? 100 : copper > 0 && copper < 4 ? copper * 120 : 60;
             int amplifier = PufferfishItems.isRadiant(stack) ? 0 : copper > 0 && copper < 4 ? copper - 1 : PufferfishItems.hasNetheriteCombat(stack) ? 1 : 0;
             helper.assertTrue(target.getHealth() == 20 - damage, "Short cast damage failed");
-            helper.assertTrue(copper >= 4 ? poison == null
+            if (PufferfishItems.isRadiant(stack)) {
+                RadiantPufferfishEffectsGameTests.assertHit(helper, target, -1, 4096);
+            } else helper.assertTrue(copper >= 4 ? poison == null
                     : poison != null && poison.getDuration() == duration && poison.getAmplifier() == amplifier,
                     "Short cast poison did not match its fish");
             for (var variant : PufferfishItems.FLAIL_VARIANTS) {

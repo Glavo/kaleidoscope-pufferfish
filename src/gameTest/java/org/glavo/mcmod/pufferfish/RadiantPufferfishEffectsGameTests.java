@@ -28,6 +28,36 @@ public final class RadiantPufferfishEffectsGameTests {
         helper.assertTrue(glow != null && glow.getDuration() == 200 && glow.getAmplifier() == 0, "Radiant damage did not apply ten seconds of glowing");
     }
 
+    private static final java.util.List<net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect>> BONUS_EFFECTS =
+            java.util.List.of(MobEffects.BLINDNESS, MobEffects.DARKNESS, MobEffects.HUNGER, MobEffects.WEAKNESS);
+
+    static int prepareHit(net.minecraft.world.entity.LivingEntity target, net.minecraft.world.entity.Entity source, long seed) {
+        var current = target.getEffect(MobEffects.WITHER);
+        int previous = current == null ? -1 : current.getAmplifier();
+        target.removeAllEffects();
+        if (previous >= 0) target.addEffect(new MobEffectInstance(MobEffects.WITHER, 20, previous));
+        source.getRandom().setSeed(seed);
+        return previous;
+    }
+
+    static void assertHit(GameTestHelper helper, net.minecraft.world.entity.LivingEntity target, int previous, long seed) {
+        var random = net.minecraft.util.RandomSource.create(seed);
+        int expected = previous;
+        if (previous < 2 && random.nextFloat() < 0.6F) expected++;
+        var wither = target.getEffect(MobEffects.WITHER);
+        helper.assertTrue(expected < 0 ? wither == null : wither != null
+                        && wither.getAmplifier() == expected && wither.getDuration() == 100,
+                "Radiant hit did not roll a 60 percent increase or refresh existing wither: " + previous + ", seed=" + seed);
+        for (int i = 0; i < BONUS_EFFECTS.size(); i++) {
+            boolean triggered = previous >= 2 && random.nextFloat() < 0.05F;
+            var effect = target.getEffect(BONUS_EFFECTS.get(i));
+            helper.assertTrue(triggered ? effect != null && effect.getAmplifier() == 0 && effect.getDuration() == (i < 2 ? 100 : 200) : effect == null,
+                    "Capped radiant hit did not independently roll bonus effect " + i + ", seed=" + seed);
+        }
+        assertGlowing(helper, target);
+        helper.assertTrue(!target.hasEffect(MobEffects.POISON), "Radiant attack applied poison");
+    }
+
     @GameTest(template = "empty")
     public static void meleeEscalatesWitherAndProjectilesContinueIt(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
@@ -39,19 +69,16 @@ public final class RadiantPufferfishEffectsGameTests {
         target.setNoAi(true);
         target.getAttribute(Attributes.MAX_HEALTH).setBaseValue(1000);
         target.setHealth(1000);
+        var seeds = net.minecraft.util.RandomSource.create(46291);
         for (int hit = 0; hit < 12; hit++) {
             target.invulnerableTime = 0;
             for (int tick = 0; tick < 25; tick++) player.tick();
+            long seed = seeds.nextLong();
+            int previous = prepareHit(target, player, seed);
             float health = target.getHealth();
             player.attack(target);
             helper.assertTrue(health - target.getHealth() == 8, "Radiant melee should deal eight base damage");
-            assertGlowing(helper, target);
-            var effect = target.getEffect(MobEffects.WITHER);
-            helper.assertTrue(effect != null && effect.getAmplifier() == Math.min(hit, 9) && effect.getDuration() == 100
-                    && !target.hasEffect(MobEffects.POISON), "Melee wither did not advance exactly once or exceeded level ten");
-            var blindness = target.getEffect(MobEffects.BLINDNESS);
-            helper.assertTrue(hit < 10 ? blindness == null : blindness != null && blindness.getDuration() == 60 && blindness.getAmplifier() == 0,
-                    "Blindness should start only on hits against existing wither ten");
+            assertHit(helper, target, previous, seed);
         }
         target.removeAllEffects();
         target.addEffect(new MobEffectInstance(MobEffects.WITHER, 20, 1));
@@ -60,16 +87,17 @@ public final class RadiantPufferfishEffectsGameTests {
         projectile.setItem(fish);
         projectile.setPos(target.getX() - 1, target.getY() + 0.5, target.getZ());
         projectile.setDeltaMovement(2, 0, 0);
+        long seed = seeds.nextLong();
+        int previous = prepareHit(target, player, seed);
         float health = target.getHealth();
         projectile.tick();
         helper.assertTrue(health - target.getHealth() == 8, "Radiant throws should deal eight base damage");
-        assertGlowing(helper, target);
-        helper.assertTrue(target.getEffect(MobEffects.WITHER).getAmplifier() == 2
-                && target.getEffect(MobEffects.WITHER).getDuration() == 100, "Thrown fish did not escalate existing wither");
+        assertHit(helper, target, previous, seed);
         target.removeAllEffects();
+        seed = seeds.nextLong();
+        previous = prepareHit(target, player, seed);
         PufferfishCombat.hitEffects(new ItemStack(PufferfishItems.RADIANT_FLAIL.get()), target, player, Vec3.ZERO);
-        helper.assertTrue(target.getEffect(MobEffects.WITHER).getAmplifier() == 0, "Flail did not start with wither one");
-        assertGlowing(helper, target);
+        assertHit(helper, target, previous, seed);
         target.removeAllEffects();
         PufferfishCombat.hitEffects(new ItemStack(PufferfishItems.NETHERITE.get()), target, player, Vec3.ZERO);
         helper.assertTrue(!target.hasEffect(MobEffects.GLOWING), "Non-radiant attacks applied glowing");
@@ -77,29 +105,67 @@ public final class RadiantPufferfishEffectsGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void cappedWitherBlindsOnThrowsAndFlailsButNotRetaliation(GameTestHelper helper) {
+    public static void radiantProbabilityRefreshAndCapRespectAllStartingLevels(GameTestHelper helper) {
+        var target = EntityType.COW.create(helper.getLevel());
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        var seeds = net.minecraft.util.RandomSource.create(70129);
+        for (var item : new net.minecraft.world.item.Item[] {PufferfishItems.RADIANT.get(), PufferfishItems.RADIANT_FLAIL.get()}) {
+            for (int previous = -1; previous <= 2; previous++) {
+                int advanced = 0;
+                for (int attempt = 0; attempt < 128; attempt++) {
+                    target.removeAllEffects();
+                    if (previous >= 0) target.addEffect(new MobEffectInstance(MobEffects.WITHER, 20, previous));
+                    long seed = seeds.nextLong();
+                    prepareHit(target, player, seed);
+                    PufferfishCombat.hitEffects(new ItemStack(item), target, player, Vec3.ZERO);
+                    assertHit(helper, target, previous, seed);
+                    var wither = target.getEffect(MobEffects.WITHER);
+                    if (wither != null && wither.getAmplifier() > previous) advanced++;
+                }
+                helper.assertTrue(previous == 2 ? advanced == 0 : advanced > 0 && advanced < 128,
+                        "Radiant wither never failed, never advanced, or exceeded III");
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void cappedWitherRollsAllDebuffsIndependentlyButPassiveEffectsDoNot(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         var target = helper.spawn(EntityType.VILLAGER, new BlockPos(3, 2, 2));
         target.setNoAi(true);
+        target.getAttribute(Attributes.MAX_HEALTH).setBaseValue(1000);
+        var seeds = net.minecraft.util.RandomSource.create(92711);
+        var combinations = new java.util.HashSet<Integer>();
         for (var weapon : new net.minecraft.world.item.Item[] {PufferfishItems.RADIANT.get(), PufferfishItems.RADIANT_FLAIL.get()}) {
-            var stack = new ItemStack(weapon);
-            target.removeAllEffects();
-            target.addEffect(new MobEffectInstance(MobEffects.WITHER, 100, 9));
-            PufferfishCombat.applyPassiveEffect(stack, target, player);
-            helper.assertTrue(!target.hasEffect(MobEffects.BLINDNESS), "Passive radiant effects must not blind");
-            if (PufferfishItems.isFlail(stack)) {
-                PufferfishCombat.hitEffects(stack, target, player, Vec3.ZERO);
-            } else {
-                var projectile = new ThrownPufferfish(helper.getLevel(), player);
-                projectile.setItem(stack);
-                projectile.setPos(target.getX() - 1, target.getY() + 0.5, target.getZ());
-                projectile.setDeltaMovement(2, 0, 0);
-                projectile.tick();
+            for (int attempt = 0; attempt < 256; attempt++) {
+                long seed = seeds.nextLong();
+                target.removeAllEffects();
+                target.addEffect(new MobEffectInstance(MobEffects.WITHER, 20, 2));
+                prepareHit(target, player, seed);
+                var stack = new ItemStack(weapon);
+                PufferfishCombat.applyPassiveEffect(stack, target, player);
+                helper.assertTrue(BONUS_EFFECTS.stream().noneMatch(target::hasEffect), "Passive radiant effects rolled bonus debuffs");
+                target.setHealth(1000);
+                target.invulnerableTime = 0;
+                if (PufferfishItems.isFlail(stack)) {
+                    PufferfishCombat.hitEffects(stack, target, player, Vec3.ZERO);
+                } else {
+                    var projectile = new ThrownPufferfish(helper.getLevel(), player);
+                    projectile.setItem(stack);
+                    projectile.setPos(target.getX() - 1, target.getY() + 0.5, target.getZ());
+                    projectile.setDeltaMovement(2, 0, 0);
+                    projectile.tick();
+                }
+                assertHit(helper, target, 2, seed);
+                int mask = 0;
+                for (int i = 0; i < BONUS_EFFECTS.size(); i++) if (target.hasEffect(BONUS_EFFECTS.get(i))) mask |= 1 << i;
+                combinations.add(mask);
             }
-            var blindness = target.getEffect(MobEffects.BLINDNESS);
-            helper.assertTrue(blindness != null && blindness.getAmplifier() == 0 && blindness.getDuration() == 60,
-                    "Active radiant hits against wither ten should blind for three seconds");
         }
+        helper.assertTrue(combinations.containsAll(java.util.List.of(0, 1, 2, 4, 8))
+                        && combinations.stream().anyMatch(mask -> Integer.bitCount(mask) > 1),
+                "Independent debuffs never occurred alone or together");
         helper.succeed();
     }
 

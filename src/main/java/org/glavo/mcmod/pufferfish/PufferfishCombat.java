@@ -31,7 +31,8 @@ public final class PufferfishCombat {
     public static final int POISON_DURATION_TICKS = 60;
     public static final int RADIANT_WITHER_DURATION_TICKS = 100;
     public static final int RADIANT_GLOW_DURATION_TICKS = 200;
-    public static final int RADIANT_BLINDNESS_DURATION_TICKS = 60;
+    private static final float RADIANT_WITHER_CHANCE = 0.6F;
+    private static final float RADIANT_DEBUFF_CHANCE = 0.05F;
     /// Prevents construction of this combat utility.
     private PufferfishCombat() {}
 
@@ -101,15 +102,28 @@ public final class PufferfishCombat {
         }
     }
 
-    /// Shares attack status effects between living fish and weapons, including stacking radiant wither.
+    /// Radiant hits roll Wither I or an upgrade to III; existing wither always refreshes.
     public static void applyAttackEffect(ItemStack stack, LivingEntity target, Entity source) {
         if (PufferfishItems.isRadiant(stack)) {
             var current = target.getEffect(MobEffects.WITHER);
-            if (current != null && current.getAmplifier() >= 9) {
-                target.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, RADIANT_BLINDNESS_DURATION_TICKS), source);
+            var random = source.getRandom();
+            if (current == null) {
+                if (random.nextFloat() < RADIANT_WITHER_CHANCE) {
+                    target.addEffect(new MobEffectInstance(MobEffects.WITHER, RADIANT_WITHER_DURATION_TICKS), source);
+                }
+            } else {
+                int amplifier = current.getAmplifier();
+                boolean capped = amplifier >= 2;
+                if (amplifier < 2 && random.nextFloat() < RADIANT_WITHER_CHANCE) amplifier++;
+                target.addEffect(new MobEffectInstance(MobEffects.WITHER, RADIANT_WITHER_DURATION_TICKS, amplifier), source);
+                // Only hits against an already capped effect roll the four independent debuffs.
+                if (capped) {
+                    if (random.nextFloat() < RADIANT_DEBUFF_CHANCE) target.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 100), source);
+                    if (random.nextFloat() < RADIANT_DEBUFF_CHANCE) target.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 100), source);
+                    if (random.nextFloat() < RADIANT_DEBUFF_CHANCE) target.addEffect(new MobEffectInstance(MobEffects.HUNGER, 200), source);
+                    if (random.nextFloat() < RADIANT_DEBUFF_CHANCE) target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 200), source);
+                }
             }
-            int amplifier = current == null ? 0 : Math.min(9, current.getAmplifier() + 1);
-            target.addEffect(new MobEffectInstance(MobEffects.WITHER, RADIANT_WITHER_DURATION_TICKS, amplifier), source);
             applyRadiantGlow(target, source);
         } else {
             applyPassiveEffect(stack, target, source);
