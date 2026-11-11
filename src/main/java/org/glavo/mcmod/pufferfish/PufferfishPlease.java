@@ -123,6 +123,7 @@ public class PufferfishPlease {
                     PufferfishVariant.ALL.forEach(variant -> output.accept(variant.skin()));
                     PufferfishShields.VARIANTS.values().forEach(output::accept);
                     PufferfishArmor.VARIANTS.values().forEach(output::accept);
+                    PufferfishCatArmor.VARIANTS.values().forEach(output::accept);
                     PufferfishBoats.VARIANTS.values().forEach(variant -> output.accept(variant.item()));
                 }).build());
     }
@@ -147,6 +148,7 @@ public class PufferfishPlease {
         }
         PufferfishShields.register(bus);
         PufferfishArmor.register(bus);
+        PufferfishCatArmor.register(bus);
         PufferfishBoats.register(bus);
         PufferfishLamps.register(bus);
         PufferfishBlocks.register(bus);

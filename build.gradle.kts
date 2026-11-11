@@ -340,6 +340,23 @@ val generateArmorResources = tasks.register<Sync>("generateArmorResources") {
     for (color in allSkinVariants) {
         val prefix = if (color.isEmpty()) "" else "${color}_"
         val skinName = "${prefix}pufferfish_skin"
+        val catArmorName = "${skinName}_cat_armor"
+        for ((template, target) in mapOf(
+            "recipe" to "data/$modId/recipe/$catArmorName.json",
+            "advancement" to "data/$modId/advancement/recipes/combat/$catArmorName.json"
+        )) {
+            from("src/main/templates/armor/$template.json") {
+                expand("modId" to modId, "skinName" to skinName, "armorName" to catArmorName,
+                    "armorType" to "cat_armor", "pattern" to JsonOutput.toJson(listOf("S S", "SSS", " S ")))
+                into(target.substringBeforeLast('/'))
+                rename { target.substringAfterLast('/') }
+            }
+        }
+        from("src/main/templates/armor/cat_model.json") {
+            expand("modId" to modId, "skinName" to skinName)
+            into("assets/$modId/models/item")
+            rename { "$catArmorName.json" }
+        }
         for ((armorType, pattern) in patterns) {
             val armorName = "${skinName}_$armorType"
             for ((template, target) in mapOf(

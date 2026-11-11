@@ -38,6 +38,16 @@ public final class PufferfishSpriteSource implements SpriteSource {
                         return new SpriteContents(sprite, size, image, metadata);
                     })));
         }
+        for (var name : org.glavo.mcmod.pufferfish.PufferfishCatArmor.VARIANTS.keySet()) {
+            var id = PufferfishPlease.id("item/" + name);
+            var replacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(id));
+            if (replacement.isPresent()) output.add(id, replacement.get());
+            else manager.getResource(ResourceLocation.withDefaultNamespace("textures/item/wolf_armor.png"))
+                    .ifPresent(resource -> output.add(id, loader -> loader.loadSprite(id, resource, (sprite, size, image, metadata) -> {
+                        PufferfishArmorTextures.skin(manager, image, name, false);
+                        return new SpriteContents(sprite, size, image, metadata);
+                    })));
+        }
         for (boolean bucket : new boolean[] {false, true}) {
             ResourceLocation original = ResourceLocation.withDefaultNamespace(bucket ? "item/pufferfish_bucket" : "item/pufferfish");
             for (DyeColor color : DyeColor.values()) {

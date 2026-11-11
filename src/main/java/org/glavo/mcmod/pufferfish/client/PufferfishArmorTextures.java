@@ -26,6 +26,7 @@ public final class PufferfishArmorTextures implements ResourceManagerReloadListe
     private final Set<ResourceLocation> generated = new HashSet<>();
 
     public static void skin(ResourceManager manager, NativeImage mask, String name, boolean worn) {
+        boolean catArmor = !worn && name.endsWith("_cat_armor");
         String prefix = name.substring(0, name.indexOf("pufferfish_skin"));
         if (prefix.startsWith("waxed_")) prefix = prefix.substring("waxed_".length());
         int ventral = switch (prefix) {
@@ -44,12 +45,12 @@ public final class PufferfishArmorTextures implements ResourceManagerReloadListe
         for (var color : DyeColor.values()) if (prefix.equals(color.getName() + "_")) tint = color.getTextureDiffuseColor();
         String overlayPath = worn ? "textures/models/armor/leather_layer_" + (name.endsWith("_leggings") ? 2 : 1) + "_overlay.png"
                 : "textures/item/leather_" + name.substring(name.lastIndexOf('_') + 1) + "_overlay.png";
-        try (var overlayStream = manager.open(ResourceLocation.withDefaultNamespace(overlayPath));
-                var overlay = NativeImage.read(overlayStream);
+        try (var overlayStream = catArmor ? null : manager.open(ResourceLocation.withDefaultNamespace(overlayPath));
+                var overlay = overlayStream == null ? null : NativeImage.read(overlayStream);
                 var stream = manager.open(FISH); var fish = NativeImage.read(stream)) {
             PufferfishSkinTexture.recolorSource(fish, name);
             for (int y = 0; y < mask.getHeight(); y++) for (int x = 0; x < mask.getWidth(); x++) {
-                mask.blendPixel(x, y, overlay.getPixelRGBA(x * overlay.getWidth() / mask.getWidth(), y * overlay.getHeight() / mask.getHeight()));
+                if (overlay != null) mask.blendPixel(x, y, overlay.getPixelRGBA(x * overlay.getWidth() / mask.getWidth(), y * overlay.getHeight() / mask.getHeight()));
                 int original = mask.getPixelRGBA(x, y);
                 if ((original >>> 24) == 0) continue;
                 int u = x * (worn ? 64 : 16) / mask.getWidth();
@@ -61,7 +62,7 @@ public final class PufferfishArmorTextures implements ResourceManagerReloadListe
                 if (prefix.equals("golden_")) {
                     int shade = Math.max(original & 255, Math.max(original >>> 8 & 255, original >>> 16 & 255));
                     int gold = GoldenSkinMaterial.shade(pixel, shade, u, v, belly);
-                    mask.setPixelRGBA(x, y, original & 0xFF000000 | detail(gold, u, v, belly, true, ventral) & 0xFFFFFF);
+                    mask.setPixelRGBA(x, y, original & 0xFF000000 | (catArmor ? gold : detail(gold, u, v, belly, true, ventral)) & 0xFFFFFF);
                     continue;
                 }
                 int red = pixel & 255;
@@ -74,6 +75,16 @@ public final class PufferfishArmorTextures implements ResourceManagerReloadListe
                     green = (color >>> 8 & 255) * brightness / 255;
                     blue = (color & 255) * brightness / 255;
                 }
+                if (catArmor) {
+                    if (belly) {
+                        red = (red + 3 * (ventral >>> 16 & 255)) / 4;
+                        green = (green + 3 * (ventral >>> 8 & 255)) / 4;
+                        blue = (blue + 3 * (ventral & 255)) / 4;
+                    }
+                    int shade = Math.min(255, Math.max(original & 255, Math.max(original >>> 8 & 255, original >>> 16 & 255)) * 255 / 198);
+                    mask.setPixelRGBA(x, y, original & 0xFF000000 | blue * shade / 255 << 16 | green * shade / 255 << 8 | red * shade / 255);
+                    continue;
+                }
                 int shade = 160 + Math.max(original & 255, Math.max(original >>> 8 & 255, original >>> 16 & 255)) * 95 / 255;
                 int shaded = blue * shade / 255 << 16 | green * shade / 255 << 8 | red * shade / 255;
                 mask.setPixelRGBA(x, y, original & 0xFF000000 | detail(shaded, u, v, belly, false, ventral) & 0xFFFFFF);
@@ -85,6 +96,7 @@ public final class PufferfishArmorTextures implements ResourceManagerReloadListe
 
     private static boolean belly(int u, int v, String name, boolean worn) {
         if (!worn) {
+            if (name.endsWith("_cat_armor")) return v >= 6;
             if (name.endsWith("_helmet")) return v >= 7 && u >= 4 && u < 12;
             if (name.endsWith("_chestplate")) return v >= 6 && v < 14 && u >= (v < 8 ? 6 : 5) && u < (v < 8 ? 10 : 11);
             if (name.endsWith("_leggings")) return v >= 7 && v < 12 && (u == 5 || u == 10);

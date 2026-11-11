@@ -53,6 +53,11 @@ public class PufferfishPleaseClient {
         bus.addListener(EventPriority.LOWEST, this::wrapModels);
         bus.addListener(this::registerReloadListeners);
         bus.addListener(this::registerRenderers);
+        bus.addListener((EntityRenderersEvent.AddLayers event) -> {
+            var renderer = event.<net.minecraft.world.entity.animal.Cat, net.minecraft.client.renderer.entity.CatRenderer>
+                    getRenderer(net.minecraft.world.entity.EntityType.CAT);
+            if (renderer != null) renderer.addLayer(new org.glavo.mcmod.pufferfish.client.PufferfishCatArmorLayer(renderer));
+        });
         bus.addListener(this::registerItemExtensions);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishHeadRenderer::beforePlayer);
         NeoForge.EVENT_BUS.addListener(PufferfishHeadRenderer::afterPlayer);

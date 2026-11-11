@@ -26,6 +26,7 @@ public final class PufferfishAdvancements {
     public static final DeferredHolder<CriterionTrigger<?>, PlayerTrigger> WAX_PUFFERFISH = TRIGGERS.register("wax_pufferfish", PlayerTrigger::new);
     public static final DeferredHolder<CriterionTrigger<?>, PlayerTrigger> RESTORE_ANCIENT_CONDUIT = TRIGGERS.register("restore_ancient_conduit", PlayerTrigger::new);
     public static final DeferredHolder<CriterionTrigger<?>, PlayerTrigger> KILLED_BY_HEAVY_PUFFERFISH = TRIGGERS.register("killed_by_heavy_pufferfish", PlayerTrigger::new);
+    public static final DeferredHolder<CriterionTrigger<?>, PlayerTrigger> EQUIP_CAT_ARMOR = TRIGGERS.register("equip_cat_armor", PlayerTrigger::new);
 
     private PufferfishAdvancements() {}
 

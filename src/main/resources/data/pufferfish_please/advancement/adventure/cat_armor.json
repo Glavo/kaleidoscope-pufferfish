@@ -1,0 +1,14 @@
+{
+  "parent": "pufferfish_please:adventure/careful_with_spikes",
+  "display": {
+    "icon": {"id": "pufferfish_please:pufferfish_skin_cat_armor"},
+    "title": {"translate": "advancements.pufferfish_please.cat_armor.title"},
+    "description": {"translate": "advancements.pufferfish_please.cat_armor.description"},
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {"equip": {"trigger": "pufferfish_please:equip_cat_armor"}},
+  "requirements": [["equip"]]
+}

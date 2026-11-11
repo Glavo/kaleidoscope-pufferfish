@@ -3,6 +3,7 @@
   "package": "org.glavo.mcmod.pufferfish.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "PufferfishCatArmorMixin",
     "PufferfishConduitMixin",
     "PufferfishPowerMixin",
     "LethalToxinMixin",
