@@ -7,22 +7,42 @@
         {
           "type": "minecraft:item",
           "name": "pufferfish_please:pufferfish_upgrade_smithing_template",
-          "weight": 1
+          "weight": 125
+        },
+        {
+          "type": "minecraft:item",
+          "name": "pufferfish_please:copper_pufferfish",
+          "weight": 100
+        },
+        {
+          "type": "minecraft:item",
+          "name": "pufferfish_please:iron_pufferfish",
+          "weight": 60
+        },
+        {
+          "type": "minecraft:item",
+          "name": "pufferfish_please:golden_pufferfish",
+          "weight": 40
+        },
+        {
+          "type": "minecraft:item",
+          "name": "pufferfish_please:diamond_pufferfish",
+          "weight": 10
         },
         {
           "type": "minecraft:item",
           "name": "minecraft:prismarine_shard",
-          "weight": 7
+          "weight": 777
         },
         {
           "type": "minecraft:item",
           "name": "minecraft:prismarine_crystals",
-          "weight": 5
+          "weight": 555
         },
         {
           "type": "minecraft:item",
           "name": "minecraft:gold_nugget",
-          "weight": 3
+          "weight": 333
         }
       ]
     }

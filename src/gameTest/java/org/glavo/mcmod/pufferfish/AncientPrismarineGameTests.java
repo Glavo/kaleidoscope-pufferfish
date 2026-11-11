@@ -132,20 +132,32 @@ public final class AncientPrismarineGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void archaeologyTableContainsTemplatesAndOrdinaryTreasure(GameTestHelper helper) {
+    public static void archaeologyTableContainsTemplatesRareFishAndOrdinaryTreasure(GameTestHelper helper) {
         var level = helper.getLevel();
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         var params = new LootParams.Builder(level).withParameter(LootContextParams.ORIGIN, helper.absoluteVec(new net.minecraft.world.phys.Vec3(2, 2, 2)))
                 .withParameter(LootContextParams.THIS_ENTITY, player).create(LootContextParamSets.ARCHAEOLOGY);
         var table = level.getServer().reloadableRegistries().getLootTable(AncientPrismarineBlockEntity.LOOT_TABLE);
         var random = net.minecraft.util.RandomSource.create(74019L);
-        int templates = 0;
-        for (int roll = 0; roll < 256; roll++) {
+        var seen = new java.util.HashSet<net.minecraft.world.item.Item>();
+        int templates = 0, rareFish = 0, diamonds = 0;
+        for (int roll = 0; roll < 2048; roll++) {
             var items = table.getRandomItems(params, random);
             helper.assertTrue(items.size() == 1 && items.getFirst().getCount() == 1, "Archaeology must produce one treasure");
-            if (items.getFirst().is(PufferfishItems.UPGRADE_TEMPLATE)) templates++;
+            var stack = items.getFirst();
+            boolean materialFish = stack.is(PufferfishItems.COPPER) || stack.is(PufferfishItems.IRON)
+                    || stack.is(PufferfishItems.GOLDEN) || stack.is(PufferfishItems.DIAMOND);
+            helper.assertTrue(materialFish || stack.is(PufferfishItems.UPGRADE_TEMPLATE) || stack.is(Items.PRISMARINE_SHARD)
+                    || stack.is(Items.PRISMARINE_CRYSTALS) || stack.is(Items.GOLD_NUGGET), "Archaeology produced unexpected treasure");
+            seen.add(stack.getItem());
+            if (stack.is(PufferfishItems.UPGRADE_TEMPLATE)) templates++;
+            if (materialFish) rareFish++;
+            if (stack.is(PufferfishItems.DIAMOND)) diamonds++;
         }
-        helper.assertTrue(templates > 0 && templates < 64, "Template loot is missing or not rare");
+        helper.assertTrue(seen.size() == 8, "Archaeology treasure variety is missing");
+        helper.assertTrue(templates > 0 && templates < 200, "Template loot is missing or not rare");
+        helper.assertTrue(rareFish > 0 && rareFish < 320, "Material fish are missing or too common");
+        helper.assertTrue(diamonds > 0 && diamonds < 30, "Diamond pufferfish are missing or too common");
         helper.succeed();
     }
 }
