@@ -77,7 +77,7 @@ public final class PufferfishMeleeGameTests {
                     && player.getAttributeValue(Attributes.ATTACK_SPEED) == (netherite ? 2 : 3), "Incorrect pufferfish melee attributes");
             player.attack(target);
             helper.assertTrue(target.getHealth() == 20 - (netherite ? 6 : 1), "Charged melee damage does not match the configured base damage");
-            var poison = target.getEffect(MobEffects.POISON);
+            var poison = PufferfishEffectsGameTests.poison(target);
             helper.assertTrue(poison != null && poison.getDuration() == 120 && poison.getAmplifier() == (netherite ? 1 : 0),
                     "Melee poison differs from throwing");
             helper.assertTrue(player.getMainHandItem().getCount() == 1 && player.getInventory().countItem(stack.getItem()) == 4
@@ -144,7 +144,7 @@ public final class PufferfishMeleeGameTests {
                 "Offhand pufferfish granted mainhand attack attributes");
         target = target(helper);
         player.attack(target);
-        helper.assertTrue(target.getHealth() == 19 && !target.hasEffect(MobEffects.POISON), "Offhand fish poisoned an empty-handed attack");
+        helper.assertTrue(target.getHealth() == 19 && !PufferfishEffectsGameTests.hasPoison(target), "Offhand fish poisoned an empty-handed attack");
         target.discard();
         helper.succeed();
     }
@@ -175,7 +175,7 @@ public final class PufferfishMeleeGameTests {
         NeoForge.EVENT_BUS.addListener(cancel);
         try {
             player.attack(target);
-            helper.assertTrue(target.getHealth() == 20 && !target.hasEffect(MobEffects.POISON) && target.getDeltaMovement().equals(Vec3.ZERO),
+            helper.assertTrue(target.getHealth() == 20 && !PufferfishEffectsGameTests.hasPoison(target) && target.getDeltaMovement().equals(Vec3.ZERO),
                     "Canceled melee hit applied damage, poison, or Punch");
         } finally {
             NeoForge.EVENT_BUS.unregister(cancel);

@@ -104,7 +104,7 @@ public final class PufferfishWindBurstGameTests {
                     helper.assertTrue(bursts[0] - before == (rank > 0 ? 1 : 0) && projectile.isRemoved(),
                             "An impact did not trigger exactly one gust and recover the fish");
                     helper.assertTrue(target.getHealth() == 20 - PufferfishCombat.damage(stack)
-                            && target.getEffect(MobEffects.POISON) != null && nearby.getHealth() == 20,
+                            && PufferfishEffectsGameTests.poison(target) != null && nearby.getHealth() == 20,
                             "Gust changed direct damage, poison, or bystander health");
                     double speed = nearby.getDeltaMovement().length();
                     helper.assertTrue(rank == 0 ? speed == 0 : speed > previous,

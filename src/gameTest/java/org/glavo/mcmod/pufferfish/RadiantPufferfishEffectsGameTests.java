@@ -59,7 +59,7 @@ public final class RadiantPufferfishEffectsGameTests {
                     "Capped radiant hit did not independently roll bonus effect " + i + ", seed=" + seed);
         }
         assertGlowing(helper, target);
-        helper.assertTrue(!target.hasEffect(MobEffects.POISON), "Radiant attack applied poison");
+        helper.assertTrue(!PufferfishEffectsGameTests.hasPoison(target), "Radiant attack applied poison");
     }
 
     @GameTest(template = "empty")
@@ -215,7 +215,7 @@ public final class RadiantPufferfishEffectsGameTests {
                     helper.assertTrue(!attacker.hasEffect(MobEffects.WITHER) && !attacker.hasEffect(MobEffects.GLOWING),
                             "Radiant effects triggered without thorns damage: " + variant);
                 }
-                helper.assertTrue(!attacker.hasEffect(MobEffects.POISON), "Radiant equipment applied poison");
+                helper.assertTrue(!PufferfishEffectsGameTests.hasPoison(attacker), "Radiant equipment applied poison");
             }
             helper.assertTrue(reflected > 0 && reflected < 64, "Radiant retaliation did not roll thorns: " + variant);
             attacker.removeAllEffects();
@@ -264,7 +264,7 @@ public final class RadiantPufferfishEffectsGameTests {
                 NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(target));
                 assertGlowing(helper, target);
                 helper.assertTrue(target.hasEffect(MobEffects.WITHER) && target.getEffect(MobEffects.WITHER).getAmplifier() == 0 && target.getEffect(MobEffects.WITHER).getDuration() == 120
-                        && !target.hasEffect(MobEffects.POISON), "Contact should apply fixed wither one");
+                        && !PufferfishEffectsGameTests.hasPoison(target), "Contact should apply fixed wither one");
             }
         }
         helper.succeed();

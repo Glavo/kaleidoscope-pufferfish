@@ -95,7 +95,7 @@ public final class MaterialPufferfish extends Pufferfish {
 
     @Override
     public boolean canBeAffected(MobEffectInstance effect) {
-        return !effect.is(MobEffects.POISON) && !(effect.is(MobEffects.WITHER) && kind() == PufferfishMobConfig.Kind.RADIANT)
+        return !org.glavo.mcmod.pufferfish.PufferfishEffects.isPoison(effect) && !(effect.is(MobEffects.WITHER) && kind() == PufferfishMobConfig.Kind.RADIANT)
                 && super.canBeAffected(effect);
     }
 

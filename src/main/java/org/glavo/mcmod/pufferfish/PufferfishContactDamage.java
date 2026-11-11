@@ -29,7 +29,8 @@ public final class PufferfishContactDamage {
         var level = entity.level();
         var bounds = entity.getBoundingBox().inflate(0.001);
         boolean touching = false;
-        var effects = new java.util.HashMap<net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect>, MobEffectInstance>();
+        PufferfishPoison poison = null;
+        boolean radiant = false;
         for (var pos : BlockPos.betweenClosed(BlockPos.containing(bounds.minX, bounds.minY, bounds.minZ),
                 BlockPos.containing(bounds.maxX, bounds.maxY, bounds.maxZ))) {
             var state = level.getBlockState(pos);
@@ -38,10 +39,9 @@ public final class PufferfishContactDamage {
                 if (shape.move(pos).intersects(bounds)) {
                     touching = true;
                     if (entity instanceof LivingEntity) {
-                        var effect = poison(level, pos, state);
-                        var poison = effect == null ? null : effects.get(effect.getEffect());
-                        if (effect != null && (poison == null || effect.getAmplifier() > poison.getAmplifier()
-                                || effect.getAmplifier() == poison.getAmplifier() && effect.getDuration() > poison.getDuration())) effects.put(effect.getEffect(), effect);
+                        var stack = contactItem(level, pos, state);
+                        poison = PufferfishPoison.strongest(poison, PufferfishPoison.of(stack));
+                        radiant |= PufferfishItems.isRadiant(stack);
                     }
                     break;
                 }
@@ -51,31 +51,25 @@ public final class PufferfishContactDamage {
         var source = new DamageSource(level.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(DAMAGE_TYPE));
         if (!entity.hurt(source, 1)) return;
         if (entity instanceof LivingEntity living && living.isAlive() && !living.isInvulnerableTo(source)) {
-            if (effects.containsKey(MobEffects.WITHER)) PufferfishCombat.applyRadiantGlow(living, null);
-            for (var effect : effects.values()) {
-                var current = living.getEffect(effect.getEffect());
-                // Late poison refreshes allow damage ticks to fall outside the contact hurt cooldown.
-                int refreshThreshold = effect.is(MobEffects.POISON) ? 20 : effect.getDuration() / 2;
-                if (current == null || !current.isInfiniteDuration() && (current.getAmplifier() < effect.getAmplifier()
-                        || current.getAmplifier() == effect.getAmplifier() && current.getDuration() <= refreshThreshold)) {
-                    living.addEffect(effect);
+            if (poison != null && poison.shouldRefresh(living)) poison.apply(living, null, PufferfishCombat.STATUS_EFFECT_DURATION_TICKS);
+            if (radiant) {
+                PufferfishCombat.applyRadiantGlow(living, null);
+                var current = living.getEffect(MobEffects.WITHER);
+                if (current == null || !current.isInfiniteDuration() && current.getAmplifier() == 0
+                        && current.getDuration() <= PufferfishCombat.STATUS_EFFECT_DURATION_TICKS / 2) {
+                    living.addEffect(new MobEffectInstance(MobEffects.WITHER, PufferfishCombat.STATUS_EFFECT_DURATION_TICKS));
                 }
             }
         }
     }
 
-    @javax.annotation.Nullable
-    private static MobEffectInstance poison(Level level, BlockPos pos, BlockState state) {
+    private static net.minecraft.world.item.ItemStack contactItem(Level level, BlockPos pos, BlockState state) {
         if (state.getBlock() instanceof PufferfishSkinBlock) {
-            int copper = CopperPufferfish.skinIndex(state.getBlock().asItem().getDefaultInstance());
-            if (copper >= 0) return copper >= 4 ? null : new MobEffectInstance(MobEffects.POISON, PufferfishCombat.STATUS_EFFECT_DURATION_TICKS, Math.max(0, copper - 1));
-            boolean radiant = state.is(PufferfishBlocks.RADIANT_SKIN.get());
-            return new MobEffectInstance(radiant ? MobEffects.WITHER : MobEffects.POISON,
-                    PufferfishCombat.STATUS_EFFECT_DURATION_TICKS, 0);
+            return state.getBlock().asItem().getDefaultInstance();
         }
         if (level.getBlockEntity(pos) instanceof PlacedPufferfishBlockEntity placed && !placed.fish().isEmpty()) {
-            return PufferfishCombat.passiveEffect(placed.fish());
+            return placed.fish();
         }
-        return null;
+        return net.minecraft.world.item.ItemStack.EMPTY;
     }
 }

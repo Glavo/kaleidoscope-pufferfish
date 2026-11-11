@@ -7,8 +7,6 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -42,24 +40,6 @@ public final class PufferfishRetaliation {
         return PufferfishItems.isWeapon(stack) ? variant.material().headThorns() : variant.material().skinThorns();
     }
 
-    /// Equipment retaliation is balanced independently of weapon attacks and placed-fish contact.
-    @javax.annotation.Nullable
-    public static MobEffectInstance effect(ItemStack stack) {
-        var variant = PufferfishVariant.of(stack);
-        if (variant == null || variant.waxed()) return null;
-        if (variant.material() == PufferfishMaterial.RADIANT) return new MobEffectInstance(MobEffects.WITHER, PufferfishCombat.STATUS_EFFECT_DURATION_TICKS, 0);
-        int oxidation = variant.oxidation();
-        return new MobEffectInstance(MobEffects.POISON, PufferfishCombat.STATUS_EFFECT_DURATION_TICKS, Math.max(0, oxidation - 1));
-    }
-
-    @javax.annotation.Nullable
-    public static MobEffectInstance strongestPoison(@javax.annotation.Nullable MobEffectInstance first,
-            @javax.annotation.Nullable MobEffectInstance second) {
-        if (second == null || !second.is(MobEffects.POISON)) return first;
-        return first == null || second.getAmplifier() > first.getAmplifier()
-                || second.getAmplifier() == first.getAmplifier() && second.getDuration() > first.getDuration() ? second : first;
-    }
-
     /// Equipment effects follow successful intrinsic or enchanted thorns, including damage absorbed by absorption hearts.
     public static void effectsOnThorns(LivingDamageEvent.Post event) {
         var target = event.getEntity();
@@ -68,12 +48,12 @@ public final class PufferfishRetaliation {
                 || !dealtDamage(event)) return;
         var poison = PufferfishArmor.poison(wearer);
         if (PufferfishHeadgear.isWearing(wearer)) {
-            poison = strongestPoison(poison, effect(wearer.getItemBySlot(EquipmentSlot.HEAD)));
+            poison = PufferfishPoison.strongest(poison, PufferfishPoison.of(wearer.getItemBySlot(EquipmentSlot.HEAD)));
         }
-        if (poison != null) target.addEffect(poison, wearer);
+        if (poison != null) poison.apply(target, wearer, PufferfishCombat.STATUS_EFFECT_DURATION_TICKS);
         if (PufferfishHeadgear.isWearing(wearer) && PufferfishItems.isRadiant(wearer.getItemBySlot(EquipmentSlot.HEAD))
                 || PufferfishArmor.isWearingRadiant(wearer)) {
-            target.addEffect(effect(new ItemStack(PufferfishItems.RADIANT.get())), wearer);
+            target.addEffect(PufferfishCombat.passiveEffect(new ItemStack(PufferfishItems.RADIANT.get())), wearer);
             PufferfishCombat.applyRadiantGlow(target, wearer);
         }
     }

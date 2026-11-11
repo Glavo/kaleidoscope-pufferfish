@@ -180,8 +180,8 @@ public final class PufferfishPumpPressureGameTests {
                 helper.assertTrue(near.getHealth() < far.getHealth() && far.getHealth() < initial && initial - near.getHealth() <= 6,
                         "Burst damage did not fall off with distance: " + near.getHealth() + ", " + far.getHealth() + ", " + initial
                                 + "; positions: " + near.position() + ", " + far.position() + "; center: " + pump.getBlockPos().getCenter());
-                helper.assertTrue(near.hasEffect(MobEffects.POISON) && near.getDeltaMovement().lengthSqr() > 0, "Burst omitted poison or knockback");
-                helper.assertTrue(covered.getHealth() == initial && !covered.hasEffect(MobEffects.POISON), "Burst passed through solid cover");
+                helper.assertTrue(PufferfishEffectsGameTests.hasPoison(near) && near.getDeltaMovement().lengthSqr() > 0, "Burst omitted poison or knockback");
+                helper.assertTrue(covered.getHealth() == initial && !PufferfishEffectsGameTests.hasPoison(covered), "Burst passed through solid cover");
                 helper.assertTrue(fish.getHealth() == fishHealth && fish.getActiveEffects().isEmpty(), "Burst damaged or poisoned another pufferfish");
                 helper.assertTrue(helper.getBlockState(new BlockPos(1, 2, 2)).is(Blocks.STONE), "Burst destroyed blocks");
                 helper.succeed();

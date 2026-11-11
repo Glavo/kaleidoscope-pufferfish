@@ -100,18 +100,18 @@ public final class CopperPufferfishGameTests {
             helper.assertTrue(target.hurt(target.damageSources().playerAttack(player), 1), "Melee damage failed");
             assertPoison(helper, target, stage);
 
-            target.removeEffect(MobEffects.POISON);
+            PufferfishEffectsGameTests.clearPoison(target);
             PufferfishCombat.hitEffects(fish, target, player, Vec3.ZERO);
             assertPoison(helper, target, stage);
 
-            target.removeEffect(MobEffects.POISON);
+            PufferfishEffectsGameTests.clearPoison(target);
             player.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
             player.setItemSlot(EquipmentSlot.HEAD, fish);
             target.invulnerableTime = 0;
             helper.assertTrue(target.hurt(target.damageSources().thorns(player), 1), "Thorns damage failed");
-            var poison = target.getEffect(MobEffects.POISON);
+            var poison = PufferfishEffectsGameTests.poison(target);
             helper.assertTrue(stage >= 4 ? poison == null
-                    : poison != null && poison.getAmplifier() == new int[] {0, 0, 1, 2}[stage] && poison.getDuration() == 120,
+                    : poison != null && poison.getAmplifier() == new int[] {0, 0, 1, 1}[stage] && poison.getDuration() == 120,
                     "Copper headgear did not apply its oxidation poison tier and duration");
         }
         helper.succeed();
@@ -124,10 +124,10 @@ public final class CopperPufferfishGameTests {
         var fish = new ItemStack(PufferfishItems.COPPER_VARIANTS.get(7).get());
         target.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 2));
         PufferfishCombat.hitEffects(fish, target, player, Vec3.ZERO);
-        var poison = target.getEffect(MobEffects.POISON);
+        var poison = PufferfishEffectsGameTests.poison(target);
         helper.assertTrue(poison != null && poison.getDuration() == 200 && poison.getAmplifier() == 2,
                 "Wax changed an existing poison effect");
-        target.removeEffect(MobEffects.POISON);
+        PufferfishEffectsGameTests.clearPoison(target);
         player.setItemSlot(EquipmentSlot.HEAD, fish);
         player.getRandom().setSeed(4291);
         int reflected = 0;
@@ -138,19 +138,19 @@ public final class CopperPufferfishGameTests {
             target.setHealth(target.getMaxHealth());
             player.hurt(player.damageSources().mobAttack(target), 1);
             if (target.getHealth() < target.getMaxHealth()) reflected++;
-            helper.assertTrue(!target.hasEffect(MobEffects.POISON), "Waxed headgear poisoned its attacker");
+            helper.assertTrue(!PufferfishEffectsGameTests.hasPoison(target), "Waxed headgear poisoned its attacker");
         }
         helper.assertTrue(reflected > 0, "Wax disabled thorns retaliation");
         helper.succeed();
     }
 
     private static void assertPoison(GameTestHelper helper, LivingEntity target, int stage) {
-        var poison = target.getEffect(MobEffects.POISON);
+        var poison = PufferfishEffectsGameTests.poison(target);
         if (stage >= 4) {
             helper.assertTrue(poison == null, "Waxed copper applied poison");
         } else {
             int duration = 120;
-            int amplifier = new int[] {0, 0, 1, 2}[stage];
+            int amplifier = new int[] {0, 0, 1, 1}[stage];
             helper.assertTrue(poison != null && poison.getDuration() == duration
                     && poison.getAmplifier() == amplifier, "Incorrect oxidation poison strength");
         }

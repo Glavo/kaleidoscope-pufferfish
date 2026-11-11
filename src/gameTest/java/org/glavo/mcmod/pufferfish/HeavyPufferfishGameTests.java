@@ -114,7 +114,7 @@ public final class HeavyPufferfishGameTests {
                     "Heavy fish did not use configured damage and heavy attack speed");
             helper.assertTrue(Math.abs(player.getCurrentItemAttackStrengthDelay() - 20 / 0.6) < 0.001,
                     "Heavy fish did not have the expected attack recharge time");
-            var poison = target.getEffect(MobEffects.POISON);
+            var poison = PufferfishEffectsGameTests.poison(target);
             helper.assertTrue(poison != null && poison.getAmplifier() == 1 && poison.getDuration() == 120,
                     "Heavy fish lost pufferfish poison effects");
             helper.assertTrue(stack.getCount() == 1 && stack.getDamageValue() == 1, "Heavy fish attack did not spend exactly one durability");

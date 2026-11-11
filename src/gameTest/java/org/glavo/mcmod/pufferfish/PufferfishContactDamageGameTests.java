@@ -92,7 +92,7 @@ public final class PufferfishContactDamageGameTests {
             var fish = variant.fish().get();
             int copper = CopperPufferfish.index(fish);
             int duration = 120;
-            int amplifier = copper > 0 && copper < 4 ? copper - 1 : PufferfishItems.hasNetheriteCombat(fish) ? 1 : 0;
+            int amplifier = copper > 0 && copper < 4 ? Math.min(1, copper - 1) : PufferfishItems.hasNetheriteCombat(fish) ? 1 : 0;
             var poison = copper >= 4 ? null : new MobEffectInstance(MobEffects.POISON, duration, amplifier);
             for (var block : new PlacedPufferfishBlock[] {PufferfishItems.isHeavy(fish)
                     ? PufferfishBlocks.PLACED_HEAVY_FISH.get() : PufferfishBlocks.PLACED_FISH.get(), variant.block().get()}) {
@@ -107,7 +107,7 @@ public final class PufferfishContactDamageGameTests {
                     var state = skin.defaultBlockState().setValue(PufferfishSkinBlock.FACE, face).setValue(PufferfishSkinBlock.FACING, facing);
                     level.setBlockAndUpdate(pos, state);
                     assertContact(helper, pos, state, copper >= 4
-                            ? null : new MobEffectInstance(MobEffects.POISON, 120, copper >= 0 ? amplifier : 0));
+                            ? null : new MobEffectInstance(MobEffects.POISON, 120, amplifier));
                 }
             }
         }
@@ -130,17 +130,17 @@ public final class PufferfishContactDamageGameTests {
             entity.tickCount = 20;
             NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
             helper.assertTrue(entity.getHealth() == entity.getMaxHealth() - 1, "Contact did not deal one point: " + state + " / " + side);
-            var poison = entity.getEffect(MobEffects.POISON);
+            var poison = PufferfishEffectsGameTests.poison(entity);
             helper.assertTrue(expectedPoison == null ? poison == null : poison != null
                     && poison.getDuration() == expectedPoison.getDuration() && poison.getAmplifier() == expectedPoison.getAmplifier(),
                     "Incorrect contact poison: " + state + " / " + side);
-            entity.removeEffect(MobEffects.POISON);
+            PufferfishEffectsGameTests.clearPoison(entity);
             entity.invulnerableTime = 0;
             entity.setPos(entity.position().add(Vec3.atLowerCornerOf(side.getNormal()).scale(0.02)));
             entity.tickCount = 40;
             NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
             helper.assertTrue(entity.getHealth() == entity.getMaxHealth() - 1, "Nearby entity was hurt without touching the shape");
-            helper.assertTrue(!entity.hasEffect(MobEffects.POISON), "Nearby entity was poisoned without touching the shape");
+            helper.assertTrue(!PufferfishEffectsGameTests.hasPoison(entity), "Nearby entity was poisoned without touching the shape");
         }
     }
 
@@ -176,18 +176,18 @@ public final class PufferfishContactDamageGameTests {
                 entity.setPos(helper.absoluteVec(new Vec3(3, 2.625, 2.5)));
                 entity.tickCount = 20;
                 NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
-                var poison = entity.getEffect(MobEffects.POISON);
-                helper.assertTrue(poison != null && poison.getDuration() == 120 && poison.getAmplifier() == 2,
+                var poison = PufferfishEffectsGameTests.poison(entity);
+                helper.assertTrue(poison != null && poison.getDuration() == 120 && poison.getAmplifier() == 1 && poison.is(PufferfishEffects.LETHAL_TOXIN),
                         "Contact order hid or weakened the strongest poison");
                 helper.assertTrue(entity.getHealth() == entity.getMaxHealth() - 1, "Poisonous contacts stacked prick damage");
                 for (var existing : new MobEffectInstance[] {
                         new MobEffectInstance(MobEffects.POISON, 400, 2),
                         new MobEffectInstance(MobEffects.POISON, 20, 3),
                         new MobEffectInstance(MobEffects.POISON, -1, 0)}) {
-                    entity.removeEffect(MobEffects.POISON);
+                    PufferfishEffectsGameTests.clearPoison(entity);
                     entity.addEffect(existing);
                     NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
-                    poison = entity.getEffect(MobEffects.POISON);
+                    poison = PufferfishEffectsGameTests.poison(entity);
                     helper.assertTrue(poison.getDuration() == existing.getDuration() && poison.getAmplifier() == existing.getAmplifier(),
                             "Contact overwrote a longer, stronger, or infinite poison");
                 }
@@ -213,12 +213,31 @@ public final class PufferfishContactDamageGameTests {
         NeoForge.EVENT_BUS.addListener(listener);
         helper.runAfterDelay(100, () -> {
             NeoForge.EVENT_BUS.unregister(listener);
-            helper.assertTrue(poisoned.hasEffect(MobEffects.POISON) && !control.hasEffect(MobEffects.POISON)
+            helper.assertTrue(PufferfishEffectsGameTests.hasPoison(poisoned) && !PufferfishEffectsGameTests.hasPoison(control)
                     && poisonHits[0] > 0, "Contact poison did not damage or was continuously reset");
             poisoned.setPos(poisoned.position().add(0, 2, 0));
         });
         helper.runAfterDelay(225, () -> {
-            helper.assertTrue(!poisoned.hasEffect(MobEffects.POISON), "Lamp poison did not expire after leaving");
+            helper.assertTrue(!PufferfishEffectsGameTests.hasPoison(poisoned), "Lamp poison did not expire after leaving");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 150)
+    public static void lethalContactPoisonDealsRepeatedDamage(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(2, 2, 2), PufferfishLamps.VARIANTS.get("copper_pufferfish_lamp").block().get());
+        var target = helper.spawn(EntityType.COW, 2.5F, 2.625F, 2.5F);
+        target.setNoAi(true);
+        target.setNoGravity(true);
+        target.addEffect(new MobEffectInstance(PufferfishEffects.LETHAL_TOXIN, 120));
+        int[] hits = {0};
+        Consumer<LivingDamageEvent.Post> listener = event -> {
+            if (event.getEntity() == target && event.getSource().is(NeoForgeMod.POISON_DAMAGE) && event.getNewDamage() > 0) hits[0]++;
+        };
+        NeoForge.EVENT_BUS.addListener(listener);
+        helper.runAfterDelay(100, () -> {
+            NeoForge.EVENT_BUS.unregister(listener);
+            helper.assertTrue(hits[0] >= 3, "Contact hurt cooldown repeatedly suppressed lethal toxin damage");
             helper.succeed();
         });
     }

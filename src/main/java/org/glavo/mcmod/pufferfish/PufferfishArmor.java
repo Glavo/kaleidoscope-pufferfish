@@ -10,7 +10,6 @@ import java.util.Map;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.LivingEntity;
@@ -101,13 +100,13 @@ public final class PufferfishArmor {
     }
 
     @javax.annotation.Nullable
-    public static MobEffectInstance poison(LivingEntity wearer) {
-        MobEffectInstance poison = null;
+    public static PufferfishPoison poison(LivingEntity wearer) {
+        PufferfishPoison poison = null;
         for (var type : TYPES) {
             var stack = wearer.getItemBySlot(type.getSlot());
             if (!(stack.getItem() instanceof ArmorItem armor) || armor.getType() != type || PufferfishItems.isRadiant(stack)
                     || PufferfishVariant.of(stack) == null) continue;
-            poison = PufferfishRetaliation.strongestPoison(poison, PufferfishRetaliation.effect(stack));
+            poison = PufferfishPoison.strongest(poison, PufferfishPoison.of(stack));
         }
         return poison;
     }

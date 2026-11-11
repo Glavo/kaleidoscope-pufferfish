@@ -51,10 +51,11 @@ public final class PufferfishShieldGameTests {
                 player.invulnerableTime = 0;
                 shield.setDamageValue(0);
                 player.hurt(player.damageSources().mobAttack(attacker), 6);
-                var poison = attacker.getEffect(PufferfishItems.isRadiant(shield) ? net.minecraft.world.effect.MobEffects.WITHER : net.minecraft.world.effect.MobEffects.POISON);
+                var poison = PufferfishEffectsGameTests.effect(attacker, PufferfishItems.isRadiant(shield) ? net.minecraft.world.effect.MobEffects.WITHER : net.minecraft.world.effect.MobEffects.POISON);
                 String name = item.getId().getPath();
                 int duration = 120;
-                int amplifier = name.startsWith("oxidized_copper_") ? 2 : name.startsWith("weathered_copper_") ? 1 : 0;
+                int amplifier = name.startsWith("oxidized_copper_") || name.startsWith("weathered_copper_")
+                        || name.startsWith("netherite_") || name.startsWith("heavy_") ? 1 : 0;
                 helper.assertTrue(name.startsWith("waxed_") ? poison == null
                         : poison != null && poison.getDuration() == duration && poison.getAmplifier() == amplifier,
                         "Shield applied an incorrect effect after a successful block");
@@ -98,7 +99,7 @@ public final class PufferfishShieldGameTests {
                 net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.HIGH, intercept);
                 try {
                     player.hurt(player.damageSources().mobAttack(attacker), 6);
-                    helper.assertTrue(attacker.getHealth() == 20 && !attacker.hasEffect(net.minecraft.world.effect.MobEffects.POISON)
+                    helper.assertTrue(attacker.getHealth() == 20 && !PufferfishEffectsGameTests.hasPoison(attacker)
                                 && !attacker.hasEffect(net.minecraft.world.effect.MobEffects.WITHER)
                                 && !attacker.hasEffect(net.minecraft.world.effect.MobEffects.GLOWING),
                             "Invalid shield block retaliated: scenario=" + scenario);

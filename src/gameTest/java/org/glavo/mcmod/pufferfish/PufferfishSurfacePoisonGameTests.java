@@ -62,17 +62,17 @@ public final class PufferfishSurfacePoisonGameTests {
             var entity = stand(helper, state);
             entity.invulnerableTime = 0;
             NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
-            var poison = entity.getEffect(MobEffects.POISON);
+            var poison = PufferfishEffectsGameTests.poison(entity);
             int copper = CopperPufferfish.skinIndex(state.getBlock().asItem().getDefaultInstance());
-            int amplifier = Math.max(0, copper - 1);
+            int amplifier = copper >= 2 || state.is(PufferfishBlocks.NETHERITE_SKIN.get()) || state.is(PufferfishBlocks.HEAVY_SKIN.get()) ? 1 : 0;
             helper.assertTrue(poison != null && poison.getDuration() == 120 && poison.getAmplifier() == amplifier,
                     "Standing on a pufferfish surface applied an incorrect material effect");
-            entity.removeEffect(MobEffects.POISON);
+            PufferfishEffectsGameTests.clearPoison(entity);
             entity.setOnGround(false);
             entity.setPos(entity.position().add(0, 0.1, 0));
             entity.invulnerableTime = 0;
             NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
-            helper.assertTrue(!entity.hasEffect(MobEffects.POISON), "An airborne entity was poisoned");
+            helper.assertTrue(!PufferfishEffectsGameTests.hasPoison(entity), "An airborne entity was poisoned");
             entity.discard();
         }
         helper.succeed();
@@ -84,18 +84,18 @@ public final class PufferfishSurfacePoisonGameTests {
             var entity = stand(helper, PufferfishBlocks.COPPER_SKINS.get(stage + 4).get().defaultBlockState());
             entity.invulnerableTime = 0;
             NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
-            helper.assertTrue(!entity.hasEffect(MobEffects.POISON), "Waxed skin applied poison");
+            helper.assertTrue(!PufferfishEffectsGameTests.hasPoison(entity), "Waxed skin applied poison");
             entity.addEffect(new MobEffectInstance(MobEffects.POISON, 20, 0));
             entity.invulnerableTime = 0;
             NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
-            var poison = entity.getEffect(MobEffects.POISON);
+            var poison = PufferfishEffectsGameTests.poison(entity);
             helper.assertTrue(poison != null && poison.getDuration() == 20 && poison.getAmplifier() == 0,
                     "Waxed skin changed existing poison");
-            entity.removeEffect(MobEffects.POISON);
+            PufferfishEffectsGameTests.clearPoison(entity);
             helper.getLevel().setBlockAndUpdate(entity.getOnPos(), PufferfishBlocks.COPPER_SKINS.get(stage).get().defaultBlockState());
             entity.invulnerableTime = 0;
             NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
-            helper.assertTrue(entity.hasEffect(MobEffects.POISON), "Unwaxed skin no longer applied poison");
+            helper.assertTrue(PufferfishEffectsGameTests.hasPoison(entity), "Unwaxed skin no longer applied poison");
             entity.discard();
         }
         helper.succeed();
@@ -109,7 +109,7 @@ public final class PufferfishSurfacePoisonGameTests {
         var level = helper.getLevel();
         entity.invulnerableTime = 0;
         NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
-        helper.assertTrue(!entity.hasEffect(MobEffects.POISON), "Ordinary stone poisoned an entity");
+        helper.assertTrue(!PufferfishEffectsGameTests.hasPoison(entity), "Ordinary stone poisoned an entity");
         entity.discard();
         level.setBlockAndUpdate(pos, PufferfishBlocks.skin(null).defaultBlockState());
         var zombie = helper.spawn(EntityType.ZOMBIE, new BlockPos(2, 3, 2));
@@ -117,7 +117,7 @@ public final class PufferfishSurfacePoisonGameTests {
         zombie.setPos(pos.getX() + 0.5, pos.getY() + 1.0 / 16, pos.getZ() + 0.5);
         zombie.move(MoverType.SELF, new Vec3(0, -0.1, 0));
         NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(zombie));
-        helper.assertTrue(!zombie.hasEffect(MobEffects.POISON), "Undead poison immunity was bypassed");
+        helper.assertTrue(!PufferfishEffectsGameTests.hasPoison(zombie), "Undead poison immunity was bypassed");
         zombie.discard();
         helper.succeed();
     }
@@ -132,14 +132,14 @@ public final class PufferfishSurfacePoisonGameTests {
             entity.addEffect(effect);
             entity.invulnerableTime = 0;
             NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
-            helper.assertTrue(entity.getEffect(MobEffects.POISON).getDuration() == effect.getDuration()
-                    && entity.getEffect(MobEffects.POISON).getAmplifier() == effect.getAmplifier(), "Existing poison was overwritten");
-            entity.removeEffect(MobEffects.POISON);
+            helper.assertTrue(PufferfishEffectsGameTests.poison(entity).getDuration() == effect.getDuration()
+                    && PufferfishEffectsGameTests.poison(entity).getAmplifier() == effect.getAmplifier(), "Existing poison was overwritten");
+            PufferfishEffectsGameTests.clearPoison(entity);
         }
         entity.addEffect(new MobEffectInstance(MobEffects.POISON, 20, 0));
         entity.invulnerableTime = 0;
         NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
-        helper.assertTrue(entity.getEffect(MobEffects.POISON).getDuration() == 120, "Short poison was not refreshed");
+        helper.assertTrue(PufferfishEffectsGameTests.poison(entity).getDuration() == 120, "Short poison was not refreshed");
         entity.discard();
         helper.succeed();
     }
@@ -150,13 +150,13 @@ public final class PufferfishSurfacePoisonGameTests {
         var entity = stand(helper, PufferfishBlocks.skin(DyeColor.BLUE).defaultBlockState());
         float health = entity.getHealth();
         helper.runAfterDelay(100, () -> {
-            helper.assertTrue(entity.hasEffect(MobEffects.POISON) && entity.getHealth() < health,
+            helper.assertTrue(PufferfishEffectsGameTests.hasPoison(entity) && entity.getHealth() < health,
                     "Stationary surface poison was absent or its damage timer was repeatedly reset");
             helper.getLevel().setBlockAndUpdate(entity.getOnPos(), Blocks.STONE.defaultBlockState());
             var safe = helper.absolutePos(new BlockPos(2, 3, 2));
             entity.setPos(safe.getX() + 0.5, safe.getY(), safe.getZ() + 0.5);
             helper.runAfterDelay(125, () -> {
-                helper.assertTrue(!entity.hasEffect(MobEffects.POISON), "Surface poison did not expire after leaving");
+                helper.assertTrue(!PufferfishEffectsGameTests.hasPoison(entity), "Surface poison did not expire after leaving");
                 entity.discard();
                 helper.succeed();
             });

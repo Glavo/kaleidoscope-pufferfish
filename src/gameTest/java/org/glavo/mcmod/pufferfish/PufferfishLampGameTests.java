@@ -168,7 +168,7 @@ public final class PufferfishLampGameTests {
             var entity = (PlacedPufferfishBlockEntity) level.getBlockEntity(pos);
             helper.assertTrue(ItemStack.matches(entity.fish(), fish) && level.getBlockState(pos) == state,
                     "Falling lamp lost its fish or orientation");
-            var poison = target.getEffect(MobEffects.POISON);
+            var poison = PufferfishEffectsGameTests.poison(target);
             helper.assertTrue(target.getHealth() < target.getMaxHealth() && poison != null && poison.getAmplifier() == 1,
                     "Falling lamp did not damage and poison its target");
             helper.succeed();
@@ -192,7 +192,7 @@ public final class PufferfishLampGameTests {
                 falling.causeFallDamage(distance, 1, level.damageSources().fall());
                 float damage = distance < 1 ? 0 : distance == 5 ? 8 : 40;
                 helper.assertTrue(target.getHealth() == 100 - damage, "Incorrect falling lamp damage or damage cap");
-                var poison = target.getEffect(MobEffects.POISON);
+                var poison = PufferfishEffectsGameTests.poison(target);
                 if (block instanceof HeavyPufferfishBlock && damage > 0) {
                     helper.assertTrue(poison != null && poison.getAmplifier() == 1 && poison.getDuration() == 120, "Incorrect impact poison");
                     var source = target.getLastDamageSource();
@@ -200,7 +200,7 @@ public final class PufferfishLampGameTests {
                             instanceof TranslatableContents message && message.getKey().equals("death.attack.pufferfish_please.falling_pufferfish"),
                             "Heavy fish or lamp used the anvil death message");
                 } else helper.assertTrue(poison == null, "Non-damaging fall or vanilla anvil applied poison");
-                helper.assertTrue(!immune.hasEffect(MobEffects.POISON), "Invulnerable target was poisoned");
+                helper.assertTrue(!PufferfishEffectsGameTests.hasPoison(immune), "Invulnerable target was poisoned");
                 target.discard();
                 immune.discard();
                 falling.discard();

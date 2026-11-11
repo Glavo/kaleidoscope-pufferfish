@@ -46,7 +46,7 @@ public final class PufferfishFriendlyFireGameTests {
                     "Fish accepted direct damage from another fish");
             helper.assertTrue(!target.hurt(new net.minecraft.world.damagesource.DamageSource(source.typeHolder(), arrow, attacker), 2)
                     && target.getHealth() == health, "Fish accepted indirect damage attributed to another fish");
-            for (var effect : java.util.List.of(MobEffects.POISON, MobEffects.WITHER, MobEffects.GLOWING, MobEffects.BLINDNESS, MobEffects.REGENERATION)) {
+            for (var effect : java.util.List.of(MobEffects.POISON, PufferfishEffects.LETHAL_TOXIN, MobEffects.WITHER, MobEffects.GLOWING, MobEffects.BLINDNESS, MobEffects.REGENERATION)) {
                 helper.assertTrue(!target.addEffect(new MobEffectInstance(effect, 100), attacker) && !target.hasEffect(effect),
                         "Fish accepted a status effect from another fish");
             }

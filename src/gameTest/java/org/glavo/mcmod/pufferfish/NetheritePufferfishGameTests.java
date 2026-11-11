@@ -145,7 +145,7 @@ public final class NetheritePufferfishGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void netheriteRetaliationUsesStrongerThornsWithConditionalPoisonOne(GameTestHelper helper) {
+    public static void netheriteRetaliationUsesStrongerThornsWithConditionalPoison(GameTestHelper helper) {
         var wearer = helper.makeMockPlayer(GameType.SURVIVAL);
         var attacker = EntityType.PIG.create(helper.getLevel());
         int[] reflected = new int[2];
@@ -160,12 +160,12 @@ public final class NetheritePufferfishGameTests {
                 wearer.invulnerableTime = 0;
                 attacker.setHealth(attacker.getMaxHealth());
                 attacker.invulnerableTime = 0;
-                attacker.removeEffect(MobEffects.POISON);
+                PufferfishEffectsGameTests.clearPoison(attacker);
                 wearer.hurt(wearer.damageSources().mobAttack(attacker), 1);
-                var poison = attacker.getEffect(MobEffects.POISON);
+                var poison = PufferfishEffectsGameTests.poison(attacker);
                 helper.assertTrue(attacker.getHealth() < attacker.getMaxHealth()
-                        ? poison != null && poison.getDuration() == 120 && poison.getAmplifier() == 0 : poison == null,
-                        "Retaliation did not condition Poison I on successful thorns");
+                        ? poison != null && poison.getDuration() == 120 && poison.getAmplifier() == tier : poison == null,
+                        "Retaliation did not condition material poison on successful thorns");
                 if (attacker.getHealth() < attacker.getMaxHealth()) reflected[tier]++;
             }
         }
@@ -200,7 +200,7 @@ public final class NetheritePufferfishGameTests {
         float health = target.getHealth();
         projectile.tick();
         helper.assertTrue(target.getHealth() == health - 6, "Netherite projectile did not deal exactly 6 base damage");
-        var poison = target.getEffect(MobEffects.POISON);
+        var poison = PufferfishEffectsGameTests.poison(target);
         helper.assertTrue(poison != null && poison.getDuration() == 120 && poison.getAmplifier() == 1, "Netherite projectile did not apply six seconds of Poison II");
         var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, target.getBoundingBox().inflate(3));
         helper.assertTrue(projectile.isRemoved() && drops.size() == 1 && drops.getFirst().getItem().getCount() == 1

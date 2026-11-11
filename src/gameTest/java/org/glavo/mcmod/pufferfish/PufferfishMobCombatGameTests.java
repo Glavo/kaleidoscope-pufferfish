@@ -93,7 +93,7 @@ public final class PufferfishMobCombatGameTests {
         for (var variant : PufferfishMobs.VARIANTS.values()) {
             var fish = variant.entity().get().create(helper.getLevel());
             helper.assertTrue(!fish.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 1))
-                    && !fish.hasEffect(MobEffects.POISON), "Material fish accepted poison: " + variant.fish().getId());
+                    && !PufferfishEffectsGameTests.hasPoison(fish), "Material fish accepted poison: " + variant.fish().getId());
             boolean wither = fish.addEffect(new MobEffectInstance(MobEffects.WITHER, 200, 1));
             helper.assertTrue(wither == (fish.kind() != PufferfishMobConfig.Kind.RADIANT), "Incorrect wither immunity");
             helper.assertTrue(fish.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 200)), "Immunity blocked a beneficial effect");

@@ -132,10 +132,10 @@ public final class PufferfishFlailGameTests {
             helper.assertTrue(target.getHealth() == 20 && head != null && head.isShortCast(), "Left click dealt direct melee damage or failed to cast");
             if (PufferfishItems.isRadiant(stack)) RadiantPufferfishEffectsGameTests.prepareHit(target, player, 4096);
             for (int tick = 0; tick < 8 && !head.isReturning(); tick++) { head.tickCount++; head.tick(); }
-            var poison = target.getEffect(PufferfishItems.isRadiant(stack) ? MobEffects.WITHER : MobEffects.POISON);
+            var poison = PufferfishEffectsGameTests.effect(target, PufferfishItems.isRadiant(stack) ? MobEffects.WITHER : MobEffects.POISON);
             int copper = CopperPufferfish.index(PufferfishItems.flailFish(stack));
             int duration = 120;
-            int amplifier = PufferfishItems.isRadiant(stack) ? 0 : copper > 0 && copper < 4 ? copper - 1 : PufferfishItems.hasNetheriteCombat(stack) ? 1 : 0;
+            int amplifier = PufferfishItems.isRadiant(stack) ? 0 : copper > 0 && copper < 4 ? Math.min(1, copper - 1) : PufferfishItems.hasNetheriteCombat(stack) ? 1 : 0;
             helper.assertTrue(target.getHealth() == 20 - damage, "Short cast damage failed");
             if (PufferfishItems.isRadiant(stack)) {
                 RadiantPufferfishEffectsGameTests.assertHit(helper, target, -1, 4096);
@@ -389,7 +389,7 @@ public final class PufferfishFlailGameTests {
             head.tick();
             boolean netherite = PufferfishItems.hasNetheriteCombat(new ItemStack(item));
             helper.assertTrue(head.isReturning() && target.getHealth() == (PufferfishItems.hasHeavyCombat(head.getItem()) ? 4 : netherite ? 8 : 18)
-                    && target.hasEffect(MobEffects.POISON) && target.getEffect(MobEffects.POISON).getDuration() == 120, "Flying head did not hit and start returning");
+                    && PufferfishEffectsGameTests.hasPoison(target) && PufferfishEffectsGameTests.poison(target).getDuration() == 120, "Flying head did not hit and start returning");
             float health = target.getHealth();
             target.invulnerableTime = 0;
             head.setPos(target.position().add(0, 0.8, 0));
@@ -439,7 +439,7 @@ public final class PufferfishFlailGameTests {
                     float baseline = (PufferfishItems.hasHeavyCombat(stack) ? 10 : PufferfishItems.hasNetheriteCombat(stack) ? 6 : 1) + (rank == 0 ? 0 : 3);
                     float expected = baseline * (PufferfishItems.hasHeavyCombat(stack) ? 1.6F : 2) * Math.min(1, (float) elapsed / duration);
                     helper.assertTrue(Math.abs(100 - target.getHealth() - expected) < 0.001
-                            && restored.isReturning() && target.hasEffect(MobEffects.POISON),
+                            && restored.isReturning() && PufferfishEffectsGameTests.hasPoison(target),
                             "Charge damage or saved charge was incorrect: elapsed=" + elapsed + ", expected=" + expected
                                     + ", actual=" + (100 - target.getHealth()) + ", removed=" + restored.isRemoved()
                                     + ", owner=" + (restored.getOwner() == player) + ", charge=" + tag.getFloat("Charge"));
@@ -624,7 +624,7 @@ public final class PufferfishFlailGameTests {
                     }
                     float expectedDamage = PufferfishItems.hasHeavyCombat(stack) ? 16 : PufferfishItems.hasNetheriteCombat(stack) ? 12 : 2;
                     helper.assertTrue(Math.abs(100 - target.getHealth() - expectedDamage) < 0.001
-                            && target.hasEffect(MobEffects.POISON), "Aimed flail missed: distance=" + distance + ", pitch=" + pitch + ", arm=" + arm + ", hand=" + hand + ", target=" + type);
+                            && PufferfishEffectsGameTests.hasPoison(target), "Aimed flail missed: distance=" + distance + ", pitch=" + pitch + ", arm=" + arm + ", hand=" + hand + ", target=" + type);
                     helper.assertTrue(head.isReturning() && target.getBoundingBox().inflate(0.301).contains(head.position()),
                             "Head started returning before reaching the visible impact point");
                     target.invulnerableTime = 0;

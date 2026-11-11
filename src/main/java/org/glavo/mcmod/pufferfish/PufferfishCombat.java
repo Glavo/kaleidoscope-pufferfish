@@ -130,30 +130,33 @@ public final class PufferfishCombat {
             }
             applyRadiantGlow(target, source);
         } else {
-            var poison = passiveEffect(stack);
-            if (poison != null) target.addEffect(new MobEffectInstance(MobEffects.POISON, duration, poison.getAmplifier()), source);
+            var poison = PufferfishPoison.of(stack);
+            if (poison != null) poison.apply(target, source, duration);
         }
     }
 
-    /// Applies fixed passive effects without escalating existing wither.
+    /// Rolls material poison or applies fixed radiant wither without escalation.
     public static void applyPassiveEffect(ItemStack stack, LivingEntity target, Entity source) {
-        var poison = passiveEffect(stack);
-        if (poison != null) target.addEffect(poison, source);
-        if (PufferfishItems.isRadiant(stack)) applyRadiantGlow(target, source);
+        if (PufferfishItems.isRadiant(stack)) {
+            target.addEffect(passiveEffect(stack), source);
+            applyRadiantGlow(target, source);
+        } else {
+            var poison = PufferfishPoison.of(stack);
+            if (poison != null) poison.apply(target, source, STATUS_EFFECT_DURATION_TICKS);
+        }
     }
 
     public static void applyRadiantGlow(LivingEntity target, @javax.annotation.Nullable Entity source) {
         target.addEffect(new MobEffectInstance(MobEffects.GLOWING, RADIANT_GLOW_DURATION_TICKS), source);
     }
 
+    /// Returns the material's status before rolling lethal toxin replacement.
     @javax.annotation.Nullable
     public static MobEffectInstance passiveEffect(ItemStack stack) {
         stack = PufferfishItems.flailFish(stack);
         if (PufferfishItems.isRadiant(stack)) return new MobEffectInstance(MobEffects.WITHER, STATUS_EFFECT_DURATION_TICKS, 0);
-        int copper = CopperPufferfish.index(stack);
-        if (copper >= 4) return null;
-        int amplifier = copper > 0 ? copper - 1 : PufferfishItems.hasNetheriteCombat(stack) ? 1 : 0;
-        return new MobEffectInstance(MobEffects.POISON, STATUS_EFFECT_DURATION_TICKS, amplifier);
+        var poison = PufferfishPoison.of(stack);
+        return poison == null ? null : new MobEffectInstance(MobEffects.POISON, STATUS_EFFECT_DURATION_TICKS, poison.amplifier());
     }
 
     /// Returns the stored level of the specified enchantment, or zero when absent.

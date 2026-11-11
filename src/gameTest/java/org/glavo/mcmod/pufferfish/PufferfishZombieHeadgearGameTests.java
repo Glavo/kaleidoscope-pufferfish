@@ -121,7 +121,7 @@ public final class PufferfishZombieHeadgearGameTests {
             attacker.invulnerableTime = 0;
             attacker.removeAllEffects();
             helper.assertTrue(zombie.hurt(zombie.damageSources().mobAttack(attacker), 1), "Attack did not hit zombie");
-            var poison = attacker.getEffect(MobEffects.POISON);
+            var poison = PufferfishEffectsGameTests.poison(attacker);
             if (attacker.getHealth() < attacker.getMaxHealth()) reflected++;
             helper.assertTrue(attacker.getHealth() < attacker.getMaxHealth()
                     ? poison != null && poison.getDuration() == 120 && poison.getAmplifier() == 0 : poison == null,

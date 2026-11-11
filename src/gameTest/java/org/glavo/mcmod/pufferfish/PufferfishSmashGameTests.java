@@ -77,7 +77,7 @@ public final class PufferfishSmashGameTests {
                 helper.assertTrue(Math.abs(1000 - target.getHealth() - expected) < 0.001F, "Ordinary fish gained falling damage at distance " + distance);
                 helper.assertTrue(player.fallDistance == distance && !PufferfishCombat.canSmash(player, stack), "Fall distance reset without a successful smash");
                 helper.assertTrue(ItemStack.matches(player.getMainHandItem(), PufferfishDurabilityGameTests.worn(stack))
-                        && player.getInventory().countItem(stack.getItem()) == 4 && target.hasEffect(MobEffects.POISON),
+                        && player.getInventory().countItem(stack.getItem()) == 4 && PufferfishEffectsGameTests.hasPoison(target),
                         "Smash consumed fish or lost existing poison effects");
                 target.discard();
             }
@@ -192,7 +192,7 @@ public final class PufferfishSmashGameTests {
         try {
             player.attack(target);
             helper.assertTrue(target.getHealth() == 1000 && player.fallDistance == 6
-                    && !target.hasEffect(MobEffects.POISON), "Canceled hit granted smash effects");
+                    && !PufferfishEffectsGameTests.hasPoison(target), "Canceled hit granted smash effects");
         } finally {
             NeoForge.EVENT_BUS.unregister(cancel);
             target.discard();

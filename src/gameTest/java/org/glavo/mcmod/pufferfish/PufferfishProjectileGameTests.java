@@ -360,7 +360,7 @@ public class PufferfishProjectileGameTests {
         float health = target.getHealth();
         var projectile = hit(helper, target);
         helper.assertTrue(target.getHealth() == health - 1.0F, "Impact did not deal exactly one base damage");
-        var effect = target.getEffect(MobEffects.POISON);
+        var effect = PufferfishEffectsGameTests.poison(target);
         helper.assertTrue(effect != null && effect.getDuration() == 120 && effect.getAmplifier() == 0,
                 "Impact did not apply Poison I for 60 ticks");
         helper.assertTrue(projectile.isRemoved(), "Projectile survived its impact");
@@ -375,13 +375,13 @@ public class PufferfishProjectileGameTests {
         target.setInvulnerable(true);
         float health = target.getHealth();
         var projectile = hit(helper, target);
-        helper.assertTrue(target.getHealth() == health && !target.hasEffect(MobEffects.POISON), "Invulnerable target was damaged or poisoned");
+        helper.assertTrue(target.getHealth() == health && !PufferfishEffectsGameTests.hasPoison(target), "Invulnerable target was damaged or poisoned");
         helper.assertTrue(projectile.isRemoved(), "Blocked projectile was not removed");
         target.discard();
         var zombie = helper.spawn(EntityType.ZOMBIE, new BlockPos(2, 1, 3));
         float zombieHealth = zombie.getHealth();
         hit(helper, zombie);
-        helper.assertTrue(zombie.getHealth() < zombieHealth && !zombie.hasEffect(MobEffects.POISON), "Undead poison immunity was bypassed");
+        helper.assertTrue(zombie.getHealth() < zombieHealth && !PufferfishEffectsGameTests.hasPoison(zombie), "Undead poison immunity was bypassed");
         zombie.discard();
         helper.succeed();
     }
