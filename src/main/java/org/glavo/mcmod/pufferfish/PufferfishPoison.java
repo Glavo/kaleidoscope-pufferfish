@@ -10,24 +10,24 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 
-/// Material poison strength and the chance to replace it with lethal toxin on each application.
-public record PufferfishPoison(int amplifier, float lethalChance) {
+/// Material poison strength, lethal conversion chance, and the separate handheld melee application chance.
+public record PufferfishPoison(int amplifier, float lethalChance, float meleeChance) {
     @Nullable
     public static PufferfishPoison of(ItemStack stack) {
         var variant = PufferfishVariant.of(stack);
         if (variant == null || variant.waxed()) return null;
         return switch (variant.material()) {
-            case NORMAL -> new PufferfishPoison(0, 0);
+            case NORMAL -> new PufferfishPoison(0, 0, 0.6F);
             case COPPER -> switch (variant.oxidation()) {
-                case 0 -> new PufferfishPoison(0, 0.25F);
-                case 1 -> new PufferfishPoison(0, 0.5F);
-                case 2 -> new PufferfishPoison(1, 0.75F);
-                default -> new PufferfishPoison(1, 1);
+                case 0 -> new PufferfishPoison(0, 0.25F, 0.6F);
+                case 1 -> new PufferfishPoison(0, 0.5F, 0.6F);
+                case 2 -> new PufferfishPoison(1, 0.75F, 0.8F);
+                default -> new PufferfishPoison(1, 1, 1);
             };
-            case IRON, GOLDEN -> new PufferfishPoison(0, 0.25F);
-            case DIAMOND -> new PufferfishPoison(0, 0.5F);
-            case NETHERITE -> new PufferfishPoison(1, 0.75F);
-            case HEAVY -> new PufferfishPoison(1, 1);
+            case IRON, GOLDEN -> new PufferfishPoison(0, 0.25F, 0.6F);
+            case DIAMOND -> new PufferfishPoison(0, 0.5F, 0.6F);
+            case NETHERITE -> new PufferfishPoison(1, 0.75F, 0.6F);
+            case HEAVY -> new PufferfishPoison(1, 1, 1);
             case RADIANT -> null;
         };
     }

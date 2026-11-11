@@ -97,6 +97,7 @@ public final class CopperPufferfishGameTests {
             var player = helper.makeMockPlayer(GameType.SURVIVAL);
             var target = EntityType.PIG.create(helper.getLevel());
             player.setItemSlot(EquipmentSlot.MAINHAND, fish);
+            player.getRandom().setSeed(4096);
             helper.assertTrue(target.hurt(target.damageSources().playerAttack(player), 1), "Melee damage failed");
             assertPoison(helper, target, stage);
 

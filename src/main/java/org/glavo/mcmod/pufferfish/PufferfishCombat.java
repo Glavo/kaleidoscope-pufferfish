@@ -86,13 +86,20 @@ public final class PufferfishCombat {
                 || event.getNewDamage() + event.getReduction(DamageContainer.Reduction.ABSORPTION) <= 0) return;
         var stack = player.getMainHandItem();
         if (PufferfishItems.isWeapon(stack)) {
-            hitEffects(stack, event.getEntity(), player, event.getEntity().position().subtract(player.position()));
+            var poison = PufferfishPoison.of(stack);
+            boolean applyEffect = PufferfishItems.isRadiant(stack) || PufferfishItems.isFlail(stack)
+                    || poison != null && (poison.meleeChance() >= 1 || player.getRandom().nextFloat() < poison.meleeChance());
+            hitEffects(stack, event.getEntity(), player, event.getEntity().position().subtract(player.position()), applyEffect);
         }
     }
 
     /// Applies the fish's active status effect and Punch knockback, respecting immunity and knockback resistance.
     public static void hitEffects(ItemStack stack, LivingEntity target, Entity source, Vec3 direction) {
-        applyAttackEffect(stack, target, source);
+        hitEffects(stack, target, source, direction, true);
+    }
+
+    private static void hitEffects(ItemStack stack, LivingEntity target, Entity source, Vec3 direction, boolean applyEffect) {
+        if (applyEffect) applyAttackEffect(stack, target, source);
         int punch = enchantmentLevel(stack, Enchantments.PUNCH);
         if (punch > 0) {
             double resistance = Math.max(0, 1 - target.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE));

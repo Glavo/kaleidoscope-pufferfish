@@ -142,6 +142,78 @@ public final class PufferfishEffectsGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void meleeRollsApplicationBeforeLethalConversion(GameTestHelper helper) {
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        var target = EntityType.COW.create(helper.getLevel());
+        var seeds = net.minecraft.util.RandomSource.create(470129);
+        for (var variant : PufferfishVariant.ALL) {
+            if (variant.material() == PufferfishMaterial.RADIANT) continue;
+            float chance = variant == PufferfishVariant.HEAVY || variant.copperIndex() == 3 ? 1
+                    : variant.copperIndex() == 2 ? 0.8F : 0.6F;
+            int applied = 0;
+            for (int hit = 0; hit < 128; hit++) {
+                var stack = variant.fish();
+                player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, stack);
+                target.removeAllEffects();
+                target.setHealth(target.getMaxHealth());
+                target.invulnerableTime = 0;
+                long seed = seeds.nextLong();
+                player.getRandom().setSeed(seed);
+                var random = net.minecraft.util.RandomSource.create(seed);
+                boolean triggered = !variant.waxed() && (chance == 1 || random.nextFloat() < chance);
+                var profile = PufferfishPoison.of(stack);
+                boolean lethal = triggered && (profile.lethalChance() == 1
+                        || profile.lethalChance() > 0 && random.nextFloat() < profile.lethalChance());
+                helper.assertTrue(target.hurt(target.damageSources().playerAttack(player), 1), "Melee hit failed");
+                var effect = poison(target);
+                helper.assertTrue(triggered ? effect != null && effect.getDuration() == 120
+                                && effect.getAmplifier() == profile.amplifier()
+                                && effect.is(lethal ? PufferfishEffects.LETHAL_TOXIN : MobEffects.POISON) : effect == null,
+                        "Incorrect two-stage melee roll: " + variant.fishName() + ", seed=" + seed);
+                if (effect != null) applied++;
+            }
+            helper.assertTrue(variant.waxed() ? applied == 0 : chance == 1 ? applied == 128 : applied > 0 && applied < 128,
+                    "Melee did not cover both application outcomes");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void failedMeleeRollPreservesExistingPoisonAndPunch(GameTestHelper helper) {
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setPos(helper.absoluteVec(new net.minecraft.world.phys.Vec3(2, 2, 2)));
+        var target = EntityType.COW.create(helper.getLevel());
+        target.setPos(player.position().add(1, 0, 0));
+        var punch = helper.getLevel().registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.ENCHANTMENT)
+                .getOrThrow(net.minecraft.world.item.enchantment.Enchantments.PUNCH);
+        for (var variant : java.util.List.of(PufferfishVariant.NORMAL, PufferfishVariant.NETHERITE, PufferfishVariant.COPPER.get(2))) {
+            for (var type : java.util.List.of(MobEffects.POISON, PufferfishEffects.LETHAL_TOXIN)) {
+                var stack = variant.fish();
+                net.minecraft.world.item.enchantment.EnchantmentHelper.updateEnchantments(stack, enchantments -> enchantments.set(punch, 2));
+                player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, stack);
+                target.removeAllEffects();
+                target.setHealth(target.getMaxHealth());
+                target.invulnerableTime = 0;
+                target.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
+                target.addEffect(new MobEffectInstance(type, 20));
+                long seed = 0;
+                float chance = variant.copperIndex() == 2 ? 0.8F : 0.6F;
+                while (net.minecraft.util.RandomSource.create(seed).nextFloat() < chance) seed++;
+                var random = net.minecraft.util.RandomSource.create(seed);
+                random.nextFloat();
+                player.getRandom().setSeed(seed);
+                helper.assertTrue(target.hurt(target.damageSources().playerAttack(player), 1), "Melee damage failed");
+                var effect = poison(target);
+                helper.assertTrue(effect != null && effect.is(type) && effect.getDuration() == 20 && effect.getAmplifier() == 0,
+                        "Failed melee roll refreshed, upgraded, or converted existing poison");
+                helper.assertTrue(player.getRandom().nextFloat() == random.nextFloat(), "Failed melee roll still rolled lethal conversion");
+                helper.assertTrue(target.getDeltaMovement().x > 1, "Failed poison roll suppressed Punch knockback");
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void lethalToxinKillsWherePoisonStops(GameTestHelper helper) {
         var poisoned = EntityType.COW.create(helper.getLevel());
         var intoxicated = EntityType.COW.create(helper.getLevel());

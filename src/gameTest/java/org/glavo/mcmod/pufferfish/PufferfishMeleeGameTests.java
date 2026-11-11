@@ -75,6 +75,7 @@ public final class PufferfishMeleeGameTests {
             boolean netherite = PufferfishItems.isNetherite(stack);
             helper.assertTrue(player.getAttributeValue(Attributes.ATTACK_DAMAGE) == (netherite ? 6 : 1)
                     && player.getAttributeValue(Attributes.ATTACK_SPEED) == (netherite ? 2 : 3), "Incorrect pufferfish melee attributes");
+            player.getRandom().setSeed(4096);
             player.attack(target);
             helper.assertTrue(target.getHealth() == 20 - (netherite ? 6 : 1), "Charged melee damage does not match the configured base damage");
             var poison = PufferfishEffectsGameTests.poison(target);

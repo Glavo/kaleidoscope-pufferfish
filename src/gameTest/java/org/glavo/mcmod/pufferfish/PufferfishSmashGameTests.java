@@ -42,9 +42,11 @@ public final class PufferfishSmashGameTests {
     /// Creates a fully charged player holding the supplied stack and falling the specified distance.
     private static Player attacker(GameTestHelper helper, ItemStack stack, float distance) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        var pos = helper.absolutePos(new BlockPos(2, 4, 1));
+        player.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+        player.setNoGravity(true);
         player.setItemInHand(InteractionHand.MAIN_HAND, stack);
         for (int tick = 0; tick < 36; tick++) player.tick();
-        var pos = helper.absolutePos(new BlockPos(2, 4, 1));
         player.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
         player.setOnGround(distance == 0);
         player.setDeltaMovement(0, -0.4, 0);
@@ -72,13 +74,16 @@ public final class PufferfishSmashGameTests {
             for (float distance : new float[] {0, 1.5F, 1.5001F, 3, 8, 12}) {
                 var player = attacker(helper, stack.copy(), distance);
                 var target = target(helper);
+                player.getRandom().setSeed(4096);
                 player.attack(target);
                 float expected = (PufferfishItems.isNetherite(stack) ? 6 : 1) * (distance > 0 ? 1.5F : 1);
                 helper.assertTrue(Math.abs(1000 - target.getHealth() - expected) < 0.001F, "Ordinary fish gained falling damage at distance " + distance);
                 helper.assertTrue(player.fallDistance == distance && !PufferfishCombat.canSmash(player, stack), "Fall distance reset without a successful smash");
-                helper.assertTrue(ItemStack.matches(player.getMainHandItem(), PufferfishDurabilityGameTests.worn(stack))
-                        && player.getInventory().countItem(stack.getItem()) == 4 && PufferfishEffectsGameTests.hasPoison(target),
-                        "Smash consumed fish or lost existing poison effects");
+                helper.assertTrue(ItemStack.matches(player.getMainHandItem(), PufferfishDurabilityGameTests.worn(stack)),
+                        "Attack changed fish components unexpectedly: " + stack + ", distance=" + distance);
+                helper.assertTrue(player.getInventory().countItem(stack.getItem()) == 4,
+                        "Attack changed the total fish count: " + player.getInventory().countItem(stack.getItem()));
+                helper.assertTrue(PufferfishEffectsGameTests.hasPoison(target), "Seeded melee hit failed to apply poison");
                 target.discard();
             }
         }
