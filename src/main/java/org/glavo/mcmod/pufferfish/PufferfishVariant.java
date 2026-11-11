@@ -4,8 +4,8 @@
 package org.glavo.mcmod.pufferfish;
 
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -29,8 +29,11 @@ public record PufferfishVariant(String fishName, PufferfishMaterial material, @N
     private static final Map<Item, PufferfishVariant> ITEMS = new IdentityHashMap<>();
 
     static {
-        var dyed = new EnumMap<DyeColor, PufferfishVariant>(DyeColor.class);
-        for (var color : DyeColor.values()) {
+        var dyed = new LinkedHashMap<DyeColor, PufferfishVariant>();
+        for (var color : List.of(DyeColor.WHITE, DyeColor.LIGHT_GRAY, DyeColor.GRAY, DyeColor.BLACK,
+                DyeColor.BROWN, DyeColor.RED, DyeColor.ORANGE, DyeColor.YELLOW,
+                DyeColor.LIME, DyeColor.GREEN, DyeColor.CYAN, DyeColor.LIGHT_BLUE,
+                DyeColor.BLUE, DyeColor.PURPLE, DyeColor.MAGENTA, DyeColor.PINK)) {
             dyed.put(color, new PufferfishVariant(color.getName() + "_pufferfish", PufferfishMaterial.NORMAL, color, -1));
         }
         DYED = java.util.Collections.unmodifiableMap(dyed);

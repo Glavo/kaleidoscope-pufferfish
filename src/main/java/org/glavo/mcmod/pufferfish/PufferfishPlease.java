@@ -84,26 +84,19 @@ public class PufferfishPlease {
                 .title(Component.translatable("itemGroup.pufferfish_please"))
                 .icon(() -> PufferfishColors.dye(new ItemStack(Items.PUFFERFISH_BUCKET), DyeColor.PURPLE))
                 .displayItems((parameters, output) -> {
-                    output.accept(PufferfishBlocks.CONDUIT);
-                    output.accept(PufferfishBlocks.ANCIENT_CONDUIT);
-                    output.accept(PufferfishBlocks.ANCIENT_PRISMARINE);
-                    output.accept(PufferfishBlocks.SUSPICIOUS_ANCIENT_PRISMARINE);
-                    PufferfishLamps.VARIANTS.values().forEach(variant -> output.accept(variant.block().get()));
-                    if (ModList.get().isLoaded("create")) {
-                        output.accept(CreateIntegration.ENGINE_ITEM.get());
-                    }
                     PufferfishVariant.ALL.stream().filter(variant -> variant != PufferfishVariant.NORMAL)
                             .forEach(variant -> output.accept(variant.fish()));
-                    for (var color : DyeColor.values()) {
+                    for (var color : PufferfishVariant.DYED.keySet()) {
                         output.accept(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH_BUCKET), color));
                     }
                     PufferfishMobs.VARIANTS.values().forEach(variant -> output.accept(variant.bucket()));
+
                     output.accept(PufferfishItems.SASHIMI);
+                    output.accept(PufferfishItems.RAW_BAOZI);
+                    output.accept(PufferfishItems.BAOZI);
                     output.accept(PufferfishItems.BRAISED);
                     output.accept(PufferfishItems.BRAISED_RICE_BOWL);
                     output.accept(PufferfishItems.ZOSUI);
-                    output.accept(PufferfishItems.RAW_BAOZI);
-                    output.accept(PufferfishItems.BAOZI);
                     if (ModList.get().isLoaded("kaleidoscope_cookery")) {
                         output.accept(org.glavo.mcmod.pufferfish.compat.cookery.CookeryFoodIntegration.STARGAZY_PIE_ITEM);
                         if (ModList.get().isLoaded("kaleidoscope_chinesefood")) {
@@ -111,20 +104,31 @@ public class PufferfishPlease {
                             output.accept(org.glavo.mcmod.pufferfish.compat.cookery.CookeryFoodIntegration.ASPIC_ITEM);
                         }
                     }
+                    output.accept(PufferfishItems.PUMP);
+                    output.accept(PufferfishItems.UPGRADE_TEMPLATE);
+
                     output.accept(PufferfishItems.FLAIL);
-                    for (var color : DyeColor.values()) {
+                    for (var color : PufferfishVariant.DYED.keySet()) {
                         var flail = new ItemStack(PufferfishItems.FLAIL.get());
                         flail.set(COLOR.get(), color);
                         output.accept(flail);
                     }
                     PufferfishItems.FLAIL_VARIANTS.stream().skip(1).forEach(output::accept);
-                    output.accept(PufferfishItems.PUMP);
-                    output.accept(PufferfishItems.UPGRADE_TEMPLATE);
+
                     PufferfishVariant.ALL.forEach(variant -> output.accept(variant.skin()));
                     PufferfishShields.VARIANTS.values().forEach(output::accept);
                     PufferfishArmor.VARIANTS.values().forEach(output::accept);
                     PufferfishCatArmor.VARIANTS.values().forEach(output::accept);
                     PufferfishBoats.VARIANTS.values().forEach(variant -> output.accept(variant.item()));
+
+                    PufferfishLamps.VARIANTS.values().forEach(variant -> output.accept(variant.block().get()));
+                    if (ModList.get().isLoaded("create")) {
+                        output.accept(CreateIntegration.ENGINE_ITEM.get());
+                    }
+                    output.accept(PufferfishBlocks.CONDUIT);
+                    output.accept(PufferfishBlocks.ANCIENT_CONDUIT);
+                    output.accept(PufferfishBlocks.ANCIENT_PRISMARINE);
+                    output.accept(PufferfishBlocks.SUSPICIOUS_ANCIENT_PRISMARINE);
                 }).build());
     }
 
