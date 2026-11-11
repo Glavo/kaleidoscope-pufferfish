@@ -107,7 +107,7 @@ public final class PufferfishContactDamageGameTests {
                     var state = skin.defaultBlockState().setValue(PufferfishSkinBlock.FACE, face).setValue(PufferfishSkinBlock.FACING, facing);
                     level.setBlockAndUpdate(pos, state);
                     assertContact(helper, pos, state, copper >= 4
-                            ? null : new MobEffectInstance(MobEffects.POISON, copper >= 0 ? duration : 120, copper >= 0 ? amplifier : 0));
+                            ? null : new MobEffectInstance(MobEffects.POISON, 120, copper >= 0 ? amplifier : 0));
                 }
             }
         }

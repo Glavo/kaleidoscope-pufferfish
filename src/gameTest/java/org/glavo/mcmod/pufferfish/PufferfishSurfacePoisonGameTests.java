@@ -64,9 +64,8 @@ public final class PufferfishSurfacePoisonGameTests {
             NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
             var poison = entity.getEffect(MobEffects.POISON);
             int copper = CopperPufferfish.skinIndex(state.getBlock().asItem().getDefaultInstance());
-            int duration = copper >= 0 ? new int[] {60, 120, 240, 360}[copper] : 120;
             int amplifier = Math.max(0, copper - 1);
-            helper.assertTrue(poison != null && poison.getDuration() == duration && poison.getAmplifier() == amplifier,
+            helper.assertTrue(poison != null && poison.getDuration() == 120 && poison.getAmplifier() == amplifier,
                     "Standing on a pufferfish surface applied an incorrect material effect");
             entity.removeEffect(MobEffects.POISON);
             entity.setOnGround(false);

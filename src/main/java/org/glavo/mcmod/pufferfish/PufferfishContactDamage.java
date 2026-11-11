@@ -66,7 +66,7 @@ public final class PufferfishContactDamage {
     private static MobEffectInstance poison(Level level, BlockPos pos, BlockState state) {
         if (state.getBlock() instanceof PufferfishSkinBlock) {
             int copper = CopperPufferfish.skinIndex(state.getBlock().asItem().getDefaultInstance());
-            if (copper >= 0) return PufferfishRetaliation.effect(PufferfishItems.COPPER_VARIANTS.get(copper).get().getDefaultInstance());
+            if (copper >= 0) return copper >= 4 ? null : new MobEffectInstance(MobEffects.POISON, 120, Math.max(0, copper - 1));
             boolean radiant = state.is(PufferfishBlocks.RADIANT_SKIN.get());
             return new MobEffectInstance(radiant ? MobEffects.WITHER : MobEffects.POISON, radiant ? PufferfishCombat.RADIANT_WITHER_DURATION_TICKS : 120, 0);
         }
