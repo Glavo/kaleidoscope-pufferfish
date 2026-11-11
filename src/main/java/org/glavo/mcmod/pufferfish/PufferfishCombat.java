@@ -3,8 +3,12 @@
 
 package org.glavo.mcmod.pufferfish;
 
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -12,13 +16,14 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.animal.Cat;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.MaceItem;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
@@ -65,7 +70,7 @@ public final class PufferfishCombat {
     /// Returns whether the supplied fish can perform a configured smash with the attacker's current fall state.
     public static boolean canSmash(LivingEntity attacker, ItemStack stack) {
         return PufferfishItems.isHeavy(stack) && PufferfishCombatConfig.value(PufferfishCombatConfig.SMASH_ENABLED)
-                && MaceItem.canSmashAttack(attacker);
+                && attacker.fallDistance > 1.5F && !attacker.isFallFlying();
     }
 
     /// Returns the capped heavy-fish falling bonus, including Density, before critical hits and armor.
@@ -78,6 +83,40 @@ public final class PufferfishCombat {
         double bonus = curve * PufferfishCombatConfig.value(PufferfishCombatConfig.HEAVY_DAMAGE_MULTIPLIER) + distance * enchantmentLevel(stack, Enchantments.DENSITY) * density;
         double cap = PufferfishCombatConfig.value(PufferfishCombatConfig.MAX_SMASH_BONUS);
         return (float) (cap > 0 ? Math.min(bonus, cap) : bonus);
+    }
+
+    /// Successful heavy-fish smashes protect the landing and repel nearby enemies, excluding cats.
+    public static void smashHit(LivingEntity attacker, LivingEntity target) {
+        if (!(attacker instanceof ServerPlayer player) || target instanceof Cat) return;
+        var level = player.serverLevel();
+        if (!player.isIgnoringFallDamageFromCurrentImpulse() || player.currentImpulseImpactPos == null
+                || player.currentImpulseImpactPos.y > player.getY()) {
+            player.currentImpulseImpactPos = player.position();
+        }
+        player.setIgnoreFallDamageFromCurrentImpulse(true);
+        player.setDeltaMovement(player.getDeltaMovement().with(Direction.Axis.Y, 0.01F));
+        player.connection.send(new ClientboundSetEntityMotionPacket(player));
+        var sound = SoundEvents.MACE_SMASH_AIR;
+        if (target.onGround()) {
+            player.setSpawnExtraParticlesOnFall(true);
+            sound = player.fallDistance > 5 ? SoundEvents.MACE_SMASH_GROUND_HEAVY : SoundEvents.MACE_SMASH_GROUND;
+        }
+        level.playSound(null, player.getX(), player.getY(), player.getZ(), sound, player.getSoundSource(), 1, 1);
+        level.levelEvent(2013, target.getOnPos(), 750);
+        double radius = 3.5;
+        for (var nearby : level.getEntitiesOfClass(LivingEntity.class, target.getBoundingBox().inflate(radius), entity ->
+                entity != player && entity != target && !entity.isSpectator() && !(entity instanceof Cat)
+                        && !player.isAlliedTo(entity)
+                        && !(entity instanceof TamableAnimal pet && pet.isTame() && player.getUUID().equals(pet.getOwnerUUID()))
+                        && !(entity instanceof ArmorStand stand && stand.isMarker()) && target.distanceToSqr(entity) <= radius * radius)) {
+            var direction = nearby.position().subtract(target.position());
+            double strength = (radius - direction.length()) * 0.7F * (player.fallDistance > 5 ? 2 : 1)
+                    * (1 - nearby.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE));
+            if (strength <= 0) continue;
+            var impulse = direction.normalize().scale(strength);
+            nearby.push(impulse.x, 0.7F, impulse.z);
+            if (nearby instanceof ServerPlayer pushed) pushed.connection.send(new ClientboundSetEntityMotionPacket(pushed));
+        }
     }
 
     /// Applies shared weapon effects after a server-side player attack damages health or absorption.

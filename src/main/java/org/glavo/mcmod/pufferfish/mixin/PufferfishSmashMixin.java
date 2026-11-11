@@ -8,7 +8,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import org.glavo.mcmod.pufferfish.PufferfishCombat;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -28,12 +27,13 @@ public abstract class PufferfishSmashMixin {
         }
     }
 
-    /// Reuses successful mace-hit feedback and landing protection without consuming the fish.
+    /// Applies heavy-fish impact feedback and landing protection without consuming the fish.
     @Inject(method = "hurtEnemy", at = @At("HEAD"), cancellable = true)
     private void pufferfishPlease$smashHit(ItemStack stack, LivingEntity target, LivingEntity attacker,
             CallbackInfoReturnable<Boolean> callback) {
         if (PufferfishCombat.canSmash(attacker, stack)) {
-            callback.setReturnValue(Items.MACE.hurtEnemy(stack, target, attacker));
+            PufferfishCombat.smashHit(attacker, target);
+            callback.setReturnValue(true);
         }
     }
 

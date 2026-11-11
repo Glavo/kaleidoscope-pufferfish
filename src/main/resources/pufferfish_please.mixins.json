@@ -16,8 +16,7 @@
     "EntityTypeMixin",
     "PufferfishEquipmentMixin",
     "PufferfishRepairRecipeMixin",
-    "PufferfishSmashMixin",
-    "PufferfishSmashKnockbackMixin"
+    "PufferfishSmashMixin"
   ],
   "client": [
     "PufferfishPowerLightMixin",

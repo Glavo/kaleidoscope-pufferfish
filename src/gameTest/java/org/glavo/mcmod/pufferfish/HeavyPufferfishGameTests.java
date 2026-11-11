@@ -126,6 +126,78 @@ public final class HeavyPufferfishGameTests {
         return damage;
     }
 
+    @GameTest(template = "empty")
+    public static void heavyFishRetainMaceFeedbackAndLandingProtection(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var center = helper.absolutePos(new BlockPos(2, 20, 2)).getCenter();
+        var player = net.neoforged.neoforge.common.util.FakePlayerFactory.get(level,
+                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "smash-feedback-test"));
+        player.setPos(center.add(0, 3, 0));
+        player.setOnGround(false);
+        var target = EntityType.COW.create(level);
+        target.setPos(center);
+        var near = EntityType.COW.create(level);
+        var resistant = EntityType.COW.create(level);
+        var far = EntityType.COW.create(level);
+        var pet = EntityType.WOLF.create(level);
+        pet.setTame(true, true);
+        pet.setOwnerUUID(player.getUUID());
+        near.setPos(center.add(1, 0, 0));
+        resistant.setPos(center.add(-1, 0, 0));
+        resistant.getAttribute(Attributes.KNOCKBACK_RESISTANCE).setBaseValue(0.5);
+        far.setPos(center.add(4, 0, 0));
+        pet.setPos(center.add(0, 0, 1));
+        var nearby = List.of(near, resistant, far, pet);
+        for (var entity : nearby) {
+            entity.setNoAi(true);
+            entity.setNoGravity(true);
+            level.addFreshEntity(entity);
+        }
+        try {
+            for (boolean grounded : new boolean[] {false, true}) for (float distance : new float[] {3, 6}) {
+                target.setOnGround(grounded);
+                List<net.minecraft.world.phys.Vec3> expected = null;
+                for (var stack : List.of(new ItemStack(Items.MACE), PufferfishItems.HEAVY.toStack())) {
+                    nearby.forEach(entity -> entity.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO));
+                    player.setItemInHand(InteractionHand.MAIN_HAND, stack);
+                    player.setIgnoreFallDamageFromCurrentImpulse(false);
+                    player.currentImpulseImpactPos = null;
+                    player.setDeltaMovement(0.25, -1, -0.5);
+                    player.fallDistance = distance;
+                    helper.assertTrue(stack.getItem().hurtEnemy(stack, target, player), "Smash feedback rejected a successful hit");
+                    helper.assertTrue(player.isIgnoringFallDamageFromCurrentImpulse() && player.currentImpulseImpactPos.equals(player.position())
+                            && player.getDeltaMovement().equals(new net.minecraft.world.phys.Vec3(0.25, 0.01F, -0.5)),
+                            "Smash feedback lost landing protection or changed horizontal movement");
+                    helper.assertTrue(player.fallDistance == distance, "Smash feedback reset fall distance before enchantments");
+                    var actual = nearby.stream().map(net.minecraft.world.entity.Entity::getDeltaMovement).toList();
+                    if (expected == null) expected = actual;
+                    else helper.assertTrue(actual.equals(expected), "Heavy fish knockback differs from vanilla mace feedback");
+                    helper.assertTrue(near.getDeltaMovement().lengthSqr() > 0
+                            && Math.abs(resistant.getDeltaMovement().x * 2 + near.getDeltaMovement().x) < 0.00001
+                            && far.getDeltaMovement().lengthSqr() == 0 && pet.getDeltaMovement().lengthSqr() == 0,
+                            "Smash feedback ignored resistance, distance or pet ownership");
+                    stack.getItem().postHurtEnemy(stack, target, player);
+                    helper.assertTrue(player.fallDistance == 0, "Completed smash did not reset fall distance");
+                }
+            }
+            var fish = PufferfishItems.HEAVY.toStack();
+            player.setItemInHand(InteractionHand.MAIN_HAND, fish);
+            for (int offset : new int[] {-2, 2}) {
+                var previous = player.position().add(0, offset, 0);
+                player.setIgnoreFallDamageFromCurrentImpulse(true);
+                player.currentImpulseImpactPos = previous;
+                player.fallDistance = 3;
+                fish.getItem().hurtEnemy(fish, target, player);
+                helper.assertTrue(player.currentImpulseImpactPos.equals(offset < 0 ? previous : player.position()),
+                        "Repeated smash lost the lowest protected landing height");
+            }
+        } finally {
+            nearby.forEach(net.minecraft.world.entity.Entity::discard);
+            target.discard();
+        }
+        helper.succeed();
+    }
+
     /// Compares heavy fish with actual vanilla mace hits across all Density levels, fall boundaries, and armor.
     @GameTest(template = "empty")
     public static void defaultHeavyFishDamageMatchesVanillaMace(GameTestHelper helper) {
