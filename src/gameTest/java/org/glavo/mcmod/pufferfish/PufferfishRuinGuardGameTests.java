@@ -32,6 +32,7 @@ public final class PufferfishRuinGuardGameTests {
         var floor = helper.absolutePos(new BlockPos(2, 40, 2));
         var context = StructurePieceSerializationContext.fromLevel(level);
         int diamonds = 0, total = 0;
+        var copperStages = new java.util.HashSet<Integer>();
         boolean three = false, four = false;
         var seeds = RandomSource.create(74392L);
         for (int sample = 0; sample < 32; sample++) {
@@ -54,6 +55,11 @@ public final class PufferfishRuinGuardGameTests {
                 helper.assertTrue(fish.kind() == PufferfishMobConfig.Kind.COPPER || fish.kind() == PufferfishMobConfig.Kind.IRON
                         || fish.kind() == PufferfishMobConfig.Kind.DIAMOND, "Unexpected ruin guard variant");
                 copper |= fish.kind() == PufferfishMobConfig.Kind.COPPER;
+                if (fish.kind() == PufferfishMobConfig.Kind.COPPER) {
+                    int stage = CopperPufferfish.index(fish.fish());
+                    helper.assertTrue(stage >= 1 && stage <= 3, "Copper guard spawned fresh or waxed");
+                    copperStages.add(stage);
+                }
                 iron |= fish.kind() == PufferfishMobConfig.Kind.IRON;
                 if (fish.kind() == PufferfishMobConfig.Kind.DIAMOND) diamonds++;
                 total++;
@@ -85,6 +91,7 @@ public final class PufferfishRuinGuardGameTests {
             }
         }
         helper.assertTrue(three && four && diamonds > 0 && diamonds < total / 5, "Guard counts or rare diamond variants did not vary");
+        helper.assertTrue(copperStages.size() == 3, "An aged copper guard variant is missing");
         var normal = new PufferfishRuinPiece(floor, false, 74392L);
         normal.postProcess(level, level.structureManager(), level.getChunkSource().getGenerator(), RandomSource.create(),
                 normal.getBoundingBox(), new ChunkPos(floor), floor);

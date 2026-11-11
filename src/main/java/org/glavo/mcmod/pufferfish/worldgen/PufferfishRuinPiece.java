@@ -139,6 +139,13 @@ public final class PufferfishRuinPiece extends StructurePiece {
             int roll = random.nextInt(10);
             String variant = i == 0 ? "iron_pufferfish" : i == 1 ? "copper_pufferfish"
                     : roll == 0 ? "diamond_pufferfish" : roll < 5 ? "copper_pufferfish" : "iron_pufferfish";
+            if (variant.equals("copper_pufferfish")) {
+                variant = switch (random.nextInt(3)) {
+                    case 0 -> "exposed_copper_pufferfish";
+                    case 1 -> "weathered_copper_pufferfish";
+                    default -> "oxidized_copper_pufferfish";
+                };
+            }
             var pos = getWorldPos(3 + (i & 1) * 2, 8, 3 + (i >> 1) * 2);
             if ((spawnedGuards & (1 << i)) != 0 || !box.isInside(pos)) continue;
             spawnedGuards |= 1 << i;
