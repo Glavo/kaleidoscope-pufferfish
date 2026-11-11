@@ -21,8 +21,61 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class AncientPufferfishConduitGameTests {
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void bothConduitsFollowEveryVanillaRangeThreshold(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var pos = helper.absolutePos(new BlockPos(2, 182, 2));
+        var slots = new java.util.ArrayList<BlockPos>();
+        for (var offset : BlockPos.betweenClosed(-2, -2, -2, 2, 2, 2)) {
+            int x = Math.abs(offset.getX()), y = Math.abs(offset.getY()), z = Math.abs(offset.getZ());
+            if (x == 0 && (y == 2 || z == 2) || y == 0 && (x == 2 || z == 2) || z == 0 && (x == 2 || y == 2)) {
+                slots.add(pos.offset(offset));
+            }
+        }
+        var fish = EntityType.PUFFERFISH.create(level);
+        fish.setPos(pos.getCenter());
+        fish.setNoAi(true);
+        fish.setNoGravity(true);
+        level.addFreshEntity(fish);
+        helper.runAfterDelay(40 - level.getGameTime() % 40, () -> {
+            for (var block : java.util.List.of(PufferfishBlocks.CONDUIT.get(), PufferfishBlocks.ANCIENT_CONDUIT.get())) {
+                for (var water : BlockPos.betweenClosed(pos.offset(-1, -1, -1), pos.offset(1, 1, 1))) {
+                    level.setBlock(water, Blocks.WATER.defaultBlockState(), 2);
+                }
+                level.setBlockAndUpdate(pos, block.defaultBlockState());
+                var core = (PufferfishConduitBlockEntity) level.getBlockEntity(pos);
+                for (var step : new int[][] {{15, 0}, {16, 32}, {20, 32}, {21, 48}, {27, 48}, {28, 64},
+                        {34, 64}, {35, 80}, {41, 80}, {42, 96}, {20, 32}, {15, 0}}) {
+                    int count = step[0], radius = step[1];
+                    for (int i = 0; i < slots.size(); i++) {
+                        level.setBlock(slots.get(i), (i >= count ? Blocks.WATER : i % 2 == 0
+                                ? Blocks.PRISMARINE : PufferfishBlocks.ANCIENT_PRISMARINE.get()).defaultBlockState(), 2);
+                    }
+                    fish.removeEffect(PufferfishEffects.PUFFERFISH_POWER);
+                    fish.setPos(pos.above(radius).getCenter());
+                    PufferfishConduitBlockEntity.serverTick(level, pos, core.getBlockState(), core);
+                    helper.assertTrue(core.isActive() == (radius > 0), "Incorrect activation at frame size " + count);
+                    helper.assertTrue(!fish.hasEffect(PufferfishEffects.PUFFERFISH_POWER)
+                            && !PufferfishConduitSpawning.isInRange(level, pos.above(radius)),
+                            "Power or spawn replacement exceeded the radius at frame size " + count);
+                    if (radius > 0) {
+                        fish.setPos(pos.above(radius - 1).getCenter());
+                        PufferfishConduitBlockEntity.serverTick(level, pos, core.getBlockState(), core);
+                        helper.assertTrue(fish.hasEffect(PufferfishEffects.PUFFERFISH_POWER)
+                                && PufferfishConduitSpawning.isInRange(level, pos.above(radius - 1))
+                                && PufferfishConduitSpawning.isInAncientRange(level, pos.above(radius - 1)) == core.isAncient(),
+                                "Power, spawn replacement or curse range missed the boundary at frame size " + count);
+                    }
+                }
+            }
+            fish.discard();
+            for (var block : BlockPos.betweenClosed(pos.offset(-2, -2, -2), pos.offset(2, 2, 2))) level.removeBlock(block, false);
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty", timeoutTicks = 210)
-    public static void ancientFrameActivatesConduitWithFixedRange(GameTestHelper helper) {
+    public static void repairingAncientFrameExpandsPowerCurseAndSpawnRange(GameTestHelper helper) {
         var level = helper.getLevel();
         var pos = helper.absolutePos(new BlockPos(2, 82, 2));
         var normalPos = pos.east(8);
@@ -73,18 +126,28 @@ public final class AncientPufferfishConduitGameTests {
             helper.assertTrue(curse.getDuration() == remaining && !player.hasEffect(PufferfishEffects.PUFFERFISH_POWER),
                     "Overlapping normal conduit extended curse or restored power");
             distant.removeEffect(PufferfishEffects.PUFFERFISH_POWER);
-            PufferfishConduitBlockEntity.applyPower(level, pos, 42);
+            PufferfishConduitBlockEntity.applyPower(level, pos, 16);
             helper.assertTrue(curse.getDuration() == 260, "Ancient conduit did not renew curse");
-            helper.assertTrue(!distant.hasEffect(PufferfishEffects.PUFFERFISH_POWER), "Ancient conduit exceeded its fixed range");
+            helper.assertTrue(!distant.hasEffect(PufferfishEffects.PUFFERFISH_POWER), "Incomplete frame empowered distant fish");
             for (var offset : BlockPos.betweenClosed(-2, -2, -2, 2, 2, 2)) {
                 int x = Math.abs(offset.getX()), y = Math.abs(offset.getY()), z = Math.abs(offset.getZ());
                 if (x == 0 && (y == 2 || z == 2) || y == 0 && (x == 2 || z == 2) || z == 0 && (x == 2 || y == 2)) {
-                    level.setBlockAndUpdate(pos.offset(offset), PufferfishBlocks.ANCIENT_PRISMARINE.get().defaultBlockState());
+                    level.setBlockAndUpdate(pos.offset(offset), ((x + y + z) % 2 == 0
+                            ? PufferfishBlocks.ANCIENT_PRISMARINE.get() : Blocks.PRISMARINE).defaultBlockState());
                 }
             }
             helper.runAfterDelay(45, () -> {
-                helper.assertTrue(ancient.isActive() && !PufferfishConduitSpawning.isInAncientRange(level, pos.above(32)),
-                        "Frame enlarged the ancient conduit range");
+                helper.assertTrue(ancient.isActive() && ancient.isHunting()
+                        && PufferfishConduitSpawning.isInAncientRange(level, pos.above(95))
+                        && !PufferfishConduitSpawning.isInAncientRange(level, pos.above(96)),
+                        "Repaired ancient frame did not expand its range to ninety-six blocks");
+                helper.assertTrue(distant.hasEffect(PufferfishEffects.PUFFERFISH_POWER), "Repaired frame did not empower distant fish");
+                player.setPos(pos.above(40).getCenter());
+                player.removeEffect(PufferfishEffects.PUFFERFISH_CURSE);
+                player.addEffect(new MobEffectInstance(PufferfishEffects.PUFFERFISH_POWER, 260));
+                player.invulnerableTime = 0;
+                player.hurt(player.damageSources().mobAttack(attacker), 1);
+                helper.assertTrue(player.hasEffect(PufferfishEffects.PUFFERFISH_CURSE), "Repaired frame did not expand curse conversion range");
                 level.setBlockAndUpdate(pos.above(), Blocks.STONE.defaultBlockState());
                 helper.runAfterDelay(45, () -> {
                     helper.assertTrue(!ancient.isActive() && !PufferfishConduitSpawning.isInAncientRange(level, pos),

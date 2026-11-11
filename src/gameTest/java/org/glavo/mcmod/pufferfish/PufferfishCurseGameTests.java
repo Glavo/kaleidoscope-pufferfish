@@ -170,7 +170,7 @@ public final class PufferfishCurseGameTests {
     private static BlockPos ancientAura(GameTestHelper helper) {
         var pos = helper.absolutePos(new BlockPos(2, 82, 2));
         helper.getLevel().setBlockAndUpdate(pos, PufferfishBlocks.ANCIENT_CONDUIT.get().defaultBlockState());
-        PufferfishConduitSpawning.update(helper.getLevel(), pos, PufferfishConduitBlockEntity.ANCIENT_RADIUS);
+        PufferfishConduitSpawning.update(helper.getLevel(), pos, 32);
         return pos;
     }
 

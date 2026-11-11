@@ -19,7 +19,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
 public final class PufferfishConduitBlockEntity extends ConduitBlockEntity {
-    public static final int ANCIENT_RADIUS = 32;
     public static final TagKey<Block> ANCIENT_FRAME = TagKey.create(Registries.BLOCK,
             PufferfishPlease.id("ancient_conduit_frame"));
     public PufferfishConduitBlockEntity(BlockPos pos, BlockState state) { super(pos, state); }
@@ -60,7 +59,7 @@ public final class PufferfishConduitBlockEntity extends ConduitBlockEntity {
 
     public static void applyPower(Level level, BlockPos pos, int frameSize) {
         boolean ancient = level.getBlockState(pos).is(PufferfishBlocks.ANCIENT_CONDUIT.get());
-        int radius = ancient ? ANCIENT_RADIUS : frameSize / 7 * 16;
+        int radius = frameSize / 7 * 16;
         var bounds = new AABB(pos).inflate(radius).expandTowards(0, level.getHeight(), 0);
         for (var target : level.getEntitiesOfClass(LivingEntity.class, bounds,
                 target -> target instanceof Pufferfish || target instanceof Player && target.isInWaterOrRain())) {
@@ -80,7 +79,7 @@ public final class PufferfishConduitBlockEntity extends ConduitBlockEntity {
         ConduitBlockEntity.serverTick(level, pos, state, entity);
         if (level.getGameTime() % 40 != 0) return;
         int frameSize = 0;
-        if (entity.isActive() && !entity.isAncient()) {
+        if (entity.isActive()) {
             for (var offset : BlockPos.betweenClosed(-2, -2, -2, 2, 2, 2)) {
                 if (isFrameOffset(offset)) {
                     var framePos = pos.offset(offset);
@@ -88,7 +87,7 @@ public final class PufferfishConduitBlockEntity extends ConduitBlockEntity {
                 }
             }
         }
-        int radius = entity.isAncient() && entity.isActive() ? ANCIENT_RADIUS : frameSize / 7 * 16;
+        int radius = frameSize / 7 * 16;
         PufferfishConduitSpawning.update(level, pos, radius);
     }
 

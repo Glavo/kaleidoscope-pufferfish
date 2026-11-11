@@ -48,6 +48,9 @@ public final class PufferfishRuinPiece extends StructurePiece {
             BoundingBox box, ChunkPos chunk, BlockPos origin) {
         var decoration = RandomSource.create(decorationSeed);
         var stone = ancient ? PufferfishBlocks.ANCIENT_PRISMARINE.get() : Blocks.PRISMARINE;
+        // Preserve both brushable frame blocks within a damaged but active 16-27 block frame.
+        int remainingFrameSlots = 40;
+        int retainedFrameBlocks = ancient ? 14 + decoration.nextInt(12) : 0;
         for (int x = 0; x <= 8; x++) for (int z = 0; z <= 8; z++) {
             if (Math.abs(x - 4) + Math.abs(z - 4) > 6) continue;
             for (int y = 0; y < 4; y++) {
@@ -63,6 +66,10 @@ public final class PufferfishRuinPiece extends StructurePiece {
             int dx = Math.abs(x - 4), dy = Math.abs(y - 8), dz = Math.abs(z - 4);
             boolean frame = dx == 0 && (dy == 2 || dz == 2) || dy == 0 && (dx == 2 || dz == 2)
                     || dz == 0 && (dx == 2 || dy == 2);
+            if (ancient && frame && !(dx == 2 && dy == 0 && dz == 0)) {
+                frame = decoration.nextInt(remainingFrameSlots--) < retainedFrameBlocks;
+                if (frame) retainedFrameBlocks--;
+            }
             var block = !frame ? Blocks.WATER : ancient ? stone : switch (decoration.nextInt(3)) {
                 case 0 -> Blocks.PRISMARINE;
                 case 1 -> Blocks.PRISMARINE_BRICKS;

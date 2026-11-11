@@ -116,12 +116,17 @@ public final class PufferfishRuinGameTests {
         var level = helper.getLevel();
         var pieces = new ArrayList<PufferfishRuinPiece>();
         var cores = new ArrayList<BlockPos>();
+        var frames = new ArrayList<List<BlockPos>>();
         var treasures = new ArrayList<BlockPos>();
         for (boolean ancient : new boolean[] {false, true}) {
             var floor = helper.absolutePos(new BlockPos(2, ancient ? 54 : 30, 2));
             var piece = new PufferfishRuinPiece(floor, ancient, 74392L);
             pieces.add(piece);
             var box = piece.getBoundingBox();
+            piece.postProcess(level, level.structureManager(), level.getChunkSource().getGenerator(), RandomSource.create(),
+                    box, new ChunkPos(floor), floor);
+            var expectedFrame = new ArrayList<BlockPos>();
+            PufferfishConduitBlockEntity.updateFrame(level, floor.above(4), expectedFrame);
             var context = StructurePieceSerializationContext.fromLevel(level);
             var restored = new PufferfishRuinPiece(piece.createTag(context));
             int split = floor.getX();
@@ -135,8 +140,11 @@ public final class PufferfishRuinGameTests {
             helper.assertTrue(level.getBlockState(corePos).is(ancient ? PufferfishBlocks.ANCIENT_CONDUIT.get() : PufferfishBlocks.CONDUIT.get()),
                     "Ruin placed the wrong conduit");
             var frame = new ArrayList<BlockPos>();
-            helper.assertTrue(PufferfishConduitBlockEntity.updateFrame(level, corePos, frame) && frame.size() == 42,
-                    "Generated altar does not have a complete submerged frame");
+            helper.assertTrue(PufferfishConduitBlockEntity.updateFrame(level, corePos, frame), "Generated altar cannot activate");
+            helper.assertTrue(ancient ? frame.size() >= 16 && frame.size() <= 27 : frame.size() == 42,
+                    "Generated altar has the wrong frame completeness");
+            helper.assertTrue(frame.equals(expectedFrame), "Reloaded or split generation changed the damaged frame");
+            frames.add(frame);
             if (ancient) {
                 helper.assertTrue(frame.stream().allMatch(pos -> level.getBlockState(pos).is(PufferfishConduitBlockEntity.ANCIENT_FRAME))
                         && frame.stream().anyMatch(pos -> level.getBlockState(pos).is(PufferfishBlocks.SUSPICIOUS_ANCIENT_PRISMARINE)),
@@ -163,6 +171,11 @@ public final class PufferfishRuinGameTests {
                 helper.assertTrue(level.getBlockEntity(pos) instanceof PufferfishConduitBlockEntity core && core.isActive(),
                         "Generated conduit did not activate on its own");
             }
+            var ancientPos = cores.get(1);
+            int radius = frames.get(1).size() < 21 ? 32 : 48;
+            helper.assertTrue(PufferfishConduitSpawning.isInAncientRange(level, ancientPos.above(radius - 1))
+                    && !PufferfishConduitSpawning.isInAncientRange(level, ancientPos.above(radius)),
+                    "Damaged ancient frame did not limit its natural aura range");
             var player = helper.makeMockPlayer(GameType.SURVIVAL);
             for (var pos : treasures) {
                 var treasure = (AncientPrismarineBlockEntity) level.getBlockEntity(pos);
@@ -170,9 +183,16 @@ public final class PufferfishRuinGameTests {
                 helper.assertTrue(level.getBlockState(pos).is(PufferfishBlocks.ANCIENT_PRISMARINE), "Brushing did not restore ancient stone");
             }
             helper.runAfterDelay(45, () -> {
-                for (var pos : cores) {
+                for (int i = 0; i < cores.size(); i++) {
+                    var pos = cores.get(i);
                     helper.assertTrue(((PufferfishConduitBlockEntity) level.getBlockEntity(pos)).isActive(), "Brushing deactivated the core");
+                    var frame = new ArrayList<BlockPos>();
+                    PufferfishConduitBlockEntity.updateFrame(level, pos, frame);
+                    helper.assertTrue(frame.equals(frames.get(i)), "Brushing changed the effective frame");
                 }
+                helper.assertTrue(PufferfishConduitSpawning.isInAncientRange(level, ancientPos.above(radius - 1))
+                        && !PufferfishConduitSpawning.isInAncientRange(level, ancientPos.above(radius)),
+                        "Brushing changed the ancient aura range");
                 for (var piece : pieces) {
                     var box = piece.getBoundingBox();
                     for (var pos : BlockPos.betweenClosed(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ())) {
