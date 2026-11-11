@@ -18,7 +18,6 @@ import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.world.entity.animal.Cat;
 import org.glavo.mcmod.pufferfish.PufferfishCatArmorItem;
-import org.glavo.mcmod.pufferfish.PufferfishItems;
 import org.glavo.mcmod.pufferfish.PufferfishMaterial;
 import org.glavo.mcmod.pufferfish.PufferfishPlease;
 import org.glavo.mcmod.pufferfish.PufferfishVariant;
@@ -44,7 +43,6 @@ public final class PufferfishCatArmorLayer extends RenderLayer<Cat, CatModel<Cat
         var vertices = sprite.wrap(buffers.getBuffer(RenderType.entityCutoutNoCull(TextureAtlas.LOCATION_BLOCKS)));
         int overlay = LivingEntityRenderer.getOverlayCoords(cat, 0);
         armor.renderToBuffer(pose, vertices, light, overlay, -1);
-        if (PufferfishItems.isRadiant(stack)) armor.renderGlow(pose, buffers, overlay);
     }
 
     private static final class ArmorModel extends CatModel<Cat> {
@@ -66,19 +64,6 @@ public final class PufferfishCatArmorLayer extends RenderLayer<Cat, CatModel<Cat
                     .addBox(-2.5F, 13, -8.3F, 5, 2, 1, thickness);
             root.addOrReplaceChild("body", shell, PartPose.offsetAndRotation(0, 12, -10, (float) Math.PI / 2, 0, 0));
             return LayerDefinition.create(mesh, 32, 32);
-        }
-
-        private void renderGlow(PoseStack pose, MultiBufferSource buffers, int overlay) {
-            pose.pushPose();
-            if (young) {
-                pose.scale(0.5F, 0.5F, 0.5F);
-                pose.translate(0, 1.5, 0);
-            }
-            body.translateAndRotate(pose);
-            pose.translate(0, 0.625, -0.25);
-            pose.scale(0.55F, 0.55F, 0.55F);
-            RadiantPufferfishVisuals.renderCentered(pose, buffers, overlay);
-            pose.popPose();
         }
     }
 }
