@@ -74,6 +74,7 @@ public final class PufferfishBoatClientTest {
                 for (int input = 0; input < 5; input++) {
                     var vanilla = new Boat(level, 0, 0, 0);
                     var kayak = variant.entity().get().create(level);
+                    double multiplier = variant == PufferfishBoats.VARIANTS.get("radiant_pufferfish_skin_boat") ? 1.5 : 1.25;
                     for (var boat : new Boat[] {vanilla, kayak}) {
                         status.set(boat, Boat.Status.IN_WATER);
                         oldStatus.set(boat, Boat.Status.IN_WATER);
@@ -96,14 +97,14 @@ public final class PufferfishBoatClientTest {
                         drift.invoke(kayak);
                         control.invoke(vanilla);
                         control.invoke(kayak);
-                        var expected = vanilla.getDeltaMovement().multiply(1.25, 1, 1.25);
+                        var expected = vanilla.getDeltaMovement().multiply(multiplier, 1, multiplier);
                         var difference = kayak.getDeltaMovement().subtract(expected);
                         if (difference.horizontalDistance() > 1.0E-7 || (!kayak.isHeavy() && Math.abs(difference.y) > 1.0E-7)
                                 || kayak.getYRot() != vanilla.getYRot() || kayak.isHeavy() && kayak.getDeltaMovement().y >= 0) {
                             throw new IllegalStateException("Kayak speed or steering differed from the expected boat ratio");
                         }
-                        if (input == 0 && tick == 99 && Math.abs(kayak.getDeltaMovement().horizontalDistance() - 0.5) > 0.0001) {
-                            throw new IllegalStateException("Kayak did not reach 125 percent of vanilla cruising speed");
+                        if (input == 0 && tick == 99 && Math.abs(kayak.getDeltaMovement().horizontalDistance() - 0.4 * multiplier) > 0.0001) {
+                            throw new IllegalStateException("Kayak did not reach the expected cruising speed: " + kayak.skinBoatName());
                         }
                     }
                     vanilla.ejectPassengers();

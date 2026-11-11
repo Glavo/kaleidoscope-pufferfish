@@ -1,0 +1,35 @@
+{
+  "parent": "pufferfish_please:adventure/pufferfish_voyage",
+  "display": {
+    "icon": {
+      "id": "pufferfish_please:radiant_pufferfish_skin_boat"
+    },
+    "title": {
+      "translate": "advancements.pufferfish_please.radiant_voyage.title"
+    },
+    "description": {
+      "translate": "advancements.pufferfish_please.radiant_voyage.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "ride": {
+      "trigger": "minecraft:started_riding",
+      "conditions": {
+        "player": {
+          "vehicle": {
+            "type": "pufferfish_please:radiant_pufferfish_skin_boat"
+          }
+        }
+      }
+    }
+  },
+  "requirements": [
+    [
+      "ride"
+    ]
+  ]
+}

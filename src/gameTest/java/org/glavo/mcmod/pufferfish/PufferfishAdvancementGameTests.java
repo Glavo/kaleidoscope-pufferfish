@@ -234,14 +234,20 @@ public final class PufferfishAdvancementGameTests {
         player.startRiding(vanillaBoat, true);
         CriteriaTriggers.START_RIDING_TRIGGER.trigger(player);
         helper.assertTrue(!done(player, "pufferfish_voyage"), "Vanilla boat granted the pufferfish voyage");
+        helper.assertTrue(!done(player, "radiant_voyage") && !done(player, "heavy_voyage"), "Vanilla boat granted a special voyage");
         player.stopRiding();
         for (var variant : PufferfishBoats.VARIANTS.values()) {
             var boat = variant.entity().get().create(level);
             player.startRiding(boat, true);
             CriteriaTriggers.START_RIDING_TRIGGER.trigger(player);
             helper.assertTrue(done(player, "pufferfish_voyage"), "Missing boat advancement variant: " + variant.entity().getId());
+            helper.assertTrue(done(player, "radiant_voyage") == boat.skinBoatName().equals("radiant_pufferfish_skin_boat"),
+                    "Incorrect radiant voyage progress: " + boat.skinBoatName());
+            helper.assertTrue(done(player, "heavy_voyage") == boat.isHeavy(), "Incorrect heavy voyage progress: " + boat.skinBoatName());
             player.stopRiding();
             player.getAdvancements().revoke(advancement(player, "pufferfish_voyage"), "ride");
+            player.getAdvancements().revoke(advancement(player, "radiant_voyage"), "ride");
+            player.getAdvancements().revoke(advancement(player, "heavy_voyage"), "ride");
         }
         player.getAdvancements().stopListening();
         helper.succeed();
