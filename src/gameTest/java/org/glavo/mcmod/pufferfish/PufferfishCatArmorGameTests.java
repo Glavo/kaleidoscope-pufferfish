@@ -34,6 +34,34 @@ import org.glavo.mcmod.pufferfish.test.TestPlayers;
 @PrefixGameTestTemplate(false)
 public final class PufferfishCatArmorGameTests {
     @GameTest(template = "empty")
+    public static void catArmorHooksLeaveOtherEquipmentAlone(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var cat = EntityType.CAT.create(level);
+        var wolf = EntityType.WOLF.create(level);
+        var horse = EntityType.HORSE.create(level);
+        var cow = EntityType.COW.create(level);
+        var armor = PufferfishCatArmor.VARIANTS.get("pufferfish_skin_cat_armor").toStack();
+        helper.assertTrue(cat.canUseSlot(EquipmentSlot.BODY) && cat.isBodyArmorItem(armor), "Cat armor was not recognized");
+        helper.assertTrue(wolf.canUseSlot(EquipmentSlot.BODY) && horse.canUseSlot(EquipmentSlot.BODY)
+                && horse.isBodyArmorItem(new ItemStack(Items.IRON_HORSE_ARMOR)), "Native animal armor was rejected");
+        helper.assertTrue(!cow.canUseSlot(EquipmentSlot.BODY) && !cow.isBodyArmorItem(armor), "Cat armor hooks affected another mob");
+
+        cat.setBodyArmorItem(new ItemStack(Items.WOLF_ARMOR));
+        cat.tick();
+        cat.hurt(cat.damageSources().cactus(), 4);
+        helper.assertTrue(cat.getBodyArmorItem().getDamageValue() == 0, "Cat armor hooks damaged foreign equipment");
+        cat.setBodyArmorItem(armor);
+        cat.tick();
+        cat.invulnerableTime = 0;
+        cat.hurt(cat.damageSources().cactus(), 4);
+        helper.assertTrue(cat.getBodyArmorItem().getDamageValue() == 1, "Cat armor did not wear exactly once");
+        cat.invulnerableTime = 0;
+        cat.hurt(cat.damageSources().magic(), 1);
+        helper.assertTrue(cat.getBodyArmorItem().getDamageValue() == 1, "Armor-bypassing damage wore cat armor");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void everySkinCraftsEquipsRepairsAndPersists(GameTestHelper helper) {
         var player = player(helper);
         var level = helper.getLevel();

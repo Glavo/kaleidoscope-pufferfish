@@ -16,6 +16,7 @@ import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
 import net.minecraft.server.level.ServerEntity;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.animal.Pufferfish;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.DyeColor;
@@ -42,6 +43,52 @@ import net.neoforged.neoforge.network.payload.SyncAttachmentsPayload;
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public class PufferfishGameTests {
+    @GameTest(template = "empty")
+    public static void equipmentSlotFallbackLeavesNativeEquipmentAlone(GameTestHelper helper) {
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        helper.assertTrue(player.getEquipmentSlotForItem(new ItemStack(Items.PUFFERFISH)) == EquipmentSlot.HEAD,
+                "Ordinary pufferfish lost its head slot");
+        helper.assertTrue(player.getEquipmentSlotForItem(new ItemStack(Items.IRON_CHESTPLATE)) == EquipmentSlot.CHEST
+                && player.getEquipmentSlotForItem(new ItemStack(Items.ELYTRA)) == EquipmentSlot.CHEST
+                && player.getEquipmentSlotForItem(new ItemStack(Items.SHIELD)) == EquipmentSlot.OFFHAND
+                && player.getEquipmentSlotForItem(new ItemStack(Items.COD)) == EquipmentSlot.MAINHAND,
+                "Pufferfish fallback replaced an unrelated equipment slot");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void materialBucketsInitializeFishAndNamesBeforeTracking(GameTestHelper helper) {
+        var level = helper.getLevel();
+        List<Boolean> initialized = new ArrayList<>();
+        for (var variant : PufferfishMobs.VARIANTS.values()) {
+            var fish = variant.entity().get().create(level);
+            var stored = fish.fish();
+            stored.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
+            fish.setFish(stored);
+            var bucket = variant.bucket().toStack();
+            fish.saveToBucketTag(bucket);
+            bucket.set(DataComponents.CUSTOM_NAME, Component.literal("Ready before tracking"));
+            Consumer<EntityJoinLevelEvent> observer = event -> {
+                if (event.getLevel() == level && event.getEntity() instanceof org.glavo.mcmod.pufferfish.entity.MaterialPufferfish joined) {
+                    initialized.add(ItemStack.matches(joined.fish(), stored)
+                            && joined.getName().getString().equals("Ready before tracking"));
+                }
+            };
+            initialized.clear();
+            var pos = helper.absolutePos(new BlockPos(1, 1, 1));
+            NeoForge.EVENT_BUS.addListener(observer);
+            try {
+                ((MobBucketItem) bucket.getItem()).checkExtraContent(null, level, bucket, pos);
+                helper.assertTrue(initialized.size() == 1 && initialized.getFirst(),
+                        "Material bucket data or the original name initializer ran after tracking: " + variant.fish().getId());
+            } finally {
+                NeoForge.EVENT_BUS.unregister(observer);
+                level.getEntitiesOfClass(Pufferfish.class, new AABB(pos).inflate(1)).forEach(Pufferfish::discard);
+            }
+        }
+        helper.succeed();
+    }
+
     @GameTest(template = "empty")
     public static void bucketColorsAreReadyBeforeTracking(GameTestHelper helper) {
         List<DyeColor> colorsAtJoin = new ArrayList<>();
