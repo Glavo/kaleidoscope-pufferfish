@@ -13,6 +13,8 @@ import java.nio.file.Path;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemDisplayContext;
@@ -40,9 +42,12 @@ public final class PufferfishCatArmorClientTest {
             for (var entry : PufferfishCatArmor.VARIANTS.entrySet()) {
                 var stack = entry.getValue().toStack();
                 var model = minecraft.getItemRenderer().getModel(stack, level, null, 0);
+                var worn = minecraft.getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
+                        .apply(PufferfishPlease.id("entity/cat/" + entry.getKey()));
                 if (model == minecraft.getModelManager().getMissingModel() || model.getQuads(null, null, RandomSource.create()).isEmpty()
                         || model.isGui3d()
                         || !model.getParticleIcon().contents().name().equals(PufferfishPlease.id("item/" + entry.getKey()))
+                        || worn.contents().name().equals(MissingTextureAtlasSprite.getLocation())
                         || stack.getHoverName().getString().startsWith("item.")) {
                     throw new IllegalStateException("Missing cat armor item resources: " + entry.getKey());
                 }

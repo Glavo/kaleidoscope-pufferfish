@@ -26,7 +26,7 @@ public final class PufferfishArmorTextures implements ResourceManagerReloadListe
     private final Set<ResourceLocation> generated = new HashSet<>();
 
     public static void skin(ResourceManager manager, NativeImage mask, String name, boolean worn) {
-        boolean catArmor = !worn && name.endsWith("_cat_armor");
+        boolean catArmor = name.endsWith("_cat_armor");
         String prefix = name.substring(0, name.indexOf("pufferfish_skin"));
         if (prefix.startsWith("waxed_")) prefix = prefix.substring("waxed_".length());
         int ventral = switch (prefix) {
@@ -95,8 +95,11 @@ public final class PufferfishArmorTextures implements ResourceManagerReloadListe
     }
 
     private static boolean belly(int u, int v, String name, boolean worn) {
+        if (name.endsWith("_cat_armor")) {
+            return worn ? v >= 24 && u < 8 || v >= 20 && u >= 24 && u < 30
+                    || v >= 7 && v < 13 && u >= 28 && u < 36 : v >= 6;
+        }
         if (!worn) {
-            if (name.endsWith("_cat_armor")) return v >= 6;
             if (name.endsWith("_helmet")) return v >= 7 && u >= 4 && u < 12;
             if (name.endsWith("_chestplate")) return v >= 6 && v < 14 && u >= (v < 8 ? 6 : 5) && u < (v < 8 ? 10 : 11);
             if (name.endsWith("_leggings")) return v >= 7 && v < 12 && (u == 5 || u == 10);

@@ -6,6 +6,7 @@ package org.glavo.mcmod.pufferfish.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.CatModel;
+import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.CubeDeformation;
 import net.minecraft.client.model.geom.builders.CubeListBuilder;
@@ -39,31 +40,57 @@ public final class PufferfishCatArmorLayer extends RenderLayer<Cat, CatModel<Cat
         armor.prepareMobModel(cat, limbSwing, limbSwingAmount, partialTick);
         armor.setupAnim(cat, limbSwing, limbSwingAmount, age, headYaw, headPitch);
         var sprite = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
-                .apply(PufferfishPlease.id("block/" + variant.skinName()));
+                .apply(PufferfishPlease.id("entity/cat/" + variant.skinName() + "_cat_armor"));
         var vertices = sprite.wrap(buffers.getBuffer(RenderType.entityCutoutNoCull(TextureAtlas.LOCATION_BLOCKS)));
         int overlay = LivingEntityRenderer.getOverlayCoords(cat, 0);
         armor.renderToBuffer(pose, vertices, light, overlay, -1);
     }
 
     private static final class ArmorModel extends CatModel<Cat> {
-        private ArmorModel(boolean heavy) { super(mesh(heavy).bakeRoot()); }
+        private ArmorModel(boolean heavy) { super(mesh(heavy)); }
 
-        private static LayerDefinition mesh(boolean heavy) {
+        private static ModelPart mesh(boolean heavy) {
             var mesh = CatModel.createBodyMesh(CubeDeformation.NONE);
             var root = mesh.getRoot();
-            for (var part : new String[] {"head", "tail1", "tail2", "left_hind_leg", "right_hind_leg", "left_front_leg", "right_front_leg"}) {
+            for (var part : new String[] {"tail1", "tail2"}) {
                 root.addOrReplaceChild(part, CubeListBuilder.create(), PartPose.ZERO);
             }
-            var thickness = new CubeDeformation(heavy ? 0.25F : 0);
-            var shell = CubeListBuilder.create().texOffs(8, 0)
-                    .addBox(-2.5F, 4, -2.3F, 5, 12, 1, thickness)
-                    .addBox(-2.7F, 4, -7.5F, 1, 12, 5.5F, thickness)
-                    .addBox(1.7F, 4, -7.5F, 1, 12, 5.5F, thickness)
-                    .texOffs(0, 16)
-                    .addBox(-2.5F, 5, -8.3F, 5, 2, 1, thickness)
-                    .addBox(-2.5F, 13, -8.3F, 5, 2, 1, thickness);
-            root.addOrReplaceChild("body", shell, PartPose.offsetAndRotation(0, 12, -10, (float) Math.PI / 2, 0, 0));
-            return LayerDefinition.create(mesh, 32, 32);
+            var thickness = new CubeDeformation(heavy ? 0.4F : 0.2F);
+            var head = root.addOrReplaceChild("head", CubeListBuilder.create(), PartPose.offset(0, 15, -9));
+            head.addOrReplaceChild("plate", CubeListBuilder.create().texOffs(0, 0)
+                    .addBox(-3, -3, -2, 6, 6, 4, thickness), PartPose.offset(0, 0, -0.5F));
+            var body = root.addOrReplaceChild("body", CubeListBuilder.create(),
+                    PartPose.offsetAndRotation(0, 12, -10, (float) Math.PI / 2, 0, 0));
+            body.addOrReplaceChild("chest", CubeListBuilder.create().texOffs(21, 0)
+                    .addBox(-4, 0, -3.5F, 8, 6, 7, thickness), PartPose.offset(0, 3, -5));
+            body.addOrReplaceChild("back", CubeListBuilder.create().texOffs(18, 14)
+                    .addBox(-3, 0, -3, 6, 9, 6, thickness), PartPose.offset(0, 9, -5));
+            for (boolean front : new boolean[] {true, false}) {
+                for (boolean left : new boolean[] {true, false}) {
+                    String name = (left ? "left" : "right") + (front ? "_front_leg" : "_hind_leg");
+                    var leg = root.addOrReplaceChild(name, CubeListBuilder.create(),
+                            PartPose.offset((left ? 1 : -1) * (front ? 1.2F : 1.1F), front ? 14.1F : 18, front ? -5 : 5));
+                    leg.addOrReplaceChild("plate", CubeListBuilder.create().texOffs(0, 18)
+                            .addBox(-1, 0, -1, 2, 8, 2, thickness), PartPose.offset(0, 0, front ? 1 : 2));
+                }
+            }
+            var baked = LayerDefinition.create(mesh, 64, 32).bakeRoot();
+            // Keep the wolf armor UV layout while fitting each plate to the cat's animated parts.
+            var headPlate = baked.getChild("head").getChild("plate");
+            headPlate.xScale = 5.0F / 6;
+            headPlate.yScale = 4.0F / 6;
+            headPlate.zScale = 5.0F / 4;
+            var chest = baked.getChild("body").getChild("chest");
+            chest.xScale = 0.5F;
+            chest.zScale = 6.0F / 7;
+            var back = baked.getChild("body").getChild("back");
+            back.xScale = 4.0F / 6;
+            back.yScale = 10.0F / 9;
+            for (var side : new String[] {"left", "right"}) {
+                baked.getChild(side + "_front_leg").getChild("plate").yScale = 10.0F / 8;
+                baked.getChild(side + "_hind_leg").getChild("plate").yScale = 6.0F / 8;
+            }
+            return baked;
         }
     }
 }

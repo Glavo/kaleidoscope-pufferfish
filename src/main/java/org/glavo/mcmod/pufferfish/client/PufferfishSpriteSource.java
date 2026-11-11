@@ -47,6 +47,14 @@ public final class PufferfishSpriteSource implements SpriteSource {
                         PufferfishArmorTextures.skin(manager, image, name, false);
                         return new SpriteContents(sprite, size, image, metadata);
                     })));
+            var wornId = PufferfishPlease.id("entity/cat/" + name);
+            var wornReplacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(wornId));
+            if (wornReplacement.isPresent()) output.add(wornId, wornReplacement.get());
+            else manager.getResource(ResourceLocation.withDefaultNamespace("textures/entity/wolf/wolf_armor.png"))
+                    .ifPresent(resource -> output.add(wornId, loader -> loader.loadSprite(wornId, resource, (sprite, size, image, metadata) -> {
+                        PufferfishArmorTextures.skin(manager, image, name, true);
+                        return new SpriteContents(sprite, size, image, metadata);
+                    })));
         }
         for (boolean bucket : new boolean[] {false, true}) {
             ResourceLocation original = ResourceLocation.withDefaultNamespace(bucket ? "item/pufferfish_bucket" : "item/pufferfish");
