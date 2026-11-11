@@ -5,21 +5,31 @@ package org.glavo.mcmod.pufferfish.worldgen;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.DecoratedPotBlockEntity;
+import net.minecraft.world.level.block.entity.PotDecorations;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.StructurePiece;
 import net.minecraft.world.level.levelgen.structure.pieces.StructurePieceSerializationContext;
+import net.minecraft.world.level.storage.loot.LootTable;
 import org.glavo.mcmod.pufferfish.AncientPrismarineBlockEntity;
 import org.glavo.mcmod.pufferfish.PufferfishBlocks;
+import org.glavo.mcmod.pufferfish.PufferfishPlease;
 
 public final class PufferfishRuinPiece extends StructurePiece {
+    public static final ResourceKey<LootTable> POT_LOOT_TABLE = ResourceKey.create(Registries.LOOT_TABLE,
+            PufferfishPlease.id("pots/pufferfish_ruin"));
+
     private final boolean ancient;
     private final long decorationSeed;
 
@@ -91,6 +101,23 @@ public final class PufferfishRuinPiece extends StructurePiece {
                 long lootSeed = decoration.nextLong();
                 if (box.isInside(treasure) && level.getBlockEntity(treasure) instanceof AncientPrismarineBlockEntity entity) {
                     entity.setLootTable(AncientPrismarineBlockEntity.LOOT_TABLE, lootSeed);
+                }
+            }
+        } else {
+            int count = 1 + decoration.nextInt(2);
+            int firstSide = decoration.nextInt(4);
+            for (int i = 0; i < count; i++) {
+                var side = Direction.from2DDataValue((firstSide + i * 2) % 4);
+                int x = 4 + side.getStepX() * 3, z = 4 + side.getStepZ() * 3;
+                placeBlock(level, Blocks.DECORATED_POT.defaultBlockState().setValue(BlockStateProperties.WATERLOGGED, true)
+                        .setValue(BlockStateProperties.HORIZONTAL_FACING, side), x, 5, z, box);
+                var potPos = getWorldPos(x, 5, z);
+                long lootSeed = decoration.nextLong();
+                if (box.isInside(potPos) && level.getBlockEntity(potPos) instanceof DecoratedPotBlockEntity pot) {
+                    pot.setFromItem(DecoratedPotBlockEntity.createDecoratedPotItem(new PotDecorations(
+                            Items.BRICK, Items.BRICK, Items.BRICK, Items.ANGLER_POTTERY_SHERD)));
+                    pot.setLootTable(POT_LOOT_TABLE, lootSeed);
+                    pot.setChanged();
                 }
             }
         }

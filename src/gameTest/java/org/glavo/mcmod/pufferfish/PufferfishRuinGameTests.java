@@ -4,6 +4,7 @@
 package org.glavo.mcmod.pufferfish;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
@@ -11,15 +12,22 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.biome.MultiNoiseBiomeSource;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.DecoratedPotBlockEntity;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
@@ -31,6 +39,10 @@ import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.levelgen.structure.pieces.StructurePieceSerializationContext;
 import net.minecraft.world.level.levelgen.structure.placement.RandomSpreadStructurePlacement;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.glavo.mcmod.pufferfish.worldgen.PufferfishRuinPiece;
@@ -161,8 +173,8 @@ public final class PufferfishRuinGameTests {
                     var block = level.getBlockState(pos);
                     helper.assertTrue(block.isAir() || block.is(Blocks.WATER) || block.is(Blocks.PRISMARINE)
                             || block.is(Blocks.PRISMARINE_BRICKS) || block.is(Blocks.DARK_PRISMARINE)
-                            || block.is(Blocks.SEA_LANTERN) || block.is(PufferfishBlocks.CONDUIT),
-                            "Ordinary ruin contains ancient stone or reward blocks");
+                            || block.is(Blocks.SEA_LANTERN) || block.is(Blocks.DECORATED_POT) || block.is(PufferfishBlocks.CONDUIT),
+                            "Ordinary ruin contains ancient stone or archaeology blocks");
                 }
             }
         }
@@ -202,5 +214,101 @@ public final class PufferfishRuinGameTests {
                 helper.succeed();
             });
         });
+    }
+
+    @GameTest(template = "empty")
+    public static void ordinaryPotsSurviveSplitGenerationAndReleaseLootWithoutChangingFrames(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var floor = helper.absolutePos(new BlockPos(2, 30, 2));
+        boolean single = false, pair = false;
+        for (long seed = 1; seed <= 8; seed++) {
+            var piece = new PufferfishRuinPiece(floor, false, seed);
+            var box = piece.getBoundingBox();
+            piece.postProcess(level, level.structureManager(), level.getChunkSource().getGenerator(), RandomSource.create(),
+                    box, new ChunkPos(floor), floor);
+            var pots = new HashMap<BlockPos, CompoundTag>();
+            for (var pos : BlockPos.betweenClosed(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ())) {
+                if (level.getBlockEntity(pos) instanceof DecoratedPotBlockEntity pot) {
+                    helper.assertTrue(pot.getBlockState().getValue(BlockStateProperties.WATERLOGGED)
+                            && pot.getDecorations().front().orElseThrow() == Items.ANGLER_POTTERY_SHERD,
+                            "Ruin pot is not waterlogged or lacks its fishing decoration");
+                    helper.assertTrue(PufferfishRuinPiece.POT_LOOT_TABLE.equals(pot.getLootTable()), "Ruin pot has no supply loot table");
+                    helper.assertTrue(pos.getY() == floor.getY() + 1 && level.getBlockState(pos.below()).isSolid(),
+                            "Ruin pot is not supported by the pedestal");
+                    pots.put(pos.immutable(), pot.saveWithFullMetadata(level.registryAccess()));
+                    pot.setLootTable(null);
+                }
+            }
+            helper.assertTrue(pots.size() >= 1 && pots.size() <= 2, "Ordinary ruin must contain one or two pots");
+            single |= pots.size() == 1;
+            pair |= pots.size() == 2;
+            for (var pos : BlockPos.betweenClosed(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ())) {
+                level.removeBlock(pos, false);
+            }
+            var restored = new PufferfishRuinPiece(piece.createTag(StructurePieceSerializationContext.fromLevel(level)));
+            for (var clip : List.of(new BoundingBox(floor.getX() + 1, box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ()),
+                    new BoundingBox(box.minX(), box.minY(), box.minZ(), floor.getX(), box.maxY(), box.maxZ()))) {
+                restored.postProcess(level, level.structureManager(), level.getChunkSource().getGenerator(), RandomSource.create(),
+                        clip, new ChunkPos(floor), floor);
+            }
+            for (var entry : pots.entrySet()) {
+                var pos = entry.getKey();
+                helper.assertTrue(level.getBlockEntity(pos) instanceof DecoratedPotBlockEntity pot
+                        && pot.saveWithFullMetadata(level.registryAccess()).equals(entry.getValue()),
+                        "Reloading or split generation changed a pot's decoration or loot seed");
+                var state = level.getBlockState(pos);
+                var loaded = (DecoratedPotBlockEntity) BlockEntity.loadStatic(pos, state, entry.getValue(), level.registryAccess());
+                level.setBlockEntity(loaded);
+                var preview = (DecoratedPotBlockEntity) BlockEntity.loadStatic(pos, state, entry.getValue(), level.registryAccess());
+                preview.setLevel(level);
+                var reward = preview.getTheItem().copy();
+                helper.assertTrue(!reward.isEmpty(), "Ruin pot resolved to empty loot");
+                level.setBlock(pos, state.setValue(BlockStateProperties.CRACKED, true), 2);
+                level.destroyBlock(pos, true);
+                var drops = level.getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(1.5));
+                int rewardCount = 0;
+                for (var drop : drops) {
+                    var stack = drop.getItem();
+                    if (ItemStack.isSameItemSameComponents(stack, reward)) rewardCount += stack.getCount();
+                    else helper.assertTrue(stack.is(Items.BRICK) || stack.is(Items.ANGLER_POTTERY_SHERD), "Pot dropped unexpected treasure");
+                    drop.discard();
+                }
+                helper.assertTrue(rewardCount == reward.getCount(), "Breaking an unopened pot lost or duplicated its supplies");
+            }
+            var frame = new ArrayList<BlockPos>();
+            helper.assertTrue(PufferfishConduitBlockEntity.updateFrame(level, floor.above(4), frame) && frame.size() == 42,
+                    "Breaking pots damaged the conduit frame");
+            for (var pos : BlockPos.betweenClosed(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ())) {
+                level.removeBlock(pos, false);
+            }
+        }
+        helper.assertTrue(single && pair, "Ruin seeds did not vary the pot count");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void potLootContainsSmallStacksOfOrdinarySupplies(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var params = new LootParams.Builder(level).withParameter(LootContextParams.ORIGIN,
+                helper.absolutePos(new BlockPos(2, 2, 2)).getCenter()).create(LootContextParamSets.CHEST);
+        var table = level.getServer().reloadableRegistries().getLootTable(PufferfishRuinPiece.POT_LOOT_TABLE);
+        var random = RandomSource.create(74392L);
+        var seen = new java.util.HashSet<net.minecraft.world.item.Item>();
+        int gold = 0;
+        for (int i = 0; i < 256; i++) {
+            var items = table.getRandomItems(params, random);
+            helper.assertTrue(items.size() == 1, "Pot loot must fit its single inventory slot");
+            var stack = items.getFirst();
+            boolean valid = stack.is(Items.PRISMARINE_SHARD) && stack.getCount() >= 2 && stack.getCount() <= 5
+                    || stack.is(Items.PRISMARINE_CRYSTALS) && stack.getCount() >= 1 && stack.getCount() <= 3
+                    || stack.is(Items.KELP) && stack.getCount() >= 3 && stack.getCount() <= 6
+                    || stack.is(Items.PUFFERFISH) && stack.getCount() >= 1 && stack.getCount() <= 2
+                    || stack.is(Items.GOLD_NUGGET) && stack.getCount() >= 1 && stack.getCount() <= 3;
+            helper.assertTrue(valid, "Pot loot contains excessive supplies or exclusive treasure");
+            seen.add(stack.getItem());
+            if (stack.is(Items.GOLD_NUGGET)) gold++;
+        }
+        helper.assertTrue(seen.size() == 5 && gold > 0 && gold < 32, "Supply variety or rare gold loot is missing");
+        helper.succeed();
     }
 }
