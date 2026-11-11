@@ -6,6 +6,7 @@ package org.glavo.mcmod.pufferfish;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
@@ -130,6 +131,7 @@ public final class PufferfishMobs {
         var food = stack.getFoodProperties(fish);
         if (food == null || food.nutrition() <= 0) return;
         if (fish.level() instanceof ServerLevel level) {
+            var crumbs = new ItemParticleOption(ParticleTypes.ITEM, stack.copyWithCount(1));
             fish.heal(food.nutrition());
             fish.setPersistenceRequired();
             if (!player.hasInfiniteMaterials()) {
@@ -138,7 +140,8 @@ public final class PufferfishMobs {
             }
             fish.playSound(SoundEvents.GENERIC_EAT, 1, 1);
             fish.gameEvent(GameEvent.EAT);
-            level.sendParticles(ParticleTypes.HEART, fish.getX(), fish.getY(0.5), fish.getZ(), 3, 0.15, 0.15, 0.15, 0);
+            var mouth = fish.getEyePosition().add(fish.getLookAngle().scale(fish.getBbWidth() * 0.5));
+            level.sendParticles(crumbs, mouth.x, mouth.y, mouth.z, 5, 0.08, 0.08, 0.08, 0.02);
         }
         event.setCancellationResult(InteractionResult.sidedSuccess(fish.level().isClientSide));
         event.setCanceled(true);
