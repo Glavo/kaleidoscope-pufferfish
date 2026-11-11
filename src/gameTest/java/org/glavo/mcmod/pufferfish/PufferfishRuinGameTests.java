@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -14,6 +15,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.biome.MultiNoiseBiomeSource;
@@ -109,11 +111,12 @@ public final class PufferfishRuinGameTests {
                 level.getServer().getStructureManager(), 74392L, new ChunkPos(0, 0), 0, level, structure.biomes()::contains);
     }
 
-    @GameTest(template = "empty", timeoutTicks = 100)
-    public static void generatedAltarsActivateAndContainArchaeology(GameTestHelper helper) {
+    @GameTest(template = "empty", timeoutTicks = 150)
+    public static void generatedAltarsSeparateMaterialsAndAncientRewards(GameTestHelper helper) {
         var level = helper.getLevel();
         var pieces = new ArrayList<PufferfishRuinPiece>();
         var cores = new ArrayList<BlockPos>();
+        var treasures = new ArrayList<BlockPos>();
         for (boolean ancient : new boolean[] {false, true}) {
             var floor = helper.absolutePos(new BlockPos(2, ancient ? 54 : 30, 2));
             var piece = new PufferfishRuinPiece(floor, ancient, 74392L);
@@ -134,13 +137,25 @@ public final class PufferfishRuinGameTests {
             var frame = new ArrayList<BlockPos>();
             helper.assertTrue(PufferfishConduitBlockEntity.updateFrame(level, corePos, frame) && frame.size() == 42,
                     "Generated altar does not have a complete submerged frame");
-            helper.assertTrue(frame.stream().anyMatch(pos -> level.getBlockState(pos).is(PufferfishBlocks.ANCIENT_PRISMARINE))
-                    && frame.stream().anyMatch(pos -> level.getBlockState(pos).is(Blocks.PRISMARINE)), "Frame materials are not mixed");
-            for (var treasure : List.of(floor.west(3), floor.east(3))) {
-                helper.assertTrue(level.getBlockEntity(treasure) instanceof AncientPrismarineBlockEntity, "Missing archaeology block");
-                var tag = level.getBlockEntity(treasure).saveWithFullMetadata(level.registryAccess());
-                helper.assertTrue(tag.getString("LootTable").equals(AncientPrismarineBlockEntity.LOOT_TABLE.location().toString()),
-                        "Generated archaeology has no treasure table");
+            if (ancient) {
+                helper.assertTrue(frame.stream().allMatch(pos -> level.getBlockState(pos).is(PufferfishConduitBlockEntity.ANCIENT_FRAME))
+                        && frame.stream().anyMatch(pos -> level.getBlockState(pos).is(PufferfishBlocks.SUSPICIOUS_ANCIENT_PRISMARINE)),
+                        "Ancient frame must mix ancient stone with brushable variants");
+                for (var treasure : List.of(floor.west(3), floor.east(3), corePos.west(2), corePos.east(2))) {
+                    treasures.add(treasure);
+                    helper.assertTrue(level.getBlockEntity(treasure) instanceof AncientPrismarineBlockEntity, "Missing archaeology block");
+                    var tag = level.getBlockEntity(treasure).saveWithFullMetadata(level.registryAccess());
+                    helper.assertTrue(tag.getString("LootTable").equals(AncientPrismarineBlockEntity.LOOT_TABLE.location().toString()),
+                            "Generated archaeology has no treasure table");
+                }
+            } else {
+                for (var pos : BlockPos.betweenClosed(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ())) {
+                    var block = level.getBlockState(pos);
+                    helper.assertTrue(block.isAir() || block.is(Blocks.WATER) || block.is(Blocks.PRISMARINE)
+                            || block.is(Blocks.PRISMARINE_BRICKS) || block.is(Blocks.DARK_PRISMARINE)
+                            || block.is(Blocks.SEA_LANTERN) || block.is(PufferfishBlocks.CONDUIT),
+                            "Ordinary ruin contains ancient stone or reward blocks");
+                }
             }
         }
         helper.runAfterDelay(45, () -> {
@@ -148,13 +163,24 @@ public final class PufferfishRuinGameTests {
                 helper.assertTrue(level.getBlockEntity(pos) instanceof PufferfishConduitBlockEntity core && core.isActive(),
                         "Generated conduit did not activate on its own");
             }
-            for (var piece : pieces) {
-                var box = piece.getBoundingBox();
-                for (var pos : BlockPos.betweenClosed(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ())) {
-                    level.removeBlock(pos, false);
-                }
+            var player = helper.makeMockPlayer(GameType.SURVIVAL);
+            for (var pos : treasures) {
+                var treasure = (AncientPrismarineBlockEntity) level.getBlockEntity(pos);
+                for (int i = 0; i < 10; i++) treasure.brush(level.getGameTime() + i * 10, player, Direction.UP);
+                helper.assertTrue(level.getBlockState(pos).is(PufferfishBlocks.ANCIENT_PRISMARINE), "Brushing did not restore ancient stone");
             }
-            helper.succeed();
+            helper.runAfterDelay(45, () -> {
+                for (var pos : cores) {
+                    helper.assertTrue(((PufferfishConduitBlockEntity) level.getBlockEntity(pos)).isActive(), "Brushing deactivated the core");
+                }
+                for (var piece : pieces) {
+                    var box = piece.getBoundingBox();
+                    for (var pos : BlockPos.betweenClosed(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ())) {
+                        level.removeBlock(pos, false);
+                    }
+                }
+                helper.succeed();
+            });
         });
     }
 }

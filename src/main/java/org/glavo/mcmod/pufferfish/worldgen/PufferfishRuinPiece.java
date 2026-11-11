@@ -47,44 +47,44 @@ public final class PufferfishRuinPiece extends StructurePiece {
     public void postProcess(WorldGenLevel level, StructureManager manager, ChunkGenerator generator, RandomSource random,
             BoundingBox box, ChunkPos chunk, BlockPos origin) {
         var decoration = RandomSource.create(decorationSeed);
+        var stone = ancient ? PufferfishBlocks.ANCIENT_PRISMARINE.get() : Blocks.PRISMARINE;
         for (int x = 0; x <= 8; x++) for (int z = 0; z <= 8; z++) {
             if (Math.abs(x - 4) + Math.abs(z - 4) > 6) continue;
             for (int y = 0; y < 4; y++) {
                 var existing = level.getBlockState(getWorldPos(x, y, z));
                 if (existing.isAir() || !existing.getFluidState().isEmpty()) {
-                    placeBlock(level, Blocks.PRISMARINE.defaultBlockState(), x, y, z, box);
+                    placeBlock(level, stone.defaultBlockState(), x, y, z, box);
                 }
             }
-            var floor = (x + z) % 3 == 0 ? PufferfishBlocks.ANCIENT_PRISMARINE.get() : Blocks.PRISMARINE_BRICKS;
+            var floor = ancient || (x + z) % 3 == 0 ? stone : Blocks.PRISMARINE_BRICKS;
             placeBlock(level, floor.defaultBlockState(), x, 4, z, box);
         }
         for (int x = 2; x <= 6; x++) for (int y = 6; y <= 10; y++) for (int z = 2; z <= 6; z++) {
             int dx = Math.abs(x - 4), dy = Math.abs(y - 8), dz = Math.abs(z - 4);
             boolean frame = dx == 0 && (dy == 2 || dz == 2) || dy == 0 && (dx == 2 || dz == 2)
                     || dz == 0 && (dx == 2 || dy == 2);
-            var block = !frame ? Blocks.WATER : switch (decoration.nextInt(4)) {
+            var block = !frame ? Blocks.WATER : ancient ? stone : switch (decoration.nextInt(3)) {
                 case 0 -> Blocks.PRISMARINE;
                 case 1 -> Blocks.PRISMARINE_BRICKS;
-                case 2 -> Blocks.DARK_PRISMARINE;
-                default -> PufferfishBlocks.ANCIENT_PRISMARINE.get();
+                default -> Blocks.DARK_PRISMARINE;
             };
             placeBlock(level, block.defaultBlockState(), x, y, z, box);
         }
-        placeBlock(level, PufferfishBlocks.ANCIENT_PRISMARINE.get().defaultBlockState(), 4, 10, 4, box);
-        placeBlock(level, Blocks.PRISMARINE.defaultBlockState(), 4, 6, 4, box);
         for (int x : new int[] {1, 7}) for (int z : new int[] {1, 7}) {
             int height = 1 + decoration.nextInt(3);
             for (int y = 5; y < 5 + height; y++) {
-                placeBlock(level, Blocks.DARK_PRISMARINE.defaultBlockState(), x, y, z, box);
+                placeBlock(level, (ancient ? stone : Blocks.DARK_PRISMARINE).defaultBlockState(), x, y, z, box);
             }
             placeBlock(level, Blocks.SEA_LANTERN.defaultBlockState(), x, 5 + height, z, box);
         }
-        for (int x : new int[] {1, 7}) {
-            placeBlock(level, PufferfishBlocks.SUSPICIOUS_ANCIENT_PRISMARINE.get().defaultBlockState(), x, 4, 4, box);
-            var treasure = getWorldPos(x, 4, 4);
-            long lootSeed = decoration.nextLong();
-            if (box.isInside(treasure) && level.getBlockEntity(treasure) instanceof AncientPrismarineBlockEntity entity) {
-                entity.setLootTable(AncientPrismarineBlockEntity.LOOT_TABLE, lootSeed);
+        if (ancient) {
+            for (var offset : new int[][] {{1, 4, 4}, {7, 4, 4}, {2, 8, 4}, {6, 8, 4}}) {
+                placeBlock(level, PufferfishBlocks.SUSPICIOUS_ANCIENT_PRISMARINE.get().defaultBlockState(), offset[0], offset[1], offset[2], box);
+                var treasure = getWorldPos(offset[0], offset[1], offset[2]);
+                long lootSeed = decoration.nextLong();
+                if (box.isInside(treasure) && level.getBlockEntity(treasure) instanceof AncientPrismarineBlockEntity entity) {
+                    entity.setLootTable(AncientPrismarineBlockEntity.LOOT_TABLE, lootSeed);
+                }
             }
         }
         var core = ancient ? PufferfishBlocks.ANCIENT_CONDUIT.get() : PufferfishBlocks.CONDUIT.get();
