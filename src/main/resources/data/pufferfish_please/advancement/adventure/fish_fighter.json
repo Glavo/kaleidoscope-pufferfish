@@ -1,0 +1,28 @@
+{
+  "parent": "pufferfish_please:adventure/root",
+  "display": {
+    "icon": {
+      "id": "minecraft:pufferfish"
+    },
+    "title": {
+      "translate": "advancements.pufferfish_please.fish_fighter.title"
+    },
+    "description": {
+      "translate": "advancements.pufferfish_please.fish_fighter.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "kill_with_pufferfish": {
+      "trigger": "pufferfish_please:kill_with_pufferfish"
+    }
+  },
+  "requirements": [
+    [
+      "kill_with_pufferfish"
+    ]
+  ]
+}

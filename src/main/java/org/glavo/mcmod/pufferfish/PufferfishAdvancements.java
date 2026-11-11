@@ -12,6 +12,7 @@ import net.minecraft.server.TickTask;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.item.FallingBlockEntity;
+import net.minecraft.world.entity.monster.Enemy;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.NeoForge;
@@ -20,6 +21,8 @@ import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.glavo.mcmod.pufferfish.entity.MaterialPufferfish;
+import org.glavo.mcmod.pufferfish.entity.PufferfishFlailHead;
+import org.glavo.mcmod.pufferfish.entity.ThrownPufferfish;
 
 public final class PufferfishAdvancements {
     private static final DeferredRegister<CriterionTrigger<?>> TRIGGERS = DeferredRegister.create(Registries.TRIGGER_TYPE, PufferfishPlease.MODID);
@@ -27,6 +30,7 @@ public final class PufferfishAdvancements {
     public static final DeferredHolder<CriterionTrigger<?>, PlayerTrigger> RESTORE_ANCIENT_CONDUIT = TRIGGERS.register("restore_ancient_conduit", PlayerTrigger::new);
     public static final DeferredHolder<CriterionTrigger<?>, PlayerTrigger> KILLED_BY_HEAVY_PUFFERFISH = TRIGGERS.register("killed_by_heavy_pufferfish", PlayerTrigger::new);
     public static final DeferredHolder<CriterionTrigger<?>, PlayerTrigger> EQUIP_CAT_ARMOR = TRIGGERS.register("equip_cat_armor", PlayerTrigger::new);
+    public static final DeferredHolder<CriterionTrigger<?>, PlayerTrigger> KILL_WITH_PUFFERFISH = TRIGGERS.register("kill_with_pufferfish", PlayerTrigger::new);
 
     private PufferfishAdvancements() {}
 
@@ -34,6 +38,22 @@ public final class PufferfishAdvancements {
         TRIGGERS.register(bus);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishAdvancements::placedFrame);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishAdvancements::killedByHeavyPufferfish);
+        NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishAdvancements::killedWithPufferfish);
+    }
+
+    private static void killedWithPufferfish(LivingDeathEvent event) {
+        var victim = event.getEntity();
+        var source = event.getSource();
+        if (event.isCanceled() || !(victim instanceof Enemy) || !(source.getEntity() instanceof ServerPlayer player)) return;
+        var direct = source.getDirectEntity();
+        boolean melee = source.is(DamageTypes.PLAYER_ATTACK) && direct == player && PufferfishItems.isWeapon(player.getMainHandItem());
+        boolean projectile = source.is(ThrownPufferfish.DAMAGE_TYPE)
+                && (direct instanceof ThrownPufferfish || direct instanceof PufferfishFlailHead);
+        if (!melee && !projectile) return;
+        // Credit only deaths that remain valid after all death listeners have run.
+        player.server.tell(new TickTask(player.server.getTickCount(), () -> {
+            if (!event.isCanceled() && victim.isDeadOrDying()) KILL_WITH_PUFFERFISH.get().trigger(player);
+        }));
     }
 
     private static void killedByHeavyPufferfish(LivingDeathEvent event) {

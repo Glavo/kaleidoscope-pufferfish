@@ -37,11 +37,82 @@ import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.glavo.mcmod.pufferfish.test.TestPlayers;
+import org.glavo.mcmod.pufferfish.entity.PufferfishFlailHead;
+import org.glavo.mcmod.pufferfish.entity.ThrownPufferfish;
 import org.glavo.mcmod.pufferfish.worldgen.PufferfishRuinPiece;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishAdvancementGameTests {
+    @GameTest(template = "empty")
+    public static void weaponProgressRequiresADirectHostileKill(GameTestHelper helper) {
+        var players = new java.util.LinkedHashMap<String, ServerPlayer>();
+        for (var mode : List.of("melee", "throw", "flail", "sword", "thorns", "poison", "wither", "passive", "canceled")) {
+            var player = player(helper);
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.PUFFERFISH));
+            var target = mode.equals("passive") ? helper.spawn(EntityType.COW, new BlockPos(2, 3, 4))
+                    : helper.spawn(EntityType.CREEPER, new BlockPos(2, 3, 4));
+            target.setNoAi(true);
+            target.setNoGravity(true);
+            target.setHealth(0.1F);
+            switch (mode) {
+                case "throw" -> {
+                    var fish = new ThrownPufferfish(helper.getLevel(), player);
+                    fish.setItem(PufferfishVariant.DYED.get(DyeColor.BLUE).fish());
+                    player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_SWORD));
+                    fish.setPos(target.getX(), target.getY() + 0.8, target.getZ() - 2);
+                    fish.setDeltaMovement(0, 0, 3);
+                    helper.getLevel().addFreshEntity(fish);
+                    fish.tick();
+                    fish.discard();
+                }
+                case "flail" -> {
+                    player.setItemInHand(InteractionHand.MAIN_HAND, PufferfishItems.HEAVY_FLAIL.toStack());
+                    var head = new PufferfishFlailHead(helper.getLevel(), player, InteractionHand.MAIN_HAND);
+                    head.setPos(target.getX(), target.getY() + 0.8, target.getZ() - 2);
+                    head.setDeltaMovement(0, 0, 3);
+                    helper.getLevel().addFreshEntity(head);
+                    head.tick();
+                    head.discard();
+                }
+                case "thorns" -> target.hurt(helper.getLevel().damageSources().thorns(player), 10);
+                case "poison", "wither" -> {
+                    target.setLastHurtByPlayer(player);
+                    target.hurt(mode.equals("poison") ? helper.getLevel().damageSources().magic()
+                            : helper.getLevel().damageSources().wither(), 10);
+                }
+                case "canceled" -> {
+                    java.util.function.Consumer<LivingDeathEvent> cancel = event -> {
+                        if (event.getEntity() == target) {
+                            event.setCanceled(true);
+                            target.setHealth(1);
+                        }
+                    };
+                    NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, cancel);
+                    try {
+                        player.attack(target);
+                    } finally {
+                        NeoForge.EVENT_BUS.unregister(cancel);
+                    }
+                }
+                default -> {
+                    if (mode.equals("sword")) player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_SWORD));
+                    player.attack(target);
+                }
+            }
+            helper.assertTrue(target.isDeadOrDying() != mode.equals("canceled"), "Unexpected death outcome: " + mode);
+            players.put(mode, player);
+        }
+        helper.runAfterDelay(2, () -> {
+            players.forEach((mode, player) -> {
+                boolean granted = List.of("melee", "throw", "flail").contains(mode);
+                helper.assertTrue(done(player, "fish_fighter") == granted, "Incorrect weapon kill progress: " + mode);
+                player.getAdvancements().stopListening();
+            });
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty")
     public static void heavyFishAndBothFallingBlocksGrantTheDeathAdvancement(GameTestHelper helper) {
         var level = helper.getLevel();
