@@ -1,0 +1,33 @@
+{
+  "parent": "pufferfish_please:adventure/pufferfish_trainer",
+  "display": {
+    "icon": {
+      "id": "pufferfish_please:diamond_pufferfish_bucket"
+    },
+    "title": {
+      "translate": "advancements.pufferfish_please.experienced_pufferfish_trainer.title"
+    },
+    "description": {
+      "translate": "advancements.pufferfish_please.experienced_pufferfish_trainer.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "capture": {
+      "trigger": "minecraft:filled_bucket",
+      "conditions": {
+        "item": {
+          "items": "#pufferfish_please:rare_pufferfish_buckets"
+        }
+      }
+    }
+  },
+  "requirements": [
+    [
+      "capture"
+    ]
+  ]
+}

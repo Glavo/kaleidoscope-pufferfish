@@ -16,6 +16,14 @@
     "background": "minecraft:textures/block/prismarine.png"
   },
   "criteria": {
+    "capture": {
+      "trigger": "minecraft:filled_bucket",
+      "conditions": {
+        "item": {
+          "items": "#pufferfish_please:pufferfish_buckets"
+        }
+      }
+    },
     "obtain": {
       "trigger": "minecraft:inventory_changed",
       "conditions": {
@@ -29,7 +37,8 @@
   },
   "requirements": [
     [
-      "obtain"
+      "obtain",
+      "capture"
     ]
   ]
 }

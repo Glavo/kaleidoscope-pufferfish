@@ -27,6 +27,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ChunkPos;
@@ -46,6 +47,73 @@ import org.glavo.mcmod.pufferfish.worldgen.PufferfishRuinPiece;
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishAdvancementGameTests {
+    @GameTest(template = "empty")
+    public static void ordinaryAndDyedCapturesGrantOnlyTheFirstTrainerRank(GameTestHelper helper) {
+        for (int color = -1; color < DyeColor.values().length; color++) {
+            var player = player(helper);
+            var fish = EntityType.PUFFERFISH.create(helper.getLevel());
+            if (color >= 0) PufferfishColors.set(fish, DyeColor.byId(color));
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.WATER_BUCKET));
+            fish.interact(player, InteractionHand.MAIN_HAND);
+            helper.assertTrue(fish.isRemoved() && player.getMainHandItem().is(Items.PUFFERFISH_BUCKET), "Pufferfish was not captured");
+            helper.assertTrue(done(player, "root") && done(player, "pufferfish_trainer"), "Capture did not unlock the root and trainer rank");
+            helper.assertTrue(!done(player, "experienced_pufferfish_trainer") && !done(player, "legendary_pufferfish_trainer"),
+                    "Ordinary or dyed pufferfish granted a higher trainer rank");
+            player.getAdvancements().stopListening();
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void materialCapturesGrantTheirRankAndAllLowerRanks(GameTestHelper helper) {
+        for (var variant : PufferfishMobs.VARIANTS.values()) {
+            var player = player(helper);
+            var fish = variant.entity().get().create(helper.getLevel());
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.WATER_BUCKET));
+            if (!fish.canCapture()) {
+                fish.interact(player, InteractionHand.MAIN_HAND);
+                helper.assertTrue(!fish.isRemoved() && player.getMainHandItem().is(Items.WATER_BUCKET), "Healthy fish was captured");
+                helper.assertTrue(!done(player, "root") && !done(player, "pufferfish_trainer")
+                                && !done(player, "experienced_pufferfish_trainer") && !done(player, "legendary_pufferfish_trainer"),
+                        "Failed capture granted progress");
+            }
+            fish.setHealth(1);
+            fish.interact(player, InteractionHand.MAIN_HAND);
+            helper.assertTrue(fish.isRemoved() && player.getMainHandItem().is(variant.bucket().get()), "Material fish was not captured");
+            helper.assertTrue(done(player, "root") && done(player, "pufferfish_trainer") && done(player, "experienced_pufferfish_trainer"),
+                    "Material capture did not grant all lower ranks: " + variant.entity().getId());
+            boolean elite = variant.fish() == PufferfishItems.HEAVY || variant.fish() == PufferfishItems.RADIANT;
+            helper.assertTrue(done(player, "legendary_pufferfish_trainer") == elite, "Incorrect legendary rank: " + variant.entity().getId());
+            helper.assertTrue(advancement(player, "legendary_pufferfish_trainer").value().display().orElseThrow().getType() == AdvancementType.CHALLENGE,
+                    "Legendary trainer is not a challenge");
+            player.getAdvancements().stopListening();
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void obtainingBucketsAndCapturingOtherFishDoNotGrantTrainerProgress(GameTestHelper helper) {
+        var player = player(helper);
+        var buckets = new java.util.ArrayList<ItemStack>();
+        buckets.add(new ItemStack(Items.PUFFERFISH_BUCKET));
+        for (var color : DyeColor.values()) buckets.add(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH_BUCKET), color));
+        PufferfishMobs.VARIANTS.values().forEach(variant -> buckets.add(variant.bucket().toStack()));
+        for (var bucket : buckets) {
+            CriteriaTriggers.INVENTORY_CHANGED.trigger(player, player.getInventory(), bucket);
+        }
+        CriteriaTriggers.RECIPE_CRAFTED.trigger(player, PufferfishPlease.id("bucket_pufferfish"),
+                List.of(new ItemStack(Items.PUFFERFISH), new ItemStack(Items.WATER_BUCKET)));
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.WATER_BUCKET));
+        var cod = EntityType.COD.create(helper.getLevel());
+        cod.interact(player, InteractionHand.MAIN_HAND);
+        helper.assertTrue(cod.isRemoved() && player.getMainHandItem().is(Items.COD_BUCKET), "Cod was not captured");
+        helper.assertTrue(!done(player, "root") && !done(player, "pufferfish_trainer")
+                        && !done(player, "experienced_pufferfish_trainer") && !done(player, "legendary_pufferfish_trainer"),
+                "Obtaining a bucket, crafting one, or capturing another fish granted trainer progress");
+        player.getAdvancements().stopListening();
+        helper.succeed();
+    }
+
     @GameTest(template = "empty")
     public static void collectionEquipmentEffectsAndBoatsUnlockTheirAdvancements(GameTestHelper helper) {
         var player = player(helper);

@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:pufferfish_bucket",
+    "#pufferfish_please:rare_pufferfish_buckets"
+  ]
+}
