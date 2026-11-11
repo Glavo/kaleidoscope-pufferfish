@@ -312,6 +312,9 @@ public final class MaterialPufferfish extends Pufferfish {
         if (!wax && !scrape) return super.mobInteract(player, hand);
         if (!level().isClientSide) {
             setFish(CopperPufferfish.convert(fish(), wax ? index + 4 : index >= 4 ? index - 4 : index - 1));
+            if (wax && player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                org.glavo.mcmod.pufferfish.PufferfishAdvancements.WAX_PUFFERFISH.get().trigger(serverPlayer);
+            }
             setPersistenceRequired();
             level().levelEvent(player, wax ? 3003 : index >= 4 ? 3004 : 3005, blockPosition(), 0);
             level().playSound(null, this, wax ? SoundEvents.HONEYCOMB_WAX_ON : index >= 4 ? SoundEvents.AXE_WAX_OFF : SoundEvents.AXE_SCRAPE,

@@ -1,0 +1,35 @@
+{
+  "parent": "pufferfish_please:adventure/ocean_visitor",
+  "display": {
+    "icon": {
+      "id": "pufferfish_please:ancient_pufferfish_conduit"
+    },
+    "title": {
+      "translate": "advancements.pufferfish_please.unfriendly_fish.title"
+    },
+    "description": {
+      "translate": "advancements.pufferfish_please.unfriendly_fish.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "visit": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": {
+          "location": {
+            "structures": "pufferfish_please:ancient_pufferfish_ruin"
+          }
+        }
+      }
+    }
+  },
+  "requirements": [
+    [
+      "visit"
+    ]
+  ]
+}

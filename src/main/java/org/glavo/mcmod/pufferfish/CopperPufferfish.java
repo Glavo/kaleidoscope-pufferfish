@@ -74,6 +74,9 @@ public final class CopperPufferfish {
         if (!wax && !scrape) return;
         if (!level.isClientSide()) {
             changePlaced(level, event.getPos(), wax ? index + 4 : index >= 4 ? index - 4 : index - 1);
+            if (wax && player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                PufferfishAdvancements.WAX_PUFFERFISH.get().trigger(serverPlayer);
+            }
             level.levelEvent(player, wax ? 3003 : index >= 4 ? 3004 : 3005, event.getPos(), 0);
             level.playSound(null, event.getPos(), wax ? net.minecraft.sounds.SoundEvents.HONEYCOMB_WAX_ON
                     : index >= 4 ? net.minecraft.sounds.SoundEvents.AXE_WAX_OFF : net.minecraft.sounds.SoundEvents.AXE_SCRAPE,

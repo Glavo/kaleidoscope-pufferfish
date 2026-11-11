@@ -1,0 +1,28 @@
+{
+  "parent": "pufferfish_please:adventure/unfriendly_fish",
+  "display": {
+    "icon": {
+      "id": "pufferfish_please:ancient_prismarine"
+    },
+    "title": {
+      "translate": "advancements.pufferfish_please.restored_glory.title"
+    },
+    "description": {
+      "translate": "advancements.pufferfish_please.restored_glory.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "restore": {
+      "trigger": "pufferfish_please:restore_ancient_conduit"
+    }
+  },
+  "requirements": [
+    [
+      "restore"
+    ]
+  ]
+}

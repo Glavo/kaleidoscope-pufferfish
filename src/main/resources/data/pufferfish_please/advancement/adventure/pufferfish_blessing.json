@@ -1,0 +1,33 @@
+{
+  "parent": "pufferfish_please:adventure/ocean_visitor",
+  "display": {
+    "icon": {
+      "id": "pufferfish_please:pufferfish_conduit"
+    },
+    "title": {
+      "translate": "advancements.pufferfish_please.pufferfish_blessing.title"
+    },
+    "description": {
+      "translate": "advancements.pufferfish_please.pufferfish_blessing.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "effect": {
+      "trigger": "minecraft:effects_changed",
+      "conditions": {
+        "effects": {
+          "pufferfish_please:pufferfish_power": {}
+        }
+      }
+    }
+  },
+  "requirements": [
+    [
+      "effect"
+    ]
+  ]
+}

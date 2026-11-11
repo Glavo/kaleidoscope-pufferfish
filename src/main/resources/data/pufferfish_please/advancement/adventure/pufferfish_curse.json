@@ -1,0 +1,33 @@
+{
+  "parent": "pufferfish_please:adventure/unfriendly_fish",
+  "display": {
+    "icon": {
+      "id": "pufferfish_please:oxidized_copper_pufferfish"
+    },
+    "title": {
+      "translate": "advancements.pufferfish_please.pufferfish_curse.title"
+    },
+    "description": {
+      "translate": "advancements.pufferfish_please.pufferfish_curse.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "effect": {
+      "trigger": "minecraft:effects_changed",
+      "conditions": {
+        "effects": {
+          "pufferfish_please:pufferfish_curse": {}
+        }
+      }
+    }
+  },
+  "requirements": [
+    [
+      "effect"
+    ]
+  ]
+}

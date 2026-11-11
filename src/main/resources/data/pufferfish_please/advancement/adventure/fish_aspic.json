@@ -1,0 +1,41 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "kaleidoscope_cookery"
+    }
+  ],
+  "parent": "pufferfish_please:adventure/root",
+  "display": {
+    "icon": {
+      "id": "pufferfish_please:pufferfish_aspic"
+    },
+    "title": {
+      "translate": "advancements.pufferfish_please.fish_aspic.title"
+    },
+    "description": {
+      "translate": "advancements.pufferfish_please.fish_aspic.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "pufferfish_please:pufferfish_aspic"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "obtain"
+    ]
+  ]
+}

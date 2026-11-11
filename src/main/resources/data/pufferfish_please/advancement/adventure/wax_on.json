@@ -1,0 +1,35 @@
+{
+  "parent": "pufferfish_please:adventure/root",
+  "display": {
+    "icon": {
+      "id": "pufferfish_please:waxed_copper_pufferfish"
+    },
+    "title": {
+      "translate": "advancements.pufferfish_please.wax_on.title"
+    },
+    "description": {
+      "translate": "advancements.pufferfish_please.wax_on.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "wax": {
+      "trigger": "pufferfish_please:wax_pufferfish"
+    },
+    "craft": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "pufferfish_please:wax_copper_pufferfish"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "wax",
+      "craft"
+    ]
+  ]
+}

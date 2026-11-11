@@ -136,6 +136,7 @@ public class PufferfishPlease {
             CreateIntegration.register(bus, container);
         }
         PufferfishItems.register(bus);
+        PufferfishAdvancements.register(bus);
         PufferfishEffects.register(bus);
         PufferfishMobs.register(bus);
         if (ModList.get().isLoaded("kaleidoscope_chinesefood")) {

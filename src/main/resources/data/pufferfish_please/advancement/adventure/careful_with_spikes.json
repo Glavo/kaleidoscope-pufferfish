@@ -1,0 +1,37 @@
+{
+  "parent": "pufferfish_please:adventure/root",
+  "display": {
+    "icon": {
+      "id": "minecraft:pufferfish"
+    },
+    "title": {
+      "translate": "advancements.pufferfish_please.careful_with_spikes.title"
+    },
+    "description": {
+      "translate": "advancements.pufferfish_please.careful_with_spikes.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "wear": {
+      "trigger": "minecraft:tick",
+      "conditions": {
+        "player": {
+          "equipment": {
+            "head": {
+              "items": "#pufferfish_please:pufferfish"
+            }
+          }
+        }
+      }
+    }
+  },
+  "requirements": [
+    [
+      "wear"
+    ]
+  ]
+}
