@@ -1,5 +1,5 @@
 {
-  "parent": "pufferfish_please:adventure/pufferfish_trainer",
+  "parent": "pufferfish_please:adventure/pufferfish_pump",
   "display": {
     "icon": {
       "id": "pufferfish_please:waxed_copper_pufferfish"
