@@ -133,6 +133,7 @@ public class PufferfishPlease {
             CreateIntegration.register(bus, container);
         }
         PufferfishItems.register(bus);
+        PufferfishEffects.register(bus);
         PufferfishMobs.register(bus);
         if (ModList.get().isLoaded("kaleidoscope_chinesefood")) {
             org.glavo.mcmod.pufferfish.compat.chinesefood.ChineseFoodIntegration.register(bus);

@@ -1,0 +1,9 @@
+{
+  "sources": [
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/poison",
+      "sprite": "pufferfish_please:lethal_toxin"
+    }
+  ]
+}

@@ -71,6 +71,11 @@ public final class PufferfishClientSmokeTest {
                 throw new IllegalStateException("Missing dyed pufferfish entity texture: " + color);
             }
         }
+        var toxinSprite = minecraft.getMobEffectTextures().get(PufferfishEffects.LETHAL_TOXIN);
+        if (!toxinSprite.contents().name().equals(PufferfishEffects.LETHAL_TOXIN.getId())
+                || PufferfishEffects.LETHAL_TOXIN.get().getDisplayName().getString().startsWith("effect.")) {
+            throw new IllegalStateException("Missing lethal toxin sprite or translation");
+        }
         PufferfishDyedTextureClientTest.verify(minecraft, phase == 1);
         verifySkin(minecraft, null);
         var upgradeTemplate = PufferfishItems.UPGRADE_TEMPLATE.toStack();

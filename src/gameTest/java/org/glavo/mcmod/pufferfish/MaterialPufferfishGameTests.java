@@ -103,6 +103,7 @@ public final class MaterialPufferfishGameTests {
     @GameTest(template = "empty")
     public static void materialThrowsKeepTheirItemAndShareCooldown(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setPos(helper.absoluteVec(new net.minecraft.world.phys.Vec3(2, 2, 2)));
         var allFish = new ArrayList<>(fish());
         allFish.addAll(List.of(Items.PUFFERFISH, PufferfishItems.NETHERITE.get(), PufferfishItems.HEAVY.get()));
         for (var item : allFish) {
@@ -111,7 +112,8 @@ public final class MaterialPufferfishGameTests {
             player.setItemInHand(InteractionHand.MAIN_HAND, stack);
             var event = new PlayerInteractEvent.RightClickItem(player, InteractionHand.MAIN_HAND);
             NeoForge.EVENT_BUS.post(event);
-            var projectiles = helper.getLevel().getEntitiesOfClass(ThrownPufferfish.class, player.getBoundingBox().inflate(4));
+            var projectiles = helper.getLevel().getEntitiesOfClass(ThrownPufferfish.class, player.getBoundingBox().inflate(4),
+                    projectile -> projectile.getOwner() == player);
             helper.assertTrue(event.isCanceled() && stack.getCount() == 1 && projectiles.size() == 1
                     && projectiles.getFirst().getItem().is(item) && projectiles.getFirst().getItem().getCount() == 1,
                     "Throwing lost the material fish identity or consumed the wrong quantity");
