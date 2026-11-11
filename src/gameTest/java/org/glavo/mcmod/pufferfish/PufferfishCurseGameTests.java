@@ -22,6 +22,7 @@ import net.minecraft.world.effect.MobEffectUtil;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
@@ -61,12 +62,18 @@ public final class PufferfishCurseGameTests {
             } finally {
                 buffer.release();
             }
+            var unempowered = player(helper, new ArrayList<>());
+            unempowered.hurt(unempowered.damageSources().mobAttack(fish), 1);
+            helper.assertTrue(unempowered.hasEffect(PufferfishEffects.PUFFERFISH_CURSE)
+                    && unempowered.getEffect(PufferfishEffects.PUFFERFISH_CURSE).getDuration() == 260,
+                    "Material fish required power to curse: " + variant.fish().getId());
         }
         var fish = PufferfishMobs.VARIANTS.get("copper_pufferfish").entity().get().create(helper.getLevel());
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         player.setPos(helper.absolutePos(new BlockPos(2, 82, 2)).getCenter());
         player.hurt(player.damageSources().mobAttack(fish), 1);
-        helper.assertTrue(!player.hasEffect(PufferfishEffects.PUFFERFISH_CURSE), "Unempowered player was cursed");
+        helper.assertTrue(player.hasEffect(PufferfishEffects.PUFFERFISH_CURSE), "Unempowered player was not cursed");
+        player.removeEffect(PufferfishEffects.PUFFERFISH_CURSE);
         player.addEffect(new MobEffectInstance(PufferfishEffects.PUFFERFISH_POWER, 260));
         helper.assertTrue(!player.hurt(player.damageSources().mobAttack(fish), 1), "Invulnerability fixture failed");
         helper.assertTrue(player.hasEffect(PufferfishEffects.PUFFERFISH_POWER), "Rejected attack converted power");
@@ -75,11 +82,41 @@ public final class PufferfishCurseGameTests {
         helper.assertTrue(player.hasEffect(PufferfishEffects.PUFFERFISH_POWER), "Thorns converted power");
         player.invulnerableTime = 0;
         player.hurt(player.damageSources().mobAttack(EntityType.PUFFERFISH.create(helper.getLevel())), 1);
-        helper.assertTrue(player.hasEffect(PufferfishEffects.PUFFERFISH_POWER), "Ordinary fish converted power");
+        helper.assertTrue(player.hasEffect(PufferfishEffects.PUFFERFISH_CURSE)
+                && !player.hasEffect(PufferfishEffects.PUFFERFISH_POWER), "Ordinary fish did not convert power");
+        player.removeEffect(PufferfishEffects.PUFFERFISH_CURSE);
         player.invulnerableTime = 0;
         player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 260));
         player.hurt(player.damageSources().mobAttack(fish), 1);
-        helper.assertTrue(player.hasEffect(PufferfishEffects.PUFFERFISH_CURSE), "Absorbed attack did not convert power");
+        helper.assertTrue(player.hasEffect(PufferfishEffects.PUFFERFISH_CURSE), "Absorbed attack did not curse an unempowered player");
+        helper.getLevel().removeBlock(ancient, false);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void ordinaryAndDyedFishStingsCurseWithoutPower(GameTestHelper helper) {
+        var ancient = ancientAura(helper);
+        var colors = DyeColor.values();
+        for (int i = -1; i < colors.length; i++) {
+            var packets = new ArrayList<Packet<?>>();
+            var player = player(helper, packets);
+            var fish = EntityType.PUFFERFISH.create(helper.getLevel());
+            fish.setPuffState(2);
+            if (i >= 0) PufferfishColors.set(fish, colors[i]);
+            fish.playerTouch(player);
+            var curse = player.getEffect(PufferfishEffects.PUFFERFISH_CURSE);
+            helper.assertTrue(curse != null && curse.getDuration() == 260 && curse.getAmplifier() == 0,
+                    "Ordinary or dyed fish sting did not curse an unempowered player");
+            helper.assertTrue(apparitions(packets) == 1, "Fish sting did not send exactly one apparition");
+            var packet = packets.stream().filter(value -> value instanceof ClientboundLevelParticlesPacket particle
+                    && particle.getParticle().getType() == PufferfishEffects.CURSE_APPEARANCE.get()).findFirst().orElseThrow();
+            var appearance = ((net.minecraft.core.particles.ItemParticleOption) ((ClientboundLevelParticlesPacket) packet).getParticle()).getItem();
+            helper.assertTrue(appearance.is(Items.PUFFERFISH) && PufferfishColors.get(appearance) == (i < 0 ? null : colors[i]),
+                    "Curse apparition lost the attacking fish color");
+        }
+        var player = player(helper, new ArrayList<>());
+        player.hurt(player.damageSources().mobAttack(EntityType.ZOMBIE.create(helper.getLevel())), 1);
+        helper.assertTrue(!player.hasEffect(PufferfishEffects.PUFFERFISH_CURSE), "Non-pufferfish attack triggered a curse");
         helper.getLevel().removeBlock(ancient, false);
         helper.succeed();
     }
