@@ -118,7 +118,7 @@ neoForge {
 }
 
 // Development-only dependencies are excluded from published dependency metadata.
-val localRuntime by configurations.creating
+val localRuntime = configurations.create("localRuntime")
 configurations.runtimeClasspath {
     extendsFrom(localRuntime)
 }
@@ -147,10 +147,6 @@ dependencies {
     if (providers.gradleProperty("include_farmers_delight").get().toBoolean()) {
         localRuntime(farmersDelight)
     }
-
-    testImplementation(platform("org.junit:junit-bom:6.0.0"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 val metadataProperties = listOf(
@@ -159,7 +155,7 @@ val metadataProperties = listOf(
     "kaleidoscope_cookery_version_range", "farmers_delight_version_range", "create_version_range"
 ).associateWith { providers.gradleProperty(it).get() }
 
-val generateModMetadata by tasks.registering(ProcessResources::class) {
+val generateModMetadata = tasks.register<ProcessResources>("generateModMetadata") {
     inputs.properties(metadataProperties)
     expand(metadataProperties)
     from("src/main/templates")
@@ -578,10 +574,6 @@ publishing {
 
 tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
-}
-
-tasks.test {
-    useJUnitPlatform()
 }
 
 tasks.jar {
