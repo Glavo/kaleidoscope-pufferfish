@@ -93,12 +93,8 @@ public class PufferfishPlease {
                             .forEach(variant -> output.accept(variant.fish()));
                     for (var color : DyeColor.values()) {
                         output.accept(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH_BUCKET), color));
-                        output.accept(PufferfishMobs.dyedEgg(color));
                     }
-                    PufferfishMobs.VARIANTS.values().forEach(variant -> {
-                        output.accept(variant.bucket());
-                        output.accept(variant.egg());
-                    });
+                    PufferfishMobs.VARIANTS.values().forEach(variant -> output.accept(variant.bucket()));
                     output.accept(PufferfishItems.SASHIMI);
                     output.accept(PufferfishItems.BRAISED);
                     output.accept(PufferfishItems.BRAISED_RICE_BOWL);

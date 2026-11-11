@@ -36,9 +36,7 @@ final class PufferfishSpawnEggClientTest {
             }
             for (int layer = 0; layer < 2; layer++) {
                 int color = minecraft.getItemColors().getColor(egg, layer);
-                var dye = egg.get(PufferfishPlease.COLOR.get());
-                int expected = dye == null ? ((SpawnEggItem) egg.getItem()).getColor(layer)
-                        : layer == 0 ? dye.getTextureDiffuseColor() : 0xFFF0D5;
+                int expected = ((SpawnEggItem) egg.getItem()).getColor(layer);
                 int tint = layer;
                 if (FastColor.ARGB32.alpha(color) != 255 || (color & 0xFFFFFF) != (expected & 0xFFFFFF)
                         || quads.stream().noneMatch(quad -> quad.isTinted() && quad.getTintIndex() == tint)) {
