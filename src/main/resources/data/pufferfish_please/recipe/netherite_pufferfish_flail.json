@@ -1,0 +1,21 @@
+{
+  "type": "pufferfish_please:pufferfish_flail",
+  "category": "equipment",
+  "pattern": [
+    "  F",
+    " C ",
+    "C  "
+  ],
+  "key": {
+    "F": {
+      "item": "pufferfish_please:netherite_pufferfish"
+    },
+    "C": {
+      "item": "minecraft:chain"
+    }
+  },
+  "result": {
+    "id": "pufferfish_please:netherite_pufferfish_flail",
+    "count": 1
+  }
+}

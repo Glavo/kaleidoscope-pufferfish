@@ -1,12 +1,12 @@
 {
   "replace": false,
   "values": [
-    "kaleidoscope_pufferfish:braised_pufferfish",
-    "kaleidoscope_pufferfish:braised_pufferfish_rice_bowl",
-    "kaleidoscope_pufferfish:pufferfish_zosui",
-    "kaleidoscope_pufferfish:pufferfish_baozi",
+    "pufferfish_please:braised_pufferfish",
+    "pufferfish_please:braised_pufferfish_rice_bowl",
+    "pufferfish_please:pufferfish_zosui",
+    "pufferfish_please:pufferfish_baozi",
     {
-      "id": "kaleidoscope_pufferfish:pufferfish_stargazy_pie",
+      "id": "pufferfish_please:pufferfish_stargazy_pie",
       "required": false
     }
   ]

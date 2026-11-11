@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:block",
+  "pools": [{
+    "rolls": 1,
+    "entries": [{"type": "minecraft:item", "name": "pufferfish_please:pufferfish_conduit"}],
+    "conditions": [{"condition": "minecraft:survives_explosion"}]
+  }]
+}

@@ -1,0 +1,29 @@
+{
+  "required": true,
+  "package": "org.glavo.mcmod.pufferfish.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "PufferfishBoatBuoyancyMixin",
+    "LegacyPufferfishDataMixin",
+    "ChoppingBoardMixin",
+    "AbstractFishMixin",
+    "MaterialPufferfishMixin",
+    "PufferfishPuffGoalMixin",
+    "EntityTypeMixin",
+    "PufferfishEquipmentMixin",
+    "PufferfishRepairRecipeMixin",
+    "PufferfishSmashMixin"
+  ],
+  "client": [
+    "FallingPufferfishRendererMixin",
+    "PufferfishBoatSpeedMixin",
+    "PufferfishRendererMixin",
+    "PufferfishHeadLayerMixin",
+    "PufferfishHandLayerMixin",
+    "RadiantPufferfishItemMixin",
+    "PufferfishFlailArmMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

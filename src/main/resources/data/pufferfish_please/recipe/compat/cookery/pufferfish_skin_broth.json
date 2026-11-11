@@ -1,0 +1,15 @@
+{
+  "neoforge:conditions": [
+    {"type": "neoforge:mod_loaded", "modid": "kaleidoscope_cookery"},
+    {"type": "neoforge:mod_loaded", "modid": "kaleidoscope_chinesefood"}
+  ],
+  "type": "kaleidoscope_cookery:stockpot",
+  "ingredients": [
+    {"tag": "pufferfish_please:edible_pufferfish_skins"},
+    {"tag": "pufferfish_please:edible_pufferfish_skins"}
+  ],
+  "soup_base": "minecraft:water",
+  "result": {"id": "pufferfish_please:pufferfish_skin_broth", "count": 1},
+  "time": 1200,
+  "carrier": {"item": "minecraft:bowl"}
+}

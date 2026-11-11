@@ -1,0 +1,35 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "kaleidoscope_cookery"
+    }
+  ],
+  "type": "kaleidoscope_cookery:flex_stockpot",
+  "ingredients": [
+    {
+      "tag": "c:foods/raw_pufferfish"
+    },
+    {
+      "tag": "c:foods/raw_pufferfish"
+    },
+    {
+      "tag": "c:foods/raw_pufferfish"
+    },
+    {
+      "tag": "c:crops/lettuce"
+    },
+    [
+      {
+        "tag": "c:crops/rice"
+      },
+      {
+        "tag": "c:grain/rice"
+      }
+    ]
+  ],
+  "result": {
+    "id": "pufferfish_please:pufferfish_zosui",
+    "count": 1
+  }
+}

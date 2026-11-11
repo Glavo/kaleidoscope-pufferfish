@@ -1,0 +1,10 @@
+{
+  "neoforge:conditions": [
+    {"type": "neoforge:mod_loaded", "modid": "kaleidoscope_cookery"},
+    {"type": "neoforge:mod_loaded", "modid": "kaleidoscope_chinesefood"}
+  ],
+  "type": "pufferfish_please:refrigerating_pufferfish_aspic",
+  "input": {"item": "pufferfish_please:pufferfish_skin_broth"},
+  "output": {"id": "pufferfish_please:pufferfish_aspic", "count": 1},
+  "base_time": 2400
+}

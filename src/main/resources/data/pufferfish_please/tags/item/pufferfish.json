@@ -1,0 +1,20 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:pufferfish",
+    "pufferfish_please:netherite_pufferfish",
+    "pufferfish_please:radiant_pufferfish",
+    "pufferfish_please:heavy_pufferfish",
+    "pufferfish_please:copper_pufferfish",
+    "pufferfish_please:waxed_copper_pufferfish",
+    "pufferfish_please:exposed_copper_pufferfish",
+    "pufferfish_please:waxed_exposed_copper_pufferfish",
+    "pufferfish_please:weathered_copper_pufferfish",
+    "pufferfish_please:waxed_weathered_copper_pufferfish",
+    "pufferfish_please:oxidized_copper_pufferfish",
+    "pufferfish_please:waxed_oxidized_copper_pufferfish",
+    "pufferfish_please:iron_pufferfish",
+    "pufferfish_please:diamond_pufferfish",
+    "pufferfish_please:golden_pufferfish"
+  ]
+}

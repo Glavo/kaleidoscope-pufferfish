@@ -1,0 +1,6 @@
+{
+  "parent": "pufferfish_please:item/pufferfish_baozi_steamer",
+  "textures": {
+    "bun": "pufferfish_please:item/raw_pufferfish_baozi"
+  }
+}

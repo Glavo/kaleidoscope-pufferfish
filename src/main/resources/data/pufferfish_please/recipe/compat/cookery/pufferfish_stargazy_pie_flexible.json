@@ -1,0 +1,24 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "kaleidoscope_cookery"
+    }
+  ],
+  "type": "kaleidoscope_cookery:flex_pot",
+  "ingredients": [
+    {
+      "item": "minecraft:pumpkin_pie"
+    },
+    {
+      "item": "minecraft:pufferfish"
+    }
+  ],
+  "carrier": {
+    "item": "minecraft:bowl"
+  },
+  "result": {
+    "id": "pufferfish_please:pufferfish_stargazy_pie",
+    "count": 1
+  }
+}

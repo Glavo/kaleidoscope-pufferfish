@@ -1,0 +1,21 @@
+{
+  "type": "pufferfish_please:pufferfish_flail",
+  "category": "equipment",
+  "pattern": [
+    "  F",
+    " C ",
+    "C  "
+  ],
+  "key": {
+    "F": {
+      "item": "minecraft:pufferfish"
+    },
+    "C": {
+      "item": "minecraft:chain"
+    }
+  },
+  "result": {
+    "id": "pufferfish_please:pufferfish_flail",
+    "count": 1
+  }
+}

@@ -1,7 +1,0 @@
-{
-  "type": "kaleidoscope_pufferfish:netherite_pufferfish_upgrade",
-  "template": {"item": "minecraft:netherite_upgrade_smithing_template"},
-  "base": {"item": "kaleidoscope_pufferfish:diamond_pufferfish"},
-  "addition": {"item": "minecraft:netherite_ingot"},
-  "result": {"id": "kaleidoscope_pufferfish:netherite_pufferfish", "count": 1}
-}

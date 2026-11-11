@@ -1,0 +1,10 @@
+{
+  "type": "pufferfish_please:material_pufferfish",
+  "category": "misc",
+  "pattern": ["GGG", "GPG", "GGG"],
+  "key": {
+    "G": {"item": "minecraft:gold_ingot"},
+    "P": {"item": "minecraft:pufferfish"}
+  },
+  "result": {"id": "pufferfish_please:golden_pufferfish", "count": 1}
+}

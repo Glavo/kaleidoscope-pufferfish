@@ -83,7 +83,7 @@ neoForge {
                 "--height", providers.gradleProperty("clientHeight").getOrElse("720")
             )
             systemProperty("neoforge.enabledGameTestNamespaces", modId)
-            systemProperty("kaleidoscope_pufferfish.clientSmokeTest", providers.gradleProperty("client_smoke_test").getOrElse("false"))
+            systemProperty("pufferfish_please.clientSmokeTest", providers.gradleProperty("client_smoke_test").getOrElse("false"))
         }
         create("server") {
             server()

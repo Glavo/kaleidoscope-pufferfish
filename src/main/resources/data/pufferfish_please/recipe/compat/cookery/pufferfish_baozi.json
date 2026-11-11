@@ -1,0 +1,17 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "kaleidoscope_cookery"
+    }
+  ],
+  "type": "kaleidoscope_cookery:steamer",
+  "ingredient": {
+    "item": "pufferfish_please:raw_pufferfish_baozi"
+  },
+  "result": {
+    "id": "pufferfish_please:pufferfish_baozi",
+    "count": 1
+  },
+  "cook_tick": 1200
+}

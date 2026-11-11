@@ -1,0 +1,40 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "farmersdelight"
+    }
+  ],
+  "type": "farmersdelight:cutting",
+  "ingredients": [
+    {
+      "item": "pufferfish_please:golden_pufferfish"
+    }
+  ],
+  "result": [
+    {
+      "item": {
+        "id": "pufferfish_please:pufferfish_sashimi",
+        "count": 1
+      }
+    },
+    {
+      "item": {
+        "id": "pufferfish_please:golden_pufferfish_skin",
+        "count": 1
+      }
+    }
+  ],
+  "tool": [
+    {
+      "type": "farmersdelight:item_ability",
+      "action": "knife_dig"
+    },
+    {
+      "tag": "c:tools/knife"
+    },
+    {
+      "tag": "kaleidoscope_cookery:kitchen_knife"
+    }
+  ]
+}

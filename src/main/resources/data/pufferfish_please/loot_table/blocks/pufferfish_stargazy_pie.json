@@ -1,0 +1,43 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "kaleidoscope_cookery"
+    }
+  ],
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:alternatives",
+          "children": [
+            {
+              "type": "minecraft:item",
+              "name": "pufferfish_please:pufferfish_stargazy_pie",
+              "conditions": [
+                {
+                  "condition": "minecraft:block_state_property",
+                  "block": "pufferfish_please:pufferfish_stargazy_pie",
+                  "properties": {
+                    "bites": "0"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "minecraft:item",
+              "name": "minecraft:bowl"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
