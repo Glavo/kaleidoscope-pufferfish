@@ -158,7 +158,7 @@ val metadataProperties = listOf(
 val generateModMetadata = tasks.register<ProcessResources>("generateModMetadata") {
     inputs.properties(metadataProperties)
     expand(metadataProperties)
-    from("src/main/templates")
+    from("src/main/templates/metadata")
     into(layout.buildDirectory.dir("generated/sources/modMetadata"))
 }
 
@@ -174,7 +174,7 @@ val generateItemModels = tasks.register<Sync>("generateItemModels") {
     filteringCharset = "UTF-8"
     into(layout.buildDirectory.dir("generated/resources/itemModels"))
     for (modelName in modelNames) {
-        from("src/main/modelTemplates/item.json") {
+        from("src/main/templates/models/item.json") {
             expand("texture" to "$modId:item/$modelName")
             into("assets/$modId/models/item")
             rename { "$modelName.json" }
@@ -205,22 +205,22 @@ val generateSkinResources = tasks.register<Sync>("generateSkinResources") {
         )
         inputs.property(skinName, properties)
         for ((template, target) in mapOf(
-            "skinTemplates/blockstate" to "assets/$modId/blockstates/$skinName.json",
-            "skinTemplates/item_model" to "assets/$modId/models/item/$skinName.json",
-            "skinTemplates/loot" to "data/$modId/loot_table/blocks/$skinName.json",
-            "skinTemplates/block_model" to "assets/$modId/models/block/$skinName.json",
-            "skinTemplates/cutting" to "data/$modId/recipe/cutting/$skinName.json",
-            "skinTemplates/chopping" to "data/$modId/recipe/chopping/$skinName.json",
-            "skinTemplates/pressing" to "data/$modId/recipe/pressing/$skinName.json"
+            "skins/blockstate" to "assets/$modId/blockstates/$skinName.json",
+            "skins/item_model" to "assets/$modId/models/item/$skinName.json",
+            "skins/loot" to "data/$modId/loot_table/blocks/$skinName.json",
+            "skins/block_model" to "assets/$modId/models/block/$skinName.json",
+            "skins/cutting" to "data/$modId/recipe/cutting/$skinName.json",
+            "skins/chopping" to "data/$modId/recipe/chopping/$skinName.json",
+            "skins/pressing" to "data/$modId/recipe/pressing/$skinName.json"
         )) {
-            from("src/main/$template.json") {
+            from("src/main/templates/$template.json") {
                 expand(properties)
                 into(target.substringBeforeLast('/'))
                 rename { target.substringAfterLast('/') }
             }
         }
         for (stage in 0..3) {
-            from("src/main/skinTemplates/chopping_stage_$stage.json") {
+            from("src/main/templates/skins/chopping_stage_$stage.json") {
                 expand(properties)
                 into("assets/$modId/models/chopping_board/$skinName")
                 rename { "$stage.json" }
@@ -234,7 +234,7 @@ val generateSkinResources = tasks.register<Sync>("generateSkinResources") {
         "loot" to "data/$modId/loot_table/blocks/golden_pufferfish_skin.json",
         "pressing" to "data/$modId/recipe/pressing/golden_pufferfish_skin.json"
     )) {
-        from("src/main/skinTemplates/$template.json") {
+        from("src/main/templates/skins/$template.json") {
             expand("modId" to modId, "blockName" to "golden_pufferfish_skin",
                 "blockId" to "$modId:golden_pufferfish_skin",
                 "ingredient" to JsonOutput.toJson(mapOf("item" to "$modId:golden_pufferfish")))
@@ -249,7 +249,7 @@ val generateSkinResources = tasks.register<Sync>("generateSkinResources") {
     )
     inputs.property("goldenChopping", goldenChoppingProperties)
     for (stage in 0..3) {
-        from("src/main/skinTemplates/chopping_stage_$stage.json") {
+        from("src/main/templates/skins/chopping_stage_$stage.json") {
             expand(goldenChoppingProperties)
             into("assets/$modId/models/chopping_board/golden_pufferfish")
             rename { "$stage.json" }
@@ -306,7 +306,7 @@ val generateShieldResources = tasks.register<Sync>("generateShieldResources") {
             "blocking" to "assets/$modId/models/item/${shieldName}_blocking.json",
             "advancement" to "data/$modId/advancement/recipes/combat/$shieldName.json"
         )) {
-            from("src/main/shieldTemplates/$template.json") {
+            from("src/main/templates/shields/$template.json") {
                 expand("modId" to modId, "skinName" to skinName, "shieldName" to shieldName)
                 into(target.substringBeforeLast('/'))
                 rename { target.substringAfterLast('/') }
@@ -337,7 +337,7 @@ val generateArmorResources = tasks.register<Sync>("generateArmorResources") {
                 "model" to "assets/$modId/models/item/$armorName.json",
                 "advancement" to "data/$modId/advancement/recipes/combat/$armorName.json"
             )) {
-                from("src/main/armorTemplates/$template.json") {
+                from("src/main/templates/armor/$template.json") {
                     expand("modId" to modId, "skinName" to skinName, "armorName" to armorName,
                         "armorType" to armorType, "pattern" to JsonOutput.toJson(pattern))
                     into(target.substringBeforeLast('/'))
@@ -347,7 +347,7 @@ val generateArmorResources = tasks.register<Sync>("generateArmorResources") {
         }
     }
     for ((armorType, slot) in mapOf("helmet" to "head", "chestplate" to "chest", "leggings" to "leg", "boots" to "foot")) {
-        from("src/main/armorTemplates/tag.json") {
+        from("src/main/templates/armor/tag.json") {
             expand("values" to JsonOutput.toJson((allSkinVariants).map { color ->
                 val prefix = if (color.isEmpty()) "" else "${color}_"
                 "$modId:${prefix}pufferfish_skin_$armorType"
@@ -372,7 +372,7 @@ val generateBoatResources = tasks.register<Sync>("generateBoatResources") {
             "model" to "assets/$modId/models/item/$boatName.json",
             "advancement" to "data/$modId/advancement/recipes/transportation/$boatName.json"
         )) {
-            from("src/main/boatTemplates/$template.json") {
+            from("src/main/templates/boats/$template.json") {
                 expand("modId" to modId, "skinName" to skinName, "boatName" to boatName)
                 into(target.substringBeforeLast('/'))
                 rename { target.substringAfterLast('/') }
@@ -417,7 +417,7 @@ val generatePieModels = tasks.register<Sync>("generatePieModels") {
     for (bites in 0..4) {
         val elements = JsonOutput.toJson(plate + portions.drop(bites).flatten())
         inputs.property("elements$bites", elements)
-        from("src/main/modelTemplates/pufferfish_pie.json") {
+        from("src/main/templates/models/pufferfish_pie.json") {
             expand("modId" to modId, "elements" to elements)
             into("assets/$modId/models/block")
             rename { "pufferfish_stargazy_pie_$bites.json" }
@@ -447,7 +447,7 @@ val generateAspicModels = tasks.register<Sync>("generateAspicModels") {
     for (bites in 0..4) {
         val elements = JsonOutput.toJson(bowl + portions.drop(bites).flatten())
         inputs.property("elements$bites", elements)
-        from("src/main/modelTemplates/pufferfish_aspic.json") {
+        from("src/main/templates/models/pufferfish_aspic.json") {
             expand("modId" to modId, "elements" to elements)
             into("assets/$modId/models/block")
             rename { "pufferfish_aspic_$bites.json" }
@@ -456,7 +456,7 @@ val generateAspicModels = tasks.register<Sync>("generateAspicModels") {
     val broth = JsonOutput.toJson(bowl + listOf(box(3.0, 2.0, 3.0, 10.0, 1.4, 10.0, 2),
         box(4.0, 3.4, 5.0, 3.0, 0.1, 1.5, 5), box(8.0, 3.4, 8.0, 3.0, 0.1, 2.0, 6)))
     inputs.property("broth", broth)
-    from("src/main/modelTemplates/pufferfish_aspic.json") {
+    from("src/main/templates/models/pufferfish_aspic.json") {
         expand("modId" to modId, "elements" to broth)
         into("assets/$modId/models/block")
         rename { "pufferfish_skin_broth.json" }
@@ -483,7 +483,7 @@ val generateLampResources = tasks.register<Sync>("generateLampResources") {
             "block_model" to "assets/$modId/models/block/$lampName.json",
             "item_model" to "assets/$modId/models/item/$lampName.json"
         )) {
-            from("src/main/lampTemplates/$template.json") {
+            from("src/main/templates/lamps/$template.json") {
                 expand("modId" to modId, "lampName" to lampName, "ingredient" to JsonOutput.toJson(ingredient),
                     "fishTexture" to (if (variant.isEmpty()) "minecraft:item/pufferfish" else "$modId:item/${fishName.removePrefix("waxed_")}"))
                 into(target.substringBeforeLast('/'))
@@ -506,7 +506,7 @@ val generateFlailResources = tasks.register<Sync>("generateFlailResources") {
             "advancement" to "data/$modId/advancement/recipes/combat/$flailName.json",
             "model" to "assets/$modId/models/item/$flailName.json"
         )) {
-            from("src/main/flailTemplates/$template.json") {
+            from("src/main/templates/flails/$template.json") {
                 expand("modId" to modId, "fishName" to fishName, "flailName" to flailName,
                     "textureName" to fishName.removePrefix("waxed_"))
                 into(target.substringBeforeLast('/'))
@@ -522,12 +522,12 @@ val generateMaterialFishRecipes = tasks.register<Sync>("generateMaterialFishReci
     filteringCharset = "UTF-8"
     into(layout.buildDirectory.dir("generated/resources/materialFish"))
     for ((name, ingredient) in materials) {
-        from("src/main/materialFishTemplates/recipe.json") {
+        from("src/main/templates/material_fish/recipe.json") {
             expand("modId" to modId, "name" to name, "ingredient" to ingredient)
             into("data/$modId/recipe")
             rename { "${name}_pufferfish.json" }
         }
-        from("src/main/materialFishTemplates/advancement.json") {
+        from("src/main/templates/material_fish/advancement.json") {
             expand("modId" to modId, "name" to name)
             into("data/$modId/advancement/recipes/combat")
             rename { "${name}_pufferfish.json" }
