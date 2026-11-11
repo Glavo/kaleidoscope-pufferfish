@@ -107,68 +107,8 @@ public final class PufferfishAdvancementGameTests {
             players.forEach((mode, player) -> {
                 boolean granted = List.of("melee", "throw", "flail").contains(mode);
                 helper.assertTrue(done(player, "fish_fighter") == granted, "Incorrect weapon kill progress: " + mode);
-                helper.assertTrue(!done(player, "tetanus"), "Unrelated or indirect damage granted tetanus progress: " + mode);
-                helper.assertTrue(!done(player, "diamond_persuasion"), "Unrelated or indirect damage granted diamond progress: " + mode);
                 player.getAdvancements().stopListening();
             });
-            helper.succeed();
-        });
-    }
-
-    @GameTest(template = "empty")
-    public static void materialKillProgressUsesTheKillingWeaponAcrossFishAndFlailVariants(GameTestHelper helper) {
-        record KillCase(ServerPlayer player, boolean tetanus, boolean diamond, String name) {}
-        var cases = new java.util.ArrayList<KillCase>();
-        var weapons = new java.util.ArrayList<ItemStack>();
-        PufferfishVariant.ALL.forEach(variant -> weapons.add(variant.fish()));
-        PufferfishItems.FLAIL_VARIANTS.forEach(item -> weapons.add(item.toStack()));
-        for (var weapon : weapons) {
-            var fish = PufferfishItems.flailFish(weapon);
-            boolean expected = fish.is(PufferfishItems.IRON.get())
-                    || PufferfishItems.COPPER_VARIANTS.stream().anyMatch(item -> fish.is(item.get()));
-            boolean diamond = fish.is(PufferfishItems.DIAMOND.get());
-            var switchedWeapon = expected ? PufferfishItems.DIAMOND.toStack() : PufferfishItems.IRON.toStack();
-            for (boolean projectile : new boolean[] {false, true}) {
-                if (!projectile && PufferfishItems.isFlail(weapon)) continue;
-                if (projectile && !PufferfishItems.isFlail(weapon) && !PufferfishItems.canThrow(weapon)) continue;
-                var player = player(helper);
-                player.setItemInHand(InteractionHand.MAIN_HAND, weapon.copy());
-                var target = helper.spawn(EntityType.CREEPER, new BlockPos(2, 3, 4));
-                target.setNoAi(true);
-                target.setNoGravity(true);
-                target.setHealth(0.1F);
-                if (projectile) {
-                    net.minecraft.world.entity.projectile.ThrowableItemProjectile shot;
-                    if (PufferfishItems.isFlail(weapon)) {
-                        shot = new PufferfishFlailHead(helper.getLevel(), player, InteractionHand.MAIN_HAND);
-                    } else {
-                        shot = new ThrownPufferfish(helper.getLevel(), player);
-                        shot.setItem(weapon.copy());
-                        player.setItemInHand(InteractionHand.MAIN_HAND, switchedWeapon.copy());
-                    }
-                    shot.setPos(target.getX(), target.getY() + 0.8, target.getZ() - 2);
-                    shot.setDeltaMovement(0, 0, 3);
-                    helper.getLevel().addFreshEntity(shot);
-                    shot.tick();
-                    shot.discard();
-                } else {
-                    player.attack(target);
-                }
-                String name = PufferfishVariant.of(weapon).fishName() + (projectile ? " projectile" : " melee");
-                helper.assertTrue(target.isDeadOrDying(), "Weapon did not kill its target: " + name);
-                // The deferred death check must retain the weapon that actually killed the target.
-                player.setItemInHand(InteractionHand.MAIN_HAND, switchedWeapon.copy());
-                cases.add(new KillCase(player, expected, diamond, name));
-                target.discard();
-            }
-        }
-        helper.runAfterDelay(2, () -> {
-            for (var test : cases) {
-                helper.assertTrue(done(test.player(), "fish_fighter"), "Weapon kill did not grant the parent: " + test.name());
-                helper.assertTrue(done(test.player(), "tetanus") == test.tetanus(), "Incorrect material kill progress: " + test.name());
-                helper.assertTrue(done(test.player(), "diamond_persuasion") == test.diamond(), "Incorrect diamond kill progress: " + test.name());
-                test.player().getAdvancements().stopListening();
-            }
             helper.succeed();
         });
     }

@@ -31,10 +31,6 @@ public final class PufferfishAdvancements {
     public static final DeferredHolder<CriterionTrigger<?>, PlayerTrigger> KILLED_BY_HEAVY_PUFFERFISH = TRIGGERS.register("killed_by_heavy_pufferfish", PlayerTrigger::new);
     public static final DeferredHolder<CriterionTrigger<?>, PlayerTrigger> EQUIP_CAT_ARMOR = TRIGGERS.register("equip_cat_armor", PlayerTrigger::new);
     public static final DeferredHolder<CriterionTrigger<?>, PlayerTrigger> KILL_WITH_PUFFERFISH = TRIGGERS.register("kill_with_pufferfish", PlayerTrigger::new);
-    public static final DeferredHolder<CriterionTrigger<?>, PlayerTrigger> KILL_WITH_COPPER_OR_IRON_PUFFERFISH =
-            TRIGGERS.register("kill_with_copper_or_iron_pufferfish", PlayerTrigger::new);
-    public static final DeferredHolder<CriterionTrigger<?>, PlayerTrigger> KILL_WITH_DIAMOND_PUFFERFISH =
-            TRIGGERS.register("kill_with_diamond_pufferfish", PlayerTrigger::new);
 
     private PufferfishAdvancements() {}
 
@@ -54,19 +50,9 @@ public final class PufferfishAdvancements {
         boolean projectile = source.is(ThrownPufferfish.DAMAGE_TYPE)
                 && (direct instanceof ThrownPufferfish || direct instanceof PufferfishFlailHead);
         if (!melee && !projectile) return;
-        var weapon = direct instanceof ThrownPufferfish fish ? fish.getItem()
-                : direct instanceof PufferfishFlailHead head ? head.getItem() : player.getMainHandItem();
-        var variant = PufferfishVariant.of(weapon);
-        boolean copperOrIron = variant != null
-                && (variant.material() == PufferfishMaterial.COPPER || variant.material() == PufferfishMaterial.IRON);
-        boolean diamond = variant != null && variant.material() == PufferfishMaterial.DIAMOND;
         // Credit only deaths that remain valid after all death listeners have run.
         player.server.tell(new TickTask(player.server.getTickCount(), () -> {
-            if (!event.isCanceled() && victim.isDeadOrDying()) {
-                KILL_WITH_PUFFERFISH.get().trigger(player);
-                if (copperOrIron) KILL_WITH_COPPER_OR_IRON_PUFFERFISH.get().trigger(player);
-                if (diamond) KILL_WITH_DIAMOND_PUFFERFISH.get().trigger(player);
-            }
+            if (!event.isCanceled() && victim.isDeadOrDying()) KILL_WITH_PUFFERFISH.get().trigger(player);
         }));
     }
 
