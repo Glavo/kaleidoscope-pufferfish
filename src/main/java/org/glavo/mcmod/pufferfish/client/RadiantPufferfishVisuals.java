@@ -7,6 +7,7 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.Util;
+import net.minecraft.util.FastColor;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.SpriteContents;
@@ -21,6 +22,7 @@ import org.glavo.mcmod.pufferfish.PufferfishItems;
 public final class RadiantPufferfishVisuals {
     private static final ResourceLocation STAR = ResourceLocation.withDefaultNamespace("textures/particle/flash.png");
     private static final int FRAMES = 48;
+    private static final int GOLD = 0xFFD700;
 
     private RadiantPufferfishVisuals() {}
 
@@ -57,7 +59,7 @@ public final class RadiantPufferfishVisuals {
                     boolean right = corner == 1 || corner == 2;
                     boolean bottom = corner >= 2;
                     buffer.addVertex(transform, x + (right ? radius : -radius), y + (bottom ? radius : -radius), 0)
-                            .setColor(255, 190, 32, alpha).setUv(right ? 1 : 0, bottom ? 1 : 0)
+                            .setColor(FastColor.ARGB32.color(alpha, GOLD)).setUv(right ? 1 : 0, bottom ? 1 : 0)
                             .setUv1(overlay & 65535, overlay >>> 16).setUv2(240, 240).setNormal(transform, 0, 0, 1);
                 }
             }
@@ -93,7 +95,7 @@ public final class RadiantPufferfishVisuals {
                         int alpha = (int) (245 * (1 - point / 12.0) * (dx == 0 && dy == 0 ? 1 : 0.4));
                         int previous = frames.getPixelRGBA(x, frame * size + y);
                         if ((previous >>> 24) >= alpha) continue;
-                        frames.setPixelRGBA(x, frame * size + y, alpha << 24 | 0x20BEFF);
+                        frames.setPixelRGBA(x, frame * size + y, FastColor.ABGR32.fromArgb32(FastColor.ARGB32.color(alpha, GOLD)));
                     }
                 }
             }
