@@ -8,6 +8,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.Cat;
 import net.minecraft.world.item.ItemStack;
 
 /// Material poison strength, lethal conversion chance, and the separate handheld melee application chance.
@@ -41,6 +42,7 @@ public record PufferfishPoison(int amplifier, float lethalChance, float meleeCha
     }
 
     public void apply(LivingEntity target, @Nullable Entity source, int duration) {
+        if (target instanceof Cat) return;
         var random = source == null ? target.getRandom() : source.getRandom();
         boolean lethal = lethalChance >= 1 || lethalChance > 0 && random.nextFloat() < lethalChance;
         target.addEffect(new MobEffectInstance(lethal ? PufferfishEffects.LETHAL_TOXIN : MobEffects.POISON, duration, amplifier), source);

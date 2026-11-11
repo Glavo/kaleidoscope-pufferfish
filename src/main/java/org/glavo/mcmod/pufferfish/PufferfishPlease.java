@@ -168,6 +168,8 @@ public class PufferfishPlease {
         NeoForge.EVENT_BUS.addListener(PufferfishZombieHeadgear::prepare);
         NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, PufferfishZombieHeadgear::equip);
         NeoForge.EVENT_BUS.addListener(PufferfishFriendlyFire::damage);
+        NeoForge.EVENT_BUS.addListener(EventPriority.HIGHEST, PufferfishFriendlyFire::attack);
+        NeoForge.EVENT_BUS.addListener(PufferfishFriendlyFire::lightning);
         NeoForge.EVENT_BUS.addListener(PufferfishFriendlyFire::effect);
         NeoForge.EVENT_BUS.addListener(PufferfishMobThorns::retaliate);
         NeoForge.EVENT_BUS.addListener(PufferfishColors::legacyTooltip);

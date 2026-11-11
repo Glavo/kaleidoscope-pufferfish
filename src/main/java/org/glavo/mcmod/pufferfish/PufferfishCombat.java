@@ -12,6 +12,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.Cat;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
@@ -105,6 +106,7 @@ public final class PufferfishCombat {
     }
 
     private static void hitEffects(ItemStack stack, LivingEntity target, Entity source, Vec3 direction, boolean applyEffect) {
+        if (target instanceof Cat) return;
         if (applyEffect) applyAttackEffect(stack, target, source);
         int punch = enchantmentLevel(stack, Enchantments.PUNCH);
         if (punch > 0) {
@@ -125,6 +127,7 @@ public final class PufferfishCombat {
     }
 
     private static void applyAttackEffect(ItemStack stack, LivingEntity target, Entity source, int duration, boolean guaranteedWither) {
+        if (target instanceof Cat) return;
         if (PufferfishItems.isRadiant(stack)) {
             var current = target.getEffect(MobEffects.WITHER);
             var random = source.getRandom();
@@ -154,6 +157,7 @@ public final class PufferfishCombat {
 
     /// Rolls material poison or applies fixed radiant wither without escalation.
     public static void applyPassiveEffect(ItemStack stack, LivingEntity target, Entity source) {
+        if (target instanceof Cat) return;
         if (PufferfishItems.isRadiant(stack)) {
             target.addEffect(passiveEffect(stack), source);
             applyRadiantGlow(target, source);
@@ -164,6 +168,7 @@ public final class PufferfishCombat {
     }
 
     public static void applyRadiantGlow(LivingEntity target, @javax.annotation.Nullable Entity source) {
+        if (target instanceof Cat) return;
         target.addEffect(new MobEffectInstance(MobEffects.GLOWING, RADIANT_GLOW_DURATION_TICKS), source);
     }
 

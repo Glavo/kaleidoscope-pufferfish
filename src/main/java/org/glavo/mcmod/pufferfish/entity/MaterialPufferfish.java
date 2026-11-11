@@ -20,6 +20,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.goal.MoveTowardsRestrictionGoal;
 import net.minecraft.world.entity.animal.Pufferfish;
+import net.minecraft.world.entity.animal.Cat;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.monster.Creeper;
@@ -125,7 +126,8 @@ public final class MaterialPufferfish extends Pufferfish {
 
     public boolean canFight(LivingEntity entity) {
         return entity != null && entity != this && entity.isAlive() && !entity.isSpectator() && !isAlliedTo(entity)
-                && !(entity instanceof Pufferfish) && !(entity instanceof Player player && (player.isCreative() || level().getDifficulty() == Difficulty.PEACEFUL));
+                && !(entity instanceof Pufferfish) && !(entity instanceof Cat)
+                && !(entity instanceof Player player && (player.isCreative() || level().getDifficulty() == Difficulty.PEACEFUL));
     }
 
     private static boolean isHuntedHostile(LivingEntity entity) {

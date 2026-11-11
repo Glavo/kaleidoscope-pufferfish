@@ -119,7 +119,8 @@ public final class PufferfishPumpBlockEntity extends BlockEntity {
         server.sendParticles(ParticleTypes.EXPLOSION, center.x, center.y, center.z, 1, 0, 0, 0, 0);
         server.sendParticles(ParticleTypes.CLOUD, center.x, center.y, center.z, 24, 0.3, 0.3, 0.3, 0.15);
         for (var target : server.getEntitiesOfClass(LivingEntity.class, new AABB(center, center).inflate(3),
-                entity -> entity.isAlive() && !entity.isSpectator() && !(entity instanceof Pufferfish))) {
+                entity -> entity.isAlive() && !entity.isSpectator() && !(entity instanceof Pufferfish)
+                        && !(entity instanceof net.minecraft.world.entity.animal.Cat))) {
             double strength = (1 - Math.sqrt(target.distanceToSqr(center)) / 3) * Explosion.getSeenPercent(center, target);
             if (strength <= 0 || !target.hurt(source, (float) (6 * strength))) continue;
             PufferfishCombat.applyPassiveEffect(released, target, player);

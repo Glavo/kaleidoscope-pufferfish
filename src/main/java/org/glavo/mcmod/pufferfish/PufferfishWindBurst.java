@@ -30,7 +30,12 @@ public final class PufferfishWindBurst {
             case 2 -> 1.22F;
             default -> 1.40F;
         };
-        var calculator = new SimpleExplosionDamageCalculator(false, false, Optional.of(strength), Optional.empty());
+        var calculator = new SimpleExplosionDamageCalculator(false, false, Optional.of(strength), Optional.empty()) {
+            @Override
+            public float getKnockbackMultiplier(net.minecraft.world.entity.Entity entity) {
+                return entity instanceof net.minecraft.world.entity.animal.Cat ? 0 : super.getKnockbackMultiplier(entity);
+            }
+        };
         var explosion = level.explode(fish, null, calculator, position.x, position.y, position.z, 1.2F, false,
                 Level.ExplosionInteraction.NONE, ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE,
                 SoundEvents.WIND_CHARGE_BURST);

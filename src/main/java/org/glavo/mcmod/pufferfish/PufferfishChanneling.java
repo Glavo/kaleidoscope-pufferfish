@@ -21,6 +21,7 @@ import net.minecraft.world.phys.Vec3;
 
 /// Applies Channeling to fish projectiles without changing vanilla's trident-only predicates.
 public final class PufferfishChanneling {
+    public static final String LIGHTNING_MARKER = "pufferfish_please:channeling";
     private PufferfishChanneling() {}
 
     /// Called only after a successful projectile hit; Endermen follow the trident exemption.
@@ -42,6 +43,7 @@ public final class PufferfishChanneling {
         var lightning = EntityType.LIGHTNING_BOLT.create(level);
         if (lightning == null) return;
         lightning.moveTo(position);
+        lightning.getPersistentData().putBoolean(LIGHTNING_MARKER, true);
         if (projectile.getOwner() instanceof ServerPlayer player) lightning.setCause(player);
         if (level.addFreshEntity(lightning)) {
             level.playSound(null, position.x, position.y, position.z, SoundEvents.TRIDENT_THUNDER, SoundSource.PLAYERS, 5, 1);

@@ -9,6 +9,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.Cat;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantedItemInUse;
 import net.minecraft.world.item.enchantment.EnchantmentTarget;
@@ -22,7 +23,7 @@ public final class PufferfishRetaliation {
     static boolean canRetaliate(LivingDamageEvent.Post event) {
         var source = event.getSource();
         return !source.is(DamageTypes.THORNS) && source.getEntity() instanceof LivingEntity attacker
-                && attacker != event.getEntity() && dealtDamage(event);
+                && !(attacker instanceof Cat) && attacker != event.getEntity() && dealtDamage(event);
     }
 
     private static boolean dealtDamage(LivingDamageEvent.Post event) {
@@ -30,6 +31,7 @@ public final class PufferfishRetaliation {
     }
 
     static void thorns(ServerLevel level, int strength, EnchantedItemInUse item, LivingEntity defender, DamageSource source) {
+        if (source.getEntity() instanceof Cat) return;
         var thorns = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.THORNS);
         thorns.value().doPostAttack(level, strength, item, EnchantmentTarget.VICTIM, defender, source);
     }
@@ -43,7 +45,7 @@ public final class PufferfishRetaliation {
     /// Equipment effects follow successful intrinsic or enchanted thorns, including damage absorbed by absorption hearts.
     public static void effectsOnThorns(LivingDamageEvent.Post event) {
         var target = event.getEntity();
-        if (target.level().isClientSide() || !event.getSource().is(DamageTypes.THORNS)
+        if (target instanceof Cat || target.level().isClientSide() || !event.getSource().is(DamageTypes.THORNS)
                 || !(event.getSource().getEntity() instanceof LivingEntity wearer) || wearer == target || wearer.isSpectator()
                 || !dealtDamage(event)) return;
         var poison = PufferfishArmor.poison(wearer);
