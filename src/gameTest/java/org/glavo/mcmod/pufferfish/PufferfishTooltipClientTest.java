@@ -79,6 +79,17 @@ public final class PufferfishTooltipClientTest {
             if (!first.contains(advancedLevel) || first.contains(initialLevel)) throw new IllegalStateException("Cultivation level did not replace level zero");
             fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_2, 0.875, 98765, 123456));
             if (!first.equals(tooltip(fish))) throw new IllegalStateException("Tooltip exposed talent or unspecified experience progress");
+            fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_10, 0, 9_999_999, Long.MAX_VALUE));
+            var highestLevel = Component.translatable("tooltip.pufferfish_please.level", PufferfishLevel.LEVEL_10.displayName()).getString();
+            if (!tooltip(fish).contains(highestLevel)) throw new IllegalStateException("A highest-rank fish below one star displayed a star count");
+            fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_10, 1, 23_000_000, Long.MAX_VALUE));
+            var starredLevel = Component.translatable("tooltip.pufferfish_please.level",
+                    Component.translatable("level.pufferfish_please.starred", 2L, PufferfishLevel.LEVEL_10.displayName())).getString();
+            var starredFish = fish.copy();
+            var starredTooltip = tooltip(fish);
+            if (!starredTooltip.contains(starredLevel) || starredTooltip.contains(highestLevel) || !ItemStack.matches(fish, starredFish)) {
+                throw new IllegalStateException("Starred rank was missing, duplicated, or changed the stored fish");
+            }
         }
     }
 

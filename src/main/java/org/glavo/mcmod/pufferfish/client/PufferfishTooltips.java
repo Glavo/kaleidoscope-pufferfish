@@ -16,8 +16,8 @@ public final class PufferfishTooltips {
     private PufferfishTooltips() {}
 
     public static void cultivation(ItemTooltipEvent event) {
-        var level = PufferfishCultivation.visibleLevel(event.getItemStack());
-        if (level != null) event.getToolTip().add(Component.translatable("tooltip.pufferfish_please.level", level.displayName())
+        var name = PufferfishCultivation.visibleName(event.getItemStack());
+        if (name != null) event.getToolTip().add(Component.translatable("tooltip.pufferfish_please.level", name)
                 .withStyle(ChatFormatting.GRAY));
     }
 

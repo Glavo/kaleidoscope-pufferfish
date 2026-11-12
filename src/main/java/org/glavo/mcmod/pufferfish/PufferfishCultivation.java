@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.server.TickTask;
@@ -21,6 +22,8 @@ import net.neoforged.neoforge.event.entity.player.PlayerXpEvent;
 
 /// Post-awakening state. Total experience is a lifetime statistic, independent of unspent progress.
 public record PufferfishCultivation(PufferfishLevel level, double talent, long experience, long totalExperience) {
+    private static final long EXPERIENCE_PER_STAR = 10_000_000;
+
     private static final Codec<PufferfishLevel> AWAKENED_LEVEL_CODEC = PufferfishLevel.CODEC.validate(level ->
             level == PufferfishLevel.LEVEL_0 ? DataResult.error(() -> "Level zero has no cultivation data") : DataResult.success(level));
     private static final Codec<Double> TALENT_CODEC = Codec.DOUBLE.validate(talent ->
@@ -67,6 +70,17 @@ public record PufferfishCultivation(PufferfishLevel level, double talent, long e
                 totalExperience + Math.min((long) amount, Long.MAX_VALUE - totalExperience));
     }
 
+    /// Highest-rank stars reflect current experience only, without spending it or applying talent.
+    public long stars() {
+        return level == PufferfishLevel.LEVEL_10 ? experience / EXPERIENCE_PER_STAR : 0;
+    }
+
+    public Component displayName() {
+        long stars = stars();
+        return stars == 0 ? level.displayName()
+                : Component.translatable("level.pufferfish_please.starred", stars, level.displayName());
+    }
+
     /// Awards the full orb value to each equipped awakened weapon, including XP consumed by Mending.
     public static void pickupExperience(PlayerXpEvent.PickupXp event) {
         if (event.isCanceled() || !(event.getEntity() instanceof ServerPlayer player)) return;
@@ -94,9 +108,9 @@ public record PufferfishCultivation(PufferfishLevel level, double talent, long e
 
     /// Reading a level never creates cultivation data or changes stacking.
     @Nullable
-    public static PufferfishLevel visibleLevel(ItemStack stack) {
+    public static Component visibleName(ItemStack stack) {
         var cultivation = stack.get(PufferfishPlease.CULTIVATION.get());
-        if (cultivation != null) return cultivation.level();
-        return PufferfishItems.isWeapon(stack) && stack.has(DataComponents.MAX_DAMAGE) ? PufferfishLevel.LEVEL_0 : null;
+        if (cultivation != null) return cultivation.displayName();
+        return PufferfishItems.isWeapon(stack) && stack.has(DataComponents.MAX_DAMAGE) ? PufferfishLevel.LEVEL_0.displayName() : null;
     }
 }

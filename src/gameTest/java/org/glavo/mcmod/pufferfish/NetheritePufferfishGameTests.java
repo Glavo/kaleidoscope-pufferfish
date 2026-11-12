@@ -192,6 +192,8 @@ public final class NetheritePufferfishGameTests {
         receiver.getEntityData().assignValues(projectile.getEntityData().getNonDefaultValues());
         helper.assertTrue(ItemStack.isSameItemSameComponents(restored.getItem(), stack)
                 && ItemStack.isSameItemSameComponents(receiver.getItem(), stack), "Netherite projectile identity was lost on save or sync");
+        var awakened = TestItems.awakened(projectile.getItem());
+        projectile.setItem(awakened);
         var target = helper.spawn(EntityType.VILLAGER, new BlockPos(2, 1, 2));
         target.setNoAi(true);
         projectile.setPos(target.getX() - 1, target.getY() + 0.5, target.getZ());
@@ -203,7 +205,7 @@ public final class NetheritePufferfishGameTests {
         helper.assertTrue(poison != null && poison.getDuration() == 120 && poison.getAmplifier() == 1, "Netherite projectile did not apply six seconds of Poison II");
         var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, target.getBoundingBox().inflate(3));
         helper.assertTrue(projectile.isRemoved() && drops.size() == 1 && drops.getFirst().getItem().getCount() == 1
-                && ItemStack.isSameItemSameComponents(drops.getFirst().getItem(), TestItems.worn(stack)), "Recovered projectile lost its netherite identity or name");
+                && ItemStack.isSameItemSameComponents(drops.getFirst().getItem(), TestItems.worn(awakened)), "Recovered projectile lost its netherite identity or name");
         drops.forEach(ItemEntity::discard);
         target.discard();
         helper.succeed();

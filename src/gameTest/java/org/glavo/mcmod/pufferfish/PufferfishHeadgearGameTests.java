@@ -249,6 +249,9 @@ public final class PufferfishHeadgearGameTests {
         wearer.invulnerableTime = 0;
         wearer.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_ABSORPTION).setBaseValue(4);
         wearer.setAbsorptionAmount(4);
+        helper.getLevel().getRandom().setSeed(4096);
+        wearer.getRandom().setSeed(4096);
+        attacker.getRandom().setSeed(4096);
         int reflected = 0;
         for (int i = 0; i < 32; i++) {
             wearer.invulnerableTime = 0;

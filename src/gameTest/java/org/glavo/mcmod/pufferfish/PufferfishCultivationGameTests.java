@@ -57,6 +57,30 @@ public final class PufferfishCultivationGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "empty")
+    public static void highestRankStarsUseCurrentExperienceWithoutSpendingOrTalentScaling(GameTestHelper helper) {
+        for (double talent : new double[] {0, 0.5, 1}) {
+            var state = new PufferfishCultivation(PufferfishLevel.LEVEL_10, talent, 9_999_999, 50_000_000);
+            helper.assertTrue(state.stars() == 0 && state.displayName().equals(PufferfishLevel.LEVEL_10.displayName()),
+                    "An incomplete star or lifetime experience changed the rank name");
+            state = state.addExperience(1);
+            helper.assertTrue(state.stars() == 1 && state.experience() == 10_000_000 && state.totalExperience() == 50_000_001,
+                    "The first star changed its threshold with talent or consumed experience");
+            state = state.addExperience(23_000_000);
+            helper.assertTrue(state.stars() == 3 && state.experience() == 33_000_000 && state.totalExperience() == 73_000_001
+                    && state.level() == PufferfishLevel.LEVEL_10 && state.talent() == talent,
+                    "Multiple stars lost surplus experience or changed cultivation state");
+        }
+        for (var level : PufferfishLevel.values()) {
+            if (level == PufferfishLevel.LEVEL_0 || level == PufferfishLevel.LEVEL_10) continue;
+            var state = new PufferfishCultivation(level, 0.5, Long.MAX_VALUE, Long.MAX_VALUE);
+            helper.assertTrue(state.stars() == 0 && state.displayName().equals(level.displayName()), "A lower rank displayed stars");
+        }
+        helper.assertTrue(new PufferfishCultivation(PufferfishLevel.LEVEL_10, 0.5, Long.MAX_VALUE, Long.MAX_VALUE).stars() == 922_337_203_685L,
+                "Stars overflowed at the experience limit");
+        helper.succeed();
+    }
+
     private static ItemStack awakened(ItemStack fish) {
         PufferfishDurability.activate(fish);
         fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_1, 0.75, 10, 100));
