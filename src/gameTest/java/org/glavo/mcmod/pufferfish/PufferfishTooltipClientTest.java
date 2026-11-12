@@ -73,12 +73,24 @@ public final class PufferfishTooltipClientTest {
             if (!tooltip(fish).contains(initialLevel) || fish.has(PufferfishPlease.CULTIVATION.get())) {
                 throw new IllegalStateException("Activated fish did not display level zero without cultivation data");
             }
-            fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_2, 0.25, 12345, 54321));
+            fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_2, 0.25, 12, 54321));
             var first = tooltip(fish);
             var advancedLevel = Component.translatable("tooltip.pufferfish_please.level", PufferfishLevel.LEVEL_2.displayName()).getString();
             if (!first.contains(advancedLevel) || first.contains(initialLevel)) throw new IllegalStateException("Cultivation level did not replace level zero");
-            fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_2, 0.875, 98765, 123456));
+            fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_2, 0.875, 98, 123456));
             if (!first.equals(tooltip(fish))) throw new IllegalStateException("Tooltip exposed talent or unspecified experience progress");
+            fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_2, 0, 400, 123456));
+            if (!first.equals(tooltip(fish))) throw new IllegalStateException("Readiness ignored the talent-adjusted threshold");
+            var readyLevel = Component.translatable("tooltip.pufferfish_please.level",
+                    Component.translatable("level.pufferfish_please.ready", PufferfishLevel.LEVEL_2.displayName())).getString();
+            for (long experience : new long[] {200, 400}) {
+                fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_2, 1, experience, 123456));
+                var readyFish = fish.copy();
+                var readyTooltip = tooltip(fish);
+                if (!readyTooltip.contains(readyLevel) || readyTooltip.contains(advancedLevel) || !ItemStack.matches(fish, readyFish)) {
+                    throw new IllegalStateException("Readiness was missing, duplicated, or changed cultivation data");
+                }
+            }
             fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_10, 0, 9_999_999, Long.MAX_VALUE));
             var highestLevel = Component.translatable("tooltip.pufferfish_please.level", PufferfishLevel.LEVEL_10.displayName()).getString();
             if (!tooltip(fish).contains(highestLevel)) throw new IllegalStateException("A highest-rank fish below one star displayed a star count");

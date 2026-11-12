@@ -76,6 +76,7 @@ public record PufferfishCultivation(PufferfishLevel level, double talent, long e
     }
 
     public Component displayName() {
+        if (isExperienceComplete()) return Component.translatable("level.pufferfish_please.ready", level.displayName());
         long stars = stars();
         return stars == 0 ? level.displayName()
                 : Component.translatable("level.pufferfish_please.starred", stars, level.displayName());

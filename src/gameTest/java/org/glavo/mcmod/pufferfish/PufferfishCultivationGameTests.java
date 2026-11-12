@@ -9,6 +9,7 @@ import io.netty.buffer.Unpooled;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.item.ItemStack;
@@ -41,10 +42,14 @@ public final class PufferfishCultivationGameTests {
             bestTotal += new PufferfishCultivation(level, 1, 0, 0).requiredExperience();
             worstTotal += new PufferfishCultivation(level, 0, 0, 0).requiredExperience();
             var ready = normal.addExperience((int) required - 1);
-            helper.assertTrue(!ready.isExperienceComplete(), "Breakthrough experience was complete below the threshold");
+            helper.assertTrue(!ready.isExperienceComplete() && ready.displayName().equals(level.displayName()),
+                    "Breakthrough experience was complete below the threshold");
+            var readyName = Component.translatable("level.pufferfish_please.ready", level.displayName());
+            helper.assertTrue(ready.addExperience(1).displayName().equals(readyName), "Exact experience threshold did not display readiness");
             ready = ready.addExperience(2);
             helper.assertTrue(ready.isExperienceComplete() && ready.level() == level && ready.experience() == required + 1
-                    && ready.totalExperience() == Long.MAX_VALUE, "Reaching the threshold promoted the fish or consumed experience");
+                    && ready.totalExperience() == Long.MAX_VALUE && ready.displayName().equals(readyName),
+                    "Reaching the threshold lost readiness, promoted the fish or consumed experience");
         }
         helper.assertTrue(normalTotal == 12_601_760 && bestTotal == 6_300_880 && worstTotal == 25_203_520,
                 "Lifetime cultivation costs do not match the agreed curve and talent range");
@@ -74,7 +79,8 @@ public final class PufferfishCultivationGameTests {
         for (var level : PufferfishLevel.values()) {
             if (level == PufferfishLevel.LEVEL_0 || level == PufferfishLevel.LEVEL_10) continue;
             var state = new PufferfishCultivation(level, 0.5, Long.MAX_VALUE, Long.MAX_VALUE);
-            helper.assertTrue(state.stars() == 0 && state.displayName().equals(level.displayName()), "A lower rank displayed stars");
+            helper.assertTrue(state.stars() == 0 && state.displayName().equals(Component.translatable("level.pufferfish_please.ready", level.displayName())),
+                    "A completed lower rank displayed stars instead of readiness");
         }
         helper.assertTrue(new PufferfishCultivation(PufferfishLevel.LEVEL_10, 0.5, Long.MAX_VALUE, Long.MAX_VALUE).stars() == 922_337_203_685L,
                 "Stars overflowed at the experience limit");
