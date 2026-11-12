@@ -137,13 +137,14 @@ public final class PufferfishAwakening {
         var random = recipient.owner().getRandom();
         if (random.nextDouble() >= chance) return;
         PufferfishDurability.activate(stack);
-        stack.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_1, random.nextDouble(), 0, 0));
+        var cultivation = new PufferfishCultivation(PufferfishLevel.LEVEL_1, random.nextDouble(), 0, 0);
+        stack.set(PufferfishPlease.CULTIVATION.get(), cultivation);
         recipient.save().accept(stack);
         var level = (ServerLevel) target.level();
         var owner = recipient.owner();
         level.sendParticles(ParticleTypes.ENCHANT, owner.getX(), owner.getY() + owner.getBbHeight() * 0.5, owner.getZ(), 12, 0.3, 0.3, 0.3, 0);
         level.playSound(null, owner.blockPosition(), SoundEvents.PLAYER_LEVELUP, SoundSource.NEUTRAL, 0.5F, 1.5F);
         if (owner instanceof ServerPlayer player) player.displayClientMessage(
-                Component.translatable("message.pufferfish_please.awakened", stack.getHoverName()), true);
+                Component.translatable("message.pufferfish_please.rank_up", stack.getHoverName(), cultivation.level().displayName()), true);
     }
 }

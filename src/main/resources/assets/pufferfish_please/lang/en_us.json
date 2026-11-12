@@ -478,7 +478,7 @@
   "level.pufferfish_please.7": "Exalted",
   "level.pufferfish_please.8": "Ascendant",
   "level.pufferfish_please.9": "Transcendent",
-  "message.pufferfish_please.awakened": "%s has awakened!",
+  "message.pufferfish_please.rank_up": "%s has reached %s rank!",
   "message.pufferfish_please.capture_too_healthy": "This pufferfish is still too strong to capture.",
   "tooltip.pufferfish_please.level": "Rank: %s",
   "tooltip.pufferfish_please.pufferfish_aspic.maxim": "A golden wobble with a familiar sting.",
