@@ -13,7 +13,8 @@
     "PufferfishPuffGoalMixin",
     "EntityTypeMixin",
     "PufferfishEquipmentMixin",
-    "PufferfishRepairRecipeMixin"
+    "PufferfishRepairRecipeMixin",
+    "PufferfishThornsAwakeningMixin"
   ],
   "client": [
     "PufferfishPowerLightMixin",

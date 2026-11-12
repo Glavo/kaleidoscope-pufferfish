@@ -15,7 +15,11 @@ public final class PufferfishMobThorns {
         if (!(event.getEntity() instanceof MaterialPufferfish fish) || !(fish.level() instanceof ServerLevel level)) return;
         if (!PufferfishRetaliation.canRetaliate(event)) return;
         int strength = PufferfishVariant.of(fish.fish()).material().mobThorns();
+        var weapon = fish.fish().copy();
         PufferfishRetaliation.thorns(level, strength,
-                new EnchantedItemInUse(fish.fish().copy(), null, fish, item -> {}), fish, event.getSource());
+                new EnchantedItemInUse(weapon, null, fish, item -> {}), fish, event.getSource());
+        if (!java.util.Objects.equals(weapon.get(PufferfishPlease.CULTIVATION.get()), fish.fish().get(PufferfishPlease.CULTIVATION.get()))) {
+            fish.setFish(weapon);
+        }
     }
 }

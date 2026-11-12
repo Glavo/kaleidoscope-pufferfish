@@ -296,6 +296,7 @@ public final class PufferfishEnchantmentGameTests {
         var player = owner(helper);
         for (var damageEnchantment : List.of(Enchantments.DENSITY, Enchantments.BREACH)) {
             for (var stack : variants()) {
+                stack = TestItems.awakened(stack);
                 player.getInventory().clearContent();
                 stack.set(DataComponents.CUSTOM_NAME, Component.literal("Combined keepsake"));
                 enchant(helper, stack, damageEnchantment, 4);

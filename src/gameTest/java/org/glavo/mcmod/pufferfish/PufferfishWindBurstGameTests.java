@@ -77,7 +77,7 @@ public final class PufferfishWindBurstGameTests {
                 double previous = 0;
                 double baseSpeed = 0;
                 for (int rank = 0; rank <= 3; rank++) {
-                    var stack = original.copy();
+                    var stack = TestItems.awakened(original);
                     if (rank > 0) enchant(helper, stack, Enchantments.WIND_BURST, rank);
                     var owner = helper.makeMockPlayer(GameType.SURVIVAL);
                     owner.setPos(Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(2, 2, 0))));
@@ -162,7 +162,7 @@ public final class PufferfishWindBurstGameTests {
         NeoForge.EVENT_BUS.addListener(capture);
         try {
             for (var original : fish()) {
-                var stack = enchant(helper, original.copy(), Enchantments.WIND_BURST, 3);
+                var stack = enchant(helper, TestItems.awakened(original), Enchantments.WIND_BURST, 3);
                 enchant(helper, stack, Enchantments.LOYALTY, 3);
                 enchant(helper, stack, Enchantments.CHANNELING, 1);
                 var owner = helper.makeMockPlayer(GameType.SURVIVAL);

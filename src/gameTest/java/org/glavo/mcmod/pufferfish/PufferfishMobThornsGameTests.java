@@ -28,7 +28,8 @@ public final class PufferfishMobThornsGameTests {
             var fish = variant.entity().get().create(level);
             fish.setNoAi(true);
             fish.setPos(helper.absolutePos(new BlockPos(2, 2, 2)).getCenter());
-            var storedFish = fish.fish().copy();
+            var storedFish = org.glavo.mcmod.pufferfish.test.TestItems.awakened(fish.fish());
+            fish.setFish(storedFish);
             int strength = switch (fish.kind()) {
                 case COPPER, IRON, GOLDEN -> 1;
                 case DIAMOND, NETHERITE -> 2;

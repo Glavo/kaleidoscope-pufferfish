@@ -155,6 +155,13 @@ public final class PufferfishDurability {
         if (ItemStack.isSameItemSameComponents(first, second)) return true;
         var a = first.copy();
         var b = second.copy();
+        var firstCultivation = a.get(PufferfishPlease.CULTIVATION.get());
+        var secondCultivation = b.get(PufferfishPlease.CULTIVATION.get());
+        if (firstCultivation != null && secondCultivation != null && firstCultivation.level() == secondCultivation.level()
+                && firstCultivation.talent() == secondCultivation.talent()) {
+            a.remove(PufferfishPlease.CULTIVATION.get());
+            b.remove(PufferfishPlease.CULTIVATION.get());
+        }
         for (var component : java.util.List.of(DataComponents.DAMAGE, DataComponents.MAX_DAMAGE, DataComponents.MAX_STACK_SIZE,
                 PufferfishPlease.MANAGED_DURABILITY.get())) {
             a.remove(component);

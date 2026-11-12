@@ -351,12 +351,22 @@ public final class PufferfishFlailHead extends ThrowableItemProjectile {
                 .getHolderOrThrow(ThrownPufferfish.DAMAGE_TYPE), this, getOwner());
         float fullChargeMultiplier = PufferfishItems.hasHeavyCombat(getItem()) ? 1.6F : 2;
         float multiplier = isShortCast() ? 1 : fullChargeMultiplier * charge;
-        if (target.hurt(source, PufferfishCombat.projectileDamage(server, getItem(), target, source) * multiplier)) {
-            if (target instanceof LivingEntity living) {
-                PufferfishCombat.hitEffects(getItem(), living, getEffectSource(), getDeltaMovement());
+        var weapon = getOwner() instanceof Player player
+                && org.glavo.mcmod.pufferfish.PufferfishDurability.sameWeapon(player.getItemInHand(getHand()), getItem())
+                ? player.getItemInHand(getHand()) : getItem().copyWithCount(1);
+        float amount = PufferfishCombat.projectileDamage(server, weapon, target, source) * multiplier;
+        java.util.function.BooleanSupplier attack = () -> {
+            boolean hurt = target.hurt(source, amount);
+            if (hurt) {
+                if (target instanceof LivingEntity living) PufferfishCombat.hitEffects(weapon, living, getEffectSource(), getDeltaMovement());
+                PufferfishChanneling.hitEntity(this, weapon, target);
             }
-            PufferfishChanneling.hitEntity(this, getItem(), target);
-        }
+            return hurt;
+        };
+        if (target instanceof LivingEntity living) org.glavo.mcmod.pufferfish.PufferfishAwakening.track(
+                weapon, getOwner() == null ? this : getOwner(), living, source, attack);
+        else attack.getAsBoolean();
+        setItem(weapon);
     }
 
     @Override

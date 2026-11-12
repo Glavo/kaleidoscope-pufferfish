@@ -170,12 +170,20 @@ public class ThrownPufferfish extends ThrowableItemProjectile {
                             : Component.translatable(key + ".player", victim.getDisplayName(), attacker.getDisplayName());
                 }
             };
-            if (target.hurt(damage, PufferfishCombat.projectileDamage(server, getItem(), target, damage))) {
-                if (target instanceof LivingEntity living) {
-                    PufferfishCombat.thrownHitEffects(getItem(), living, getEffectSource(), getDeltaMovement());
+            var weapon = getItem().copyWithCount(1);
+            float amount = PufferfishCombat.projectileDamage(server, weapon, target, damage);
+            java.util.function.BooleanSupplier attack = () -> {
+                boolean hurt = target.hurt(damage, amount);
+                if (hurt) {
+                    if (target instanceof LivingEntity living) PufferfishCombat.thrownHitEffects(weapon, living, getEffectSource(), getDeltaMovement());
+                    PufferfishChanneling.hitEntity(this, weapon, target);
                 }
-                PufferfishChanneling.hitEntity(this, getItem(), target);
-            }
+                return hurt;
+            };
+            if (target instanceof LivingEntity living) org.glavo.mcmod.pufferfish.PufferfishAwakening.track(
+                    weapon, getOwner() == null ? this : getOwner(), living, damage, attack);
+            else attack.getAsBoolean();
+            setItem(weapon);
         }
     }
 

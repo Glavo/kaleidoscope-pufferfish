@@ -435,7 +435,7 @@ public class PufferfishProjectileGameTests {
     public static void entityImpactsRecoverAllColorsAndNames(GameTestHelper helper) {
         for (DyeColor color : DyeColor.values()) {
             var target = helper.spawn(EntityType.PIG, new BlockPos(2, 1, 3));
-            var stack = PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color);
+            var stack = TestItems.awakened(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
             stack.set(DataComponents.CUSTOM_NAME, Component.literal("Keepsake"));
             var projectile = hit(helper, target, stack);
             var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, target.getBoundingBox().inflate(3))

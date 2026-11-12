@@ -104,7 +104,8 @@ public final class PufferfishLoyaltyGameTests {
     @GameTest(template = "empty")
     public static void loyalImpactsDamageOnceAndReturnEveryVariant(GameTestHelper helper) {
         var player = owner(helper);
-        for (var stack : variants()) {
+        for (var original : variants()) {
+            var stack = TestItems.awakened(original);
             player.getInventory().clearContent();
             enchant(helper, stack, 3);
             stack.set(DataComponents.CUSTOM_NAME, Component.literal("Loyal keepsake"));

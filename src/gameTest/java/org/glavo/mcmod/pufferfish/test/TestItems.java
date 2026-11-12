@@ -24,6 +24,14 @@ public final class TestItems {
         return result;
     }
 
+    public static ItemStack awakened(ItemStack original) {
+        var result = original.copyWithCount(1);
+        PufferfishDurability.activate(result);
+        result.set(org.glavo.mcmod.pufferfish.PufferfishPlease.CULTIVATION.get(),
+                new org.glavo.mcmod.pufferfish.PufferfishCultivation(org.glavo.mcmod.pufferfish.PufferfishLevel.LEVEL_1, 0.5, 0, 0));
+        return result;
+    }
+
     public static ItemStack enchant(GameTestHelper helper, ItemStack stack, ResourceKey<Enchantment> key, int level) {
         var holder = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(key);
         EnchantmentHelper.updateEnchantments(stack, enchantments -> enchantments.set(holder, level));

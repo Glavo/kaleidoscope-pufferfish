@@ -233,7 +233,7 @@ public final class PufferfishExtraEnchantmentGameTests {
                         for (boolean loyal : new boolean[] {false, true}) {
                             level.setRainLevel(scenario == 0 ? 0 : 1);
                             level.setThunderLevel(scenario < 2 ? 0 : 1);
-                            var stack = original.copy();
+                            var stack = TestItems.awakened(original);
                             if (scenario != 4) enchant(helper, stack, Enchantments.CHANNELING, 1);
                             if (loyal) enchant(helper, stack, Enchantments.LOYALTY, 3);
                             var owner = serverPlayer(helper);
