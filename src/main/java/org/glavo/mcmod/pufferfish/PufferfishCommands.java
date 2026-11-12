@@ -16,15 +16,18 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.animal.Pufferfish;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.MobBucketItem;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.component.CustomData;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
-/// Operator commands for the selected players' main-hand cultivation data.
+/// Operator commands for live pufferfish or players' main-hand cultivation data.
 public final class PufferfishCommands {
     private static final DynamicCommandExceptionType UNSUPPORTED_ITEM = error("unsupported_item");
+    private static final DynamicCommandExceptionType UNSUPPORTED_ENTITY = error("unsupported_entity");
     private static final DynamicCommandExceptionType INVALID_BUCKET = error("invalid_bucket");
     private static final DynamicCommandExceptionType STACKED_ITEM = error("stacked_item");
     private static final DynamicCommandExceptionType UNAWAKENED_EXPERIENCE = error("unawakened_experience");
@@ -36,8 +39,7 @@ public final class PufferfishCommands {
     }
 
     public static void register(RegisterCommandsEvent event) {
-        var set = Commands.argument("targets", EntityArgument.players());
-        var query = Commands.argument("target", EntityArgument.player());
+        var root = Commands.literal("pufferfish").requires(source -> source.hasPermission(2));
         for (var property : Property.values()) {
             var value = property == Property.LEVEL
                     ? Commands.argument("value", IntegerArgumentType.integer(0, 10))
@@ -49,59 +51,58 @@ public final class PufferfishCommands {
                 }
                 return builder.buildFuture();
             });
-            set.then(Commands.literal(property.key).then(value.executes(context -> set(context.getSource(),
-                    EntityArgument.getPlayers(context, "targets"), property, context.getArgument("value", Number.class).longValue()))));
-            query.then(Commands.literal(property.key).executes(context -> query(context.getSource(),
-                    EntityArgument.getPlayer(context, "target"), property)));
+            root.then(Commands.literal(property.key)
+                    .then(Commands.literal("set").then(Commands.argument("targets", EntityArgument.entities())
+                            .then(value.executes(context -> set(context.getSource(), EntityArgument.getEntities(context, "targets"),
+                                    property, context.getArgument("value", Number.class).longValue())))))
+                    .then(Commands.literal("query").then(Commands.argument("target", EntityArgument.entity())
+                            .executes(context -> query(context.getSource(), EntityArgument.getEntity(context, "target"), property)))));
         }
-        event.getDispatcher().register(Commands.literal("pufferfish")
-                .requires(source -> source.hasPermission(2))
-                .then(Commands.literal("set").then(set))
-                .then(Commands.literal("query").then(query)));
+        event.getDispatcher().register(root);
     }
 
-    private static int query(CommandSourceStack source, ServerPlayer player, Property property) throws CommandSyntaxException {
-        var held = HeldFish.read(player);
-        var cultivation = held.fish.get(PufferfishPlease.CULTIVATION.get());
+    private static int query(CommandSourceStack source, Entity entity, Property property) throws CommandSyntaxException {
+        var target = Target.read(entity);
+        var cultivation = target.fish.get(PufferfishPlease.CULTIVATION.get());
         long value = cultivation == null ? 0 : property == Property.LEVEL ? cultivation.level().number() : cultivation.experience();
         source.sendSuccess(() -> Component.translatable("commands.pufferfish_please.query." + property.key,
-                player.getDisplayName(), value, property.display(value)), false);
+                target.description(), value, property.display(value)), false);
         return (int) Math.min(Integer.MAX_VALUE, value);
     }
 
-    private static int set(CommandSourceStack source, Collection<ServerPlayer> players, Property property, long value) throws CommandSyntaxException {
-        var edits = new ArrayList<HeldFish>();
-        for (var player : players) {
-            var held = HeldFish.read(player);
-            if (held.item.getCount() != 1) throw STACKED_ITEM.create(player.getDisplayName());
-            var previous = held.fish.get(PufferfishPlease.CULTIVATION.get());
+    private static int set(CommandSourceStack source, Collection<? extends Entity> entities, Property property, long value) throws CommandSyntaxException {
+        var edits = new ArrayList<Target>();
+        for (var entity : entities) {
+            var target = Target.read(entity);
+            if (target.item.getCount() != 1) throw STACKED_ITEM.create(entity.getDisplayName());
+            var previous = target.fish.get(PufferfishPlease.CULTIVATION.get());
             if (property == Property.LEVEL) {
                 var level = PufferfishLevel.values()[(int) value];
                 if (level == PufferfishLevel.LEVEL_0) {
-                    held.fish.remove(PufferfishPlease.CULTIVATION.get());
+                    target.fish.remove(PufferfishPlease.CULTIVATION.get());
                 } else {
-                    held.fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(level,
+                    target.fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(level,
                             previous == null ? 0.5 : previous.talent(), previous == null ? 0 : previous.experience(),
                             previous == null ? 0 : previous.totalExperience()));
                 }
-                PufferfishDurability.activate(held.fish);
+                PufferfishDurability.activate(target.fish);
             } else {
-                if (previous == null) throw UNAWAKENED_EXPERIENCE.create(player.getDisplayName());
-                held.fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(
+                if (previous == null) throw UNAWAKENED_EXPERIENCE.create(target.description());
+                target.fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(
                         previous.level(), previous.talent(), value, previous.totalExperience()));
             }
-            edits.add(held);
+            edits.add(target);
         }
-        // Validate every target before changing any inventory.
-        edits.forEach(HeldFish::apply);
-        if (players.size() == 1) {
+        // Validate every target before changing any item or entity.
+        edits.forEach(Target::apply);
+        if (edits.size() == 1) {
             source.sendSuccess(() -> Component.translatable("commands.pufferfish_please.set." + property.key + ".single",
-                    players.iterator().next().getDisplayName(), property.display(value)), true);
+                    edits.getFirst().description(), property.display(value)), true);
         } else {
             source.sendSuccess(() -> Component.translatable("commands.pufferfish_please.set." + property.key + ".multiple",
-                    players.size(), property.display(value)), true);
+                    edits.size(), property.display(value)), true);
         }
-        return players.size();
+        return edits.size();
     }
 
     private enum Property {
@@ -116,8 +117,13 @@ public final class PufferfishCommands {
         }
     }
 
-    private record HeldFish(ServerPlayer player, ItemStack item, ItemStack fish) {
-        static HeldFish read(ServerPlayer player) throws CommandSyntaxException {
+    private record Target(Entity entity, ItemStack item, ItemStack fish) {
+        static Target read(Entity entity) throws CommandSyntaxException {
+            if (entity instanceof Pufferfish live) {
+                var fish = PufferfishData.copy(live);
+                return new Target(live, fish, fish);
+            }
+            if (!(entity instanceof ServerPlayer player)) throw UNSUPPORTED_ENTITY.create(entity.getDisplayName());
             var item = player.getMainHandItem().copy();
             var variant = PufferfishVariant.of(item);
             if (item.isEmpty() || variant == null || item.getItem() instanceof SpawnEggItem) throw UNSUPPORTED_ITEM.create(player.getDisplayName());
@@ -127,10 +133,21 @@ public final class PufferfishCommands {
                 fish = data.contains("Fish") ? ItemStack.parse(player.registryAccess(), data.get("Fish")).orElse(ItemStack.EMPTY) : variant.fish();
                 if (fish.isEmpty() || !fish.is(variant.fishItem()) || fish.getCount() != 1) throw INVALID_BUCKET.create(player.getDisplayName());
             }
-            return new HeldFish(player, item, fish);
+            return new Target(player, item, fish);
+        }
+
+        Component description() {
+            return entity instanceof ServerPlayer
+                    ? Component.translatable("commands.pufferfish_please.target.held", entity.getDisplayName(), item.getHoverName())
+                    : Component.translatable("commands.pufferfish_please.target.entity", entity.getDisplayName());
         }
 
         void apply() {
+            if (entity instanceof Pufferfish live) {
+                PufferfishData.set(live, fish);
+                return;
+            }
+            var player = (ServerPlayer) entity;
             if (item.getItem() instanceof MobBucketItem) {
                 var saved = fish.save(player.registryAccess());
                 CustomData.update(DataComponents.BUCKET_ENTITY_DATA, item, data -> data.put("Fish", saved));
