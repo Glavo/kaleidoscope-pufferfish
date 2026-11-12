@@ -31,37 +31,26 @@ import org.glavo.mcmod.pufferfish.test.TestPlayers;
 @PrefixGameTestTemplate(false)
 public final class PufferfishDurabilityGameTests {
     @GameTest(template = "empty")
-    public static void externalDurabilityAndStackLimitsSurviveUseAndRepair(GameTestHelper helper) {
-        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+    public static void externalDurabilitySurvivesUseRepairAndUpgrades(GameTestHelper helper) {
         var external = new ItemStack(Items.PUFFERFISH);
         external.set(DataComponents.MAX_STACK_SIZE, 1);
         external.set(DataComponents.MAX_DAMAGE, 777);
         external.set(DataComponents.DAMAGE, 0);
         var expected = external.copy();
-        player.getInventory().setItem(3, external);
-        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.event.tick.PlayerTickEvent.Post(player));
-        helper.assertTrue(ItemStack.matches(expected, external), "Inventory cleanup overwrote external durability");
         PufferfishDurability.damage(external, helper.getLevel(), null, null);
         helper.assertTrue(external.getMaxDamage() == 777 && external.getDamageValue() == 1, "Using a fish replaced external durability");
         external.setDamageValue(0);
-        PufferfishDurability.normalize(external);
         helper.assertTrue(ItemStack.matches(expected, external), "Repair removed external durability");
+        var upgraded = PufferfishDurability.transfer(external, external.transmuteCopy(PufferfishItems.NETHERITE.get(), 1));
+        helper.assertTrue(upgraded.getMaxDamage() == 777 && upgraded.getMaxStackSize() == 1,
+                "Upgrade replaced external durability");
 
-        var limited = new ItemStack(Items.PUFFERFISH);
-        limited.set(DataComponents.MAX_STACK_SIZE, 16);
-        var original = limited.copy();
-        PufferfishDurability.damage(limited, helper.getLevel(), null, null);
-        limited = ItemStack.parse(helper.getLevel().registryAccess(), limited.save(helper.getLevel().registryAccess())).orElseThrow();
-        limited.setDamageValue(0);
-        PufferfishDurability.normalize(limited);
-        helper.assertTrue(ItemStack.matches(original, limited), "Repair failed to restore the external stack limit");
-
-        PufferfishDurability.damage(limited, helper.getLevel(), null, null);
-        limited.set(DataComponents.MAX_DAMAGE, 999);
-        limited.setDamageValue(0);
-        PufferfishDurability.normalize(limited);
-        helper.assertTrue(limited.getMaxDamage() == 999 && limited.getMaxStackSize() == 1
-                && !limited.has(PufferfishPlease.MANAGED_DURABILITY.get()), "Cleanup overwrote a later external durability change");
+        var modified = worn(new ItemStack(Items.PUFFERFISH));
+        modified.set(DataComponents.MAX_DAMAGE, 999);
+        PufferfishDurability.activate(modified);
+        upgraded = PufferfishDurability.transfer(modified, modified.transmuteCopy(PufferfishItems.NETHERITE.get(), 1));
+        helper.assertTrue(upgraded.getMaxDamage() == 999 && upgraded.getMaxStackSize() == 1
+                && !upgraded.has(PufferfishPlease.MANAGED_DURABILITY.get()), "Upgrade overwrote a later external durability change");
         helper.succeed();
     }
 
@@ -80,7 +69,7 @@ public final class PufferfishDurabilityGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void pristineFishStackWornFishPersistAndRepairRestoresStacking(GameTestHelper helper) {
+    public static void freshFishStackAndActivatedFishRemainDurable(GameTestHelper helper) {
         for (var original : variants()) {
             original.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Keepsake"));
             int capacity = PufferfishItems.isFlail(original) ? 1 : 64;
@@ -92,8 +81,46 @@ public final class PufferfishDurabilityGameTests {
             var restored = ItemStack.parse(helper.getLevel().registryAccess(), stack.save(helper.getLevel().registryAccess())).orElseThrow();
             helper.assertTrue(ItemStack.matches(stack, restored), "Saving lost fish durability or components");
             restored.setDamageValue(0);
-            PufferfishDurability.normalize(restored);
-            helper.assertTrue(ItemStack.matches(restored, original), "Repair did not restore the original components and stackability");
+            helper.assertTrue(restored.isDamageableItem() && !restored.isStackable()
+                    && restored.getHoverName().equals(original.getHoverName()), "Repair lost metadata or made an activated fish stackable");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void anvilEnchantingActivatesFishAndGrindingKeepsDurability(GameTestHelper helper) {
+        var enchantments = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+        for (var fresh : TestItems.fishVariants()) {
+            var player = helper.makeMockPlayer(GameType.SURVIVAL);
+            var book = new ItemStack(Items.ENCHANTED_BOOK);
+            net.minecraft.world.item.enchantment.EnchantmentHelper.updateEnchantments(book,
+                    entries -> entries.set(enchantments.getOrThrow(Enchantments.MENDING), 1));
+            var anvil = new AnvilMenu(1, player.getInventory());
+            anvil.getSlot(0).set(fresh);
+            anvil.getSlot(1).set(book);
+            var fish = anvil.getSlot(2).getItem().copy();
+            helper.assertTrue(!fish.isEmpty() && fish.isDamageableItem() && !fish.isStackable()
+                    && !fish.getEnchantments().isEmpty(), "Anvil enchanting did not activate fish durability");
+            player.getInventory().add(fish.copy());
+            player.getInventory().add(fish.copy());
+            helper.assertTrue(player.getInventory().getItem(0).getCount() == 1
+                    && player.getInventory().getItem(1).getCount() == 1, "Inventory merged enchanted fish");
+
+            PufferfishDurability.damage(fish, helper.getLevel(), null, null);
+            fish.setDamageValue(0);
+            helper.assertTrue(!fish.isStackable(), "Repair made an enchanted fish stackable");
+
+            var menu = new net.minecraft.world.inventory.GrindstoneMenu(1, player.getInventory());
+            menu.getSlot(0).set(fish);
+            var result = menu.getSlot(2).getItem();
+            helper.assertTrue(!result.isEmpty() && result.getEnchantments().isEmpty() && result.isDamageableItem() && !result.isStackable(),
+                    "Disenchanting a repaired fish removed durability or allowed stacking");
+
+            fish.enchant(enchantments.getOrThrow(Enchantments.BINDING_CURSE), 1);
+            menu.getSlot(0).set(fish.copy());
+            result = menu.getSlot(2).getItem();
+            helper.assertTrue(!result.isEmpty() && !result.getEnchantments().isEmpty() && !result.isStackable(),
+                    "Grindstone allowed a cursed fish to stack");
         }
         helper.succeed();
     }
@@ -123,7 +150,6 @@ public final class PufferfishDurabilityGameTests {
         for (var original : variants()) {
             if (!PufferfishItems.isPufferfish(original)) continue;
             original.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Keepsake"));
-            original.enchant(helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.MENDING), 1);
             for (int space : new int[] {0, 4}) {
                 var player = player(helper);
                 var target = helper.spawn(EntityType.COW, new BlockPos(2, 2, 3));
@@ -186,9 +212,8 @@ public final class PufferfishDurabilityGameTests {
             var orb = new ExperienceOrb(helper.getLevel(), player.getX(), player.getY(), player.getZ(), 8);
             orb.playerTouch(player);
             helper.assertTrue(fish.getDamageValue() == 0 && player.totalExperience == 3, "Mending did not repair ten damage and return unused XP");
-            for (int tick = 0; tick < 20; tick++) player.doTick();
-            helper.assertTrue(fish.getMaxStackSize() == 64 && !fish.has(DataComponents.MAX_DAMAGE)
-                    && PufferfishColors.get(fish) == DyeColor.BLUE && !fish.getEnchantments().isEmpty(), "Mending lost metadata or left fish unstackable");
+            helper.assertTrue(fish.getMaxStackSize() == 1 && fish.isDamageableItem()
+                    && PufferfishColors.get(fish) == DyeColor.BLUE && !fish.getEnchantments().isEmpty(), "Mending lost metadata or allowed enchanted fish to stack");
         }
         helper.succeed();
     }
@@ -204,7 +229,7 @@ public final class PufferfishDurabilityGameTests {
         menu.getSlot(0).set(fish);
         menu.getSlot(1).set(new ItemStack(Items.PUFFERFISH, 4));
         var result = menu.getSlot(2).remove(1);
-        helper.assertTrue(!result.isEmpty() && !result.isDamaged() && result.getMaxStackSize() == 64 && !result.getEnchantments().isEmpty(),
+        helper.assertTrue(!result.isEmpty() && !result.isDamaged() && result.getMaxStackSize() == 1 && !result.getEnchantments().isEmpty(),
                 "Fresh fish did not repair an enchanted fish");
         menu.getSlot(2).onTake(player, result);
         helper.assertTrue(menu.getSlot(0).getItem().isEmpty() && menu.getSlot(1).getItem().getCount() == 3, "Anvil repair consumed the wrong number of fish");
@@ -262,13 +287,16 @@ public final class PufferfishDurabilityGameTests {
                     "Material upgrade repaired the fish or lost enchantments");
         }
         var netherite = worn(new ItemStack(PufferfishItems.NETHERITE.get()));
-        netherite.setDamageValue(1000);
         for (var addition : java.util.List.of(Items.HEAVY_CORE, Items.NETHER_STAR)) {
-            var input = new net.minecraft.world.item.crafting.SmithingRecipeInput(PufferfishItems.UPGRADE_TEMPLATE.toStack(), netherite, new ItemStack(addition));
-            var recipe = level.getRecipeManager().getRecipeFor(net.minecraft.world.item.crafting.RecipeType.SMITHING, input, level).orElseThrow().value();
-            var result = recipe.assemble(input, level.registryAccess());
-            helper.assertTrue(result.getMaxDamage() == PufferfishDurability.maximum(result)
-                    && result.getDamageValue() == (int) Math.ceil(1000.0 * result.getMaxDamage() / 2031), "Smithing reset or mis-scaled durability");
+            for (int damage : new int[] {0, 1000}) {
+                netherite.setDamageValue(damage);
+                var input = new net.minecraft.world.item.crafting.SmithingRecipeInput(PufferfishItems.UPGRADE_TEMPLATE.toStack(), netherite, new ItemStack(addition));
+                var recipe = level.getRecipeManager().getRecipeFor(net.minecraft.world.item.crafting.RecipeType.SMITHING, input, level).orElseThrow().value();
+                var result = recipe.assemble(input, level.registryAccess());
+                helper.assertTrue(result.getMaxDamage() == PufferfishDurability.maximum(result)
+                        && result.getMaxStackSize() == 1
+                        && result.getDamageValue() == (int) Math.ceil((double) damage * result.getMaxDamage() / 2031), "Smithing reset or mis-scaled durability");
+            }
         }
         helper.succeed();
     }
@@ -312,6 +340,11 @@ public final class PufferfishDurabilityGameTests {
                     && result.get(PufferfishPlease.COLOR.get()) == DyeColor.RED, "Crafting repair changed wear or dye");
             helper.assertTrue(ItemStack.parse(helper.getLevel().registryAccess(), result.save(helper.getLevel().registryAccess())).isPresent(),
                     "Crafting repair produced an invalid durable stack");
+            first.setDamageValue(10);
+            second.setDamageValue(10);
+            result = recipe.assemble(input, helper.getLevel().registryAccess());
+            helper.assertTrue(!result.isDamaged() && result.isDamageableItem() && result.getMaxStackSize() == 1
+                    && result.get(PufferfishPlease.COLOR.get()) == DyeColor.RED, "Full crafting repair lost durable state or dye");
         }
         helper.succeed();
     }

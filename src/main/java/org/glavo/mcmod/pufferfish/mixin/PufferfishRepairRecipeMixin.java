@@ -9,7 +9,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.RepairItemRecipe;
 import org.glavo.mcmod.pufferfish.PufferfishColors;
-import org.glavo.mcmod.pufferfish.PufferfishDurability;
 import org.glavo.mcmod.pufferfish.PufferfishItems;
 import org.glavo.mcmod.pufferfish.PufferfishPlease;
 import org.spongepowered.asm.mixin.Mixin;
@@ -33,7 +32,6 @@ public abstract class PufferfishRepairRecipeMixin {
                         && input.items().stream().filter(stack -> !stack.isEmpty()).allMatch(stack ->
                                 state.equals(stack.get(PufferfishPlease.MANAGED_DURABILITY.get())) && state.matches(stack))) {
                     result.set(PufferfishPlease.MANAGED_DURABILITY.get(), state);
-                    PufferfishDurability.normalize(result);
                 }
                 var color = ingredient.get(org.glavo.mcmod.pufferfish.PufferfishPlease.COLOR.get());
                 if (color != null) {

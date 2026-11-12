@@ -64,8 +64,8 @@ public final class PufferfishPumpGameTests {
         for (var fish : variants) {
             fish.enchant(mending, 1);
             fish.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Inflatable"));
+            PufferfishDurability.activate(fish);
             var worn = fish.copy();
-            PufferfishDurability.activate(worn);
             worn.setDamageValue(worn.getMaxDamage() - 1);
             var pump = new PufferfishPumpBlockEntity(helper.absolutePos(new net.minecraft.core.BlockPos(2, 2, 2)), PufferfishBlocks.PUMP.get().defaultBlockState());
             pump.setLevel(helper.getLevel());
@@ -82,7 +82,7 @@ public final class PufferfishPumpGameTests {
                     pump.press(player);
                     helper.assertTrue(pump.fish().getDamageValue() == Math.max(0, oldDamage - amount), "Stroke must restore ten percent, rounded up");
                     if (completed == 10) {
-                        helper.assertTrue(ItemStack.matches(pump.fish(), variants.get(i)), "Repair lost fish components or pristine stacking");
+                        helper.assertTrue(ItemStack.matches(pump.fish(), variants.get(i)), "Repair lost fish components or durable state");
                         helper.assertTrue(ItemStack.matches(pump.pump(), PufferfishItems.PUMP.toStack()), "Inflation changed the reusable pump");
                     }
                 }

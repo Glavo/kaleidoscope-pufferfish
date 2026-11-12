@@ -72,7 +72,6 @@ public final class PufferfishPumpBlockEntity extends BlockEntity {
         level.blockEvent(worldPosition, getBlockState().getBlock(), 1, 0);
         if (PufferfishPumpItem.canInflate(fish)) {
             fish.setDamageValue(Math.max(0, fish.getDamageValue() - (fish.getMaxDamage() + 9) / 10));
-            PufferfishDurability.normalize(fish);
             pressure = releaseTicks = 0;
         } else if (PufferfishItems.isPufferfish(fish)) {
             if (++pressure >= BURST_PRESSURE) {

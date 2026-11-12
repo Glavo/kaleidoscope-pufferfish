@@ -51,7 +51,7 @@ public final class PufferfishEnchantmentGameTests {
         menu.getSlot(0).set(new ItemStack(Items.PUFFERFISH));
         menu.getSlot(1).set(book);
         var result = menu.getSlot(2).getItem();
-        helper.assertTrue(!result.isEmpty() && level(helper, result, external) == 1
+        helper.assertTrue(!result.isEmpty() && result.getMaxStackSize() == 1 && level(helper, result, external) == 1
                 && level(helper, result, Enchantments.UNBREAKING) == 1, "Mixed book lost an applicable data-pack enchantment");
         helper.succeed();
     }

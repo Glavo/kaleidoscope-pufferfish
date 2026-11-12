@@ -4,7 +4,6 @@
 package org.glavo.mcmod.pufferfish;
 
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
@@ -20,16 +19,13 @@ import net.neoforged.neoforge.common.damagesource.DamageContainer;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
-import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
-/// Pristine fish stack normally; only a single active fish receives native durability components.
+/// Fresh fish stack normally; activating one permanently gives it native durability and a stack limit of one.
 public final class PufferfishDurability {
-    public record State(int maxDamage, int maxStackSize) {
-        public static final Codec<State> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-                Codec.intRange(1, Integer.MAX_VALUE).fieldOf("max_damage").forGetter(State::maxDamage),
-                Codec.intRange(1, 99).fieldOf("max_stack_size").forGetter(State::maxStackSize)).apply(instance, State::new));
-        public static final StreamCodec<ByteBuf, State> STREAM_CODEC = StreamCodec.composite(
-                ByteBufCodecs.VAR_INT, State::maxDamage, ByteBufCodecs.VAR_INT, State::maxStackSize, State::new);
+    public record State(int maxDamage) {
+        public static final Codec<State> CODEC = Codec.intRange(1, Integer.MAX_VALUE)
+                .fieldOf("max_damage").xmap(State::new, State::maxDamage).codec();
+        public static final StreamCodec<ByteBuf, State> STREAM_CODEC = ByteBufCodecs.VAR_INT.map(State::new, State::maxDamage);
 
         public boolean matches(ItemStack stack) {
             return stack.getOrDefault(DataComponents.MAX_DAMAGE, 0) == maxDamage
@@ -61,28 +57,13 @@ public final class PufferfishDurability {
         var state = stack.get(PufferfishPlease.MANAGED_DURABILITY.get());
         if (state != null && !state.matches(stack)) stack.remove(PufferfishPlease.MANAGED_DURABILITY.get());
         if (stack.has(DataComponents.MAX_DAMAGE)) return;
-        stack.set(PufferfishPlease.MANAGED_DURABILITY.get(), new State(maximum(stack), stack.getMaxStackSize()));
+        stack.set(PufferfishPlease.MANAGED_DURABILITY.get(), new State(maximum(stack)));
         stack.set(DataComponents.MAX_STACK_SIZE, 1);
         stack.set(DataComponents.MAX_DAMAGE, maximum(stack));
         if (!stack.has(DataComponents.DAMAGE)) stack.set(DataComponents.DAMAGE, 0);
     }
 
-    public static void normalize(ItemStack stack) {
-        if (!PufferfishItems.isWeapon(stack)) return;
-        var state = stack.get(PufferfishPlease.MANAGED_DURABILITY.get());
-        if (state == null) return;
-        if (!state.matches(stack)) {
-            stack.remove(PufferfishPlease.MANAGED_DURABILITY.get());
-            return;
-        }
-        if (stack.getOrDefault(DataComponents.DAMAGE, 0) > 0) return;
-        stack.remove(DataComponents.MAX_DAMAGE);
-        stack.remove(DataComponents.DAMAGE);
-        stack.set(DataComponents.MAX_STACK_SIZE, state.maxStackSize());
-        stack.remove(PufferfishPlease.MANAGED_DURABILITY.get());
-    }
-
-    /// Preserves the fraction of durability spent when changing fish material or crafting a flail.
+    /// Preserves activation and the fraction of durability spent when changing fish material or crafting a flail.
     public static ItemStack transfer(ItemStack source, ItemStack result) {
         if (result.isEmpty()) return result;
         var state = source.get(PufferfishPlease.MANAGED_DURABILITY.get());
@@ -91,12 +72,8 @@ public final class PufferfishDurability {
         int damage = source.getOrDefault(DataComponents.DAMAGE, 0);
         result.remove(DataComponents.MAX_DAMAGE);
         result.remove(DataComponents.DAMAGE);
-        result.set(DataComponents.MAX_STACK_SIZE, state.maxStackSize() == source.getItem().getDefaultInstance().getMaxStackSize()
-                ? result.getItem().getDefaultInstance().getMaxStackSize() : state.maxStackSize());
-        if (damage > 0) {
-            activate(result);
-            result.setDamageValue(Math.min(maximum(result) - 1, (int) Math.ceil((double) damage * maximum(result) / state.maxDamage())));
-        }
+        activate(result);
+        result.setDamageValue(Math.min(maximum(result) - 1, (int) Math.ceil((double) damage * maximum(result) / state.maxDamage())));
         return result;
     }
 
@@ -106,7 +83,6 @@ public final class PufferfishDurability {
         stack.hurtAndBreak(1, level, owner, item -> {
             if (owner != null && slot != null) owner.onEquippedItemBroken(item, slot);
         });
-        normalize(stack);
     }
 
     public static void beforeAttack(AttackEntityEvent event) {
@@ -160,7 +136,6 @@ public final class PufferfishDurability {
         long cost = 2L + left.getOrDefault(DataComponents.REPAIR_COST, 0) + right.getOrDefault(DataComponents.REPAIR_COST, 0);
         var result = left.copy();
         result.setDamageValue(0);
-        normalize(result);
         String name = event.getName();
         if (name != null && !name.equals(left.getHoverName().getString())) {
             if (name.isBlank()) result.remove(DataComponents.CUSTOM_NAME);
@@ -186,14 +161,5 @@ public final class PufferfishDurability {
             b.remove(component);
         }
         return ItemStack.isSameItemSameComponents(a, b);
-    }
-
-    /// Periodically restores stacking after repairs performed outside this mod.
-    public static void tick(PlayerTickEvent.Post event) {
-        var player = event.getEntity();
-        if (player.level().isClientSide || player.tickCount % 20 != 0) return;
-        var inventory = player.getInventory();
-        for (int slot = 0; slot < inventory.getContainerSize(); slot++) normalize(inventory.getItem(slot));
-        normalize(player.containerMenu.getCarried());
     }
 }

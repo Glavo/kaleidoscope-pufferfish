@@ -44,16 +44,17 @@ public final class HeavyPufferfishGameTests {
     @GameTest(template = "empty")
     public static void heavyCoreUpgradesOneNetheriteFish(GameTestHelper helper) {
         var level = helper.getLevel();
-        var base = new ItemStack(PufferfishItems.NETHERITE.get(), 3);
+        var base = new ItemStack(PufferfishItems.NETHERITE.get());
         base.set(DataComponents.CUSTOM_NAME, Component.literal("Tempest"));
         var density = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.DENSITY);
         EnchantmentHelper.updateEnchantments(base, entries -> entries.set(density, 5));
+        PufferfishDurability.activate(base);
         var input = new SmithingRecipeInput(PufferfishItems.UPGRADE_TEMPLATE.toStack(2), base, new ItemStack(Items.HEAVY_CORE, 2));
         var recipe = level.getRecipeManager().getRecipeFor(RecipeType.SMITHING, input, level).orElseThrow().value();
         var output = recipe.assemble(input, level.registryAccess());
         helper.assertTrue(output.is(PufferfishItems.HEAVY.get()) && output.getCount() == 1
                 && output.getHoverName().getString().equals("Tempest") && output.getEnchantmentLevel(density) == 5
-                && base.getCount() == 3 && output.has(DataComponents.FIRE_RESISTANT), "Upgrade lost identity, components, or input counts");
+                && base.getCount() == 1 && !output.isStackable() && output.has(DataComponents.FIRE_RESISTANT), "Upgrade lost identity, components, or input counts");
         var buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(), level.registryAccess());
         try {
             var codec = PufferfishPlease.HEAVY_UPGRADE.get().streamCodec();
@@ -75,7 +76,7 @@ public final class HeavyPufferfishGameTests {
         helper.assertTrue(result.mayPickup(player) && ItemStack.matches(output, result.getItem()), "Smithing table rejected the pufferfish upgrade template");
         var taken = result.remove(1);
         result.onTake(player, taken);
-        helper.assertTrue(menu.getSlot(0).getItem().getCount() == 1 && menu.getSlot(1).getItem().getCount() == 2
+        helper.assertTrue(menu.getSlot(0).getItem().getCount() == 1 && menu.getSlot(1).getItem().isEmpty()
                 && menu.getSlot(2).getItem().getCount() == 1, "Upgrade did not consume exactly one template, one fish and one core");
         for (var invalid : List.of(
                 new SmithingRecipeInput(ItemStack.EMPTY, base, input.addition()),

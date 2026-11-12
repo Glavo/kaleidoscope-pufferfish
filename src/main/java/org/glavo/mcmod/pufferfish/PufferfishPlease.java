@@ -198,7 +198,6 @@ public class PufferfishPlease {
         NeoForge.EVENT_BUS.addListener(PufferfishRetaliation::effectsOnThorns);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishShields::retaliate);
         NeoForge.EVENT_BUS.addListener(PufferfishDurability::afterDamage);
-        NeoForge.EVENT_BUS.addListener(PufferfishDurability::tick);
     }
 
     public static ResourceLocation id(String path) {

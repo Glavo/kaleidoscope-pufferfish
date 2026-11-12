@@ -77,6 +77,7 @@ public final class PufferfishEnchantments {
         }
         var result = fish.copy();
         EnchantmentHelper.setEnchantments(result, enchantments.toImmutable());
+        PufferfishDurability.activate(result);
         int previousCost = fish.getOrDefault(DataComponents.REPAIR_COST, 0);
         int bookCost = book.getOrDefault(DataComponents.REPAIR_COST, 0);
         long cost = (long) previousCost + bookCost + enchantmentCost;
