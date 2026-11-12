@@ -64,20 +64,20 @@ public final class PufferfishTooltipClientTest {
     private static void verifyCultivation() {
         for (var fish : org.glavo.mcmod.pufferfish.test.TestItems.fishVariants()) {
             var original = fish.copy();
-            if (tooltip(fish).contains(Component.translatable("tooltip.pufferfish_please.realm", PufferfishRealm.LEVEL_0.displayName()).getString())
+            if (tooltip(fish).contains(Component.translatable("tooltip.pufferfish_please.level", PufferfishLevel.LEVEL_0.displayName()).getString())
                     || !ItemStack.matches(fish, original)) {
-                throw new IllegalStateException("Fresh fish displayed a realm or changed during tooltip generation");
+                throw new IllegalStateException("Fresh fish displayed a level or changed during tooltip generation");
             }
             PufferfishDurability.activate(fish);
-            var initialRealm = Component.translatable("tooltip.pufferfish_please.realm", PufferfishRealm.LEVEL_0.displayName()).getString();
-            if (!tooltip(fish).contains(initialRealm) || fish.has(PufferfishPlease.CULTIVATION.get())) {
+            var initialLevel = Component.translatable("tooltip.pufferfish_please.level", PufferfishLevel.LEVEL_0.displayName()).getString();
+            if (!tooltip(fish).contains(initialLevel) || fish.has(PufferfishPlease.CULTIVATION.get())) {
                 throw new IllegalStateException("Activated fish did not display level zero without cultivation data");
             }
-            fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishRealm.LEVEL_2, 0.25, 12345));
+            fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_2, 0.25, 12345));
             var first = tooltip(fish);
-            var advancedRealm = Component.translatable("tooltip.pufferfish_please.realm", PufferfishRealm.LEVEL_2.displayName()).getString();
-            if (!first.contains(advancedRealm) || first.contains(initialRealm)) throw new IllegalStateException("Cultivation realm did not replace level zero");
-            fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishRealm.LEVEL_2, 0.875, 98765));
+            var advancedLevel = Component.translatable("tooltip.pufferfish_please.level", PufferfishLevel.LEVEL_2.displayName()).getString();
+            if (!first.contains(advancedLevel) || first.contains(initialLevel)) throw new IllegalStateException("Cultivation level did not replace level zero");
+            fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_2, 0.875, 98765));
             if (!first.equals(tooltip(fish))) throw new IllegalStateException("Tooltip exposed talent or unspecified experience progress");
         }
     }

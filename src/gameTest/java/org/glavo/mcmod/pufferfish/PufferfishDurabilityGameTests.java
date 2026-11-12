@@ -243,7 +243,7 @@ public final class PufferfishDurabilityGameTests {
         for (var pristine : variants()) {
             if (!PufferfishItems.isPufferfish(pristine)) continue;
             var original = worn(pristine);
-            original.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishRealm.LEVEL_2, 0.875, 12345));
+            original.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_2, 0.875, 12345));
             original.enchant(level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.MENDING), 1);
             var input = net.minecraft.world.item.crafting.CraftingInput.of(2, 1, java.util.List.of(original, new ItemStack(Items.WATER_BUCKET)));
             var recipe = new PufferfishBucketRecipe(net.minecraft.world.item.crafting.CraftingBookCategory.MISC);
@@ -288,7 +288,7 @@ public final class PufferfishDurabilityGameTests {
                     "Material upgrade repaired the fish or lost enchantments");
         }
         var netherite = worn(new ItemStack(PufferfishItems.NETHERITE.get()));
-        var cultivation = new PufferfishCultivation(PufferfishRealm.LEVEL_4, 0.625, 54321);
+        var cultivation = new PufferfishCultivation(PufferfishLevel.LEVEL_4, 0.625, 54321);
         netherite.set(PufferfishPlease.CULTIVATION.get(), cultivation);
         for (var addition : java.util.List.of(Items.HEAVY_CORE, Items.NETHER_STAR)) {
             for (int damage : new int[] {0, 1000}) {
