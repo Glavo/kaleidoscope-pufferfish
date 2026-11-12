@@ -122,10 +122,12 @@ public final class PufferfishAwakeningGameTests {
         flail.tick();
         helper.assertTrue(new PufferfishCultivation(PufferfishLevel.LEVEL_1, talent, 0, 0).equals(held.get(PufferfishPlease.CULTIVATION.get()))
                 && PufferfishDurability.sameWeapon(held, flail.getItem()), "Flail awakening changed only the projectile or broke the tether identity");
-        held.set(PufferfishPlease.CULTIVATION.get(), held.get(PufferfishPlease.CULTIVATION.get()).addExperience(7));
+        int promotionCost = (int) held.get(PufferfishPlease.CULTIVATION.get()).requiredExperience();
+        held.set(PufferfishPlease.CULTIVATION.get(), held.get(PufferfishPlease.CULTIVATION.get()).addExperience(promotionCost + 7));
         flail.tick();
-        helper.assertTrue(!flail.isRemoved() && held.get(PufferfishPlease.CULTIVATION.get()).experience() == 7,
-                "Gaining experience severed the returning flail or lost progress");
+        helper.assertTrue(!flail.isRemoved() && held.get(PufferfishPlease.CULTIVATION.get()).experience() == 7
+                && held.get(PufferfishPlease.CULTIVATION.get()).level() == PufferfishLevel.LEVEL_2,
+                "Promotion severed the returning flail or lost progress");
         flail.discard();
         other.discard();
         helper.succeed();

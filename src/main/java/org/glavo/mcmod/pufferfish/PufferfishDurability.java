@@ -157,8 +157,7 @@ public final class PufferfishDurability {
         var b = second.copy();
         var firstCultivation = a.get(PufferfishPlease.CULTIVATION.get());
         var secondCultivation = b.get(PufferfishPlease.CULTIVATION.get());
-        if (firstCultivation != null && secondCultivation != null && firstCultivation.level() == secondCultivation.level()
-                && firstCultivation.talent() == secondCultivation.talent()) {
+        if (firstCultivation != null && secondCultivation != null && firstCultivation.talent() == secondCultivation.talent()) {
             a.remove(PufferfishPlease.CULTIVATION.get());
             b.remove(PufferfishPlease.CULTIVATION.get());
         }

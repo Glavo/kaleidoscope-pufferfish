@@ -28,7 +28,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class AncientPrismarineGameTests {
-    @GameTest(template = "empty", timeoutTicks = 150)
+    @GameTest(template = "empty", timeoutTicks = 150, batch = "ancient_frame")
     public static void ancientFrameRequiresSixteenBlocksAndSupportsArchaeology(GameTestHelper helper) {
         var level = helper.getLevel();
         var pos = helper.absolutePos(new BlockPos(2, 132, 2));

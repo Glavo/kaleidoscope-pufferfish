@@ -62,12 +62,18 @@ public record PufferfishCultivation(PufferfishLevel level, double talent, long e
         return required > 0 && experience >= required;
     }
 
-    /// Both counters saturate independently; experience alone never changes level or talent.
+    /// Positive awards advance unrestricted ranks, preserving talent, surplus XP and lifetime totals.
     public PufferfishCultivation addExperience(int amount) {
         if (amount <= 0) return this;
-        return new PufferfishCultivation(level, talent,
+        var result = new PufferfishCultivation(level, talent,
                 experience + Math.min((long) amount, Long.MAX_VALUE - experience),
                 totalExperience + Math.min((long) amount, Long.MAX_VALUE - totalExperience));
+        while (result.isExperienceComplete()) {
+            var next = result.level().automaticSuccessor();
+            if (next == null) break;
+            result = new PufferfishCultivation(next, talent, result.experience() - result.requiredExperience(), result.totalExperience());
+        }
+        return result;
     }
 
     /// Highest-rank stars reflect current experience only, without spending it or applying talent.
@@ -101,7 +107,10 @@ public record PufferfishCultivation(PufferfishLevel level, double talent, long e
             for (var stack : recipients) {
                 var cultivation = stack.get(PufferfishPlease.CULTIVATION.get());
                 if (!stack.isEmpty() && cultivation != null) {
-                    stack.set(PufferfishPlease.CULTIVATION.get(), cultivation.addExperience(amount));
+                    var updated = cultivation.addExperience(amount);
+                    stack.set(PufferfishPlease.CULTIVATION.get(), updated);
+                    if (updated.level() != cultivation.level()) player.displayClientMessage(
+                            Component.translatable("message.pufferfish_please.rank_up", stack.getHoverName(), updated.displayName()), true);
                 }
             }
         }));

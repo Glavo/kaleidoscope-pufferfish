@@ -27,7 +27,7 @@ import org.glavo.mcmod.pufferfish.test.TestPlayers;
 @PrefixGameTestTemplate(false)
 public final class PufferfishCultivationGameTests {
     @GameTest(template = "empty")
-    public static void breakthroughExperienceDependsOnLevelAndTalentWithoutAutomaticPromotion(GameTestHelper helper) {
+    public static void breakthroughExperienceDependsOnLevelAndTalent(GameTestHelper helper) {
         long normalTotal = 0;
         long bestTotal = 0;
         long worstTotal = 0;
@@ -45,11 +45,14 @@ public final class PufferfishCultivationGameTests {
             helper.assertTrue(!ready.isExperienceComplete() && ready.displayName().equals(level.displayName()),
                     "Breakthrough experience was complete below the threshold");
             var readyName = Component.translatable("level.pufferfish_please.ready", level.displayName());
-            helper.assertTrue(ready.addExperience(1).displayName().equals(readyName), "Exact experience threshold did not display readiness");
-            ready = ready.addExperience(2);
-            helper.assertTrue(ready.isExperienceComplete() && ready.level() == level && ready.experience() == required + 1
-                    && ready.totalExperience() == Long.MAX_VALUE && ready.displayName().equals(readyName),
-                    "Reaching the threshold lost readiness, promoted the fish or consumed experience");
+            var complete = new PufferfishCultivation(level, 0.5, required, Long.MAX_VALUE);
+            helper.assertTrue(complete.isExperienceComplete() && complete.displayName().equals(readyName),
+                    "Stored experience at the threshold did not display readiness");
+            var promoted = ready.addExperience(1);
+            helper.assertTrue(promoted.level() == PufferfishLevel.values()[level.ordinal() + 1] && promoted.experience() == 0
+                    && promoted.totalExperience() == Long.MAX_VALUE && promoted.talent() == 0.5,
+                    "Exact threshold did not advance one rank while preserving lifetime XP and talent");
+            helper.assertTrue(ready.addExperience(2).experience() == 1, "Promotion discarded surplus experience");
         }
         helper.assertTrue(normalTotal == 12_601_760 && bestTotal == 6_300_880 && worstTotal == 25_203_520,
                 "Lifetime cultivation costs do not match the agreed curve and talent range");
@@ -59,6 +62,28 @@ public final class PufferfishCultivationGameTests {
                 "Initial breakthrough cost or upward rounding is incorrect");
         var highest = new PufferfishCultivation(PufferfishLevel.LEVEL_10, 0.5, Long.MAX_VALUE, Long.MAX_VALUE);
         helper.assertTrue(highest.requiredExperience() == 0 && !highest.isExperienceComplete(), "Highest level offered another experience breakthrough");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void promotionConsumesEachThresholdAndPreservesLifetimeExperience(GameTestHelper helper) {
+        for (double talent : new double[] {0, 0.5, 1}) {
+            var initial = new PufferfishCultivation(PufferfishLevel.LEVEL_1, talent, 0, 123);
+            int totalCost = talent == 0 ? 25_203_520 : talent == 0.5 ? 12_601_760 : 6_300_880;
+            var promoted = initial.addExperience(totalCost + 23_000_000);
+            helper.assertTrue(promoted.level() == PufferfishLevel.LEVEL_10 && promoted.talent() == talent
+                    && promoted.experience() == 23_000_000 && promoted.stars() == 2
+                    && promoted.totalExperience() == 123L + totalCost + 23_000_000,
+                    "Consecutive promotions used the wrong talent costs, spent lifetime XP or counted spent XP as stars");
+        }
+        var ready = new PufferfishCultivation(PufferfishLevel.LEVEL_1, 0.5, 560, 900);
+        helper.assertTrue(ready.addExperience(0) == ready && ready.addExperience(-1) == ready,
+                "Nonpositive awards changed cultivation");
+        helper.assertTrue(ready.addExperience(1).equals(new PufferfishCultivation(PufferfishLevel.LEVEL_3, 0.5, 1, 901)),
+                "Previously accumulated experience did not advance on the next award");
+        var saturated = new PufferfishCultivation(PufferfishLevel.LEVEL_1, 0.5, Long.MAX_VALUE - 1, Long.MAX_VALUE - 1).addExperience(7);
+        helper.assertTrue(saturated.level() == PufferfishLevel.LEVEL_10 && saturated.experience() == Long.MAX_VALUE - 12_601_760
+                && saturated.totalExperience() == Long.MAX_VALUE, "Consecutive promotions overflowed experience counters");
         helper.succeed();
     }
 
@@ -99,12 +124,15 @@ public final class PufferfishCultivationGameTests {
         var main = awakened(PufferfishItems.FLAIL.toStack());
         var off = awakened(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), net.minecraft.world.item.DyeColor.BLUE));
         var head = awakened(PufferfishItems.HEAVY.toStack());
+        for (var fish : java.util.List.of(main, off, head)) {
+            fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_1, 0.75, 110, 200));
+        }
         player.setItemSlot(EquipmentSlot.MAINHAND, main);
         player.setItemSlot(EquipmentSlot.OFFHAND, off);
         player.setItemSlot(EquipmentSlot.HEAD, head);
         new ExperienceOrb(helper.getLevel(), 0, 0, 0, 7).playerTouch(player);
         helper.runAfterDelay(1, () -> {
-            var expected = new PufferfishCultivation(PufferfishLevel.LEVEL_1, 0.75, 17, 107);
+            var expected = new PufferfishCultivation(PufferfishLevel.LEVEL_2, 0.75, 3, 207);
             for (var fish : java.util.List.of(main, off, head)) {
                 helper.assertTrue(expected.equals(fish.get(PufferfishPlease.CULTIVATION.get())),
                         "Equipped fish lost XP, shared XP, changed talent or received duplicate credit");
@@ -141,6 +169,7 @@ public final class PufferfishCultivationGameTests {
     public static void canceledPickupsAndIneligibleItemsDoNotGainCultivation(GameTestHelper helper) {
         var player = TestPlayers.serverPlayer(helper);
         var fish = awakened(new ItemStack(Items.PUFFERFISH));
+        fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_1, 0.75, 110, 200));
         var expected = fish.copy();
         player.setItemSlot(EquipmentSlot.MAINHAND, fish);
         var orb = new ExperienceOrb(helper.getLevel(), 0, 0, 0, 7);

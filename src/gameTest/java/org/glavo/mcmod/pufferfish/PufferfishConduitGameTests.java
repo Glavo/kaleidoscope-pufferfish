@@ -229,7 +229,7 @@ public final class PufferfishConduitGameTests {
         return event.getSpawnerDataList();
     }
 
-    @GameTest(template = "empty")
+    @GameTest(template = "empty", batch = "conduit_spawn_compat")
     public static void chineseFoodFishAreReplacedWithoutSuppressingMaterialPufferfish(GameTestHelper helper) {
         var croaker = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getOptional(
                 net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("kaleidoscope_chinesefood", "yellow_croaker"));

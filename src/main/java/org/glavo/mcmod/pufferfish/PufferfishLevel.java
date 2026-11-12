@@ -4,6 +4,7 @@
 package org.glavo.mcmod.pufferfish;
 
 import com.mojang.serialization.Codec;
+import javax.annotation.Nullable;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.StringRepresentable;
 
@@ -33,6 +34,23 @@ public enum PufferfishLevel implements StringRepresentable {
 
     /// Zero denotes a level without an experience-based breakthrough requirement.
     public long baseExperienceRequired() { return baseExperienceRequired; }
+
+    /// Null means experience alone cannot advance this rank.
+    @Nullable
+    public PufferfishLevel automaticSuccessor() {
+        return switch (this) {
+            case LEVEL_0, LEVEL_10 -> null;
+            case LEVEL_1 -> LEVEL_2;
+            case LEVEL_2 -> LEVEL_3;
+            case LEVEL_3 -> LEVEL_4;
+            case LEVEL_4 -> LEVEL_5;
+            case LEVEL_5 -> LEVEL_6;
+            case LEVEL_6 -> LEVEL_7;
+            case LEVEL_7 -> LEVEL_8;
+            case LEVEL_8 -> LEVEL_9;
+            case LEVEL_9 -> LEVEL_10;
+        };
+    }
 
     @Override
     public String getSerializedName() { return "level." + level; }
