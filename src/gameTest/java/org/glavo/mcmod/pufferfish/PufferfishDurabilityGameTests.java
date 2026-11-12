@@ -186,7 +186,7 @@ public final class PufferfishDurabilityGameTests {
             var orb = new ExperienceOrb(helper.getLevel(), player.getX(), player.getY(), player.getZ(), 8);
             orb.playerTouch(player);
             helper.assertTrue(fish.getDamageValue() == 0 && player.totalExperience == 3, "Mending did not repair ten damage and return unused XP");
-            player.doTick();
+            for (int tick = 0; tick < 20; tick++) player.doTick();
             helper.assertTrue(fish.getMaxStackSize() == 64 && !fish.has(DataComponents.MAX_DAMAGE)
                     && PufferfishColors.get(fish) == DyeColor.BLUE && !fish.getEnchantments().isEmpty(), "Mending lost metadata or left fish unstackable");
         }

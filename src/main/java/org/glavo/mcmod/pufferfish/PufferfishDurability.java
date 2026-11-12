@@ -188,11 +188,12 @@ public final class PufferfishDurability {
         return ItemStack.isSameItemSameComponents(a, b);
     }
 
-    /// Restores stacking after native repairs, including experience orbs and anvil repairs.
+    /// Periodically restores stacking after repairs performed outside this mod.
     public static void tick(PlayerTickEvent.Post event) {
-        if (event.getEntity().level().isClientSide) return;
-        var inventory = event.getEntity().getInventory();
+        var player = event.getEntity();
+        if (player.level().isClientSide || player.tickCount % 20 != 0) return;
+        var inventory = player.getInventory();
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) normalize(inventory.getItem(slot));
-        normalize(event.getEntity().containerMenu.getCarried());
+        normalize(player.containerMenu.getCarried());
     }
 }
