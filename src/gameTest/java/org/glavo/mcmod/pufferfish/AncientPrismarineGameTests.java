@@ -140,7 +140,7 @@ public final class AncientPrismarineGameTests {
         var table = level.getServer().reloadableRegistries().getLootTable(AncientPrismarineBlockEntity.LOOT_TABLE);
         var random = net.minecraft.util.RandomSource.create(74019L);
         var seen = new java.util.HashSet<net.minecraft.world.item.Item>();
-        int templates = 0, rareFish = 0, diamonds = 0;
+        int templates = 0, rareFish = 0, diamonds = 0, pearls = 0;
         for (int roll = 0; roll < 2048; roll++) {
             var items = table.getRandomItems(params, random);
             helper.assertTrue(items.size() == 1 && items.getFirst().getCount() == 1, "Archaeology must produce one treasure");
@@ -150,14 +150,16 @@ public final class AncientPrismarineGameTests {
                     "Archaeology produced fresh or waxed copper pufferfish");
             boolean materialFish = copperStage >= 1 && copperStage <= 3 || stack.is(PufferfishItems.IRON)
                     || stack.is(PufferfishItems.GOLDEN) || stack.is(PufferfishItems.DIAMOND);
-            helper.assertTrue(materialFish || stack.is(PufferfishItems.UPGRADE_TEMPLATE) || stack.is(Items.PRISMARINE_SHARD)
+            helper.assertTrue(materialFish || stack.is(PufferfishItems.UPGRADE_TEMPLATE) || stack.is(PufferfishItems.ANCIENT_PEARL) || stack.is(Items.PRISMARINE_SHARD)
                     || stack.is(Items.PRISMARINE_CRYSTALS) || stack.is(Items.GOLD_NUGGET), "Archaeology produced unexpected treasure");
             seen.add(stack.getItem());
             if (stack.is(PufferfishItems.UPGRADE_TEMPLATE)) templates++;
             if (materialFish) rareFish++;
             if (stack.is(PufferfishItems.DIAMOND)) diamonds++;
+            if (stack.is(PufferfishItems.ANCIENT_PEARL)) pearls++;
         }
-        helper.assertTrue(seen.size() == 10, "Archaeology treasure variety or an aged copper stage is missing");
+        helper.assertTrue(seen.size() == 11, "Archaeology treasure variety or an aged copper stage is missing");
+        helper.assertTrue(pearls >= 60 && pearls <= 145, "Ancient pearls are missing or inconsistent with a five percent drop rate");
         helper.assertTrue(templates > 0 && templates < 200, "Template loot is missing or not rare");
         helper.assertTrue(rareFish > 0 && rareFish < 320, "Material fish are missing or too common");
         helper.assertTrue(diamonds > 0 && diamonds < 30, "Diamond pufferfish are missing or too common");

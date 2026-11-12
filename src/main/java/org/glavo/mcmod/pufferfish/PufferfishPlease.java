@@ -112,6 +112,7 @@ public class PufferfishPlease {
                     }
                     output.accept(PufferfishItems.PUMP);
                     output.accept(PufferfishItems.UPGRADE_TEMPLATE);
+                    output.accept(PufferfishItems.ANCIENT_PEARL);
 
                     output.accept(PufferfishItems.FLAIL);
                     for (var color : PufferfishVariant.DYED.keySet()) {

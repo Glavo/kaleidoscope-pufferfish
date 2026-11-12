@@ -129,6 +129,9 @@ public final class PufferfishItems {
                     Component.translatable("item.pufferfish_please.pufferfish_upgrade.base_slot_description"),
                     Component.translatable("item.pufferfish_please.pufferfish_upgrade.additions_slot_description"),
                     List.of(), List.of()));
+    public static final DeferredItem<Item> ANCIENT_PEARL = ITEMS.register("ancient_pufferfish_pearl",
+            () -> new Item(new Item.Properties().rarity(Rarity.RARE)));
+
     private PufferfishItems() {}
 
     private static java.util.List<DeferredItem<Item>> registerCopperFish() {

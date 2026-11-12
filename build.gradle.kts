@@ -180,7 +180,7 @@ val generateItemModels = tasks.register<Sync>("generateItemModels") {
         listOf("${color}_pufferfish", "${color}_pufferfish_bucket")
     } + listOf("netherite_pufferfish", "radiant_pufferfish", "golden_pufferfish", "pufferfish_sashimi", "heavy_pufferfish",
         "braised_pufferfish", "braised_pufferfish_rice_bowl", "pufferfish_zosui",
-        "raw_pufferfish_baozi", "pufferfish_baozi",
+        "raw_pufferfish_baozi", "pufferfish_baozi", "ancient_pufferfish_pearl",
         "copper_pufferfish", "iron_pufferfish", "diamond_pufferfish")
     inputs.property("modId", modId)
     inputs.property("modelNames", modelNames)
