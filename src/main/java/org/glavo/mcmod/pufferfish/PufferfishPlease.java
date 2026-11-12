@@ -173,6 +173,7 @@ public class PufferfishPlease {
         INGREDIENTS.register(bus);
         TABS.register(bus);
         bus.addListener(FlailAttackPayload::register);
+        NeoForge.EVENT_BUS.addListener(PufferfishCommands::register);
         NeoForge.EVENT_BUS.addListener(CopperPufferfish::interact);
         NeoForge.EVENT_BUS.addListener(PufferfishColors::interact);
         NeoForge.EVENT_BUS.addListener(PufferfishMobs::feed);
