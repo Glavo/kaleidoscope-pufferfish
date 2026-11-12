@@ -492,7 +492,7 @@
   "level.pufferfish_please.starred": "%s-Star %s",
   "message.pufferfish_please.rank_up": "%s has reached %s rank!",
   "message.pufferfish_please.capture_too_healthy": "This pufferfish is still too strong to capture.",
-  "tooltip.pufferfish_please.level": "Rank: %s",
+  "tooltip.pufferfish_please.level": "%s",
   "tooltip.pufferfish_please.pufferfish_aspic.maxim": "A golden wobble with a familiar sting.",
   "tooltip.pufferfish_please.pufferfish_skin_broth": "Refrigerate in the upper compartment for 2 minutes to set into aspic.",
   "tooltip.pufferfish_please.pufferfish_stargazy_pie.maxim": "A skyward stare in every serving.",
