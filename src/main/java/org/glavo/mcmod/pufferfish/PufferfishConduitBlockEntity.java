@@ -60,7 +60,7 @@ public final class PufferfishConduitBlockEntity extends ConduitBlockEntity {
     public static void applyPower(Level level, BlockPos pos, int frameSize) {
         boolean ancient = level.getBlockState(pos).is(PufferfishBlocks.ANCIENT_CONDUIT.get());
         int radius = frameSize / 7 * 16;
-        var bounds = new AABB(pos).inflate(radius).expandTowards(0, level.getHeight(), 0);
+        var bounds = new AABB(pos).inflate(radius);
         for (var target : level.getEntitiesOfClass(LivingEntity.class, bounds,
                 target -> target instanceof Pufferfish || target instanceof Player && target.isInWaterOrRain())) {
             if (pos.closerThan(target.blockPosition(), radius)) {

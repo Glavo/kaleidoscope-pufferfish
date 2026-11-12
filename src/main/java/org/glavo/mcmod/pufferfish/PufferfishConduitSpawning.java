@@ -61,9 +61,12 @@ public final class PufferfishConduitSpawning {
     }
 
     public static void potentialSpawns(LevelEvent.PotentialSpawns event) {
-        if (!(event.getLevel() instanceof ServerLevel level) || !isInRange(level, event.getPos())) return;
+        if (!(event.getLevel() instanceof ServerLevel level) || !ACTIVE.containsKey(level)) return;
+        var candidates = event.getSpawnerDataList();
+        if (candidates.stream().noneMatch(entry -> entry.type != EntityType.PUFFERFISH
+                && (entry.type.is(SUPPRESSED) || entry.type.is(REPLACED))) || !isInRange(level, event.getPos())) return;
         boolean replaced = false;
-        for (var entry : List.copyOf(event.getSpawnerDataList())) {
+        for (var entry : List.copyOf(candidates)) {
             if (entry.type == EntityType.PUFFERFISH) continue;
             if (entry.type.is(SUPPRESSED) || entry.type.is(REPLACED)) {
                 event.removeSpawnerData(entry);

@@ -176,6 +176,8 @@ public final class PufferfishDurability {
     }
 
     public static boolean sameWeapon(ItemStack first, ItemStack second) {
+        if (first.getItem() != second.getItem()) return false;
+        if (ItemStack.isSameItemSameComponents(first, second)) return true;
         var a = first.copy();
         var b = second.copy();
         for (var component : java.util.List.of(DataComponents.DAMAGE, DataComponents.MAX_DAMAGE, DataComponents.MAX_STACK_SIZE,

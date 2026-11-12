@@ -22,7 +22,6 @@ import net.minecraft.world.phys.Vec3;
 import org.glavo.mcmod.pufferfish.PufferfishPlease;
 import org.glavo.mcmod.pufferfish.PufferfishItems;
 import org.joml.Quaternionf;
-import org.joml.Vector3f;
 
 /// Renders a colored pufferfish head and alternating metal chain links.
 public final class PufferfishFlailModel {
@@ -105,19 +104,20 @@ public final class PufferfishFlailModel {
         sag = Math.max(0, Math.min(sag, length * 0.35));
         int count = Math.min(96, Math.max(1, (int) Math.ceil((length + sag) / 0.10)));
         var buffer = buffers.getBuffer(RenderType.entityCutoutNoCull(metalTexture(stack)));
+        int color = metalColor(stack);
+        var rotation = new Quaternionf();
+        var start = chainPoint(offset, sag, 0);
         for (int i = 0; i < count; i++) {
-            var start = chainPoint(offset, sag, (double) i / count);
             var end = chainPoint(offset, sag, (double) (i + 1) / count);
-            var center = start.add(end).scale(0.5);
             var direction = end.subtract(start).normalize();
             pose.pushPose();
-            pose.translate(center.x, center.y, center.z);
-            pose.mulPose(new Quaternionf().rotationTo(new Vector3f(0, 1, 0),
-                    new Vector3f((float) direction.x, (float) direction.y, (float) direction.z)));
+            pose.translate((start.x + end.x) * 0.5, (start.y + end.y) * 0.5, (start.z + end.z) * 0.5);
+            pose.mulPose(rotation.rotationTo(0, 1, 0, (float) direction.x, (float) direction.y, (float) direction.z));
             if ((i & 1) != 0) pose.mulPose(Axis.YP.rotationDegrees(90));
             pose.scale(1, (float) (start.distanceTo(end) / 0.10), 1);
-            link.render(pose, buffer, light, OverlayTexture.NO_OVERLAY, metalColor(stack));
+            link.render(pose, buffer, light, OverlayTexture.NO_OVERLAY, color);
             pose.popPose();
+            start = end;
         }
     }
 

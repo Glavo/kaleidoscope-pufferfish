@@ -142,7 +142,7 @@ public final class MaterialPufferfish extends Pufferfish {
             if (validTarget(provoker)) return provoker;
         }
         return level().getEntitiesOfClass(LivingEntity.class, getBoundingBox().inflate(getAttributeValue(Attributes.FOLLOW_RANGE)),
-                        target -> validTarget(target) && (isHuntedHostile(target) || isHostileToPlayers() && target instanceof Player))
+                        target -> (isHuntedHostile(target) || target instanceof Player && isHostileToPlayers()) && validTarget(target))
                 .stream().min(java.util.Comparator.comparingDouble(this::distanceToSqr)).orElse(null);
     }
 
