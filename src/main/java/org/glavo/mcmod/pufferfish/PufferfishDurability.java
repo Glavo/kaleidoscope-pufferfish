@@ -131,6 +131,10 @@ public final class PufferfishDurability {
     public static void repair(net.neoforged.neoforge.event.AnvilUpdateEvent event) {
         var left = event.getLeft();
         var right = event.getRight();
+        if (PufferfishItems.isWeapon(left) && right.is(left.getItem()) && right.has(PufferfishPlease.CULTIVATION.get())) {
+            event.setCanceled(true);
+            return;
+        }
         if (!event.getOutput().isEmpty() || !PufferfishItems.isWeapon(left) || !left.isDamaged() || left.getCount() != 1
                 || !right.is(left.getItem()) || right.getOrDefault(DataComponents.DAMAGE, 0) != 0 || !right.getEnchantments().isEmpty()) return;
         long cost = 2L + left.getOrDefault(DataComponents.REPAIR_COST, 0) + right.getOrDefault(DataComponents.REPAIR_COST, 0);

@@ -22,7 +22,6 @@ import net.minecraft.world.entity.animal.Pufferfish;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.event.entity.player.PlayerXpEvent;
-import org.glavo.mcmod.pufferfish.entity.MaterialPufferfish;
 
 /// Post-awakening state. Total experience is a lifetime statistic, independent of unspent progress.
 public record PufferfishCultivation(PufferfishLevel level, double talent, long experience, long totalExperience) {
@@ -107,17 +106,10 @@ public record PufferfishCultivation(PufferfishLevel level, double talent, long e
                 var previous = stack.get(PufferfishPlease.CULTIVATION.get());
                 if (advanceAtConduit(stack)) announcePromotion(player, stack, previous.level());
             }
-        } else if (target instanceof MaterialPufferfish fish) {
-            var stack = fish.fish().copy();
-            if (advanceAtConduit(stack)) fish.setFish(stack);
         } else if (target instanceof Pufferfish fish) {
-            var stored = fish.getExistingDataOrNull(PufferfishPlease.FISH_ITEM);
-            if (stored == null) return;
-            var stack = stored.copy();
-            if (advanceAtConduit(stack)) {
-                fish.setData(PufferfishPlease.FISH_ITEM, stack);
-                PufferfishSize.update(fish);
-            }
+            if (!PufferfishData.stored(fish).has(PufferfishPlease.CULTIVATION.get())) return;
+            var stack = PufferfishData.copy(fish);
+            if (advanceAtConduit(stack)) PufferfishData.set(fish, stack);
         }
     }
 

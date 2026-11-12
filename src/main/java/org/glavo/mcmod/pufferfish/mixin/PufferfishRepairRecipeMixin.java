@@ -8,22 +8,45 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.RepairItemRecipe;
+import net.minecraft.world.level.Level;
 import org.glavo.mcmod.pufferfish.PufferfishColors;
 import org.glavo.mcmod.pufferfish.PufferfishItems;
 import org.glavo.mcmod.pufferfish.PufferfishPlease;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(RepairItemRecipe.class)
 public abstract class PufferfishRepairRecipeMixin {
+    @Unique
+    private static boolean pufferfishPlease$hasMultipleCultivatedFish(CraftingInput input) {
+        return input.items().stream().filter(stack -> PufferfishItems.isWeapon(stack)
+                && stack.has(PufferfishPlease.CULTIVATION.get())).limit(2).count() > 1;
+    }
+
+    /// Two cultivated fish remain separate individuals; repair never discards or merges either one's progress.
+    @Inject(method = "matches(Lnet/minecraft/world/item/crafting/CraftingInput;Lnet/minecraft/world/level/Level;)Z",
+            at = @At("RETURN"), cancellable = true)
+    private void pufferfishPlease$checkCultivation(CraftingInput input, Level level, CallbackInfoReturnable<Boolean> callback) {
+        if (callback.getReturnValueZ() && pufferfishPlease$hasMultipleCultivatedFish(input)) callback.setReturnValue(false);
+    }
+
     /// Vanilla repair creates a fresh stack with max damage but retains its default stack limit.
     @Inject(method = "assemble(Lnet/minecraft/world/item/crafting/CraftingInput;Lnet/minecraft/core/HolderLookup$Provider;)Lnet/minecraft/world/item/ItemStack;",
-            at = @At("RETURN"))
+            at = @At("RETURN"), cancellable = true)
     private void pufferfishPlease$repairFish(CraftingInput input, HolderLookup.Provider registries, CallbackInfoReturnable<ItemStack> callback) {
         var result = callback.getReturnValue();
         if (!PufferfishItems.isWeapon(result)) return;
+        if (pufferfishPlease$hasMultipleCultivatedFish(input)) {
+            callback.setReturnValue(ItemStack.EMPTY);
+            return;
+        }
+        for (var ingredient : input.items()) {
+            var cultivation = ingredient.get(PufferfishPlease.CULTIVATION.get());
+            if (cultivation != null) result.set(PufferfishPlease.CULTIVATION.get(), cultivation);
+        }
         result.set(DataComponents.MAX_STACK_SIZE, 1);
         for (var ingredient : input.items()) {
             if (!ingredient.isEmpty()) {
@@ -33,9 +56,9 @@ public abstract class PufferfishRepairRecipeMixin {
                                 state.equals(stack.get(PufferfishPlease.MANAGED_DURABILITY.get())) && state.matches(stack))) {
                     result.set(PufferfishPlease.MANAGED_DURABILITY.get(), state);
                 }
-                var color = ingredient.get(org.glavo.mcmod.pufferfish.PufferfishPlease.COLOR.get());
+                var color = ingredient.get(PufferfishPlease.COLOR.get());
                 if (color != null) {
-                    if (PufferfishItems.isFlail(result)) result.set(org.glavo.mcmod.pufferfish.PufferfishPlease.COLOR.get(), color);
+                    if (PufferfishItems.isFlail(result)) result.set(PufferfishPlease.COLOR.get(), color);
                     else PufferfishColors.dye(result, color);
                 }
                 break;

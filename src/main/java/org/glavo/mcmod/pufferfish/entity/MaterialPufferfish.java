@@ -75,6 +75,7 @@ public final class MaterialPufferfish extends Pufferfish {
         builder.define(ATTACK_PHASE, IDLE);
     }
 
+    /// Borrowed, read-only item data; commit changes through setFish.
     public ItemStack fish() { return entityData.get(FISH); }
 
     public void setFish(ItemStack fish) {

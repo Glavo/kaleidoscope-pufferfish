@@ -91,25 +91,15 @@ public final class PufferfishColors {
     }
 
     public static void colorDrops(LivingDropsEvent event) {
-        if (event.getEntity() instanceof org.glavo.mcmod.pufferfish.entity.MaterialPufferfish fish) {
-            for (var drop : event.getDrops()) {
-                if (PufferfishItems.isPufferfish(drop.getItem())) drop.setItem(fish.fish().copyWithCount(drop.getItem().getCount()));
-            }
-            return;
-        }
         if (event.getEntity() instanceof Pufferfish fish) {
-            DyeColor color = get(fish);
-            var stored = fish.getExistingDataOrNull(PufferfishPlease.FISH_ITEM);
-            if (stored != null && !stored.isEmpty()) {
-                for (var drop : event.getDrops()) {
-                    if (drop.getItem().is(Items.PUFFERFISH)) drop.setItem(stored.copyWithCount(1));
-                }
-            }
-            if (color != null) {
-                for (var drop : event.getDrops()) {
-                    if (drop.getItem().is(Items.PUFFERFISH)) {
-                        drop.setItem(dye(drop.getItem().copy(), color));
-                    }
+            boolean material = fish instanceof org.glavo.mcmod.pufferfish.entity.MaterialPufferfish;
+            var stored = PufferfishData.stored(fish);
+            var stack = stored.isEmpty() ? ItemStack.EMPTY : PufferfishData.copy(fish);
+            var color = get(fish);
+            for (var drop : event.getDrops()) {
+                if (material ? PufferfishItems.isPufferfish(drop.getItem()) : drop.getItem().is(Items.PUFFERFISH)) {
+                    if (!stack.isEmpty()) drop.setItem(stack.copyWithCount(material ? drop.getItem().getCount() : 1));
+                    else if (color != null) drop.setItem(dye(drop.getItem().copy(), color));
                 }
             }
         }

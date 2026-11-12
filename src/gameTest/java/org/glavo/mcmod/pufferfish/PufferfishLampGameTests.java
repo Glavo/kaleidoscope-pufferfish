@@ -44,13 +44,20 @@ public final class PufferfishLampGameTests {
         helper.assertTrue(PufferfishLamps.VARIANTS.size() == 30, "Missing lamp variants");
         for (var variant : PufferfishLamps.VARIANTS.values()) {
             var fish = variant.fish().get();
+            var cultivation = new PufferfishCultivation(PufferfishLevel.LEVEL_5, 0.75, 123, 456);
             for (boolean reversed : new boolean[] {false, true}) {
+                if (reversed) {
+                    PufferfishDurability.activate(fish);
+                    fish.set(PufferfishPlease.CULTIVATION.get(), cultivation);
+                }
                 var torch = new ItemStack(Items.TORCH);
                 var input = CraftingInput.of(2, 1, reversed ? List.of(torch, fish) : List.of(fish, torch));
                 var recipe = level.getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, level).orElseThrow().value();
                 var result = recipe.assemble(input, level.registryAccess());
                 helper.assertTrue(result.is(variant.block().get().asItem()) && result.getCount() == 1,
                         "Lamp recipe lost the fish variant");
+                helper.assertTrue(java.util.Objects.equals(result.get(PufferfishPlease.CULTIVATION.get()), reversed ? cultivation : null)
+                        && !result.has(DataComponents.MAX_DAMAGE), "Lamp lost cultivation or inherited weapon durability");
                 helper.assertTrue(recipe.getRemainingItems(input).stream().allMatch(ItemStack::isEmpty), "Lamp recipe returned ingredients");
             }
         }

@@ -67,6 +67,8 @@ public class PufferfishPlease {
             RECIPES.register("pufferfish_flail", PufferfishFlailRecipe.Serializer::new);
     public static final DeferredHolder<RecipeSerializer<?>, PufferfishMaterialRecipe.Serializer> MATERIAL_RECIPE =
             RECIPES.register("material_pufferfish", PufferfishMaterialRecipe.Serializer::new);
+    public static final DeferredHolder<RecipeSerializer<?>, PufferfishLampRecipe.Serializer> LAMP_RECIPE =
+            RECIPES.register("pufferfish_lamp", PufferfishLampRecipe.Serializer::new);
     public static final DeferredHolder<RecipeSerializer<?>, SimpleCraftingRecipeSerializer<PufferfishDyeRecipe>> DYE_RECIPE =
             RECIPES.register("dye_pufferfish", () -> new SimpleCraftingRecipeSerializer<>(PufferfishDyeRecipe::new));
     public static final DeferredHolder<RecipeSerializer<?>, SimpleCraftingRecipeSerializer<PufferfishBucketRecipe>> BUCKET_RECIPE =

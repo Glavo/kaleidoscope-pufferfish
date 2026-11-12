@@ -223,6 +223,8 @@ public final class PufferfishDurabilityGameTests {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         player.experienceLevel = 30;
         var fish = worn(new ItemStack(Items.PUFFERFISH));
+        var cultivation = new PufferfishCultivation(PufferfishLevel.LEVEL_5, 0.875, 123, 456);
+        fish.set(PufferfishPlease.CULTIVATION.get(), cultivation);
         fish.setDamageValue(40);
         fish.enchant(helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.MENDING), 1);
         var menu = new AnvilMenu(1, player.getInventory());
@@ -231,8 +233,17 @@ public final class PufferfishDurabilityGameTests {
         var result = menu.getSlot(2).remove(1);
         helper.assertTrue(!result.isEmpty() && !result.isDamaged() && result.getMaxStackSize() == 1 && !result.getEnchantments().isEmpty(),
                 "Fresh fish did not repair an enchanted fish");
+        helper.assertTrue(cultivation.equals(result.get(PufferfishPlease.CULTIVATION.get())), "Anvil repair discarded cultivation");
         menu.getSlot(2).onTake(player, result);
         helper.assertTrue(menu.getSlot(0).getItem().isEmpty() && menu.getSlot(1).getItem().getCount() == 3, "Anvil repair consumed the wrong number of fish");
+        for (boolean enchanted : new boolean[] {false, true}) {
+            var material = worn(new ItemStack(Items.PUFFERFISH));
+            material.set(PufferfishPlease.CULTIVATION.get(), cultivation);
+            if (enchanted) material.enchant(helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.MENDING), 1);
+            menu.getSlot(0).set(fish.copy());
+            menu.getSlot(1).set(material);
+            helper.assertTrue(menu.getSlot(2).getItem().isEmpty(), "Anvil consumed a cultivated repair material");
+        }
         helper.succeed();
     }
 
@@ -349,6 +360,19 @@ public final class PufferfishDurabilityGameTests {
             result = recipe.assemble(input, helper.getLevel().registryAccess());
             helper.assertTrue(!result.isDamaged() && result.isDamageableItem() && result.getMaxStackSize() == 1
                     && result.get(PufferfishPlease.COLOR.get()) == DyeColor.RED, "Full crafting repair lost durable state or dye");
+            var cultivation = new PufferfishCultivation(PufferfishLevel.LEVEL_5, 0.875, 123, 456);
+            first.set(PufferfishPlease.CULTIVATION.get(), cultivation);
+            for (var order : java.util.List.of(java.util.List.of(first, second), java.util.List.of(second, first))) {
+                var cultivatedInput = net.minecraft.world.item.crafting.CraftingInput.of(2, 1, order);
+                helper.assertTrue(recipe.matches(cultivatedInput, helper.getLevel())
+                        && cultivation.equals(recipe.assemble(cultivatedInput, helper.getLevel().registryAccess()).get(PufferfishPlease.CULTIVATION.get())),
+                        "Crafting repair discarded cultivation based on ingredient order");
+            }
+            for (var other : java.util.List.of(cultivation, new PufferfishCultivation(PufferfishLevel.LEVEL_2, 0.25, 12, 34))) {
+                second.set(PufferfishPlease.CULTIVATION.get(), other);
+                helper.assertTrue(!recipe.matches(input, helper.getLevel()) && recipe.assemble(input, helper.getLevel().registryAccess()).isEmpty(),
+                        "Crafting repair consumed two cultivated fish");
+            }
         }
         helper.succeed();
     }

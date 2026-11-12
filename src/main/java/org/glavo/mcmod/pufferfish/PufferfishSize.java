@@ -8,7 +8,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.animal.Pufferfish;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
-import org.glavo.mcmod.pufferfish.entity.MaterialPufferfish;
 
 public final class PufferfishSize {
     private static final net.minecraft.resources.ResourceLocation MODIFIER = PufferfishPlease.id("cultivation_scale");
@@ -25,9 +24,9 @@ public final class PufferfishSize {
     /// The native attribute synchronizes geometry and collision size without replacing external modifiers.
     public static void update(Pufferfish fish) {
         if (fish.level().isClientSide) return;
-        var stack = fish instanceof MaterialPufferfish material ? material.fish() : fish.getExistingDataOrNull(PufferfishPlease.FISH_ITEM);
+        var stack = PufferfishData.stored(fish);
         var attribute = fish.getAttribute(Attributes.SCALE);
-        double amount = (stack == null ? 1 : scale(stack)) - 1;
+        double amount = scale(stack) - 1;
         var previous = attribute.getModifier(MODIFIER);
         if (previous != null && previous.amount() == amount) return;
         attribute.removeModifier(MODIFIER);

@@ -185,12 +185,26 @@ public final class PufferfishAwakeningGameTests {
                 fish.saveWithoutId(saved);
                 var loaded = (Pufferfish) fish.getType().create(helper.getLevel());
                 loaded.load(saved);
+                if (!(fish instanceof MaterialPufferfish)) PufferfishColors.set(loaded, net.minecraft.world.item.DyeColor.RED);
                 var bucket = loaded.getBucketItemStack();
                 loaded.saveToBucketTag(bucket);
                 var item = ItemStack.parseOptional(helper.getLevel().registryAccess(), bucket.get(DataComponents.BUCKET_ENTITY_DATA).copyTag().getCompound("Fish"));
                 helper.assertTrue(new PufferfishCultivation(PufferfishLevel.LEVEL_1, talent, 0, 0).equals(item.get(PufferfishPlease.CULTIVATION.get())),
                         "Live fish saving or capture lost awakening");
-                if (!(fish instanceof MaterialPufferfish)) helper.assertTrue(PufferfishColors.get(item) == net.minecraft.world.item.DyeColor.BLUE, "Awakening lost live fish color");
+                if (!(fish instanceof MaterialPufferfish)) {
+                    helper.assertTrue(PufferfishColors.get(item) == net.minecraft.world.item.DyeColor.RED, "Capture exported stale color after dyeing an awakened fish");
+                    var released = EntityType.PUFFERFISH.create(helper.getLevel());
+                    released.loadFromBucketTag(bucket.get(DataComponents.BUCKET_ENTITY_DATA).copyTag());
+                    helper.assertTrue(ItemStack.isSameItemSameComponents(PufferfishData.copy(released), item), "Bucket release changed the fish snapshot");
+                    PufferfishColors.set(released, null);
+                    var plain = PufferfishData.copy(released);
+                    helper.assertTrue(!plain.has(PufferfishPlease.COLOR.get()) && !plain.has(DataComponents.ITEM_NAME)
+                            && plain.get(PufferfishPlease.CULTIVATION.get()).equals(item.get(PufferfishPlease.CULTIVATION.get())),
+                            "Removing live dye retained stale item color or discarded cultivation");
+                    plain.remove(PufferfishPlease.CULTIVATION.get());
+                    helper.assertTrue(PufferfishData.copy(released).has(PufferfishPlease.CULTIVATION.get()), "Editing an exported snapshot mutated the live fish");
+                    released.discard();
+                }
                 loaded.discard();
                 fish.discard();
                 target.discard();

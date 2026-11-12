@@ -20,11 +20,9 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Pufferfish;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.common.damagesource.DamageContainer;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
-import org.glavo.mcmod.pufferfish.entity.MaterialPufferfish;
 
 /// A single direct hit can awaken its source fish; no progress is stored before success.
 public final class PufferfishAwakening {
@@ -109,17 +107,9 @@ public final class PufferfishAwakening {
         if (source.getEntity() != source.getDirectEntity()) return null;
         if (source.getEntity() instanceof Pufferfish fish
                 && (source.is(DamageTypes.MOB_ATTACK) || source.is(DamageTypes.THORNS))) {
-            if (fish instanceof MaterialPufferfish material) {
-                return eligible(material.fish()) ? new Recipient(fish, () -> material.fish().copy(), material::setFish) : null;
-            }
-            var stored = fish.getExistingDataOrNull(PufferfishPlease.FISH_ITEM);
-            if (stored != null && !stored.isEmpty() && !eligible(stored)) return null;
-            return new Recipient(fish, () -> {
-                var current = fish.getExistingDataOrNull(PufferfishPlease.FISH_ITEM);
-                var item = current == null || current.isEmpty() ? new ItemStack(Items.PUFFERFISH) : current.copy();
-                var color = PufferfishColors.get(fish);
-                return color == null ? item : PufferfishColors.dye(item, color);
-            }, item -> fish.setData(PufferfishPlease.FISH_ITEM, item));
+            var stored = PufferfishData.stored(fish);
+            if (!stored.isEmpty() && !eligible(stored)) return null;
+            return new Recipient(fish, () -> PufferfishData.copy(fish), item -> PufferfishData.set(fish, item));
         }
         if ((source.is(DamageTypes.PLAYER_ATTACK) || source.is(DamageTypes.MOB_ATTACK))
                 && source.getEntity() instanceof LivingEntity attacker) {
@@ -139,7 +129,6 @@ public final class PufferfishAwakening {
         var cultivation = new PufferfishCultivation(PufferfishLevel.LEVEL_1, random.nextDouble(), 0, 0);
         stack.set(PufferfishPlease.CULTIVATION.get(), cultivation);
         recipient.save().accept(stack);
-        if (recipient.owner() instanceof Pufferfish fish) PufferfishSize.update(fish);
         var level = (ServerLevel) target.level();
         var owner = recipient.owner();
         level.sendParticles(ParticleTypes.ENCHANT, owner.getX(), owner.getY() + owner.getBbHeight() * 0.5, owner.getZ(), 12, 0.3, 0.3, 0.3, 0);
