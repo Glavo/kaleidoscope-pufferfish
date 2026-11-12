@@ -60,9 +60,11 @@ public final class PufferfishAwakeningGameTests {
                 new Trial(false, true, 0.06, 0.09, true), new Trial(false, true, 0.15, 0.4, false),
                 new Trial(true, true, 0.15, 0.4, true), new Trial(true, true, 0.6, 0.9, false));
         var stacks = new ArrayList<ItemStack>();
+        var players = new ArrayList<net.minecraft.server.level.ServerPlayer>();
         var talents = new ArrayList<Double>();
         for (var trial : trials) {
             var player = TestPlayers.serverPlayer(helper);
+            players.add(player);
             var fish = new ItemStack(Items.PUFFERFISH);
             PufferfishDurability.activate(fish);
             player.setItemSlot(EquipmentSlot.MAINHAND, fish);
@@ -80,6 +82,9 @@ public final class PufferfishAwakeningGameTests {
                 var cultivation = stacks.get(i).get(PufferfishPlease.CULTIVATION.get());
                 helper.assertTrue(trials.get(i).awakens() ? new PufferfishCultivation(PufferfishLevel.LEVEL_1, talents.get(i), 0, 0).equals(cultivation)
                         : cultivation == null, "Direct damage used the wrong chance, rerolled, or retained pre-awakening progress: " + i);
+                helper.assertTrue(PufferfishAdvancementGameTests.done(players.get(i), "cultivation_level_1") == trials.get(i).awakens(),
+                        "Initial breakthrough progress did not follow successful awakening");
+                players.get(i).getAdvancements().stopListening();
             }
             helper.succeed();
         });

@@ -104,8 +104,8 @@ public record PufferfishCultivation(PufferfishLevel level, double talent, long e
         if (target instanceof Player player) {
             for (var slot : List.of(EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND, EquipmentSlot.HEAD)) {
                 var stack = player.getItemBySlot(slot);
-                if (advanceAtConduit(stack)) player.displayClientMessage(Component.translatable("message.pufferfish_please.rank_up",
-                        stack.getHoverName(), stack.get(PufferfishPlease.CULTIVATION.get()).displayName()), true);
+                var previous = stack.get(PufferfishPlease.CULTIVATION.get());
+                if (advanceAtConduit(stack)) announcePromotion(player, stack, previous.level());
             }
         } else if (target instanceof MaterialPufferfish fish) {
             var stack = fish.fish().copy();
@@ -152,11 +152,17 @@ public record PufferfishCultivation(PufferfishLevel level, double talent, long e
                     var updated = cultivation.addExperience(amount);
                     if (PufferfishConduitSpawning.isInRange(player.level(), player.blockPosition())) updated = updated.advanceAtConduit();
                     stack.set(PufferfishPlease.CULTIVATION.get(), updated);
-                    if (updated.level() != cultivation.level()) player.displayClientMessage(
-                            Component.translatable("message.pufferfish_please.rank_up", stack.getHoverName(), updated.displayName()), true);
+                    announcePromotion(player, stack, cultivation.level());
                 }
             }
         }));
+    }
+
+    static void announcePromotion(Player player, ItemStack stack, PufferfishLevel previous) {
+        var current = stack.get(PufferfishPlease.CULTIVATION.get());
+        if (current == null || current.level().compareTo(previous) <= 0) return;
+        if (player instanceof ServerPlayer serverPlayer) PufferfishAdvancements.promoted(serverPlayer, previous, current.level());
+        player.displayClientMessage(Component.translatable("message.pufferfish_please.rank_up", stack.getHoverName(), current.displayName()), true);
     }
 
     /// Reading a level never creates cultivation data or changes stacking.

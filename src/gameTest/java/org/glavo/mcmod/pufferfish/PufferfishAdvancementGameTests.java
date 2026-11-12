@@ -44,6 +44,58 @@ import org.glavo.mcmod.pufferfish.worldgen.PufferfishRuinPiece;
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishAdvancementGameTests {
+    @GameTest(template = "empty", batch = "cultivation_progress")
+    public static void cultivationProgressRequiresActualBreakthroughs(GameTestHelper helper) {
+        var observer = player(helper);
+        var borrower = player(helper);
+        var borrowed = cultivated(PufferfishLevel.LEVEL_10, 23_000_000);
+        borrower.setItemSlot(EquipmentSlot.MAINHAND, borrowed);
+        CriteriaTriggers.INVENTORY_CHANGED.trigger(borrower, borrower.getInventory(), borrowed);
+        new net.minecraft.world.entity.ExperienceOrb(helper.getLevel(), 0, 0, 0, 1).playerTouch(borrower);
+
+        var cultivator = player(helper);
+        cultivator.setItemSlot(EquipmentSlot.HEAD, cultivated(PufferfishLevel.LEVEL_4, 12_600_000));
+        PufferfishCultivation.advanceAtConduit(cultivator);
+        helper.assertTrue(done(cultivator, "cultivation_level_5") && done(cultivator, "cultivation_level_10")
+                && !done(cultivator, "cultivation_level_1"), "Consecutive breakthrough milestones were missed or earlier ranks were backfilled");
+
+        var learner = player(helper);
+        learner.setItemSlot(EquipmentSlot.OFFHAND, cultivated(PufferfishLevel.LEVEL_9, 9_999_999));
+        new net.minecraft.world.entity.ExperienceOrb(helper.getLevel(), 0, 0, 0, 1).playerTouch(learner);
+        var live = EntityType.PUFFERFISH.create(helper.getLevel());
+        live.setData(PufferfishPlease.FISH_ITEM, cultivated(PufferfishLevel.LEVEL_4, 4000));
+        PufferfishCultivation.advanceAtConduit(live);
+        var placed = cultivated(PufferfishLevel.LEVEL_4, 4000);
+        PufferfishCultivation.advanceAtConduit(placed);
+
+        String parent = "root";
+        for (int level : new int[] {1, 5, 10}) {
+            String id = "cultivation_level_" + level;
+            var advancement = advancement(cultivator, id).value();
+            helper.assertTrue(advancement.parent().orElseThrow().equals(PufferfishPlease.id("adventure/" + parent))
+                    && advancement.display().orElseThrow().getType() == (level == 1 ? AdvancementType.TASK : AdvancementType.CHALLENGE),
+                    "Cultivation milestones have the wrong parent or frame");
+            parent = id;
+        }
+        helper.runAfterDelay(2, () -> {
+            helper.assertTrue(done(learner, "cultivation_level_10") && !done(learner, "cultivation_level_5")
+                    && !done(learner, "cultivation_level_1"), "Experience-driven promotion credited the wrong milestones");
+            for (var bystander : List.of(observer, borrower)) for (int level : new int[] {1, 5, 10}) {
+                helper.assertTrue(!done(bystander, "cultivation_level_" + level), "Possession or an unowned breakthrough granted cultivation progress");
+            }
+            for (var player : List.of(observer, borrower, cultivator, learner)) player.getAdvancements().stopListening();
+            live.discard();
+            helper.succeed();
+        });
+    }
+
+    private static ItemStack cultivated(PufferfishLevel level, long experience) {
+        var fish = new ItemStack(Items.PUFFERFISH);
+        PufferfishDurability.activate(fish);
+        fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(level, 0.5, experience, 50_000_000));
+        return fish;
+    }
+
     @GameTest(template = "empty")
     public static void weaponProgressRequiresADirectHostileKill(GameTestHelper helper) {
         var players = new java.util.LinkedHashMap<String, ServerPlayer>();
@@ -437,7 +489,7 @@ public final class PufferfishAdvancementGameTests {
         return player.server.getAdvancements().get(PufferfishPlease.id("adventure/" + id));
     }
 
-    private static boolean done(ServerPlayer player, String id) {
+    static boolean done(ServerPlayer player, String id) {
         var advancement = advancement(player, id);
         return advancement != null && player.getAdvancements().getOrStartProgress(advancement).isDone();
     }

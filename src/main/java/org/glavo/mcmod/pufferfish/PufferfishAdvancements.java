@@ -31,8 +31,18 @@ public final class PufferfishAdvancements {
     public static final DeferredHolder<CriterionTrigger<?>, PlayerTrigger> KILLED_BY_HEAVY_PUFFERFISH = TRIGGERS.register("killed_by_heavy_pufferfish", PlayerTrigger::new);
     public static final DeferredHolder<CriterionTrigger<?>, PlayerTrigger> EQUIP_CAT_ARMOR = TRIGGERS.register("equip_cat_armor", PlayerTrigger::new);
     public static final DeferredHolder<CriterionTrigger<?>, PlayerTrigger> KILL_WITH_PUFFERFISH = TRIGGERS.register("kill_with_pufferfish", PlayerTrigger::new);
+    public static final DeferredHolder<CriterionTrigger<?>, PlayerTrigger> REACH_LEVEL_1 = TRIGGERS.register("reach_level_1", PlayerTrigger::new);
+    public static final DeferredHolder<CriterionTrigger<?>, PlayerTrigger> REACH_LEVEL_5 = TRIGGERS.register("reach_level_5", PlayerTrigger::new);
+    public static final DeferredHolder<CriterionTrigger<?>, PlayerTrigger> REACH_LEVEL_10 = TRIGGERS.register("reach_level_10", PlayerTrigger::new);
 
     private PufferfishAdvancements() {}
+
+    /// Awards only ranks crossed in this player's breakthrough, including consecutive promotions.
+    static void promoted(ServerPlayer player, PufferfishLevel previous, PufferfishLevel current) {
+        if (previous.compareTo(PufferfishLevel.LEVEL_1) < 0 && current.compareTo(PufferfishLevel.LEVEL_1) >= 0) REACH_LEVEL_1.get().trigger(player);
+        if (previous.compareTo(PufferfishLevel.LEVEL_5) < 0 && current.compareTo(PufferfishLevel.LEVEL_5) >= 0) REACH_LEVEL_5.get().trigger(player);
+        if (previous.compareTo(PufferfishLevel.LEVEL_10) < 0 && current.compareTo(PufferfishLevel.LEVEL_10) >= 0) REACH_LEVEL_10.get().trigger(player);
+    }
 
     public static void register(IEventBus bus) {
         TRIGGERS.register(bus);

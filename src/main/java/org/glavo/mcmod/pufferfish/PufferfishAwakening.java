@@ -7,7 +7,6 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.TickTask;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -144,7 +143,6 @@ public final class PufferfishAwakening {
         var owner = recipient.owner();
         level.sendParticles(ParticleTypes.ENCHANT, owner.getX(), owner.getY() + owner.getBbHeight() * 0.5, owner.getZ(), 12, 0.3, 0.3, 0.3, 0);
         level.playSound(null, owner.blockPosition(), SoundEvents.PLAYER_LEVELUP, SoundSource.NEUTRAL, 0.5F, 1.5F);
-        if (owner instanceof ServerPlayer player) player.displayClientMessage(
-                Component.translatable("message.pufferfish_please.rank_up", stack.getHoverName(), cultivation.displayName()), true);
+        if (owner instanceof ServerPlayer player) PufferfishCultivation.announcePromotion(player, stack, PufferfishLevel.LEVEL_0);
     }
 }

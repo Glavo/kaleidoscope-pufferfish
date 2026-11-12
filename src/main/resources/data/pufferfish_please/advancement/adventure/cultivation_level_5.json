@@ -1,0 +1,28 @@
+{
+  "parent": "pufferfish_please:adventure/cultivation_level_1",
+  "display": {
+    "icon": {
+      "id": "pufferfish_please:pufferfish_conduit"
+    },
+    "title": {
+      "translate": "advancements.pufferfish_please.cultivation_level_5.title"
+    },
+    "description": {
+      "translate": "advancements.pufferfish_please.cultivation_level_5.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "breakthrough": {
+      "trigger": "pufferfish_please:reach_level_5"
+    }
+  },
+  "requirements": [
+    [
+      "breakthrough"
+    ]
+  ]
+}

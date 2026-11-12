@@ -87,6 +87,9 @@ public final class PufferfishConduitCultivationGameTests {
             level.setBlockAndUpdate(missing, Blocks.PRISMARINE.defaultBlockState());
             helper.runAfterDelay(45, () -> {
                 var expected = new PufferfishCultivation(PufferfishLevel.LEVEL_5, 0.5, 3, 50_000);
+                helper.assertTrue(PufferfishAdvancementGameTests.done(player, "cultivation_level_5")
+                        && !PufferfishAdvancementGameTests.done(outside, "cultivation_level_5"),
+                        "Core-driven promotion credited the wrong player");
                 for (var stack : java.util.List.of(main, ordinary.getExistingDataOrNull(PufferfishPlease.FISH_ITEM), material.fish(), placed.fish())) {
                     helper.assertTrue(expected.equals(stack.get(PufferfishPlease.CULTIVATION.get())),
                             "Core range did not advance equipped, live or placed fish while preserving progress");
@@ -111,6 +114,8 @@ public final class PufferfishConduitCultivationGameTests {
                                 "A deactivated core continued advancing fish");
                         player.discard();
                         outside.discard();
+                        player.getAdvancements().stopListening();
+                        outside.getAdvancements().stopListening();
                         ordinary.discard();
                         material.discard();
                         level.removeBlock(placedPos, false);

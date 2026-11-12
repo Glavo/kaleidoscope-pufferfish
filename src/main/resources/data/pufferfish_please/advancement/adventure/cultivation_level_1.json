@@ -1,0 +1,28 @@
+{
+  "parent": "pufferfish_please:adventure/root",
+  "display": {
+    "icon": {
+      "id": "minecraft:pufferfish"
+    },
+    "title": {
+      "translate": "advancements.pufferfish_please.cultivation_level_1.title"
+    },
+    "description": {
+      "translate": "advancements.pufferfish_please.cultivation_level_1.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "breakthrough": {
+      "trigger": "pufferfish_please:reach_level_1"
+    }
+  },
+  "requirements": [
+    [
+      "breakthrough"
+    ]
+  ]
+}
