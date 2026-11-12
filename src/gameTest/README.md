@@ -17,15 +17,17 @@ Server tests use `build/test-runs/server`; client smoke tests use `build/test-ru
 With operator permission level 2, hold a pufferfish, bucket or variant-derived item and run:
 
 ```mcfunction
-/pufferfish level 1
-/pufferfish level 4 4000
-/pufferfish level 10 20000000
-/pufferfish level 0
+/pufferfish set @s level 4
+/pufferfish set @s experience 4000
+/pufferfish query @s level
+/pufferfish query @s experience
 ```
 
-The rank is an integer from 0 to 10. Optional current experience defaults to zero; rank zero cannot store experience. Existing talent and lifetime experience are preserved, while new cultivation starts with talent 0.5 and lifetime experience zero. Rank zero removes cultivation data. Fish weapons are activated even at rank zero. This command bypasses breakthrough requirements without granting advancement rewards or immediately advancing an experience-complete rank.
+Commands follow `set <players> <property> <value>` and `query <player> <property>`. Targets accept player names and vanilla selectors, including execution from the console or command blocks. Properties are `level` (0–10, with rank-name completion hints) and `experience` (a nonnegative long). Queries do not change item data; their command result is the numeric value, capped at `Integer.MAX_VALUE` for experience.
 
-Only one main-hand item is edited; remaining items return to the inventory or drop if it is full. Buckets edit their contained fish, preserving captured entity data. Lamps, skins, armor, shields, boats and flails use their item component; spawn eggs are excluded. Editing a derivative item does not add new cultivation-transfer behavior when placing or crafting it.
+Each edit changes only the selected property, preserving talent and lifetime experience. Newly awakened items start with talent 0.5 and zero experience. Setting level zero removes cultivation data; setting experience requires an awakened item. Fish weapons are activated when setting their level, even at zero. Edits bypass breakthrough requirements without granting advancement rewards or immediately advancing an experience-complete rank.
+
+Editing requires exactly one item in each target's main hand; no items are split, moved or dropped. Every target is validated before any inventory changes. Buckets edit their contained fish, preserving captured entity data. Lamps, skins, armor, shields, boats and flails use their item component; spawn eggs are excluded. Editing a derivative item does not add new cultivation-transfer behavior when placing or crafting it.
 
 ## Ownership
 

@@ -34,6 +34,8 @@ public enum PufferfishLevel implements StringRepresentable {
         this.scale = scale;
     }
 
+    public int number() { return level; }
+
     /// Zero denotes a level without an experience-based breakthrough requirement.
     public long baseExperienceRequired() { return baseExperienceRequired; }
 
