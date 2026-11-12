@@ -18,7 +18,7 @@ public enum PufferfishLevel implements StringRepresentable {
     LEVEL_6(6, 80_000),
     LEVEL_7(7, 500_000),
     LEVEL_8(8, 2_000_000),
-    LEVEL_9(9, 8_000_000),
+    LEVEL_9(9, 10_000_000),
     LEVEL_10(10, 0);
 
     public static final Codec<PufferfishLevel> CODEC = StringRepresentable.fromEnum(PufferfishLevel::values);

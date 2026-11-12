@@ -46,7 +46,7 @@ public final class PufferfishCultivationGameTests {
             helper.assertTrue(ready.isExperienceComplete() && ready.level() == level && ready.experience() == required + 1
                     && ready.totalExperience() == Long.MAX_VALUE, "Reaching the threshold promoted the fish or consumed experience");
         }
-        helper.assertTrue(normalTotal == 10_601_760 && bestTotal == 5_300_880 && worstTotal == 21_203_520,
+        helper.assertTrue(normalTotal == 12_601_760 && bestTotal == 6_300_880 && worstTotal == 25_203_520,
                 "Lifetime cultivation costs do not match the agreed curve and talent range");
         helper.assertTrue(new PufferfishCultivation(PufferfishLevel.LEVEL_1, 0.5, 0, 0).requiredExperience() == 160
                 && new PufferfishCultivation(PufferfishLevel.LEVEL_1, 0.75, 0, 0).requiredExperience() == 114
