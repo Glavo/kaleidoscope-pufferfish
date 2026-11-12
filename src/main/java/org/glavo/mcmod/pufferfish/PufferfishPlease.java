@@ -88,7 +88,7 @@ public class PufferfishPlease {
     static {
         TABS.register("pufferfish", () -> CreativeModeTab.builder()
                 .title(Component.translatable("itemGroup.pufferfish_please"))
-                .icon(() -> PufferfishColors.dye(new ItemStack(Items.PUFFERFISH_BUCKET), DyeColor.PURPLE))
+                .icon(() -> new ItemStack(Items.PUFFERFISH))
                 .displayItems((parameters, output) -> {
                     PufferfishVariant.ALL.stream().filter(variant -> variant != PufferfishVariant.NORMAL)
                             .forEach(variant -> output.accept(variant.fish()));
