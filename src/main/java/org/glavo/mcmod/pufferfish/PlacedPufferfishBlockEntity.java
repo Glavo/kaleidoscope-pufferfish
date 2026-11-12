@@ -8,6 +8,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -20,6 +21,15 @@ public final class PlacedPufferfishBlockEntity extends BlockEntity {
     }
 
     public ItemStack fish() { return fish.copy(); }
+
+    public static void serverTick(Level level, BlockPos pos, BlockState state, PlacedPufferfishBlockEntity entity) {
+        if (level.getGameTime() % 40 != 1) return;
+        var cultivation = entity.fish.get(PufferfishPlease.CULTIVATION.get());
+        if (cultivation != null && cultivation.level() == PufferfishLevel.LEVEL_4 && cultivation.isExperienceComplete()
+                && PufferfishConduitSpawning.isInRange(level, pos) && PufferfishCultivation.advanceAtConduit(entity.fish)) {
+            entity.setFish(entity.fish);
+        }
+    }
 
     public void setFish(ItemStack stack) {
         fish = PufferfishItems.isPufferfish(stack) ? stack.copyWithCount(1) : ItemStack.EMPTY;

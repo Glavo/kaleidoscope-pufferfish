@@ -49,10 +49,11 @@ public final class PufferfishCultivationGameTests {
             helper.assertTrue(complete.isExperienceComplete() && complete.displayName().equals(readyName),
                     "Stored experience at the threshold did not display readiness");
             var promoted = ready.addExperience(1);
-            helper.assertTrue(promoted.level() == PufferfishLevel.values()[level.ordinal() + 1] && promoted.experience() == 0
+            boolean gated = level == PufferfishLevel.LEVEL_4;
+            helper.assertTrue(promoted.level() == (gated ? level : PufferfishLevel.values()[level.ordinal() + 1]) && promoted.experience() == (gated ? required : 0)
                     && promoted.totalExperience() == Long.MAX_VALUE && promoted.talent() == 0.5,
                     "Exact threshold did not advance one rank while preserving lifetime XP and talent");
-            helper.assertTrue(ready.addExperience(2).experience() == 1, "Promotion discarded surplus experience");
+            helper.assertTrue(ready.addExperience(2).experience() == (gated ? required + 1 : 1), "Promotion discarded surplus experience");
         }
         helper.assertTrue(normalTotal == 12_601_760 && bestTotal == 6_300_880 && worstTotal == 25_203_520,
                 "Lifetime cultivation costs do not match the agreed curve and talent range");
@@ -70,7 +71,9 @@ public final class PufferfishCultivationGameTests {
         for (double talent : new double[] {0, 0.5, 1}) {
             var initial = new PufferfishCultivation(PufferfishLevel.LEVEL_1, talent, 0, 123);
             int totalCost = talent == 0 ? 25_203_520 : talent == 0.5 ? 12_601_760 : 6_300_880;
-            var promoted = initial.addExperience(totalCost + 23_000_000);
+            var waiting = initial.addExperience(totalCost + 23_000_000);
+            helper.assertTrue(waiting.level() == PufferfishLevel.LEVEL_4 && waiting.isExperienceComplete(), "Experience bypassed the conduit requirement");
+            var promoted = waiting.advanceAtConduit();
             helper.assertTrue(promoted.level() == PufferfishLevel.LEVEL_10 && promoted.talent() == talent
                     && promoted.experience() == 23_000_000 && promoted.stars() == 2
                     && promoted.totalExperience() == 123L + totalCost + 23_000_000,
@@ -81,7 +84,7 @@ public final class PufferfishCultivationGameTests {
                 "Nonpositive awards changed cultivation");
         helper.assertTrue(ready.addExperience(1).equals(new PufferfishCultivation(PufferfishLevel.LEVEL_3, 0.5, 1, 901)),
                 "Previously accumulated experience did not advance on the next award");
-        var saturated = new PufferfishCultivation(PufferfishLevel.LEVEL_1, 0.5, Long.MAX_VALUE - 1, Long.MAX_VALUE - 1).addExperience(7);
+        var saturated = new PufferfishCultivation(PufferfishLevel.LEVEL_1, 0.5, Long.MAX_VALUE - 1, Long.MAX_VALUE - 1).addExperience(7).advanceAtConduit();
         helper.assertTrue(saturated.level() == PufferfishLevel.LEVEL_10 && saturated.experience() == Long.MAX_VALUE - 12_601_760
                 && saturated.totalExperience() == Long.MAX_VALUE, "Consecutive promotions overflowed experience counters");
         helper.succeed();

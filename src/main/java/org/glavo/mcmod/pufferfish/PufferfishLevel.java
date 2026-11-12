@@ -39,11 +39,10 @@ public enum PufferfishLevel implements StringRepresentable {
     @Nullable
     public PufferfishLevel automaticSuccessor() {
         return switch (this) {
-            case LEVEL_0, LEVEL_10 -> null;
+            case LEVEL_0, LEVEL_4, LEVEL_10 -> null;
             case LEVEL_1 -> LEVEL_2;
             case LEVEL_2 -> LEVEL_3;
             case LEVEL_3 -> LEVEL_4;
-            case LEVEL_4 -> LEVEL_5;
             case LEVEL_5 -> LEVEL_6;
             case LEVEL_6 -> LEVEL_7;
             case LEVEL_7 -> LEVEL_8;

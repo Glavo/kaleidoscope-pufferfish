@@ -62,8 +62,10 @@ public final class PufferfishConduitBlockEntity extends ConduitBlockEntity {
         int radius = frameSize / 7 * 16;
         var bounds = new AABB(pos).inflate(radius);
         for (var target : level.getEntitiesOfClass(LivingEntity.class, bounds,
-                target -> target instanceof Pufferfish || target instanceof Player && target.isInWaterOrRain())) {
+                target -> target instanceof Pufferfish || target instanceof Player)) {
             if (pos.closerThan(target.blockPosition(), radius)) {
+                PufferfishCultivation.advanceAtConduit(target);
+                if (target instanceof Player && !target.isInWaterOrRain()) continue;
                 boolean cursed = target instanceof Player && target.hasEffect(PufferfishEffects.PUFFERFISH_CURSE);
                 if (cursed) {
                     target.removeEffect(PufferfishEffects.PUFFERFISH_POWER);

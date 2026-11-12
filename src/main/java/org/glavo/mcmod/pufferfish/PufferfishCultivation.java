@@ -17,8 +17,12 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.server.TickTask;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.Pufferfish;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.event.entity.player.PlayerXpEvent;
+import org.glavo.mcmod.pufferfish.entity.MaterialPufferfish;
 
 /// Post-awakening state. Total experience is a lifetime statistic, independent of unspent progress.
 public record PufferfishCultivation(PufferfishLevel level, double talent, long experience, long totalExperience) {
@@ -65,15 +69,53 @@ public record PufferfishCultivation(PufferfishLevel level, double talent, long e
     /// Positive awards advance unrestricted ranks, preserving talent, surplus XP and lifetime totals.
     public PufferfishCultivation addExperience(int amount) {
         if (amount <= 0) return this;
-        var result = new PufferfishCultivation(level, talent,
+        return new PufferfishCultivation(level, talent,
                 experience + Math.min((long) amount, Long.MAX_VALUE - experience),
-                totalExperience + Math.min((long) amount, Long.MAX_VALUE - totalExperience));
+                totalExperience + Math.min((long) amount, Long.MAX_VALUE - totalExperience)).advanceAutomatically();
+    }
+
+    private PufferfishCultivation advanceAutomatically() {
+        var result = this;
         while (result.isExperienceComplete()) {
             var next = result.level().automaticSuccessor();
             if (next == null) break;
             result = new PufferfishCultivation(next, talent, result.experience() - result.requiredExperience(), result.totalExperience());
         }
         return result;
+    }
+
+    /// Applies the conduit requirement without awarding experience or repeating a completed breakthrough.
+    public PufferfishCultivation advanceAtConduit() {
+        if (level != PufferfishLevel.LEVEL_4 || !isExperienceComplete()) return this;
+        return new PufferfishCultivation(PufferfishLevel.LEVEL_5, talent, experience - requiredExperience(), totalExperience)
+                .advanceAutomatically();
+    }
+
+    static boolean advanceAtConduit(ItemStack stack) {
+        var cultivation = stack.get(PufferfishPlease.CULTIVATION.get());
+        if (stack.getCount() != 1 || cultivation == null) return false;
+        var updated = cultivation.advanceAtConduit();
+        if (updated == cultivation) return false;
+        stack.set(PufferfishPlease.CULTIVATION.get(), updated);
+        return true;
+    }
+
+    static void advanceAtConduit(LivingEntity target) {
+        if (target instanceof Player player) {
+            for (var slot : List.of(EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND, EquipmentSlot.HEAD)) {
+                var stack = player.getItemBySlot(slot);
+                if (advanceAtConduit(stack)) player.displayClientMessage(Component.translatable("message.pufferfish_please.rank_up",
+                        stack.getHoverName(), stack.get(PufferfishPlease.CULTIVATION.get()).displayName()), true);
+            }
+        } else if (target instanceof MaterialPufferfish fish) {
+            var stack = fish.fish().copy();
+            if (advanceAtConduit(stack)) fish.setFish(stack);
+        } else if (target instanceof Pufferfish fish) {
+            var stored = fish.getExistingDataOrNull(PufferfishPlease.FISH_ITEM);
+            if (stored == null) return;
+            var stack = stored.copy();
+            if (advanceAtConduit(stack)) fish.setData(PufferfishPlease.FISH_ITEM, stack);
+        }
     }
 
     /// Highest-rank stars reflect current experience only, without spending it or applying talent.
@@ -108,6 +150,7 @@ public record PufferfishCultivation(PufferfishLevel level, double talent, long e
                 var cultivation = stack.get(PufferfishPlease.CULTIVATION.get());
                 if (!stack.isEmpty() && cultivation != null) {
                     var updated = cultivation.addExperience(amount);
+                    if (PufferfishConduitSpawning.isInRange(player.level(), player.blockPosition())) updated = updated.advanceAtConduit();
                     stack.set(PufferfishPlease.CULTIVATION.get(), updated);
                     if (updated.level() != cultivation.level()) player.displayClientMessage(
                             Component.translatable("message.pufferfish_please.rank_up", stack.getHoverName(), updated.displayName()), true);
