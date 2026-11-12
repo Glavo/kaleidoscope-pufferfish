@@ -96,7 +96,7 @@ public final class MaterialPufferfishCombatGoal extends Goal {
             }
             case MaterialPufferfish.RECOVERY, MaterialPufferfish.REST -> {
                 holdPosition();
-                fish.setPuffState(0);
+                fish.setPuffState(phase == MaterialPufferfish.RECOVERY ? 0 : 1);
                 if (--remaining <= 0) {
                     fish.setAttackPhase(MaterialPufferfish.IDLE);
                     decisionDelay = 8;
@@ -167,6 +167,6 @@ public final class MaterialPufferfishCombatGoal extends Goal {
     private void recover(boolean exposed) {
         fish.setAttackPhase(exposed ? MaterialPufferfish.RECOVERY : MaterialPufferfish.REST);
         remaining = fish.kind() == Kind.HEAVY ? 30 : fish.kind() == Kind.DIAMOND ? 20 : 12;
-        fish.setPuffState(0);
+        fish.setPuffState(exposed ? 0 : 1);
     }
 }

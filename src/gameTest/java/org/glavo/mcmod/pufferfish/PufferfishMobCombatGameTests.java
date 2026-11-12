@@ -393,6 +393,8 @@ public final class PufferfishMobCombatGameTests {
             for (int tick = 0; tick < (kind.equals("radiant") ? 320 : 130); tick++) {
                 fish.tick();
                 phases.add(fish.attackPhase());
+                if (fish.attackPhase() == MaterialPufferfish.REST) helper.assertTrue(fish.getPuffState() == 1,
+                        "Normal attack recovery did not stay half inflated: " + kind);
                 closest = Math.min(closest, fish.distanceToSqr(target));
                 target.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
                 target.invulnerableTime = 0;
