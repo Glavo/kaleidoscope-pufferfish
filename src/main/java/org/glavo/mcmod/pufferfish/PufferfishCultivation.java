@@ -48,6 +48,17 @@ public record PufferfishCultivation(PufferfishLevel level, double talent, long e
         if (totalExperience < 0) throw new IllegalArgumentException("Total experience must not be negative");
     }
 
+    /// The next breakthrough's unspent experience cost; zero at the highest level.
+    public long requiredExperience() {
+        return (long) Math.ceil(level.baseExperienceRequired() * Math.pow(2, 1 - 2 * talent));
+    }
+
+    /// Checks only experience readiness, not breakthrough conditions; the highest level returns false.
+    public boolean isExperienceComplete() {
+        long required = requiredExperience();
+        return required > 0 && experience >= required;
+    }
+
     /// Both counters saturate independently; experience alone never changes level or talent.
     public PufferfishCultivation addExperience(int amount) {
         if (amount <= 0) return this;

@@ -25,6 +25,38 @@ import org.glavo.mcmod.pufferfish.test.TestPlayers;
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishCultivationGameTests {
+    @GameTest(template = "empty")
+    public static void breakthroughExperienceDependsOnLevelAndTalentWithoutAutomaticPromotion(GameTestHelper helper) {
+        long normalTotal = 0;
+        long bestTotal = 0;
+        long worstTotal = 0;
+        long previous = 0;
+        for (var level : PufferfishLevel.values()) {
+            if (level == PufferfishLevel.LEVEL_0 || level == PufferfishLevel.LEVEL_10) continue;
+            var normal = new PufferfishCultivation(level, 0.5, 0, Long.MAX_VALUE);
+            long required = normal.requiredExperience();
+            helper.assertTrue(required > previous && !normal.isExperienceComplete(), "Requirements did not rise or lifetime XP counted toward breakthrough");
+            previous = required;
+            normalTotal += required;
+            bestTotal += new PufferfishCultivation(level, 1, 0, 0).requiredExperience();
+            worstTotal += new PufferfishCultivation(level, 0, 0, 0).requiredExperience();
+            var ready = normal.addExperience((int) required - 1);
+            helper.assertTrue(!ready.isExperienceComplete(), "Breakthrough experience was complete below the threshold");
+            ready = ready.addExperience(2);
+            helper.assertTrue(ready.isExperienceComplete() && ready.level() == level && ready.experience() == required + 1
+                    && ready.totalExperience() == Long.MAX_VALUE, "Reaching the threshold promoted the fish or consumed experience");
+        }
+        helper.assertTrue(normalTotal == 10_601_760 && bestTotal == 5_300_880 && worstTotal == 21_203_520,
+                "Lifetime cultivation costs do not match the agreed curve and talent range");
+        helper.assertTrue(new PufferfishCultivation(PufferfishLevel.LEVEL_1, 0.5, 0, 0).requiredExperience() == 160
+                && new PufferfishCultivation(PufferfishLevel.LEVEL_1, 0.75, 0, 0).requiredExperience() == 114
+                && new PufferfishCultivation(PufferfishLevel.LEVEL_1, 0.25, 0, 0).requiredExperience() == 227,
+                "Initial breakthrough cost or upward rounding is incorrect");
+        var highest = new PufferfishCultivation(PufferfishLevel.LEVEL_10, 0.5, Long.MAX_VALUE, Long.MAX_VALUE);
+        helper.assertTrue(highest.requiredExperience() == 0 && !highest.isExperienceComplete(), "Highest level offered another experience breakthrough");
+        helper.succeed();
+    }
+
     private static ItemStack awakened(ItemStack fish) {
         PufferfishDurability.activate(fish);
         fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_1, 0.75, 10, 100));
