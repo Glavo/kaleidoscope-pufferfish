@@ -48,7 +48,8 @@ public final class PufferfishGloveRenderer {
         pose.pushPose();
         parent.translateToHand(arm, pose);
         pose.translate((arm == HumanoidArm.RIGHT ? -1 : 1) / 16.0F, 8.5F / 16, 0);
-        pose.scale(0.75F, 0.75F, 0.75F);
+        float scale = 0.75F * org.glavo.mcmod.pufferfish.PufferfishSize.equipmentScale(stack);
+        pose.scale(scale, scale, scale);
         pose.translate(0, -18.0F / 16, 0);
         var color = PufferfishColors.get(stack);
         var texture = PufferfishItems.isHeavy(stack) ? PufferfishTextures.heavyEntity()

@@ -41,6 +41,8 @@ public final class PufferfishHeadRenderer {
             pose.translate(0, 1, 0);
         }
         head.translateAndRotate(pose);
+        float scale = org.glavo.mcmod.pufferfish.PufferfishSize.equipmentScale(stack);
+        pose.scale(scale, scale, scale);
         pose.translate(0.0F, -22.0F / 16.0F, 0.0F);
         pose.translate(0, (1 - DeflatingPufferfishModel.height(org.glavo.mcmod.pufferfish.PufferfishDurability.deflationStage(stack))) / 4, 0);
         model.prepare(stack);

@@ -35,7 +35,10 @@ public abstract class AbstractFishMixin {
             if (!(fish instanceof org.glavo.mcmod.pufferfish.entity.MaterialPufferfish) && tag.contains("Fish")) {
                 ItemStack.parse(fish.registryAccess(), tag.getCompound("Fish"))
                         .filter(item -> item.is(net.minecraft.world.item.Items.PUFFERFISH))
-                        .ifPresent(item -> fish.setData(org.glavo.mcmod.pufferfish.PufferfishPlease.FISH_ITEM, item.copyWithCount(1)));
+                        .ifPresent(item -> {
+                            fish.setData(org.glavo.mcmod.pufferfish.PufferfishPlease.FISH_ITEM, item.copyWithCount(1));
+                            org.glavo.mcmod.pufferfish.PufferfishSize.update(fish);
+                        });
             }
         }
     }

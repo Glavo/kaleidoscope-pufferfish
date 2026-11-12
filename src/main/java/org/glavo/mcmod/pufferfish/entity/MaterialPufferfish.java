@@ -81,6 +81,7 @@ public final class MaterialPufferfish extends Pufferfish {
         if (PufferfishMobs.variant(fish) != null) {
             entityData.set(FISH, fish.copyWithCount(1));
             if (!level().isClientSide) applyProfile();
+            org.glavo.mcmod.pufferfish.PufferfishSize.update(this);
         }
     }
 

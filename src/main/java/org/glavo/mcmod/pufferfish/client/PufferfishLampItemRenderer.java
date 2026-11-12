@@ -33,6 +33,8 @@ public final class PufferfishLampItemRenderer extends BlockEntityWithoutLevelRen
         if (model == null) model = new PufferfishFlailModel();
         pose.pushPose();
         pose.translate(0.5, 0.5, 0.5);
+        float scale = PufferfishWearModel.scaleForContext(org.glavo.mcmod.pufferfish.PufferfishSize.scale(stack), context);
+        pose.scale(scale, scale, scale);
         model.renderHead(PufferfishLamps.fish(item.getBlock()), pose, buffers, 15728880, overlay, 0);
         pose.popPose();
     }

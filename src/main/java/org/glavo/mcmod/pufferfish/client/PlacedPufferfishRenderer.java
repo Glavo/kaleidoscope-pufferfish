@@ -51,6 +51,9 @@ public final class PlacedPufferfishRenderer implements BlockEntityRenderer<Place
                 : ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png");
         pose.pushPose();
         pose.translate(0.5, 0, 0.5);
+        float scale = org.glavo.mcmod.pufferfish.PufferfishSize.scale(stack);
+        pose.translate(0, (1 - scale) * DeflatingPufferfishModel.floorOffset(org.glavo.mcmod.pufferfish.PufferfishDurability.deflationStage(stack)), 0);
+        pose.scale(scale, scale, scale);
         pose.mulPose(Axis.YP.rotationDegrees(-state.getValue(PlacedPufferfishBlock.FACING).toYRot()));
         pose.scale(1, -1, -1);
         pose.translate(0, -23.0 / 16, 0);

@@ -114,7 +114,10 @@ public record PufferfishCultivation(PufferfishLevel level, double talent, long e
             var stored = fish.getExistingDataOrNull(PufferfishPlease.FISH_ITEM);
             if (stored == null) return;
             var stack = stored.copy();
-            if (advanceAtConduit(stack)) fish.setData(PufferfishPlease.FISH_ITEM, stack);
+            if (advanceAtConduit(stack)) {
+                fish.setData(PufferfishPlease.FISH_ITEM, stack);
+                PufferfishSize.update(fish);
+            }
         }
     }
 

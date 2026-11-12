@@ -74,6 +74,17 @@ public class PlacedPufferfishBlock extends BaseEntityBlock implements SimpleWate
     }
 
     @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, net.minecraft.world.entity.LivingEntity placer, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, placer, stack);
+        var cultivation = stack.get(PufferfishPlease.CULTIVATION.get());
+        if (cultivation != null && PufferfishLamps.isLamp(this) && level.getBlockEntity(pos) instanceof PlacedPufferfishBlockEntity entity) {
+            var fish = entity.fish();
+            fish.set(PufferfishPlease.CULTIVATION.get(), cultivation);
+            entity.setFish(fish);
+        }
+    }
+
+    @Override
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) { return SHAPE; }
 
     @Override
@@ -104,14 +115,23 @@ public class PlacedPufferfishBlock extends BaseEntityBlock implements SimpleWate
 
     @Override
     protected List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
-        if (PufferfishLamps.isLamp(this)) return List.of(new ItemStack(this));
+        if (PufferfishLamps.isLamp(this)) return List.of(lampStack(params.getOptionalParameter(LootContextParams.BLOCK_ENTITY)));
         return params.getOptionalParameter(LootContextParams.BLOCK_ENTITY) instanceof PlacedPufferfishBlockEntity fish && !fish.fish().isEmpty()
                 ? List.of(fish.fish()) : List.of();
     }
 
     @Override
     public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
-        if (PufferfishLamps.isLamp(this)) return new ItemStack(this);
+        if (PufferfishLamps.isLamp(this)) return lampStack(level.getBlockEntity(pos));
         return level.getBlockEntity(pos) instanceof PlacedPufferfishBlockEntity fish ? fish.fish() : ItemStack.EMPTY;
+    }
+
+    private ItemStack lampStack(BlockEntity entity) {
+        var stack = new ItemStack(this);
+        if (entity instanceof PlacedPufferfishBlockEntity fish) {
+            var cultivation = fish.fish().get(PufferfishPlease.CULTIVATION.get());
+            if (cultivation != null) stack.set(PufferfishPlease.CULTIVATION.get(), cultivation);
+        }
+        return stack;
     }
 }

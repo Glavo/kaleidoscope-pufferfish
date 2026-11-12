@@ -153,7 +153,7 @@ public final class PufferfishFlailItemRenderer extends BlockEntityWithoutLevelRe
         pose.mulPose(Axis.YP.rotationDegrees(-15));
         pose.mulPose(Axis.XP.rotationDegrees(10));
         pose.scale(1.1F, 1.1F, 1.1F);
-        model.renderHead(stack, pose, buffers, light, overlay, 0);
+        model.renderHead(stack, pose, buffers, light, overlay, 0, 0, 1);
         pose.popPose();
     }
 

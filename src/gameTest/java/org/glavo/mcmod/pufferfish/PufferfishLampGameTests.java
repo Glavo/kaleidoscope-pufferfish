@@ -73,6 +73,8 @@ public final class PufferfishLampGameTests {
             helper.setBlock(relative.below(), Blocks.STONE);
             helper.setBlock(relative, Blocks.WATER);
             var stack = new ItemStack(variant.block().get(), 2);
+            var cultivation = new PufferfishCultivation(PufferfishLevel.LEVEL_10, 0.5, 123, 456);
+            stack.set(PufferfishPlease.CULTIVATION.get(), cultivation);
             player.setItemInHand(InteractionHand.MAIN_HAND, stack);
             var hit = new BlockHitResult(Vec3.atBottomCenterOf(pos), Direction.UP, pos.below(), false);
             helper.assertTrue(((BlockItem) stack.getItem()).useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit)).consumesAction(), "Lamp placement failed");
@@ -82,13 +84,16 @@ public final class PufferfishLampGameTests {
             helper.assertTrue(state.is(variant.block().get()) && state.getLightEmission(level, pos) == light
                     && state.getFluidState().getType() == Fluids.WATER && stack.getCount() == 1, "Lamp placement or light was incorrect");
             var entity = (PlacedPufferfishBlockEntity) level.getBlockEntity(pos);
-            helper.assertTrue(ItemStack.isSameItemSameComponents(entity.fish(), variant.fish().get()), "Lamp displays the wrong fish");
+            var expected = variant.fish().get();
+            expected.set(PufferfishPlease.CULTIVATION.get(), cultivation);
+            helper.assertTrue(ItemStack.isSameItemSameComponents(entity.fish(), expected), "Lamp lost its variant or cultivation on placement");
             var saved = entity.saveWithFullMetadata(level.registryAccess());
             var restored = (PlacedPufferfishBlockEntity) BlockEntity.loadStatic(pos, state, saved, level.registryAccess());
             helper.assertTrue(restored != null && ItemStack.matches(entity.fish(), restored.fish()), "Lamp lost its fish on reload");
             var drops = Block.getDrops(state, level, pos, entity);
-            helper.assertTrue(drops.size() == 1 && drops.getFirst().is(stack.getItem())
-                    && state.getBlock().getCloneItemStack(level, pos, state).is(stack.getItem()), "Lamp dropped or cloned a raw fish");
+            helper.assertTrue(drops.size() == 1 && ItemStack.isSameItemSameComponents(drops.getFirst(), stack)
+                    && ItemStack.isSameItemSameComponents(state.getBlock().getCloneItemStack(level, pos, state), stack),
+                    "Lamp lost its variant or cultivation when dropped or cloned");
         }
         helper.succeed();
     }

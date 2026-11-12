@@ -20,6 +20,12 @@ public final class RenderCapture implements MultiBufferSource {
 
     public int count() { return buffers.values().stream().mapToInt(vertices -> vertices.count).sum(); }
 
+    public net.minecraft.world.phys.AABB bounds() {
+        return buffers.values().stream().filter(vertices -> vertices.count > 0)
+                .map(vertices -> new net.minecraft.world.phys.AABB(vertices.minX, vertices.minY, vertices.minZ, vertices.maxX, vertices.maxY, vertices.maxZ))
+                .reduce(net.minecraft.world.phys.AABB::minmax).orElseThrow();
+    }
+
     public int count(RenderType type) {
         var vertices = buffers.get(type);
         return vertices == null ? 0 : vertices.count;
@@ -27,12 +33,16 @@ public final class RenderCapture implements MultiBufferSource {
 
     private static final class Vertices implements VertexConsumer {
         private int count;
+        private float minX = Float.POSITIVE_INFINITY, minY = Float.POSITIVE_INFINITY, minZ = Float.POSITIVE_INFINITY;
+        private float maxX = Float.NEGATIVE_INFINITY, maxY = Float.NEGATIVE_INFINITY, maxZ = Float.NEGATIVE_INFINITY;
 
         @Override
         public VertexConsumer addVertex(float x, float y, float z) {
             if (!Float.isFinite(x) || !Float.isFinite(y) || !Float.isFinite(z)) {
                 throw new IllegalStateException("Renderer emitted a non-finite vertex");
             }
+            minX = Math.min(minX, x); minY = Math.min(minY, y); minZ = Math.min(minZ, z);
+            maxX = Math.max(maxX, x); maxY = Math.max(maxY, y); maxZ = Math.max(maxZ, z);
             count++;
             return this;
         }

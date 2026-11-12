@@ -75,10 +75,16 @@ public final class PufferfishFlailModel {
 
     /// Renders a head centered at the current origin, preserving dye and enchantment glint.
     public void renderHead(ItemStack stack, PoseStack pose, MultiBufferSource buffers, int light, int overlay, float age) {
-        renderHead(stack, pose, buffers, light, overlay, age, 0);
+        renderHead(stack, pose, buffers, light, overlay, age, 0,
+                stack.getItem() instanceof org.glavo.mcmod.pufferfish.PufferfishFlailItem
+                        ? org.glavo.mcmod.pufferfish.PufferfishSize.equipmentScale(stack) : 1);
     }
 
     public void renderHead(ItemStack stack, PoseStack pose, MultiBufferSource buffers, int light, int overlay, float age, float pressure) {
+        renderHead(stack, pose, buffers, light, overlay, age, pressure, 1);
+    }
+
+    public void renderHead(ItemStack stack, PoseStack pose, MultiBufferSource buffers, int light, int overlay, float age, float pressure, float scale) {
         fish.prepare(stack, pressure);
         stack = PufferfishItems.flailFish(stack);
         var color = stack.get(PufferfishPlease.COLOR.get());
@@ -87,7 +93,7 @@ public final class PufferfishFlailModel {
                 : PufferfishItems.materialName(stack) != null ? PufferfishTextures.materialEntity(PufferfishItems.materialName(stack))
                 : color == null ? FISH_TEXTURE : PufferfishTextures.entity(color);
         pose.pushPose();
-        pose.scale(0.8F, -0.8F, -0.8F);
+        pose.scale(0.8F * scale, -0.8F * scale, -0.8F * scale);
         pose.translate(0, -18.0F / 16, 0);
         fish.setupAnim(null, 0, 0, age, 0, 0);
         fish.renderToBuffer(pose, ItemRenderer.getFoilBufferDirect(buffers, RenderType.entityCutoutNoCull(texture),

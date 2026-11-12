@@ -61,6 +61,16 @@ public final class DeflatingPufferfishModel<T extends Entity> extends Hierarchic
         return switch (stage) { case 1 -> 6.5F / 8; case 2 -> 5.0F / 8; case 3 -> 3.0F / 8; default -> 1; };
     }
 
+    /// Lowest vertex relative to the placed model's support plane, including the angled lower fins.
+    public static float floorOffset(int stage) {
+        return switch (stage) {
+            case 1 -> (1 - (float) Math.sqrt(2) * 1.3F) / 16;
+            case 2 -> (1 - (float) Math.sqrt(2)) / 16;
+            case 3 -> 1.0F / 16;
+            default -> 0;
+        };
+    }
+
     @Override public ModelPart root() { return current.root(); }
 
     @Override

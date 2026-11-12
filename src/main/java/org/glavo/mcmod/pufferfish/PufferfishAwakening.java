@@ -139,6 +139,7 @@ public final class PufferfishAwakening {
         var cultivation = new PufferfishCultivation(PufferfishLevel.LEVEL_1, random.nextDouble(), 0, 0);
         stack.set(PufferfishPlease.CULTIVATION.get(), cultivation);
         recipient.save().accept(stack);
+        if (recipient.owner() instanceof Pufferfish fish) PufferfishSize.update(fish);
         var level = (ServerLevel) target.level();
         var owner = recipient.owner();
         level.sendParticles(ParticleTypes.ENCHANT, owner.getX(), owner.getY() + owner.getBbHeight() * 0.5, owner.getZ(), 12, 0.3, 0.3, 0.3, 0);
