@@ -243,6 +243,7 @@ public final class PufferfishDurabilityGameTests {
         for (var pristine : variants()) {
             if (!PufferfishItems.isPufferfish(pristine)) continue;
             var original = worn(pristine);
+            original.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishRealm.LEVEL_2, 0.875, 12345));
             original.enchant(level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.MENDING), 1);
             var input = net.minecraft.world.item.crafting.CraftingInput.of(2, 1, java.util.List.of(original, new ItemStack(Items.WATER_BUCKET)));
             var recipe = new PufferfishBucketRecipe(net.minecraft.world.item.crafting.CraftingBookCategory.MISC);
@@ -258,7 +259,7 @@ public final class PufferfishDurabilityGameTests {
             var captured = loaded.getBucketItemStack();
             loaded.saveToBucketTag(captured);
             var stored = ItemStack.parseOptional(level.registryAccess(), captured.get(DataComponents.BUCKET_ENTITY_DATA).copyTag().getCompound("Fish"));
-            helper.assertTrue(ItemStack.matches(original, stored), "Release, saving or recapture lost durability or enchantments");
+            helper.assertTrue(ItemStack.matches(original, stored), "Release, saving or recapture lost fish components");
             fish.discard();
             loaded.discard();
             var state = PufferfishBlocks.PLACED_FISH.get().defaultBlockState();
@@ -287,6 +288,8 @@ public final class PufferfishDurabilityGameTests {
                     "Material upgrade repaired the fish or lost enchantments");
         }
         var netherite = worn(new ItemStack(PufferfishItems.NETHERITE.get()));
+        var cultivation = new PufferfishCultivation(PufferfishRealm.LEVEL_4, 0.625, 54321);
+        netherite.set(PufferfishPlease.CULTIVATION.get(), cultivation);
         for (var addition : java.util.List.of(Items.HEAVY_CORE, Items.NETHER_STAR)) {
             for (int damage : new int[] {0, 1000}) {
                 netherite.setDamageValue(damage);
@@ -296,6 +299,7 @@ public final class PufferfishDurabilityGameTests {
                 helper.assertTrue(result.getMaxDamage() == PufferfishDurability.maximum(result)
                         && result.getMaxStackSize() == 1
                         && result.getDamageValue() == (int) Math.ceil((double) damage * result.getMaxDamage() / 2031), "Smithing reset or mis-scaled durability");
+                helper.assertTrue(cultivation.equals(result.get(PufferfishPlease.CULTIVATION.get())), "Smithing lost cultivation data");
             }
         }
         helper.succeed();

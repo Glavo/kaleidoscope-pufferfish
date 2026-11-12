@@ -8,10 +8,18 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.neoforged.neoforge.client.event.RenderTooltipEvent;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
+import org.glavo.mcmod.pufferfish.PufferfishCultivation;
 
-/// Hides the creative category annotation while preserving names and mod attribution.
+/// Adds cultivation ranks and hides duplicate creative category annotations.
 public final class PufferfishTooltips {
     private PufferfishTooltips() {}
+
+    public static void cultivation(ItemTooltipEvent event) {
+        var realm = PufferfishCultivation.visibleRealm(event.getItemStack());
+        if (realm != null) event.getToolTip().add(Component.translatable("tooltip.pufferfish_please.realm", realm.displayName())
+                .withStyle(ChatFormatting.GRAY));
+    }
 
     public static void hideCreativeCategory(RenderTooltipEvent.GatherComponents event) {
         if (event.getItemStack().isEmpty()) return;
