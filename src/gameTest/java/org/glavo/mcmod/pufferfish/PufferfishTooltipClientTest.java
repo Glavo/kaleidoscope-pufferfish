@@ -73,11 +73,11 @@ public final class PufferfishTooltipClientTest {
             if (!tooltip(fish).contains(initialLevel) || fish.has(PufferfishPlease.CULTIVATION.get())) {
                 throw new IllegalStateException("Activated fish did not display level zero without cultivation data");
             }
-            fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_2, 0.25, 12345));
+            fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_2, 0.25, 12345, 54321));
             var first = tooltip(fish);
             var advancedLevel = Component.translatable("tooltip.pufferfish_please.level", PufferfishLevel.LEVEL_2.displayName()).getString();
             if (!first.contains(advancedLevel) || first.contains(initialLevel)) throw new IllegalStateException("Cultivation level did not replace level zero");
-            fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_2, 0.875, 98765));
+            fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_2, 0.875, 98765, 123456));
             if (!first.equals(tooltip(fish))) throw new IllegalStateException("Tooltip exposed talent or unspecified experience progress");
         }
     }

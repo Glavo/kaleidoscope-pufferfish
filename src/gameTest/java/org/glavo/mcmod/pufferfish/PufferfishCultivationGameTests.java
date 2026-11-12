@@ -21,7 +21,7 @@ public final class PufferfishCultivationGameTests {
     public static void cultivationSurvivesStorageAndSynchronization(GameTestHelper helper) {
         for (var level : PufferfishLevel.values()) {
             if (level == PufferfishLevel.LEVEL_0) continue;
-            var state = new PufferfishCultivation(level, 0.1234567890123456, 9_000_000_001L);
+            var state = new PufferfishCultivation(level, 0.1234567890123456, 9_000_000_001L, Long.MAX_VALUE);
             var fish = new ItemStack(Items.PUFFERFISH);
             PufferfishDurability.activate(fish);
             fish.set(PufferfishPlease.CULTIVATION.get(), state);
@@ -42,17 +42,18 @@ public final class PufferfishCultivationGameTests {
     @GameTest(template = "empty")
     public static void cultivationRejectsInvalidState(GameTestHelper helper) {
         for (var json : java.util.List.of(
-                "{\"level\":\"level.0\",\"talent\":0.5,\"experience\":0}",
-                "{\"level\":\"unknown\",\"talent\":0.5,\"experience\":0}",
-                "{\"level\":\"level.1\",\"talent\":-0.1,\"experience\":0}",
-                "{\"level\":\"level.1\",\"talent\":1.1,\"experience\":0}",
-                "{\"level\":\"level.1\",\"talent\":1e999,\"experience\":0}",
-                "{\"level\":\"level.1\",\"talent\":0.5,\"experience\":-1}")) {
+                "{\"level\":\"level.0\",\"talent\":0.5,\"experience\":0,\"total_experience\":0}",
+                "{\"level\":\"unknown\",\"talent\":0.5,\"experience\":0,\"total_experience\":0}",
+                "{\"level\":\"level.1\",\"talent\":-0.1,\"experience\":0,\"total_experience\":0}",
+                "{\"level\":\"level.1\",\"talent\":1.1,\"experience\":0,\"total_experience\":0}",
+                "{\"level\":\"level.1\",\"talent\":1e999,\"experience\":0,\"total_experience\":0}",
+                "{\"level\":\"level.1\",\"talent\":0.5,\"experience\":-1,\"total_experience\":0}",
+                "{\"level\":\"level.1\",\"talent\":0.5,\"experience\":0,\"total_experience\":-1}")) {
             helper.assertTrue(PufferfishCultivation.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseString(json)).error().isPresent(),
                     "Invalid cultivation data was accepted: " + json);
         }
         for (double talent : new double[] {0, 1}) {
-            var state = new PufferfishCultivation(PufferfishLevel.LEVEL_1, talent, 0);
+            var state = new PufferfishCultivation(PufferfishLevel.LEVEL_1, talent, 0, 0);
             var encoded = PufferfishCultivation.CODEC.encodeStart(JsonOps.INSTANCE, state).getOrThrow();
             helper.assertTrue(encoded.getAsJsonObject().get("level").getAsString().equals("level.1"),
                     "Cultivation persisted a level name instead of a level ID");
