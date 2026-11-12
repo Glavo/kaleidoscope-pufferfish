@@ -189,6 +189,7 @@ public class PufferfishPlease {
         NeoForge.EVENT_BUS.addListener(PufferfishDurability::beforeAttack);
         NeoForge.EVENT_BUS.addListener(PufferfishDurability::beforeDamage);
         NeoForge.EVENT_BUS.addListener(PufferfishDurability::repair);
+        NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishCultivation::pickupExperience);
         NeoForge.EVENT_BUS.addListener(HeavyPufferfishBlock::poisonOnImpact);
         NeoForge.EVENT_BUS.addListener(PufferfishContactDamage::tick);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishConduitSpawning::potentialSpawns);

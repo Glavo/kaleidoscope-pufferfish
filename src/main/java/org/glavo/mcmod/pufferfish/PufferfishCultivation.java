@@ -7,11 +7,17 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.netty.buffer.ByteBuf;
+import java.util.ArrayList;
+import java.util.List;
 import javax.annotation.Nullable;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.server.TickTask;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.event.entity.player.PlayerXpEvent;
 
 /// Post-awakening state. Total experience is a lifetime statistic, independent of unspent progress.
 public record PufferfishCultivation(PufferfishLevel level, double talent, long experience, long totalExperience) {
@@ -40,6 +46,39 @@ public record PufferfishCultivation(PufferfishLevel level, double talent, long e
         if (!Double.isFinite(talent) || talent < 0 || talent > 1) throw new IllegalArgumentException("Talent must be finite and between zero and one");
         if (experience < 0) throw new IllegalArgumentException("Experience must not be negative");
         if (totalExperience < 0) throw new IllegalArgumentException("Total experience must not be negative");
+    }
+
+    /// Both counters saturate independently; experience alone never changes level or talent.
+    public PufferfishCultivation addExperience(int amount) {
+        if (amount <= 0) return this;
+        return new PufferfishCultivation(level, talent,
+                experience + Math.min((long) amount, Long.MAX_VALUE - experience),
+                totalExperience + Math.min((long) amount, Long.MAX_VALUE - totalExperience));
+    }
+
+    /// Awards the full orb value to each equipped awakened weapon, including XP consumed by Mending.
+    public static void pickupExperience(PlayerXpEvent.PickupXp event) {
+        if (event.isCanceled() || !(event.getEntity() instanceof ServerPlayer player)) return;
+        int amount = event.getOrb().getValue();
+        if (amount <= 0) return;
+        var recipients = new ArrayList<ItemStack>(3);
+        for (var slot : List.of(EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND, EquipmentSlot.HEAD)) {
+            var stack = player.getItemBySlot(slot);
+            if (stack.getCount() == 1 && PufferfishItems.isWeapon(stack) && stack.has(PufferfishPlease.CULTIVATION.get())) {
+                recipients.add(stack);
+            }
+        }
+        if (recipients.isEmpty()) return;
+        // Wait for all pickup listeners, including later cancellation, while retaining the original recipients.
+        player.server.tell(new TickTask(player.server.getTickCount(), () -> {
+            if (event.isCanceled()) return;
+            for (var stack : recipients) {
+                var cultivation = stack.get(PufferfishPlease.CULTIVATION.get());
+                if (!stack.isEmpty() && cultivation != null) {
+                    stack.set(PufferfishPlease.CULTIVATION.get(), cultivation.addExperience(amount));
+                }
+            }
+        }));
     }
 
     /// Reading a level never creates cultivation data or changes stacking.
