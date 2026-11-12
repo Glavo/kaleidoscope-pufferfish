@@ -115,11 +115,21 @@ public final class PufferfishMobs {
                 RegisterSpawnPlacementsEvent.Operation.REPLACE));
     }
 
-    public static void naturalColors(FinalizeSpawnEvent event) {
-        if (event.getSpawnType() == MobSpawnType.NATURAL && event.getEntity().getType() == EntityType.PUFFERFISH
-                && event.getEntity() instanceof Pufferfish fish && fish.getRandom().nextInt(4) == 0) {
+    public static void naturalTraits(FinalizeSpawnEvent event) {
+        if (event.getSpawnType() != MobSpawnType.NATURAL || !(event.getEntity() instanceof Pufferfish fish)) return;
+        if (fish.getType() == EntityType.PUFFERFISH && fish.getRandom().nextInt(4) == 0) {
             PufferfishColors.set(fish, DyeColor.byId(fish.getRandom().nextInt(16)));
         }
+        if (PufferfishData.stored(fish).has(PufferfishPlease.CULTIVATION.get())) return;
+        // Natural chances are 10%, 2%, and 0.2%; active conduits divide each by four.
+        int roll = fish.getRandom().nextInt(PufferfishConduitSpawning.isInRange(fish.level(), fish.blockPosition()) ? 2000 : 500);
+        var rank = roll < 50 ? PufferfishLevel.LEVEL_1 : roll < 60 ? PufferfishLevel.LEVEL_2
+                : roll == 60 ? PufferfishLevel.LEVEL_3 : null;
+        if (rank == null) return;
+        var stack = PufferfishData.copy(fish);
+        PufferfishDurability.activate(stack);
+        stack.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(rank, fish.getRandom().nextDouble(), 0, 0));
+        PufferfishData.set(fish, stack);
     }
 
     public static void feed(PlayerInteractEvent.EntityInteract event) {

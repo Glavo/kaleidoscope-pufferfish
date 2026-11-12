@@ -177,7 +177,7 @@ public class PufferfishPlease {
         NeoForge.EVENT_BUS.addListener(PufferfishColors::interact);
         NeoForge.EVENT_BUS.addListener(PufferfishMobs::feed);
         NeoForge.EVENT_BUS.addListener(PufferfishColors::colorDrops);
-        NeoForge.EVENT_BUS.addListener(PufferfishMobs::naturalColors);
+        NeoForge.EVENT_BUS.addListener(PufferfishMobs::naturalTraits);
         NeoForge.EVENT_BUS.addListener(PufferfishSize::joinLevel);
         NeoForge.EVENT_BUS.addListener(PufferfishZombieHeadgear::prepare);
         NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, PufferfishZombieHeadgear::equip);

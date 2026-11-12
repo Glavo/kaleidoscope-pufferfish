@@ -210,7 +210,7 @@ public final class PufferfishMobGameTests {
         for (int i = 0; i < 512; i++) {
             var fish = EntityType.PUFFERFISH.create(level);
             fish.getRandom().setSeed(random.nextLong());
-            PufferfishMobs.naturalColors(new FinalizeSpawnEvent(fish, level, pos.getX(), pos.getY(), pos.getZ(),
+            PufferfishMobs.naturalTraits(new FinalizeSpawnEvent(fish, level, pos.getX(), pos.getY(), pos.getZ(),
                     level.getCurrentDifficultyAt(pos), MobSpawnType.NATURAL, null, null));
             if (PufferfishColors.get(fish) != null) colors.add(PufferfishColors.get(fish));
         }
