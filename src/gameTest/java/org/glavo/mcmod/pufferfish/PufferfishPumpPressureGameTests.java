@@ -179,6 +179,13 @@ public final class PufferfishPumpPressureGameTests {
                     "Burst damage did not fall off with distance: " + near.getHealth() + ", " + far.getHealth() + ", " + initial
                             + "; positions: " + near.position() + ", " + far.position() + "; center: " + pump.getBlockPos().getCenter());
             helper.assertTrue(TestEffects.hasPoison(near) && near.getDeltaMovement().lengthSqr() > 0, "Burst omitted poison or knockback");
+            var source = near.getLastDamageSource();
+            helper.assertTrue(source != null && source.is(net.minecraft.world.damagesource.DamageTypes.EXPLOSION)
+                    && source.getEntity() == player, "Burst lost its explosion type or player attribution");
+            assertBurstMessage(helper, source.getLocalizedDeathMessage(near), true, near.getDisplayName(), player.getDisplayName());
+            assertBurstMessage(helper, source.getLocalizedDeathMessage(player), false, player.getDisplayName());
+            var unattributed = PufferfishPumpBlockEntity.burstDamageSource(helper.getLevel(), null, pump.getBlockPos().getCenter());
+            assertBurstMessage(helper, unattributed.getLocalizedDeathMessage(near), false, near.getDisplayName());
             helper.assertTrue(covered.getHealth() == initial && !TestEffects.hasPoison(covered), "Burst passed through solid cover");
             helper.assertTrue(fish.getHealth() == fishHealth && fish.getActiveEffects().isEmpty(), "Burst damaged or poisoned another pufferfish");
             helper.assertTrue(cat.getHealth() == cat.getMaxHealth() && cat.getActiveEffects().isEmpty()
@@ -186,5 +193,12 @@ public final class PufferfishPumpPressureGameTests {
             helper.assertTrue(helper.getBlockState(new BlockPos(1, 2, 2)).is(Blocks.STONE), "Burst destroyed blocks");
             helper.succeed();
         });
+    }
+
+    private static void assertBurstMessage(GameTestHelper helper, net.minecraft.network.chat.Component message, boolean attributed,
+            net.minecraft.network.chat.Component... names) {
+        helper.assertTrue(message.getContents() instanceof net.minecraft.network.chat.contents.TranslatableContents translated
+                && translated.getKey().equals("death.attack.pufferfish_please.pufferfish_burst" + (attributed ? ".player" : ""))
+                && java.util.Arrays.equals(translated.getArgs(), names), "Burst death message used the wrong variant or name order");
     }
 }

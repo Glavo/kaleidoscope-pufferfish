@@ -3,11 +3,13 @@
 
 package org.glavo.mcmod.pufferfish;
 
+import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -25,6 +27,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 /// Stores the complete inserted fish and preserves the pump item's metadata.
 public final class PufferfishPumpBlockEntity extends BlockEntity {
@@ -110,8 +113,7 @@ public final class PufferfishPumpBlockEntity extends BlockEntity {
         pressure = releaseTicks = 0;
         changed();
         var center = worldPosition.getCenter();
-        var source = new DamageSource(server.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE)
-                .getHolderOrThrow(DamageTypes.EXPLOSION), null, player, center);
+        var source = burstDamageSource(server, player, center);
         server.gameEvent(player, GameEvent.EXPLODE, center);
         server.playSound(null, worldPosition, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.BLOCKS, 1, 1.3F);
         server.sendParticles(ParticleTypes.EXPLOSION, center.x, center.y, center.z, 1, 0, 0, 0, 0);
@@ -145,6 +147,19 @@ public final class PufferfishPumpBlockEntity extends BlockEntity {
     public boolean triggerEvent(int id, int param) {
         if (id == 1 && level != null) { animationStart = level.getGameTime(); return true; }
         return super.triggerEvent(id, param);
+    }
+
+    static DamageSource burstDamageSource(ServerLevel server, @Nullable Player player, Vec3 center) {
+        return new DamageSource(server.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE)
+                .getHolderOrThrow(DamageTypes.EXPLOSION), null, player, center) {
+            @Override
+            public Component getLocalizedDeathMessage(LivingEntity victim) {
+                String key = "death.attack.pufferfish_please.pufferfish_burst";
+                return player == null || player == victim
+                        ? Component.translatable(key, victim.getDisplayName())
+                        : Component.translatable(key + ".player", victim.getDisplayName(), player.getDisplayName());
+            }
+        };
     }
 
     private void changed() {

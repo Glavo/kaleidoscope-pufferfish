@@ -124,6 +124,8 @@
   "death.attack.pufferfish_please.falling_pufferfish": "%1$s 被下落的河豚压扁了",
   "death.attack.pufferfish_please.heavy_pufferfish": "%1$s 承受了生命不能承受之重",
   "death.attack.pufferfish_please.netherite_pufferfish": "%1$s 发现不只有钻石才够硬",
+  "death.attack.pufferfish_please.pufferfish_burst": "%1$s 死于过度膨胀",
+  "death.attack.pufferfish_please.pufferfish_burst.player": "%2$s 在给河豚打气的时候没有考虑 %1$s 的感受",
   "death.attack.pufferfish_please.pufferfish_prick": "%1$s发现地板是河豚做的",
   "death.attack.pufferfish_please.pufferfish_prick.player": "%1$s发现地板是河豚做的",
   "death.attack.pufferfish_please.radiant_pufferfish": "%1$s 在璀璨的光芒下融化了",

@@ -124,6 +124,8 @@
   "death.attack.pufferfish_please.falling_pufferfish": "%1$s was squashed by a falling pufferfish",
   "death.attack.pufferfish_please.heavy_pufferfish": "%1$s bore the unbearable weight of being",
   "death.attack.pufferfish_please.netherite_pufferfish": "%1$s discovered that diamond wasn't the only tough material",
+  "death.attack.pufferfish_please.pufferfish_burst": "%1$s died of overinflation",
+  "death.attack.pufferfish_please.pufferfish_burst.player": "%2$s inflated a pufferfish without considering %1$s's feelings",
   "death.attack.pufferfish_please.pufferfish_prick": "%1$s discovered the floor was made of pufferfish",
   "death.attack.pufferfish_please.pufferfish_prick.player": "%1$s discovered the floor was made of pufferfish",
   "death.attack.pufferfish_please.radiant_pufferfish": "%1$s melted in the radiant light",
