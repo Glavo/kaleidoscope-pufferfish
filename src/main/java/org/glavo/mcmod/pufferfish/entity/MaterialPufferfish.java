@@ -183,7 +183,7 @@ public final class MaterialPufferfish extends Pufferfish {
     public ItemStack getBucketItemStack() { return new ItemStack(PufferfishMobs.variant(fish()).bucket().get()); }
 
     @Override
-    public ItemStack getPickResult() { return getBucketItemStack(); }
+    public ItemStack getPickResult() { return new ItemStack(PufferfishMobs.variant(fish()).egg().get()); }
 
     /// Ruin residents remain near their home without natural despawning; bucket capture releases them from it.
     public void setHome(BlockPos pos) {
