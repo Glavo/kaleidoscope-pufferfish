@@ -126,6 +126,7 @@
   "block.pufferfish_please.white_pufferfish_skin": "白色河豚皮",
   "block.pufferfish_please.yellow_pufferfish_lamp": "黄色河豚灯",
   "block.pufferfish_please.yellow_pufferfish_skin": "黄色河豚皮",
+  "config.jade.plugin_pufferfish_please.level": "河豚境界",
   "death.attack.pufferfish_please.diamond_pufferfish": "%1$s 感受到了钻石的坚硬",
   "death.attack.pufferfish_please.falling_pufferfish": "%1$s 被下落的河豚压扁了",
   "death.attack.pufferfish_please.heavy_pufferfish": "%1$s 承受了生命不能承受之重",

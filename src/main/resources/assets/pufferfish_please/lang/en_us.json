@@ -126,6 +126,7 @@
   "block.pufferfish_please.white_pufferfish_skin": "White Pufferfish Skin",
   "block.pufferfish_please.yellow_pufferfish_lamp": "Yellow Pufferfish Lamp",
   "block.pufferfish_please.yellow_pufferfish_skin": "Yellow Pufferfish Skin",
+  "config.jade.plugin_pufferfish_please.level": "Pufferfish rank",
   "death.attack.pufferfish_please.diamond_pufferfish": "%1$s felt the hardness of diamond",
   "death.attack.pufferfish_please.falling_pufferfish": "%1$s was squashed by a falling pufferfish",
   "death.attack.pufferfish_please.heavy_pufferfish": "%1$s bore the unbearable weight of being",

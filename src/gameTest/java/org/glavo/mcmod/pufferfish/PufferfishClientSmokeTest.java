@@ -46,6 +46,7 @@ public final class PufferfishClientSmokeTest {
         PufferfishPowerClientTest.verify(minecraft);
         PufferfishCurseClientTest.verify(minecraft);
         PufferfishTooltipClientTest.verify();
+        if (net.neoforged.fml.ModList.get().isLoaded("jade")) PufferfishJadeClientTest.verify(minecraft);
         PufferfishHeadgearClientTest.verify(minecraft);
         PufferfishCompatibilityClientTest.verify(minecraft);
         PufferfishGloveClientTest.verify(minecraft);

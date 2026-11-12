@@ -140,11 +140,13 @@ dependencies {
     val chineseFood = "maven.modrinth:kaleidoscopechinesefood:${providers.gradleProperty("kaleidoscope_chinesefood_version").get()}"
     val farmersDelight = "maven.modrinth:farmers-delight:${providers.gradleProperty("farmers_delight_version").get()}"
     val create = "maven.modrinth:create:${providers.gradleProperty("create_version").get()}"
+    val jade = "maven.modrinth:jade:${providers.gradleProperty("jade_version").get()}"
 
     compileOnly(cookery)
     compileOnly(chineseFood)
     compileOnly(farmersDelight)
     compileOnly(create)
+    compileOnly(jade)
     compileOnly("mezz.jei:jei-${providers.gradleProperty("minecraft_version").get()}-common-api:${providers.gradleProperty("jei_version").get()}")
     // Create bundles Ponder at runtime; its base interfaces are also needed by javac.
     compileOnly("net.createmod.ponder:ponder-neoforge:${providers.gradleProperty("ponder_version").get()}") {
@@ -160,6 +162,7 @@ dependencies {
     if (providers.gradleProperty("include_farmers_delight").get().toBoolean()) {
         localRuntime(farmersDelight)
     }
+    if (providers.gradleProperty("include_jade").get().toBoolean()) localRuntime(jade)
 }
 
 val metadataProperties = listOf(
