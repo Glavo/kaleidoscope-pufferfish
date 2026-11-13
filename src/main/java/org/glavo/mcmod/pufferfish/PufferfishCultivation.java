@@ -56,7 +56,17 @@ public record PufferfishCultivation(PufferfishLevel level, double talent, long e
 
     /// The next breakthrough's unspent experience cost; zero at the highest level.
     public long requiredExperience() {
-        return (long) Math.ceil(level.baseExperienceRequired() * Math.pow(2, 1 - 2 * talent));
+        return requiredExperience(level);
+    }
+
+    private long requiredExperience(PufferfishLevel rank) {
+        return (long) Math.ceil(rank.baseExperienceRequired() * Math.pow(2, 1 - 2 * talent));
+    }
+
+    /// Returns a quarter of the current XP and the talent-adjusted cost of reaching this rank, rounded down.
+    public long downgradeRefund() {
+        long threshold = requiredExperience(PufferfishLevel.values()[level.number() - 1]);
+        return experience / 4 + threshold / 4 + (experience % 4 + threshold % 4) / 4;
     }
 
     /// Checks only experience readiness, not breakthrough conditions; the highest level returns false.

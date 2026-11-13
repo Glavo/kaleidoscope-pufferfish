@@ -22,6 +22,95 @@ import org.glavo.mcmod.pufferfish.test.CuttingAssertions;
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class FishProcessingTableGameTests {
+    @GameTest(template = "empty", timeoutTicks = 140)
+    public static void completedDowngradesDropExactExperienceOnceAndSkinsDropNone(GameTestHelper helper) {
+        var table = place(helper);
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BRUSH));
+        var fish = new ItemStack(Items.PUFFERFISH);
+        PufferfishDurability.activate(fish);
+        fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_2, 0.5, 83, Long.MAX_VALUE));
+        table.insert(fish);
+        var bounds = new net.minecraft.world.phys.AABB(table.getBlockPos()).inflate(4);
+        for (int stroke = 0; stroke < 3; stroke++) {
+            int current = stroke;
+            helper.runAfterDelay(1 + stroke * 10, () -> {
+                table.brush(player, InteractionHand.MAIN_HAND);
+                table.brush(player, InteractionHand.MAIN_HAND);
+                var orbs = helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.ExperienceOrb.class, bounds);
+                helper.assertTrue(current < 2 ? orbs.isEmpty() : orbs.size() == 1 && orbs.getFirst().getValue() == 60,
+                        "Partial or repeated strokes duplicated experience, or the refund was incorrect");
+                if (current == 2) orbs.forEach(net.minecraft.world.entity.Entity::discard);
+            });
+        }
+        for (int stroke = 0; stroke < 3; stroke++) {
+            helper.runAfterDelay(41 + stroke * 10, () -> {
+                table.brush(player, InteractionHand.MAIN_HAND);
+                helper.assertTrue(helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.ExperienceOrb.class, bounds).isEmpty(),
+                        "Rank one refunded an awakening cost or previously refunded XP");
+            });
+        }
+        helper.runAfterDelay(70, () -> {
+            table.removeItem();
+            var skin = new ItemStack(PufferfishBlocks.RADIANT_SKIN.get());
+            PufferfishSkinBlock.setLevel(skin, PufferfishLevel.LEVEL_10);
+            table.insert(skin);
+        });
+        for (int stroke = 0; stroke < 3; stroke++) {
+            int current = stroke;
+            helper.runAfterDelay(71 + stroke * 10, () -> {
+                table.brush(player, InteractionHand.MAIN_HAND);
+                helper.assertTrue(helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.ExperienceOrb.class, bounds).isEmpty(), "Skin generated experience without cultivation data");
+                if (current == 2) {
+                    helper.assertTrue(table.item().get(PufferfishPlease.SKIN_LEVEL.get()) == PufferfishLevel.LEVEL_9, "Skin did not lose a rank");
+                    helper.succeed();
+                }
+            });
+        }
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 60)
+    public static void largeRefundsUsePersistentMergedOrbsAndSupportMending(GameTestHelper helper) {
+        var table = place(helper);
+        var player = org.glavo.mcmod.pufferfish.test.TestPlayers.serverPlayer(helper);
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BRUSH));
+        var fish = new ItemStack(Items.PUFFERFISH);
+        fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_10, 0, 0, 0));
+        table.insert(fish);
+        for (int stroke = 0; stroke < 3; stroke++) {
+            int current = stroke;
+            helper.runAfterDelay(1 + stroke * 10, () -> {
+                table.brush(player, InteractionHand.MAIN_HAND);
+                if (current != 2) return;
+                var orbs = helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.ExperienceOrb.class,
+                        new net.minecraft.world.phys.AABB(table.getBlockPos()).inflate(2));
+                helper.assertTrue(orbs.size() <= 2 && !orbs.isEmpty(), "Large refunds spawned excessive orb entities");
+                var pickaxe = new ItemStack(Items.DIAMOND_PICKAXE);
+                pickaxe.setDamageValue(100);
+                pickaxe.enchant(helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.MENDING), 1);
+                player.setItemInHand(InteractionHand.MAIN_HAND, pickaxe);
+                long total = 0;
+                for (var orb : orbs) {
+                    var saved = new net.minecraft.nbt.CompoundTag();
+                    orb.addAdditionalSaveData(saved);
+                    total += (long) saved.getShort("Value") * saved.getInt("Count");
+                    var restored = new net.minecraft.world.entity.ExperienceOrb(helper.getLevel(), 0, 0, 0, 0);
+                    restored.readAdditionalSaveData(saved);
+                    helper.assertTrue(restored.getValue() > 0 && restored.getValue() <= Short.MAX_VALUE, "Orb value did not survive vanilla persistence");
+                    for (int count = saved.getInt("Count"); count > 0; count--) {
+                        player.takeXpDelay = 0;
+                        restored.playerTouch(player);
+                    }
+                    helper.assertTrue(restored.isRemoved(), "Merged orb did not finish after its stored pickup count");
+                    orb.discard();
+                }
+                helper.assertTrue(total == 5_000_000 && player.totalExperience == 4_999_950 && !pickaxe.isDamaged(),
+                        "Refund was truncated, failed to reach the player, or bypassed Mending");
+                helper.succeed();
+            });
+        }
+    }
+
     private static FishProcessingTableBlockEntity place(GameTestHelper helper) {
         var pos = new BlockPos(2, 2, 2);
         helper.setBlock(pos, PufferfishBlocks.PROCESSING_TABLE.get());

@@ -27,6 +27,29 @@ import org.glavo.mcmod.pufferfish.test.TestPlayers;
 @PrefixGameTestTemplate(false)
 public final class PufferfishCultivationGameTests {
     @GameTest(template = "empty")
+    public static void downgradeRefundUsesThePreviousThresholdAndRoundsWithoutOverflow(GameTestHelper helper) {
+        for (var sample : java.util.List.of(
+                new PufferfishCultivation(PufferfishLevel.LEVEL_2, 0, 83, 0),
+                new PufferfishCultivation(PufferfishLevel.LEVEL_2, 0.5, 83, Long.MAX_VALUE),
+                new PufferfishCultivation(PufferfishLevel.LEVEL_2, 1, 83, 1))) {
+            long expected = sample.talent() == 0 ? 100 : sample.talent() == 0.5 ? 60 : 40;
+            helper.assertTrue(sample.downgradeRefund() == expected, "Refund used lifetime XP, the next rank's cost, or the wrong talent multiplier");
+        }
+        helper.assertTrue(new PufferfishCultivation(PufferfishLevel.LEVEL_2, 0.25, 1, 0).downgradeRefund() == 57,
+                "Refund must round the talent-adjusted threshold up before rounding the combined quarter down");
+        helper.assertTrue(new PufferfishCultivation(PufferfishLevel.LEVEL_1, 0.75, 3, Long.MAX_VALUE).downgradeRefund() == 0
+                && new PufferfishCultivation(PufferfishLevel.LEVEL_1, 0, 4, 0).downgradeRefund() == 1,
+                "Awakening must not invent an experience threshold");
+        helper.assertTrue(new PufferfishCultivation(PufferfishLevel.LEVEL_10, 0.5, 20_000_000, 80_000_000).downgradeRefund() == 7_500_000,
+                "Immortal stars were counted separately from current XP");
+        var extreme = new PufferfishCultivation(PufferfishLevel.LEVEL_10, 0, Long.MAX_VALUE, Long.MAX_VALUE);
+        long expected = java.math.BigInteger.valueOf(Long.MAX_VALUE).add(java.math.BigInteger.valueOf(20_000_000))
+                .divide(java.math.BigInteger.valueOf(4)).longValueExact();
+        helper.assertTrue(extreme.downgradeRefund() == expected, "Maximum stored experience overflowed the refund");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void breakthroughExperienceDependsOnLevelAndTalent(GameTestHelper helper) {
         long normalTotal = 0;
         long bestTotal = 0;

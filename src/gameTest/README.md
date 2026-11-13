@@ -32,9 +32,11 @@ Generic cutting boards only produce sashimi; pressing produces unranked skins. S
 
 Player targets must hold exactly one item; no items are split, moved or dropped. Every target is validated before any item or entity changes. Buckets edit their contained fish, preserving captured entity data. Lamps, skins, armor, shields, boats and flails use their item component; spawn eggs are excluded. Other derivative crafting recipes do not automatically transfer cultivation.
 
-## Fish processing table
+## Pufferfish stand
 
 Insert one fish or skin, cut with a knife or shears, brush to lower rank, or retrieve with an empty hand. Three brush strokes remove one rank and clear current XP; talent and lifetime XP remain until rank zero. Rank zero clears cultivation. Full, unenchanted fish with mod-managed durability can then return to their original stack limit; wear, enchantments and foreign durability are never erased. Taking the item out clears partial processing progress.
+
+Completed fish downgrades refund one quarter of current XP plus the talent-adjusted cost of reaching the old rank, rounded down. Awakening has no XP cost; skins and rank-zero restoration refund nothing. Refunds use vanilla merged experience orbs, including normal pickup and Mending behavior; lifetime XP and star counts are never counted separately.
 
 Recipes use `pufferfish_please:fish_processing` with `ingredient`, `tool`, `strokes`, `results` and optional `inherit_skin_level`. The table accepts other ingredients when a data pack supplies a recipe. No idle block entity ticker is required. Client smoke tests save a rendered preview to `build/test-runs/client/screenshots/fish-processing-table.png`.
 

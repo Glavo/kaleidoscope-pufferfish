@@ -16,6 +16,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.item.BrushItem;
@@ -126,11 +127,12 @@ public final class FishProcessingTableBlockEntity extends BlockEntity {
         nextStroke = time + 20;
         var oldRank = rank();
         var newRank = PufferfishLevel.values()[Math.max(0, oldRank.number() - 1)];
+        var cultivation = item.get(PufferfishPlease.CULTIVATION.get());
+        long refund = !PufferfishSkinBlock.isSkin(item) && cultivation != null ? cultivation.downgradeRefund() : 0;
         player.displayClientMessage(Component.translatable("message.pufferfish_please.processing_table.rank", newRank.displayName()), true);
         if (PufferfishSkinBlock.isSkin(item)) {
             PufferfishSkinBlock.setLevel(item, newRank);
         } else if (newRank != PufferfishLevel.LEVEL_0) {
-            var cultivation = item.get(PufferfishPlease.CULTIVATION.get());
             item.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(newRank,
                     cultivation.talent(), 0, cultivation.totalExperience()));
         } else {
@@ -143,7 +145,26 @@ public final class FishProcessingTableBlockEntity extends BlockEntity {
         player.getItemInHand(hand).hurtAndBreak(1, player, slot(hand));
         server.playSound(null, worldPosition, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 0.7F, 0.8F);
         changed();
+        dropExperience(server, refund);
         return true;
+    }
+
+    private void dropExperience(ServerLevel server, long amount) {
+        while (amount > 0) {
+            // Vanilla saves and synchronizes each orb's value as a short, with an int count for merged orbs.
+            int value = (int) Math.min(Short.MAX_VALUE, amount);
+            int count = (int) Math.min(Integer.MAX_VALUE, amount / value);
+            var orb = new ExperienceOrb(server, worldPosition.getX() + 0.5, worldPosition.getY() + 1,
+                    worldPosition.getZ() + 0.5, value);
+            if (count > 1) {
+                var data = new CompoundTag();
+                orb.addAdditionalSaveData(data);
+                data.putInt("Count", count);
+                orb.readAdditionalSaveData(data);
+            }
+            server.addFreshEntity(orb);
+            amount -= (long) value * count;
+        }
     }
 
     /// Uses the vanilla brush cadence and targeting; other blocks retain their normal brushing behavior.
