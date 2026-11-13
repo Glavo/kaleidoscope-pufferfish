@@ -62,6 +62,11 @@ public class PufferfishPlease {
             () -> AttachmentType.builder(() -> DyeColor.WHITE).serialize(DyeColor.CODEC).sync(DyeColor.STREAM_CODEC).build());
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<ItemStack>> FISH_ITEM = ATTACHMENTS.register("fish_item",
             () -> AttachmentType.builder(() -> ItemStack.EMPTY).serialize(ItemStack.OPTIONAL_CODEC).build());
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<java.util.List<ItemStack>>> GOLEM_FISH = ATTACHMENTS.register("golem_fish",
+            () -> AttachmentType.<java.util.List<ItemStack>>builder(() -> java.util.List.of())
+                    .serialize(ItemStack.SINGLE_ITEM_CODEC.listOf(0, PufferfishGolemStack.MAX_COUNT - 1))
+                    .sync(ItemStack.STREAM_CODEC.apply(net.minecraft.network.codec.ByteBufCodecs.list(PufferfishGolemStack.MAX_COUNT - 1)))
+                    .build());
     public static final DeferredHolder<EntityType<?>, EntityType<ThrownPufferfish>> THROWN_PUFFERFISH = ENTITIES.register("thrown_pufferfish",
             () -> EntityType.Builder.<ThrownPufferfish>of(ThrownPufferfish::new, MobCategory.MISC)
                     .sized(0.25F, 0.25F).clientTrackingRange(4).updateInterval(10).build(id("thrown_pufferfish").toString()));
@@ -218,7 +223,9 @@ public class PufferfishPlease {
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishEnchantments::applyBook);
         NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::breathe);
         NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::breatheMob);
-        NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::interact);
+        NeoForge.EVENT_BUS.addListener(PufferfishGolemStack::interact);
+        NeoForge.EVENT_BUS.addListener(PufferfishGolemStack::tick);
+        NeoForge.EVENT_BUS.addListener(PufferfishGolemStack::drops);
         NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::retaliate);
         NeoForge.EVENT_BUS.addListener(PufferfishArmor::retaliate);
         NeoForge.EVENT_BUS.addListener(PufferfishRetaliation::effectsOnThorns);

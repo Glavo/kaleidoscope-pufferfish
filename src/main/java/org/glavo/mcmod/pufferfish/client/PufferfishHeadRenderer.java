@@ -29,7 +29,11 @@ public final class PufferfishHeadRenderer {
 
     public void render(ModelPart head, PoseStack pose, MultiBufferSource buffers, int light,
             LivingEntity wearer, float ageInTicks) {
-        var stack = wearer.getItemBySlot(EquipmentSlot.HEAD);
+        render(head, pose, buffers, light, wearer, ageInTicks, wearer.getItemBySlot(EquipmentSlot.HEAD), true);
+    }
+
+    public void render(ModelPart head, PoseStack pose, MultiBufferSource buffers, int light,
+            LivingEntity wearer, float ageInTicks, net.minecraft.world.item.ItemStack stack, boolean radiantEffects) {
         var color = PufferfishColors.get(stack);
         var texture = PufferfishItems.isHeavy(stack) ? PufferfishTextures.heavyEntity()
                 : PufferfishItems.isNetherite(stack) ? PufferfishTextures.netheriteEntity()
@@ -49,7 +53,7 @@ public final class PufferfishHeadRenderer {
         model.setupAnim(wearer, 0.0F, 0.0F, ageInTicks, 0.0F, 0.0F);
         model.renderToBuffer(pose, buffers.getBuffer(RenderType.entityCutoutNoCull(texture)), light,
                 LivingEntityRenderer.getOverlayCoords(wearer, 0.0F));
-        RadiantPufferfishVisuals.render(stack, pose, buffers, LivingEntityRenderer.getOverlayCoords(wearer, 0.0F));
+        if (radiantEffects) RadiantPufferfishVisuals.render(stack, pose, buffers, LivingEntityRenderer.getOverlayCoords(wearer, 0.0F));
         pose.popPose();
     }
 

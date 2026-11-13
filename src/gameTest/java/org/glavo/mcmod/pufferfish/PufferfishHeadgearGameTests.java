@@ -112,6 +112,7 @@ public final class PufferfishHeadgearGameTests {
             golem.load(tag);
             helper.assertTrue(ItemStack.matches(expected, golem.getItemBySlot(EquipmentSlot.HEAD)), "Reload lost headgear data");
             player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new ItemStack(Items.PUFFERFISH));
+            player.setShiftKeyDown(false);
             player.interactOn(golem, net.minecraft.world.InteractionHand.MAIN_HAND);
             helper.assertTrue(player.getMainHandItem().getCount() == 1
                     && ItemStack.matches(expected, golem.getItemBySlot(EquipmentSlot.HEAD)), "Occupied headgear was overwritten");

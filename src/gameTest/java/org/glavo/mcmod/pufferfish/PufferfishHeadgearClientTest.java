@@ -283,16 +283,87 @@ public final class PufferfishHeadgearClientTest {
         if (Math.abs(moved.minY - capture.minY - 0.125F) > 0.001F) {
             throw new IllegalStateException("Golem headgear did not follow the head transform");
         }
+        var tower = new ArrayList<ItemStack>();
+        for (int i = 0; i < 255; i++) tower.add(PufferfishVariant.ALL.get(i % PufferfishVariant.ALL.size()).fish());
+        golem.setData(PufferfishPlease.GOLEM_FISH, List.copyOf(tower));
+        var stacked = new CapturedVertices();
+        layer.render(new PoseStack(), stacked, 15728880, golem, 0, 0, 0, 0, 0, 0);
+        if (stacked.minY > -120 || stacked.vertices < capture.vertices * 128
+                || !stacked.types.contains(RenderType.entityCutoutNoCull(PufferfishTextures.heavyEntity()))
+                || !stacked.types.contains(RenderType.entityCutoutNoCull(PufferfishTextures.netheriteEntity()))) {
+            throw new IllegalStateException("Mixed golem tower lost height or material rendering");
+        }
+        verifyTowerClipping(minecraft, golem, layer, stacked.vertices);
+        var frustum = new net.minecraft.client.renderer.culling.Frustum(new org.joml.Matrix4f(), new org.joml.Matrix4f()) {
+            @Override public boolean isVisible(net.minecraft.world.phys.AABB bounds) { return bounds.maxY > 100; }
+        };
+        if (!renderer.shouldRender(golem, frustum, 0, 140, 0)) {
+            throw new IllegalStateException("Visible tower was culled with its off-screen golem");
+        }
+        golem.removeData(PufferfishPlease.GOLEM_FISH);
+        if (renderer.shouldRender(golem, frustum, 0, 140, 0)) {
+            throw new IllegalStateException("Removed tower retained its extended visibility bounds");
+        }
+        var radiant = new ItemStack(PufferfishItems.RADIANT.get());
+        golem.setItemSlot(EquipmentSlot.HEAD, radiant);
+        golem.setData(PufferfishPlease.GOLEM_FISH, java.util.Collections.nCopies(7, radiant));
+        var shortTower = new CapturedVertices();
+        layer.render(new PoseStack(), shortTower, 15728880, golem, 0, 0, 0, 0, 0, 0);
+        golem.setData(PufferfishPlease.GOLEM_FISH, java.util.Collections.nCopies(255, radiant));
+        var tallTower = new CapturedVertices();
+        layer.render(new PoseStack(), tallTower, 15728880, golem, 0, 0, 0, 0, 0, 0);
+        var glow = RenderType.entityTranslucentEmissive(PufferfishTextures.radiantGlow());
+        if (shortTower.count(glow) == 0 || tallTower.count(glow) != shortTower.count(glow)
+                || tallTower.vertices <= shortTower.vertices) {
+            throw new IllegalStateException("Tower effect limit hid fish or allowed unbounded glow geometry");
+        }
+        golem.removeData(PufferfishPlease.GOLEM_FISH);
         golem.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
         capture = new CapturedVertices();
         layer.render(new PoseStack(), capture, 15728880, golem, 0, 0, 0, 0, 0, 0);
         if (capture.vertices != 0) throw new IllegalStateException("Removed golem headgear still rendered");
     }
 
+    private static void verifyTowerClipping(Minecraft minecraft, net.minecraft.world.entity.animal.IronGolem golem,
+            org.glavo.mcmod.pufferfish.client.PufferfishGolemHeadLayer layer, int fullVertices) {
+        var previousLevel = minecraft.level;
+        try {
+            var field = net.minecraft.client.renderer.LevelRenderer.class.getDeclaredField("cullingFrustum");
+            var capturedField = net.minecraft.client.renderer.LevelRenderer.class.getDeclaredField("capturedFrustum");
+            field.setAccessible(true);
+            capturedField.setAccessible(true);
+            var previous = field.get(minecraft.levelRenderer);
+            var previousCaptured = capturedField.get(minecraft.levelRenderer);
+            var camera = minecraft.gameRenderer.getMainCamera().getPosition();
+            var frustum = new net.minecraft.client.renderer.culling.Frustum(new org.joml.Matrix4f(), new org.joml.Matrix4f()) {
+                @Override public boolean isVisible(net.minecraft.world.phys.AABB bounds) {
+                    return bounds.minY < camera.y - 70 && bounds.maxY > camera.y - 80;
+                }
+            };
+            try {
+                minecraft.level = level(minecraft);
+                capturedField.set(minecraft.levelRenderer, null);
+                field.set(minecraft.levelRenderer, frustum);
+                var clipped = new CapturedVertices();
+                layer.render(new PoseStack(), clipped, 15728880, golem, 0, 0, 0, 0, 0, 0);
+                if (clipped.vertices == 0 || clipped.vertices >= fullVertices / 2 || clipped.minY < -85 || clipped.maxY > -65) {
+                    throw new IllegalStateException("Tower clipping hid visible fish or submitted off-screen geometry");
+                }
+            } finally {
+                minecraft.level = previousLevel;
+                field.set(minecraft.levelRenderer, previous);
+                capturedField.set(minecraft.levelRenderer, previousCaptured);
+            }
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Could not configure the clipping fixture", exception);
+        }
+    }
+
     private static final class CapturedVertices implements MultiBufferSource, VertexConsumer {
         private final List<RenderType> types = new ArrayList<>();
         private RenderType type;
         private int vertices;
+        private final java.util.Map<RenderType, Integer> counts = new java.util.HashMap<>();
         private float minY = Float.POSITIVE_INFINITY;
         private float maxY = Float.NEGATIVE_INFINITY;
 
@@ -305,11 +376,17 @@ public final class PufferfishHeadgearClientTest {
 
         @Override
         public VertexConsumer addVertex(float x, float y, float z) {
+            if (!Float.isFinite(x) || !Float.isFinite(y) || !Float.isFinite(z)) {
+                throw new IllegalStateException("Headgear produced non-finite vertices");
+            }
             vertices++;
+            counts.merge(type, 1, Integer::sum);
             minY = Math.min(minY, y);
             maxY = Math.max(maxY, y);
             return this;
         }
+
+        private int count(RenderType type) { return counts.getOrDefault(type, 0); }
 
         @Override
         public VertexConsumer setColor(int red, int green, int blue, int alpha) { return this; }
