@@ -49,7 +49,7 @@ public final class PufferfishHeadgear {
                 || player.isSpectator() || !player.mayBuild()) return;
         var held = event.getItemStack();
         var equipped = golem.getItemBySlot(EquipmentSlot.HEAD);
-        boolean equip = equipped.isEmpty() && PufferfishItems.isPufferfish(held);
+        boolean equip = player.isShiftKeyDown() && equipped.isEmpty() && PufferfishItems.isPufferfish(held);
         boolean remove = held.isEmpty() && player.isShiftKeyDown() && PufferfishItems.isPufferfish(equipped)
                 && (player.hasInfiniteMaterials() || !EnchantmentHelper.has(equipped, EnchantmentEffectComponents.PREVENT_ARMOR_CHANGE));
         if (!equip && !remove) return;

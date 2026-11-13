@@ -42,7 +42,7 @@ Recipes use `pufferfish_please:fish_processing` with `ingredient`, `tool`, `stro
 
 ## Iron golem headgear
 
-Right-click an iron golem with a pufferfish to equip one in its empty head slot. Sneak-right-click with an empty hand to retrieve it; Binding Curse prevents survival removal. Equipment retains its components through save/load and uses the existing headgear effects and durability rules. Iron ingots still repair the golem. Client tests cover variant rendering, attachment to the head and removal.
+Sneak-right-click an iron golem with a pufferfish to equip one in its empty head slot. Sneak-right-click with an empty hand to retrieve it; Binding Curse prevents survival removal. Ordinary right-clicks remain available for throwing. Equipment retains its components through save/load and uses the existing headgear effects and durability rules. Iron ingots still repair the golem. Client tests cover variant rendering, attachment to the head and removal.
 
 ## Live fish health
 

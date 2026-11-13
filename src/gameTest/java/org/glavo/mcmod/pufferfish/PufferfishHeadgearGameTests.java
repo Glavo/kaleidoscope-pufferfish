@@ -46,6 +46,7 @@ public final class PufferfishHeadgearGameTests {
         var golem = EntityType.IRON_GOLEM.create(helper.getLevel());
         var fish = new ItemStack(Items.PUFFERFISH, 4);
         player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, fish);
+        player.setShiftKeyDown(true);
         player.interactOn(golem, net.minecraft.world.InteractionHand.MAIN_HAND);
         helper.assertTrue(fish.getCount() == 3 && golem.getItemBySlot(EquipmentSlot.HEAD).getCount() == 1,
                 "Equipping a stack did not consume exactly one fish");
@@ -78,7 +79,7 @@ public final class PufferfishHeadgearGameTests {
         player.setGameMode(GameType.CREATIVE);
         player.interactOn(golem, net.minecraft.world.InteractionHand.MAIN_HAND);
         helper.assertTrue(golem.getItemBySlot(EquipmentSlot.HEAD).isEmpty(), "Creative removal was blocked by binding");
-        player.setShiftKeyDown(false);
+        player.setShiftKeyDown(true);
         player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new ItemStack(Items.PUFFERFISH, 4));
         player.interactOn(golem, net.minecraft.world.InteractionHand.MAIN_HAND);
         helper.assertTrue(player.getMainHandItem().getCount() == 4 && golem.getItemBySlot(EquipmentSlot.HEAD).getCount() == 1,
@@ -97,6 +98,10 @@ public final class PufferfishHeadgearGameTests {
             fish.set(DataComponents.CUSTOM_NAME, Component.literal("Golem companion"));
             var expected = fish.copy();
             player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, fish);
+            helper.assertTrue(!player.interactOn(golem, net.minecraft.world.InteractionHand.MAIN_HAND).consumesAction()
+                    && golem.getItemBySlot(EquipmentSlot.HEAD).isEmpty()
+                    && ItemStack.matches(expected, player.getMainHandItem()), "Standing interaction intercepted fish use");
+            player.setShiftKeyDown(true);
             helper.assertTrue(player.interactOn(golem, net.minecraft.world.InteractionHand.MAIN_HAND).consumesAction()
                     && player.getMainHandItem().isEmpty(), "Golem did not equip the fish");
             helper.assertTrue(ItemStack.matches(expected, golem.getItemBySlot(EquipmentSlot.HEAD))
