@@ -208,7 +208,8 @@ public final class FishProcessingTableBlockEntity extends BlockEntity {
 
     @Override protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
-        if (!item.isEmpty()) tag.put("Item", item.save(registries));
+        // Empty update packets are ignored by NeoForge; explicitly synchronize the empty slot.
+        tag.put("Item", item.saveOptional(registries));
         if (cuttingRecipe != null) {
             tag.putString("CuttingRecipe", cuttingRecipe.toString());
             tag.putInt("Cuts", cuts);

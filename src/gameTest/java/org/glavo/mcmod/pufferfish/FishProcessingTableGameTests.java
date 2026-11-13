@@ -22,6 +22,52 @@ import org.glavo.mcmod.pufferfish.test.CuttingAssertions;
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class FishProcessingTableGameTests {
+    @GameTest(template = "empty", timeoutTicks = 60)
+    public static void cuttingAndEmptyHandRetrievalSynchronizeAnEmptyStand(GameTestHelper helper) {
+        var table = place(helper);
+        var player = org.glavo.mcmod.pufferfish.test.TestPlayers.serverPlayer(helper);
+        var pos = table.getBlockPos();
+        var hit = new net.minecraft.world.phys.BlockHitResult(pos.getCenter(), net.minecraft.core.Direction.UP, pos, false);
+        var fish = CuttingAssertions.rankedFish(PufferfishVariant.RADIANT, 1);
+        table.insert(fish);
+        var replica = new FishProcessingTableBlockEntity(pos, table.getBlockState());
+        receiveStandUpdate(helper, table, replica);
+        helper.assertTrue(ItemStack.matches(replica.item(), fish), "Stand input did not reach the client");
+        player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+        player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(Items.TORCH));
+        var result = player.gameMode.useItemOn(player, helper.getLevel(), player.getMainHandItem(), InteractionHand.MAIN_HAND, hit);
+        helper.assertTrue(result.consumesAction() && table.item().isEmpty()
+                && ItemStack.matches(player.getInventory().getItem(0), fish), "Empty-hand retrieval did not return the original fish");
+        receiveStandUpdate(helper, table, replica);
+        helper.assertTrue(replica.item().isEmpty(), "Retrieval left a ghost fish on the client");
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.SHEARS));
+        table.insert(fish);
+        receiveStandUpdate(helper, table, replica);
+        for (int stroke = 0; stroke < 3; stroke++) {
+            int current = stroke;
+            helper.runAfterDelay(1 + stroke * 10, () -> {
+                player.gameMode.useItemOn(player, helper.getLevel(), player.getMainHandItem(), InteractionHand.MAIN_HAND, hit);
+                receiveStandUpdate(helper, table, replica);
+                helper.assertTrue(table.item().isEmpty() == (current == 2) && ItemStack.matches(table.item(), replica.item()),
+                        "Cutting completion left the displayed fish out of sync");
+                if (current == 2) {
+                    CuttingAssertions.verifyDrops(helper, pos.above(), PufferfishBlocks.RADIANT_SKIN.get(), PufferfishLevel.LEVEL_10);
+                    helper.succeed();
+                }
+            });
+        }
+    }
+
+    private static void receiveStandUpdate(GameTestHelper helper, FishProcessingTableBlockEntity source, FishProcessingTableBlockEntity replica) {
+        var buffer = new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(), helper.getLevel().registryAccess());
+        try {
+            var codec = net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket.STREAM_CODEC;
+            codec.encode(buffer, source.getUpdatePacket());
+            replica.onDataPacket(new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.CLIENTBOUND),
+                    codec.decode(buffer), helper.getLevel().registryAccess());
+        } finally { buffer.release(); }
+    }
+
     @GameTest(template = "empty", timeoutTicks = 140)
     public static void completedDowngradesDropExactExperienceOnceAndSkinsDropNone(GameTestHelper helper) {
         var table = place(helper);

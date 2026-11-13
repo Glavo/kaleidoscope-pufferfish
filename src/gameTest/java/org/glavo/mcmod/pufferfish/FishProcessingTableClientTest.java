@@ -32,6 +32,15 @@ public final class FishProcessingTableClientTest {
             renderer.render(table, 4, pose, capture, 15728880, OverlayTexture.NO_OVERLAY);
             if (capture.count() == 0 || !pose.clear()) throw new IllegalStateException("Table input geometry is missing or leaked a transform");
         }
+        var emptyStand = new FishProcessingTableBlockEntity(BlockPos.ZERO, state);
+        emptyStand.setLevel(level);
+        table.onDataPacket(ClientTestLevel.connection(minecraft).getConnection(), emptyStand.getUpdatePacket(), level.registryAccess());
+        var clearedPose = new PoseStack();
+        var clearedGeometry = new RenderCapture();
+        renderer.render(table, 0, clearedPose, clearedGeometry, 15728880, OverlayTexture.NO_OVERLAY);
+        if (!table.item().isEmpty() || clearedGeometry.count() != 0 || !clearedPose.clear()) {
+            throw new IllegalStateException("Cleared stand still renders its previous input after a network update");
+        }
         table.setLevel(null);
         table.removeItem();
         table.insert(PufferfishVariant.NORMAL.fish());
