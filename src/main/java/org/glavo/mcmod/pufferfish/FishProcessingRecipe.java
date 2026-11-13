@@ -25,7 +25,7 @@ public record FishProcessingRecipe(Ingredient ingredient, Ingredient tool, int s
     public static final MapCodec<FishProcessingRecipe> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
             Ingredient.CODEC_NONEMPTY.fieldOf("ingredient").forGetter(FishProcessingRecipe::ingredient),
             Ingredient.CODEC_NONEMPTY.fieldOf("tool").forGetter(FishProcessingRecipe::tool),
-            Codec.intRange(1, 64).optionalFieldOf("strokes", 3).forGetter(FishProcessingRecipe::strokes),
+            Codec.intRange(1, 64).optionalFieldOf("strokes", 1).forGetter(FishProcessingRecipe::strokes),
             ItemStack.CODEC.listOf(1, 8).fieldOf("results").forGetter(FishProcessingRecipe::results),
             Codec.BOOL.optionalFieldOf("inherit_skin_level", false).forGetter(FishProcessingRecipe::inheritSkinLevel)
     ).apply(instance, FishProcessingRecipe::new));

@@ -2,7 +2,7 @@
   "type": "${modId}:fish_processing",
   "ingredient": ${ingredient},
   "tool": {"tag": "${modId}:fish_processing_tools"},
-  "strokes": 3,
+  "strokes": 1,
   "results": [{"id": "${blockId}"}, {"id": "${modId}:pufferfish_sashimi"}],
   "inherit_skin_level": true
 }

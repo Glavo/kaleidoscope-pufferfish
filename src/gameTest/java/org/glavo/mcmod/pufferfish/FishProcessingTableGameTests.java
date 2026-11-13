@@ -43,19 +43,12 @@ public final class FishProcessingTableGameTests {
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.SHEARS));
         table.insert(fish);
         receiveStandUpdate(helper, table, replica);
-        for (int stroke = 0; stroke < 3; stroke++) {
-            int current = stroke;
-            helper.runAfterDelay(1 + stroke * 10, () -> {
-                player.gameMode.useItemOn(player, helper.getLevel(), player.getMainHandItem(), InteractionHand.MAIN_HAND, hit);
-                receiveStandUpdate(helper, table, replica);
-                helper.assertTrue(table.item().isEmpty() == (current == 2) && ItemStack.matches(table.item(), replica.item()),
-                        "Cutting completion left the displayed fish out of sync");
-                if (current == 2) {
-                    CuttingAssertions.verifyDrops(helper, pos.above(), PufferfishBlocks.RADIANT_SKIN.get(), PufferfishLevel.LEVEL_10);
-                    helper.succeed();
-                }
-            });
-        }
+        player.gameMode.useItemOn(player, helper.getLevel(), player.getMainHandItem(), InteractionHand.MAIN_HAND, hit);
+        receiveStandUpdate(helper, table, replica);
+        helper.assertTrue(table.item().isEmpty() && replica.item().isEmpty(),
+                "A single cut must complete processing and clear the displayed fish");
+        CuttingAssertions.verifyDrops(helper, pos.above(), PufferfishBlocks.RADIANT_SKIN.get(), PufferfishLevel.LEVEL_10);
+        helper.succeed();
     }
 
     private static void receiveStandUpdate(GameTestHelper helper, FishProcessingTableBlockEntity source, FishProcessingTableBlockEntity replica) {
@@ -170,6 +163,7 @@ public final class FishProcessingTableGameTests {
             var fish = CuttingAssertions.rankedFish(variant, 1);
             var input = new FishProcessingRecipe.Input(fish, new ItemStack(Items.SHEARS));
             var recipe = recipes.getRecipeFor(PufferfishPlease.FISH_PROCESSING_TYPE.get(), input, helper.getLevel()).orElseThrow().value();
+            helper.assertTrue(recipe.strokes() == 1, "Every pufferfish variant must be skinned in one cut");
             var results = recipe.process(fish);
             var expectedSkin = new ItemStack(variant.skin());
             PufferfishSkinBlock.setLevel(expectedSkin, PufferfishLevel.LEVEL_10);
@@ -185,7 +179,7 @@ public final class FishProcessingTableGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "empty", timeoutTicks = 80)
+    @GameTest(template = "empty")
     public static void cuttingSurvivesReloadAndCancellationPreservesTheInput(GameTestHelper helper) {
         var table = place(helper);
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
@@ -193,31 +187,23 @@ public final class FishProcessingTableGameTests {
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.SHEARS));
         helper.assertTrue(!table.insert(new ItemStack(Items.PUFFERFISH_BUCKET)) && !table.insert(PufferfishItems.FLAIL.toStack()), "Unsupported derivative entered the table");
         helper.assertTrue(table.insert(fish) && !table.insert(fish), "Table accepted a second input");
-        table.cut(player, InteractionHand.MAIN_HAND);
         var returned = table.removeItem();
         helper.assertTrue(ItemStack.matches(returned, fish), "Cancelled processing changed the individual fish");
         table.insert(returned);
-        table.cut(player, InteractionHand.MAIN_HAND);
-        table.cut(player, InteractionHand.MAIN_HAND);
         var saved = table.saveWithFullMetadata(helper.getLevel().registryAccess());
         var pos = table.getBlockPos();
         helper.getLevel().removeBlockEntity(pos);
         var reloaded = new FishProcessingTableBlockEntity(pos, table.getBlockState());
         reloaded.loadWithComponents(saved, helper.getLevel().registryAccess());
         helper.getLevel().setBlockEntity(reloaded);
-        helper.runAfterDelay(10, () -> {
-            helper.assertTrue(reloaded.cut(player, InteractionHand.MAIN_HAND) && !reloaded.item().isEmpty(), "Duplicate or cancelled strokes completed the recipe early");
-        });
-        helper.runAfterDelay(20, () -> {
-            helper.assertTrue(reloaded.cut(player, InteractionHand.MAIN_HAND) && reloaded.item().isEmpty(), "Reloaded processing failed");
-            CuttingAssertions.verifyDrops(helper, pos.above(), PufferfishBlocks.RADIANT_SKIN.get(), PufferfishLevel.LEVEL_10);
-            helper.assertTrue(player.getMainHandItem().getDamageValue() == 1 && !reloaded.cut(player, InteractionHand.MAIN_HAND), "Processing charged the wrong tool wear or duplicated outputs");
-            reloaded.insert(fish);
-            helper.getLevel().setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
-            var drops = helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, new net.minecraft.world.phys.AABB(pos).inflate(2));
-            helper.assertTrue(drops.size() == 1 && ItemStack.matches(drops.getFirst().getItem(), fish), "Breaking the table lost its input");
-            helper.succeed();
-        });
+        helper.assertTrue(reloaded.cut(player, InteractionHand.MAIN_HAND) && reloaded.item().isEmpty(), "Reloaded processing did not finish in one cut");
+        CuttingAssertions.verifyDrops(helper, pos.above(), PufferfishBlocks.RADIANT_SKIN.get(), PufferfishLevel.LEVEL_10);
+        helper.assertTrue(player.getMainHandItem().getDamageValue() == 1 && !reloaded.cut(player, InteractionHand.MAIN_HAND), "Processing charged the wrong tool wear or duplicated outputs");
+        reloaded.insert(fish);
+        helper.getLevel().setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+        var drops = helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, new net.minecraft.world.phys.AABB(pos).inflate(2));
+        helper.assertTrue(drops.size() == 1 && ItemStack.matches(drops.getFirst().getItem(), fish), "Breaking the table lost its input");
+        helper.succeed();
     }
 
     @GameTest(template = "empty", timeoutTicks = 450)
