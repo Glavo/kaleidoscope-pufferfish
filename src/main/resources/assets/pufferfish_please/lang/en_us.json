@@ -129,6 +129,7 @@
   "commands.pufferfish_please.invalid_bucket": "%s's held bucket contains invalid pufferfish data",
   "commands.pufferfish_please.query.level": "%1$s has rank %2$s (%3$s)",
   "commands.pufferfish_please.query.experience": "%1$s has %2$s current experience",
+  "commands.pufferfish_please.rank_only": "%s only stores a rank, not experience",
   "commands.pufferfish_please.set.level.single": "Set the rank of %1$s to %2$s",
   "commands.pufferfish_please.set.level.multiple": "Set the rank of %1$s targets to %2$s",
   "commands.pufferfish_please.set.experience.single": "Set the current experience of %1$s to %2$s",

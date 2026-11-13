@@ -40,6 +40,19 @@ public final class PufferfishCommandGameTests {
             var before = stack.copy();
             player.setItemInHand(InteractionHand.MAIN_HAND, stack);
             execute(source, "pufferfish level set @s 10");
+            if (PufferfishSkinBlock.isSkin(stack)) {
+                helper.assertTrue(player.getMainHandItem().get(PufferfishPlease.SKIN_LEVEL.get()) == PufferfishLevel.LEVEL_10
+                        && !player.getMainHandItem().has(PufferfishPlease.CULTIVATION.get()), "Skin command retained individual progression");
+                helper.assertTrue(execute(source, "pufferfish level query @s") == 10, "Skin rank query ignored rank-only data");
+                var unchanged = player.getMainHandItem().copy();
+                reject(helper, source, "pufferfish experience set @s 100");
+                reject(helper, source, "pufferfish experience query @s");
+                helper.assertTrue(ItemStack.matches(unchanged, player.getMainHandItem()), "Skin experience command changed its rank");
+                execute(source, "pufferfish level set @s 0");
+                helper.assertTrue(!player.getMainHandItem().has(PufferfishPlease.SKIN_LEVEL.get())
+                        && !player.getMainHandItem().has(PufferfishPlease.CULTIVATION.get()), "Rank-zero skin retained individual data");
+                continue;
+            }
             helper.assertTrue(player.getMainHandItem().get(PufferfishPlease.CULTIVATION.get()).experience() == 123,
                     "Changing rank reset current experience");
             execute(source, "pufferfish experience set @s 20000000");

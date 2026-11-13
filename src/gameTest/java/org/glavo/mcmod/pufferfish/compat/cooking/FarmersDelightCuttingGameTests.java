@@ -26,6 +26,22 @@ import vectorwing.farmersdelight.common.registry.ModItems;
 public final class FarmersDelightCuttingGameTests {
     private FarmersDelightCuttingGameTests() {}
 
+    @GameTest(template = "empty", templateNamespace = "pufferfish_please", batch = "skin_rank")
+    public static void cuttingRetainsOnlySkinRank(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var pos = helper.absolutePos(new BlockPos(1, 2, 1));
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        var knife = new ItemStack(ModItems.IRON_KNIFE.get());
+        level.setBlockAndUpdate(pos, ModBlocks.CUTTING_BOARD.get().defaultBlockState());
+        var board = (CuttingBoardBlockEntity) level.getBlockEntity(pos);
+        for (var variant : org.glavo.mcmod.pufferfish.PufferfishVariant.ALL) for (int individual = 0; individual < 2; individual++) {
+            var fish = CuttingAssertions.rankedFish(variant, individual);
+            helper.assertTrue(board.addItem(fish).isEmpty() && board.processStoredItemUsingTool(knife, player), "Board rejected cultivated fish");
+            CuttingAssertions.verifyDrops(helper, pos, variant.skin(), org.glavo.mcmod.pufferfish.PufferfishLevel.LEVEL_10);
+        }
+        helper.succeed();
+    }
+
     /// Verifies all skin colors, knife requirements, consumption, and empty-board behavior.
     @GameTest(template = "empty", templateNamespace = "pufferfish_please")
     public static void farmersDelightCutsFishIntoSashimiAndSkin(GameTestHelper helper) {

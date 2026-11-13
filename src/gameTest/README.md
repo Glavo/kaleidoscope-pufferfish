@@ -28,7 +28,9 @@ Commands follow `<property> set <targets> <value>` and `<property> query <target
 
 Each edit changes only the selected property, preserving talent and lifetime experience. Newly awakened items start with talent 0.5 and zero experience. Setting level zero removes cultivation data; setting experience requires an awakened item. Fish weapons are activated when setting their level, even at zero. Edits bypass breakthrough requirements without granting advancement rewards or immediately advancing an experience-complete rank.
 
-Player targets must hold exactly one item; no items are split, moved or dropped. Every target is validated before any item or entity changes. Buckets edit their contained fish, preserving captured entity data. Lamps, skins, armor, shields, boats and flails use their item component; spawn eggs are excluded. Editing a derivative item does not add new cultivation-transfer behavior when placing or crafting it.
+Skins only store `skin_level`: cutting and pressing inherit rank without talent, experience, lifetime totals, readiness or stars. Same-variant skins of the same rank stack normally; rank zero has no extra component. Placement stores rank in block state, retaining it through pick-block, drops and copper transformations. Skin commands support `level` but reject `experience`.
+
+Player targets must hold exactly one item; no items are split, moved or dropped. Every target is validated before any item or entity changes. Buckets edit their contained fish, preserving captured entity data. Lamps, skins, armor, shields, boats and flails use their item component; spawn eggs are excluded. Other derivative crafting recipes do not automatically transfer cultivation.
 
 ## Ownership
 

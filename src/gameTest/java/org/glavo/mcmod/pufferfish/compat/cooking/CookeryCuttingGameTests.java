@@ -35,6 +35,28 @@ import org.glavo.mcmod.pufferfish.test.CuttingAssertions;
 public final class CookeryCuttingGameTests {
     private CookeryCuttingGameTests() {}
 
+    @GameTest(template = "empty", templateNamespace = "pufferfish_please", batch = "skin_rank")
+    public static void savedCuttingProgressRetainsOnlySkinRank(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var pos = helper.absolutePos(new BlockPos(1, 2, 1));
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        var knife = new ItemStack(ModItems.IRON_KITCHEN_KNIFE.get());
+        level.setBlockAndUpdate(pos, ModBlocks.CHOPPING_BOARD.get().defaultBlockState());
+        var board = (ChoppingBoardBlockEntity) level.getBlockEntity(pos);
+        for (var variant : org.glavo.mcmod.pufferfish.PufferfishVariant.ALL) for (int individual = 0; individual < 2; individual++) {
+            helper.assertTrue(board.onPutItem(level, player, CuttingAssertions.rankedFish(variant, individual))
+                    && board.onCutItem(level, player, knife), "Board rejected cultivated fish");
+            var saved = board.saveWithFullMetadata(level.registryAccess());
+            level.removeBlockEntity(pos);
+            board = new ChoppingBoardBlockEntity(pos, level.getBlockState(pos));
+            board.loadWithComponents(saved, level.registryAccess());
+            level.setBlockEntity(board);
+            for (int cut = 1; cut < 4; cut++) helper.assertTrue(board.onCutItem(level, player, knife), "Cultivated fish cutting failed");
+            CuttingAssertions.verifyDrops(helper, pos, variant.skin(), org.glavo.mcmod.pufferfish.PufferfishLevel.LEVEL_10);
+        }
+        helper.succeed();
+    }
+
     @GameTest(template = "empty", templateNamespace = "pufferfish_please", timeoutTicks = 380)
     public static void stockpotCooksSashimiAndLettuceIntoPufferfishSoup(GameTestHelper helper) {
         var level = helper.getLevel();

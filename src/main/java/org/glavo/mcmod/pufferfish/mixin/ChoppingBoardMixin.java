@@ -9,6 +9,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.glavo.mcmod.pufferfish.PufferfishBlocks;
 import org.glavo.mcmod.pufferfish.PufferfishItems;
+import org.glavo.mcmod.pufferfish.PufferfishSkinBlock;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Shadow;
@@ -29,7 +30,7 @@ public abstract class ChoppingBoardMixin {
         if (!level.isClientSide && result.is(PufferfishItems.SASHIMI.get())) {
             var block = PufferfishBlocks.skinForFish(currentCutStack);
             if (block == null) return result;
-            var skin = new ItemStack(block);
+            var skin = PufferfishSkinBlock.inheritLevel(currentCutStack, new ItemStack(block));
             var entity = new ItemEntity(level, pos.getX() + 0.5, pos.getY() + 0.25, pos.getZ() + 0.5, skin, 0, 0, 0);
             entity.setDefaultPickUpDelay();
             level.addFreshEntity(entity);

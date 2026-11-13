@@ -129,6 +129,7 @@
   "commands.pufferfish_please.invalid_bucket": "%s 主手河豚桶内的河豚数据无效",
   "commands.pufferfish_please.query.level": "%1$s的境界等级为 %2$s（%3$s）",
   "commands.pufferfish_please.query.experience": "%1$s的当前经验为 %2$s",
+  "commands.pufferfish_please.rank_only": "%s只保存境界，不记录经验",
   "commands.pufferfish_please.set.level.single": "已将%1$s的境界设为%2$s",
   "commands.pufferfish_please.set.level.multiple": "已将 %1$s 个目标的境界设为%2$s",
   "commands.pufferfish_please.set.experience.single": "已将%1$s的当前经验设为 %2$s",

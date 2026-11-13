@@ -8,6 +8,8 @@
     "LethalToxinMixin",
     "PufferfishBoatBuoyancyMixin",
     "ChoppingBoardMixin",
+    "CuttingBoardRecipeMixin",
+    "PressingSkinRecipeMixin",
     "AbstractFishMixin",
     "MaterialPufferfishMixin",
     "PufferfishPuffGoalMixin",

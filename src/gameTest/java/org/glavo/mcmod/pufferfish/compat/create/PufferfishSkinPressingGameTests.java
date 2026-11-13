@@ -28,6 +28,27 @@ import org.glavo.mcmod.pufferfish.PufferfishPlease;
 public final class PufferfishSkinPressingGameTests {
     private PufferfishSkinPressingGameTests() {}
 
+    @GameTest(template = "empty", templateNamespace = PufferfishPlease.MODID, batch = "skin_rank")
+    public static void pressingRetainsOnlySkinRank(GameTestHelper helper) {
+        var pos = new BlockPos(1, 3, 1);
+        helper.setBlock(pos, BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("create", "mechanical_press")));
+        var press = (MechanicalPressBlockEntity) helper.getBlockEntity(pos);
+        var location = Vec3.atCenterOf(helper.absolutePos(pos.below(2)));
+        for (var variant : org.glavo.mcmod.pufferfish.PufferfishVariant.ALL) for (int individual = 0; individual < 2; individual++) {
+            var source = org.glavo.mcmod.pufferfish.test.CuttingAssertions.rankedFish(variant, individual);
+            var entity = new ItemEntity(helper.getLevel(), location.x, location.y, location.z, source.copy());
+            helper.getLevel().addFreshEntity(entity);
+            helper.assertTrue(press.tryProcessInWorld(entity, true) && ItemStack.matches(source, entity.getItem()), "Simulation altered cultivated fish");
+            helper.assertTrue(press.tryProcessInWorld(entity, false), "Press rejected cultivated fish");
+            var expected = new ItemStack(variant.skin());
+            expected.set(PufferfishPlease.SKIN_LEVEL.get(), org.glavo.mcmod.pufferfish.PufferfishLevel.LEVEL_10);
+            helper.assertTrue(ItemStack.matches(expected, entity.getItem()) && entity.getItem().getMaxStackSize() == 64,
+                    "Press did not preserve only skin rank");
+            entity.discard();
+        }
+        helper.succeed();
+    }
+
     /// Verifies recipe lookup, simulation, and actual world-item processing for all skin variants.
     @GameTest(template = "empty", templateNamespace = PufferfishPlease.MODID)
     public static void pressingOneFishProducesOneMatchingSkin(GameTestHelper helper) {

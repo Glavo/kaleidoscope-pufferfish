@@ -48,6 +48,9 @@ public class PufferfishPlease {
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<PufferfishCultivation>> CULTIVATION =
             COMPONENTS.register("cultivation", () -> DataComponentType.<PufferfishCultivation>builder()
                     .persistent(PufferfishCultivation.CODEC).networkSynchronized(PufferfishCultivation.STREAM_CODEC).build());
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<PufferfishLevel>> SKIN_LEVEL =
+            COMPONENTS.register("skin_level", () -> DataComponentType.<PufferfishLevel>builder()
+                    .persistent(PufferfishLevel.CODEC).networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.fromCodec(PufferfishLevel.CODEC)).build());
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<DyeColor>> ENTITY_COLOR = ATTACHMENTS.register("color",
             () -> AttachmentType.builder(() -> DyeColor.WHITE).serialize(DyeColor.CODEC).sync(DyeColor.STREAM_CODEC).build());
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<ItemStack>> FISH_ITEM = ATTACHMENTS.register("fish_item",

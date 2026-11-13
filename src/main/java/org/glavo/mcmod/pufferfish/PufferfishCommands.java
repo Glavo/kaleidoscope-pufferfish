@@ -31,6 +31,7 @@ public final class PufferfishCommands {
     private static final DynamicCommandExceptionType INVALID_BUCKET = error("invalid_bucket");
     private static final DynamicCommandExceptionType STACKED_ITEM = error("stacked_item");
     private static final DynamicCommandExceptionType UNAWAKENED_EXPERIENCE = error("unawakened_experience");
+    private static final DynamicCommandExceptionType RANK_ONLY = error("rank_only");
 
     private PufferfishCommands() {}
 
@@ -65,8 +66,13 @@ public final class PufferfishCommands {
         var target = Target.read(entity);
         var cultivation = target.fish.get(PufferfishPlease.CULTIVATION.get());
         long value = cultivation == null ? 0 : property == Property.LEVEL ? cultivation.level().number() : cultivation.experience();
+        if (PufferfishSkinBlock.isSkin(target.fish)) {
+            if (property == Property.EXPERIENCE) throw RANK_ONLY.create(target.description());
+            value = target.fish.getOrDefault(PufferfishPlease.SKIN_LEVEL.get(), cultivation == null ? PufferfishLevel.LEVEL_0 : cultivation.level()).number();
+        }
+        long result = value;
         source.sendSuccess(() -> Component.translatable("commands.pufferfish_please.query." + property.key,
-                target.description(), value, property.display(value)), false);
+                target.description(), result, property.display(result)), false);
         return (int) Math.min(Integer.MAX_VALUE, value);
     }
 
@@ -75,6 +81,12 @@ public final class PufferfishCommands {
         for (var entity : entities) {
             var target = Target.read(entity);
             if (target.item.getCount() != 1) throw STACKED_ITEM.create(entity.getDisplayName());
+            if (PufferfishSkinBlock.isSkin(target.fish)) {
+                if (property == Property.EXPERIENCE) throw RANK_ONLY.create(target.description());
+                PufferfishSkinBlock.setLevel(target.fish, PufferfishLevel.values()[(int) value]);
+                edits.add(target);
+                continue;
+            }
             var previous = target.fish.get(PufferfishPlease.CULTIVATION.get());
             if (property == Property.LEVEL) {
                 var level = PufferfishLevel.values()[(int) value];

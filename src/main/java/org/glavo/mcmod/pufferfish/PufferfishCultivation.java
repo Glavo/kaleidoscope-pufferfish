@@ -163,6 +163,8 @@ public record PufferfishCultivation(PufferfishLevel level, double talent, long e
     /// Reading a level never creates cultivation data or changes stacking.
     @Nullable
     public static Component visibleName(ItemStack stack) {
+        var skinLevel = stack.get(PufferfishPlease.SKIN_LEVEL.get());
+        if (PufferfishSkinBlock.isSkin(stack) && skinLevel != null) return skinLevel.displayName();
         var cultivation = stack.get(PufferfishPlease.CULTIVATION.get());
         if (cultivation != null) return cultivation.displayName();
         return PufferfishItems.isWeapon(stack) && stack.has(DataComponents.MAX_DAMAGE) ? PufferfishLevel.LEVEL_0.displayName() : null;
