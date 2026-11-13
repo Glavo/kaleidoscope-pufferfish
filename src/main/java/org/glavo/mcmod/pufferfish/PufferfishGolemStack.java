@@ -8,6 +8,7 @@ import java.util.List;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.animal.IronGolem;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
@@ -15,6 +16,7 @@ import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.GameRules;
 import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
+import net.neoforged.neoforge.event.entity.living.FinalizeSpawnEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 
@@ -31,6 +33,27 @@ public final class PufferfishGolemStack {
     private static void store(IronGolem golem, List<ItemStack> fish) {
         if (fish.isEmpty()) golem.removeData(PufferfishPlease.GOLEM_FISH);
         else golem.setData(PufferfishPlease.GOLEM_FISH, List.copyOf(fish));
+    }
+
+    public static void spawn(FinalizeSpawnEvent event) {
+        if (!(event.getEntity() instanceof IronGolem golem) || event.isSpawnCancelled()
+                || event.getSpawnType() != MobSpawnType.NATURAL && event.getSpawnType() != MobSpawnType.CHUNK_GENERATION
+                && event.getSpawnType() != MobSpawnType.STRUCTURE && event.getSpawnType() != MobSpawnType.MOB_SUMMONED
+                || golem.isPlayerCreated()
+                || !golem.getItemBySlot(EquipmentSlot.HEAD).isEmpty() || !decorations(golem).isEmpty()) return;
+        var random = golem.getRandom();
+        if (random.nextInt(10) != 0) return;
+        int roll = random.nextInt(100);
+        int count = roll < 90 ? 1 : roll < 99 ? 2 + random.nextInt(3) : 5 + random.nextInt(12);
+        var fish = new ArrayList<ItemStack>(count);
+        for (int i = 0; i < count; i++) {
+            var stack = PufferfishMobs.naturalFish(golem.registryAccess(), random);
+            if (!stack.isEmpty()) fish.add(stack);
+        }
+        if (fish.isEmpty()) return;
+        golem.setItemSlot(EquipmentSlot.HEAD, fish.removeFirst());
+        golem.setDropChance(EquipmentSlot.HEAD, 2.0F);
+        store(golem, fish);
     }
 
     public static void interact(PlayerInteractEvent.EntityInteract event) {

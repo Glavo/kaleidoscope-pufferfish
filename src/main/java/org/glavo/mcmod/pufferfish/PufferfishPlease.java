@@ -224,6 +224,7 @@ public class PufferfishPlease {
         NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::breathe);
         NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::breatheMob);
         NeoForge.EVENT_BUS.addListener(PufferfishGolemStack::interact);
+        NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishGolemStack::spawn);
         NeoForge.EVENT_BUS.addListener(PufferfishGolemStack::tick);
         NeoForge.EVENT_BUS.addListener(PufferfishGolemStack::drops);
         NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::retaliate);

@@ -9,6 +9,8 @@ import java.util.Map;
 import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.util.RandomSource;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.TagKey;
@@ -26,6 +28,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ItemUtils;
 import net.minecraft.world.item.MobBucketItem;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.level.biome.MobSpawnSettings;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.material.Fluids;
 import net.neoforged.bus.api.IEventBus;
@@ -130,6 +134,36 @@ public final class PufferfishMobs {
         PufferfishDurability.activate(stack);
         stack.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(rank, fish.getRandom().nextDouble(), 0, 0));
         PufferfishData.set(fish, stack);
+    }
+
+    /// Samples unranked fish using warm-ocean spawn weights adjusted by natural rarity checks.
+    public static ItemStack naturalFish(RegistryAccess registries, RandomSource random) {
+        var candidates = registries.registryOrThrow(Registries.BIOME).getHolderOrThrow(Biomes.WARM_OCEAN).value()
+                .getMobSettings().getMobs(MobCategory.WATER_AMBIENT).unwrap();
+        double total = candidates.stream().mapToDouble(PufferfishMobs::naturalWeight).sum();
+        if (total <= 0) return ItemStack.EMPTY;
+        double roll = random.nextDouble() * total;
+        for (var entry : candidates) {
+            roll -= naturalWeight(entry);
+            if (roll >= 0) continue;
+            if (entry.type == EntityType.PUFFERFISH) {
+                var fish = new ItemStack(Items.PUFFERFISH);
+                return random.nextInt(4) == 0 ? PufferfishColors.dye(fish, DyeColor.byId(random.nextInt(16))) : fish;
+            }
+            return new ItemStack(variant(entry.type).fish().get());
+        }
+        return ItemStack.EMPTY;
+    }
+
+    private static Variant variant(EntityType<?> type) {
+        for (var variant : VARIANTS.values()) if (variant.entity().get() == type) return variant;
+        return null;
+    }
+
+    private static double naturalWeight(MobSpawnSettings.SpawnerData entry) {
+        if (entry.type == EntityType.PUFFERFISH) return entry.getWeight().asInt();
+        var variant = variant(entry.type);
+        return variant == null ? 0 : entry.getWeight().asInt() / (double) variant.rarity();
     }
 
     public static void feed(PlayerInteractEvent.EntityInteract event) {

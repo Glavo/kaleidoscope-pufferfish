@@ -44,6 +44,8 @@ Recipes use `pufferfish_please:fish_processing` with `ingredient`, `tool`, `stro
 
 Sneak-right-click an iron golem with a pufferfish to add one to its tower, up to 256 mixed fish. Sneak-right-click with an empty hand to retrieve the top fish; Binding Curse prevents survival removal of that fish. Ordinary right-clicks remain available for throwing. Each fish retains its components through save/load and tracking. Only the bottom fish occupies the head slot and provides effects or takes wear; the next fish replaces it when it breaks. Death drops obey mob loot and Vanishing Curse. Iron ingots still repair the golem. Towers do not change collision bounds. Client tests cover mixed towers, head transforms, effect limits and visibility above an off-screen golem.
 
+Naturally generated and villager-summoned golems have a 10% chance to spawn with a tower. Among equipped golems, 90% carry one fish, 9% carry 2–4 and 1% carry 5–16. Fish use the warm-ocean spawn table weights divided by each material's natural rarity divisor; ordinary fish retain the natural 25% dye chance. All generated headgear is unranked. Player-built golems, eggs, commands, existing equipment and saved entities are excluded; joining the world again never rerolls the tower.
+
 ## Live fish health
 
 Ranks 0–10 multiply maximum health by 1, 1.2, 1.5, 2, 2.7, 3.6, 4.8, 6.2, 7.5, 8.7 and 10. Stars do not add health. Rank changes preserve the current health percentage; world and bucket reloads preserve current health. The modifier composes with external health bonuses and respects the native 1024 maximum. Capture limits remain proportional to maximum health.
