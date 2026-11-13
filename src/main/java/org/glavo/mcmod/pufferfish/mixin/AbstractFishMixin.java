@@ -29,7 +29,7 @@ public abstract class AbstractFishMixin {
         }
     }
 
-    @Inject(method = "loadFromBucketTag", at = @At("TAIL"))
+    @Inject(method = "loadFromBucketTag", at = @At("HEAD"))
     private void pufferfishPlease$loadBucketColor(CompoundTag tag, CallbackInfo ci) {
         if ((Object) this instanceof Pufferfish fish) {
             if (!(fish instanceof org.glavo.mcmod.pufferfish.entity.MaterialPufferfish) && tag.contains("Fish")) {

@@ -44,6 +44,10 @@ Recipes use `pufferfish_please:fish_processing` with `ingredient`, `tool`, `stro
 
 Right-click an iron golem with a pufferfish to equip one in its empty head slot. Sneak-right-click with an empty hand to retrieve it; Binding Curse prevents survival removal. Equipment retains its components through save/load and uses the existing headgear effects and durability rules. Iron ingots still repair the golem. Client tests cover variant rendering, attachment to the head and removal.
 
+## Live fish health
+
+Ranks 0–10 multiply maximum health by 1, 1.2, 1.5, 2, 2.7, 3.6, 4.8, 6.2, 7.5, 8.7 and 10. Stars do not add health. Rank changes preserve the current health percentage; world and bucket reloads preserve current health. The modifier composes with external health bonuses and respects the native 1024 maximum. Capture limits remain proportional to maximum health.
+
 ## Ownership
 
 - `*GameTests`: observable server behavior, real interactions, persistence, synchronization, event cancellation and item conservation.

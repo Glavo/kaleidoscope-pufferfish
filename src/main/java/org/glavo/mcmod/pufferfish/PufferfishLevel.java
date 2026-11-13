@@ -10,28 +10,30 @@ import net.minecraft.util.StringRepresentable;
 
 /// Declaration order follows cultivation rank; persistent IDs do not depend on ordinals.
 public enum PufferfishLevel implements StringRepresentable {
-    LEVEL_0(0, 0, 1.00F),
-    LEVEL_1(1, 160, 1.05F),
-    LEVEL_2(2, 400, 1.10F),
-    LEVEL_3(3, 1_200, 1.15F),
-    LEVEL_4(4, 4_000, 1.20F),
-    LEVEL_5(5, 16_000, 1.30F),
-    LEVEL_6(6, 80_000, 1.40F),
-    LEVEL_7(7, 500_000, 1.50F),
-    LEVEL_8(8, 2_000_000, 1.65F),
-    LEVEL_9(9, 10_000_000, 1.80F),
-    LEVEL_10(10, 0, 2.00F);
+    LEVEL_0(0, 0, 1.00F, 1.0),
+    LEVEL_1(1, 160, 1.05F, 1.2),
+    LEVEL_2(2, 400, 1.10F, 1.5),
+    LEVEL_3(3, 1_200, 1.15F, 2.0),
+    LEVEL_4(4, 4_000, 1.20F, 2.7),
+    LEVEL_5(5, 16_000, 1.30F, 3.6),
+    LEVEL_6(6, 80_000, 1.40F, 4.8),
+    LEVEL_7(7, 500_000, 1.50F, 6.2),
+    LEVEL_8(8, 2_000_000, 1.65F, 7.5),
+    LEVEL_9(9, 10_000_000, 1.80F, 8.7),
+    LEVEL_10(10, 0, 2.00F, 10.0);
 
     public static final Codec<PufferfishLevel> CODEC = StringRepresentable.fromEnum(PufferfishLevel::values);
 
     private final int level;
     private final long baseExperienceRequired;
     private final float scale;
+    private final double healthMultiplier;
 
-    PufferfishLevel(int level, long baseExperienceRequired, float scale) {
+    PufferfishLevel(int level, long baseExperienceRequired, float scale, double healthMultiplier) {
         this.level = level;
         this.baseExperienceRequired = baseExperienceRequired;
         this.scale = scale;
+        this.healthMultiplier = healthMultiplier;
     }
 
     public int number() { return level; }
@@ -40,6 +42,8 @@ public enum PufferfishLevel implements StringRepresentable {
     public long baseExperienceRequired() { return baseExperienceRequired; }
 
     public float scale() { return scale; }
+
+    public double healthMultiplier() { return healthMultiplier; }
 
     /// Null means experience alone cannot advance this rank.
     @Nullable

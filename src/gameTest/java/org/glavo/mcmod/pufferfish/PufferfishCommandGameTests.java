@@ -171,7 +171,7 @@ public final class PufferfishCommandGameTests {
     }
 
     @GameTest(template = "empty", batch = "cultivation_commands")
-    public static void liveFishEditsPreserveStateAndRefreshSize(GameTestHelper helper) throws CommandSyntaxException {
+    public static void liveFishEditsPreserveStateAndRefreshGrowth(GameTestHelper helper) throws CommandSyntaxException {
         var source = helper.getLevel().getServer().createCommandSourceStack().withLevel(helper.getLevel()).withPermission(2);
         for (var type : List.of(EntityType.PUFFERFISH, PufferfishMobs.VARIANTS.get("heavy_pufferfish").entity().get(),
                 PufferfishMobs.VARIANTS.get("radiant_pufferfish").entity().get())) {
@@ -204,14 +204,16 @@ public final class PufferfishCommandGameTests {
                         "Live experience query did not return the edited value");
                 var result = PufferfishData.copy(fish);
                 result.set(PufferfishPlease.CULTIVATION.get(), before.get(PufferfishPlease.CULTIVATION.get()));
-                helper.assertTrue(ItemStack.matches(before, result) && fish.getHealth() == 2 && fish.getPuffState() == 2 && fish.isNoAi(),
+                helper.assertTrue(ItemStack.matches(before, result) && Math.abs(fish.getHealth() - 20) < 0.001
+                        && fish.getPuffState() == 2 && fish.isNoAi(),
                         "Live edits changed unrelated fish or entity data");
                 var bucket = fish.getBucketItemStack();
                 fish.saveToBucketTag(bucket);
                 var contained = ItemStack.parse(helper.getLevel().registryAccess(), bucket.get(DataComponents.BUCKET_ENTITY_DATA).copyTag().get("Fish")).orElseThrow();
                 helper.assertTrue(ItemStack.matches(contained, PufferfishData.copy(fish)), "Capture lost command-edited live data");
                 execute(source, "pufferfish level set " + target + " 0");
-                helper.assertTrue(!PufferfishData.stored(fish).has(PufferfishPlease.CULTIVATION.get()) && Math.abs(fish.getScale() - 1) < 0.0001,
+                helper.assertTrue(!PufferfishData.stored(fish).has(PufferfishPlease.CULTIVATION.get()) && Math.abs(fish.getScale() - 1) < 0.0001
+                        && Math.abs(fish.getHealth() - 2) < 0.001,
                         "Resetting live rank retained cultivation or enlarged size");
             } finally {
                 fish.discard();

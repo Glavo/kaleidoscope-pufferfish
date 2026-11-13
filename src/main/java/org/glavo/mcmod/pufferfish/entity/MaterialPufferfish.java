@@ -83,6 +83,7 @@ public final class MaterialPufferfish extends Pufferfish {
             entityData.set(FISH, fish.copyWithCount(1));
             if (!level().isClientSide) applyProfile();
             org.glavo.mcmod.pufferfish.PufferfishSize.update(this);
+            org.glavo.mcmod.pufferfish.PufferfishHealth.update(this);
         }
     }
 
@@ -259,8 +260,8 @@ public final class MaterialPufferfish extends Pufferfish {
 
     @Override
     public void loadFromBucketTag(CompoundTag tag) {
-        super.loadFromBucketTag(tag);
         loadFish(tag);
+        super.loadFromBucketTag(tag);
     }
 
     @Override

@@ -43,6 +43,7 @@ public final class PufferfishData {
             fish.setData(PufferfishPlease.FISH_ITEM, stack.copyWithCount(1));
             PufferfishColors.set(fish, PufferfishColors.get(stack));
             PufferfishSize.update(fish);
+            PufferfishHealth.update(fish);
         }
     }
 }
