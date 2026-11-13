@@ -28,9 +28,15 @@ Commands follow `<property> set <targets> <value>` and `<property> query <target
 
 Each edit changes only the selected property, preserving talent and lifetime experience. Newly awakened items start with talent 0.5 and zero experience. Setting level zero removes cultivation data; setting experience requires an awakened item. Fish weapons are activated when setting their level, even at zero. Edits bypass breakthrough requirements without granting advancement rewards or immediately advancing an experience-complete rank.
 
-Skins only store `skin_level`: cutting and pressing inherit rank without talent, experience, lifetime totals, readiness or stars. Same-variant skins of the same rank stack normally; rank zero has no extra component. Placement stores rank in block state, retaining it through pick-block, drops and copper transformations. Skin commands support `level` but reject `experience`.
+Generic cutting boards only produce sashimi; pressing produces unranked skins. Skins only store `skin_level`: processing table recipes inherit rank without talent, experience, lifetime totals, readiness or stars. Same-variant skins of the same rank stack normally; rank zero has no extra component. Placement stores rank in block state, retaining it through pick-block, drops and copper transformations. Skin commands support `level` but reject `experience`.
 
 Player targets must hold exactly one item; no items are split, moved or dropped. Every target is validated before any item or entity changes. Buckets edit their contained fish, preserving captured entity data. Lamps, skins, armor, shields, boats and flails use their item component; spawn eggs are excluded. Other derivative crafting recipes do not automatically transfer cultivation.
+
+## Fish processing table
+
+Insert one fish or skin, cut with a knife or shears, brush to lower rank, or retrieve with an empty hand. Three brush strokes remove one rank and clear current XP; talent and lifetime XP remain until rank zero. Rank zero clears cultivation. Full, unenchanted fish with mod-managed durability can then return to their original stack limit; wear, enchantments and foreign durability are never erased. Taking the item out clears partial processing progress.
+
+Recipes use `pufferfish_please:fish_processing` with `ingredient`, `tool`, `strokes`, `results` and optional `inherit_skin_level`. The table accepts other ingredients when a data pack supplies a recipe. No idle block entity ticker is required. Client smoke tests save a rendered preview to `build/test-runs/client/screenshots/fish-processing-table.png`.
 
 ## Ownership
 

@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "pufferfish_please:block/fish_processing_table"
+    },
+    "facing=east": {
+      "model": "pufferfish_please:block/fish_processing_table",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "pufferfish_please:block/fish_processing_table",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "pufferfish_please:block/fish_processing_table",
+      "y": 270
+    }
+  }
+}

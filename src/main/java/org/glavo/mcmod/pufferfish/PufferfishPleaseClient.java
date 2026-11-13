@@ -102,6 +102,7 @@ public class PufferfishPleaseClient {
         event.registerBlockEntityRenderer(PufferfishBlocks.ANCIENT_PRISMARINE_ENTITY.get(),
                 net.minecraft.client.renderer.blockentity.BrushableBlockRenderer::new);
         event.registerBlockEntityRenderer(PufferfishBlocks.PUMP_ENTITY.get(), org.glavo.mcmod.pufferfish.client.PufferfishPumpBlockRenderer::new);
+        event.registerBlockEntityRenderer(PufferfishBlocks.PROCESSING_TABLE_ENTITY.get(), org.glavo.mcmod.pufferfish.client.FishProcessingTableRenderer::new);
         event.registerBlockEntityRenderer(PufferfishBlocks.PLACED_FISH_ENTITY.get(), org.glavo.mcmod.pufferfish.client.PlacedPufferfishRenderer::new);
     }
 

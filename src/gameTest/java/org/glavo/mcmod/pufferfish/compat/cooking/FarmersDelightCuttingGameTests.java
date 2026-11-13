@@ -27,7 +27,7 @@ public final class FarmersDelightCuttingGameTests {
     private FarmersDelightCuttingGameTests() {}
 
     @GameTest(template = "empty", templateNamespace = "pufferfish_please", batch = "skin_rank")
-    public static void cuttingRetainsOnlySkinRank(GameTestHelper helper) {
+    public static void cuttingDiscardsCultivation(GameTestHelper helper) {
         var level = helper.getLevel();
         var pos = helper.absolutePos(new BlockPos(1, 2, 1));
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
@@ -37,14 +37,14 @@ public final class FarmersDelightCuttingGameTests {
         for (var variant : org.glavo.mcmod.pufferfish.PufferfishVariant.ALL) for (int individual = 0; individual < 2; individual++) {
             var fish = CuttingAssertions.rankedFish(variant, individual);
             helper.assertTrue(board.addItem(fish).isEmpty() && board.processStoredItemUsingTool(knife, player), "Board rejected cultivated fish");
-            CuttingAssertions.verifyDrops(helper, pos, variant.skin(), org.glavo.mcmod.pufferfish.PufferfishLevel.LEVEL_10);
+            CuttingAssertions.verifySashimi(helper, pos);
         }
         helper.succeed();
     }
 
     /// Verifies all skin colors, knife requirements, consumption, and empty-board behavior.
     @GameTest(template = "empty", templateNamespace = "pufferfish_please")
-    public static void farmersDelightCutsFishIntoSashimiAndSkin(GameTestHelper helper) {
+    public static void farmersDelightCutsFishIntoSashimi(GameTestHelper helper) {
         var level = helper.getLevel();
         var pos = helper.absolutePos(new BlockPos(1, 2, 1));
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
@@ -58,7 +58,7 @@ public final class FarmersDelightCuttingGameTests {
             for (int remaining = 1; remaining >= 0; remaining--) {
                 helper.assertTrue(board.processStoredItemUsingTool(knife, player)
                         && board.getStoredItem().getCount() == remaining, "Each cut must consume exactly one fish");
-                CuttingAssertions.verifyDrops(helper, pos, PufferfishBlocks.skin(color));
+                CuttingAssertions.verifySashimi(helper, pos);
             }
             helper.assertTrue(!board.processStoredItemUsingTool(knife, player), "Empty board produced repeated output");
         }
@@ -66,7 +66,7 @@ public final class FarmersDelightCuttingGameTests {
             board.addItem(new ItemStack(Items.PUFFERFISH));
             var kitchenKnife = new ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.parse("kaleidoscope_cookery:iron_kitchen_knife")));
             helper.assertTrue(board.processStoredItemUsingTool(kitchenKnife, player), "Cookery knife could not cut on Farmer's Delight board");
-            CuttingAssertions.verifyDrops(helper, pos, PufferfishBlocks.skin(null));
+            CuttingAssertions.verifySashimi(helper, pos);
         }
         for (var entry : java.util.Map.of(PufferfishItems.GOLDEN.get(), PufferfishBlocks.GOLDEN_SKIN.get(),
                 PufferfishItems.NETHERITE.get(), PufferfishBlocks.NETHERITE_SKIN.get(),
@@ -80,7 +80,7 @@ public final class FarmersDelightCuttingGameTests {
             for (int remaining = 1; remaining >= 0; remaining--) {
                 helper.assertTrue(board.processStoredItemUsingTool(knife, player) && board.getStoredItem().getCount() == remaining,
                         "Special cutting did not consume exactly one fish");
-                CuttingAssertions.verifyDrops(helper, pos, entry.getValue());
+                CuttingAssertions.verifySashimi(helper, pos);
             }
             helper.assertTrue(!board.processStoredItemUsingTool(knife, player), "Special fish produced repeated output");
         }

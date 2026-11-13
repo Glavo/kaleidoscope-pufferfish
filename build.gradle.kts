@@ -227,6 +227,7 @@ val generateSkinResources = tasks.register<Sync>("generateSkinResources") {
             "skins/block_model" to "assets/$modId/models/block/$skinName.json",
             "skins/cutting" to "data/$modId/recipe/cutting/$skinName.json",
             "skins/chopping" to "data/$modId/recipe/chopping/$skinName.json",
+            "skins/processing" to "data/$modId/recipe/fish_processing/$skinName.json",
             "skins/pressing" to "data/$modId/recipe/pressing/$skinName.json"
         )) {
             from("src/main/templates/$template.json") {
@@ -248,6 +249,7 @@ val generateSkinResources = tasks.register<Sync>("generateSkinResources") {
         "block_model" to "assets/$modId/models/block/golden_pufferfish_skin.json",
         "item_model" to "assets/$modId/models/item/golden_pufferfish_skin.json",
         "loot" to "data/$modId/loot_table/blocks/golden_pufferfish_skin.json",
+        "processing" to "data/$modId/recipe/fish_processing/golden_pufferfish_skin.json",
         "pressing" to "data/$modId/recipe/pressing/golden_pufferfish_skin.json"
     )) {
         from("src/main/templates/skins/$template.json") {

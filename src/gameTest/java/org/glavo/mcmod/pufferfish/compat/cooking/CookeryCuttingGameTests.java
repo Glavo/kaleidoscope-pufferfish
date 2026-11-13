@@ -36,7 +36,7 @@ public final class CookeryCuttingGameTests {
     private CookeryCuttingGameTests() {}
 
     @GameTest(template = "empty", templateNamespace = "pufferfish_please", batch = "skin_rank")
-    public static void savedCuttingProgressRetainsOnlySkinRank(GameTestHelper helper) {
+    public static void savedCuttingProgressDiscardsCultivation(GameTestHelper helper) {
         var level = helper.getLevel();
         var pos = helper.absolutePos(new BlockPos(1, 2, 1));
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
@@ -52,7 +52,7 @@ public final class CookeryCuttingGameTests {
             board.loadWithComponents(saved, level.registryAccess());
             level.setBlockEntity(board);
             for (int cut = 1; cut < 4; cut++) helper.assertTrue(board.onCutItem(level, player, knife), "Cultivated fish cutting failed");
-            CuttingAssertions.verifyDrops(helper, pos, variant.skin(), org.glavo.mcmod.pufferfish.PufferfishLevel.LEVEL_10);
+            CuttingAssertions.verifySashimi(helper, pos);
         }
         helper.succeed();
     }
@@ -132,7 +132,7 @@ public final class CookeryCuttingGameTests {
 
     /// Verifies all colors, knife enforcement, persisted progress, and single-use output collection.
     @GameTest(template = "empty", templateNamespace = "pufferfish_please")
-    public static void cookeryCutsFishIntoSashimiAndSkin(GameTestHelper helper) {
+    public static void cookeryCutsFishIntoSashimi(GameTestHelper helper) {
         var level = helper.getLevel();
         var pos = helper.absolutePos(new BlockPos(1, 2, 1));
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
@@ -155,7 +155,7 @@ public final class CookeryCuttingGameTests {
             for (int cut = 1; cut < 3; cut++) helper.assertTrue(board.onCutItem(level, player, knife), "Knife cut failed");
             helper.assertTrue(level.getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(2)).isEmpty(), "Products dropped before collection");
             helper.assertTrue(board.onCutItem(level, player, knife), "Output collection failed");
-            CuttingAssertions.verifyDrops(helper, pos, PufferfishBlocks.skin(color));
+            CuttingAssertions.verifySashimi(helper, pos);
             helper.assertTrue(!board.onCutItem(level, player, knife), "Empty board produced repeated output");
         }
         for (var entry : java.util.Map.of(PufferfishItems.GOLDEN.get(), PufferfishBlocks.GOLDEN_SKIN.get(),
@@ -178,7 +178,7 @@ public final class CookeryCuttingGameTests {
             for (int cut = 1; cut < 3; cut++) helper.assertTrue(board.onCutItem(level, player, knife), "Special fish cutting failed");
             helper.assertTrue(level.getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(2)).isEmpty(), "Special products dropped before collection");
             helper.assertTrue(board.onCutItem(level, player, knife), "Special output collection failed");
-            CuttingAssertions.verifyDrops(helper, pos, entry.getValue());
+            CuttingAssertions.verifySashimi(helper, pos);
             helper.assertTrue(!board.onCutItem(level, player, knife), "Special fish produced repeated output");
         }
         for (var item : new net.minecraft.world.item.Item[] {PufferfishItems.SASHIMI.get(), PufferfishItems.FLAIL.get(), PufferfishItems.NETHERITE_FLAIL.get(), PufferfishItems.HEAVY_FLAIL.get()}) {

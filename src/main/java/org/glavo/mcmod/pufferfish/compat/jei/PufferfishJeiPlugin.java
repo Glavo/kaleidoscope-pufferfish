@@ -17,6 +17,26 @@ import org.glavo.mcmod.pufferfish.PufferfishPlease;
 @JeiPlugin
 public final class PufferfishJeiPlugin implements IModPlugin {
     @Override
+    public void registerCategories(mezz.jei.api.registration.IRecipeCategoryRegistration registration) {
+        registration.addRecipeCategories(new FishProcessingCategory(registration.getJeiHelpers().getGuiHelper()));
+    }
+
+    @Override
+    public void registerRecipes(mezz.jei.api.registration.IRecipeRegistration registration) {
+        var level = net.minecraft.client.Minecraft.getInstance().level;
+        if (level != null) registration.addRecipes(FishProcessingCategory.TYPE,
+                level.getRecipeManager().getAllRecipesFor(PufferfishPlease.FISH_PROCESSING_TYPE.get()).stream().map(net.minecraft.world.item.crafting.RecipeHolder::value).toList());
+        registration.addItemStackInfo(new ItemStack(org.glavo.mcmod.pufferfish.PufferfishBlocks.PROCESSING_TABLE.get()),
+                net.minecraft.network.chat.Component.translatable("tooltip.pufferfish_please.processing_table.cut"),
+                net.minecraft.network.chat.Component.translatable("tooltip.pufferfish_please.processing_table.brush"),
+                net.minecraft.network.chat.Component.translatable("tooltip.pufferfish_please.processing_table.retrieve"));
+    }
+
+    @Override
+    public void registerRecipeCatalysts(mezz.jei.api.registration.IRecipeCatalystRegistration registration) {
+        registration.addRecipeCatalyst(new ItemStack(org.glavo.mcmod.pufferfish.PufferfishBlocks.PROCESSING_TABLE.get()), FishProcessingCategory.TYPE);
+    }
+    @Override
     public ResourceLocation getPluginUid() {
         return PufferfishPlease.id("jei");
     }

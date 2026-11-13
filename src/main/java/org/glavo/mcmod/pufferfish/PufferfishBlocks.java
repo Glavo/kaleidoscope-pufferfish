@@ -25,6 +25,11 @@ public final class PufferfishBlocks {
     private static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(PufferfishPlease.MODID);
     private static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(PufferfishPlease.MODID);
     private static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, PufferfishPlease.MODID);
+    public static final DeferredBlock<FishProcessingTableBlock> PROCESSING_TABLE = BLOCKS.registerBlock("fish_processing_table",
+            FishProcessingTableBlock::new, BlockBehaviour.Properties.of().strength(2.5F).noOcclusion().sound(SoundType.WOOD)
+                    .pushReaction(net.minecraft.world.level.material.PushReaction.BLOCK));
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FishProcessingTableBlockEntity>> PROCESSING_TABLE_ENTITY =
+            BLOCK_ENTITIES.register("fish_processing_table", () -> BlockEntityType.Builder.of(FishProcessingTableBlockEntity::new, PROCESSING_TABLE.get()).build(null));
     public static final DeferredBlock<PufferfishPumpBlock> PUMP = BLOCKS.registerBlock("pufferfish_pump",
             PufferfishPumpBlock::new, BlockBehaviour.Properties.of().strength(1.5F).noOcclusion().sound(SoundType.COPPER)
                     .pushReaction(net.minecraft.world.level.material.PushReaction.BLOCK));
@@ -77,6 +82,15 @@ public final class PufferfishBlocks {
     public static final DeferredBlock<PufferfishSkinBlock> RADIANT_SKIN = registerSkin(PufferfishVariant.RADIANT, MapColor.QUARTZ);
 
     static {
+        ITEMS.register("fish_processing_table", () -> new net.minecraft.world.item.BlockItem(PROCESSING_TABLE.get(), new Item.Properties()) {
+            @Override public void appendHoverText(ItemStack stack, Item.TooltipContext context,
+                    java.util.List<net.minecraft.network.chat.Component> tooltip, net.minecraft.world.item.TooltipFlag flag) {
+                for (var action : java.util.List.of("cut", "brush", "retrieve")) {
+                    tooltip.add(net.minecraft.network.chat.Component.translatable("tooltip.pufferfish_please.processing_table." + action)
+                            .withStyle(net.minecraft.ChatFormatting.GRAY));
+                }
+            }
+        });
         ITEMS.registerSimpleBlockItem(CONDUIT);
         ITEMS.registerSimpleBlockItem(ANCIENT_CONDUIT);
         ITEMS.registerSimpleBlockItem(ANCIENT_PRISMARINE);

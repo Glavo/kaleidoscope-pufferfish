@@ -1,0 +1,13 @@
+{
+  "values": [
+    "minecraft:shears",
+    {
+      "id": "#c:tools/knife",
+      "required": false
+    },
+    {
+      "id": "#kaleidoscope_cookery:kitchen_knife",
+      "required": false
+    }
+  ]
+}

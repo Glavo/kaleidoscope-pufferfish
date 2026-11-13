@@ -20,7 +20,7 @@ import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 
-/// Fresh fish stack normally; activating one permanently gives it native durability and a stack limit of one.
+/// Fresh fish stack normally; active fish use native durability until explicitly restored at a processing table.
 public final class PufferfishDurability {
     public record State(int maxDamage) {
         public static final Codec<State> CODEC = Codec.intRange(1, Integer.MAX_VALUE)
@@ -34,6 +34,26 @@ public final class PufferfishDurability {
     }
 
     private PufferfishDurability() {}
+
+    public static boolean canDeactivate(ItemStack stack) {
+        if (!PufferfishItems.isPufferfish(stack) || stack.getCount() != 1 || stack.isDamaged()
+                || !stack.getEnchantments().isEmpty()) return false;
+        var state = stack.get(PufferfishPlease.MANAGED_DURABILITY.get());
+        return state != null && state.matches(stack);
+    }
+
+    /// Restores only managed durability and repair history, preserving variant and unrelated components.
+    public static void deactivate(ItemStack stack) {
+        if (!canDeactivate(stack) || stack.has(PufferfishPlease.CULTIVATION.get())) return;
+        var defaults = stack.getItem().components();
+        stack.remove(PufferfishPlease.MANAGED_DURABILITY.get());
+        for (var type : java.util.List.of(DataComponents.MAX_DAMAGE, DataComponents.DAMAGE,
+                DataComponents.MAX_STACK_SIZE, DataComponents.REPAIR_COST)) {
+            var value = defaults.get(type);
+            if (value == null) stack.remove(type);
+            else stack.set(type, value);
+        }
+    }
 
     /// Advances at each quarter of spent durability, with the final stage lasting until breakage.
     public static int deflationStage(ItemStack stack) {

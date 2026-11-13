@@ -4,7 +4,6 @@
   "ingredients": [${ingredient}],
   "tool": [{"type": "farmersdelight:item_ability", "action": "knife_dig"}, {"tag": "c:tools/knife"}, {"tag": "kaleidoscope_cookery:kitchen_knife"}],
   "result": [
-    {"item": {"id": "${modId}:pufferfish_sashimi", "count": 1}},
-    {"item": {"id": "${blockId}", "count": 1}}
+    {"item": {"id": "${modId}:pufferfish_sashimi", "count": 1}}
   ]
 }

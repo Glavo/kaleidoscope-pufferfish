@@ -37,6 +37,13 @@ public class PufferfishPlease {
     private static final DeferredRegister<AttachmentType<?>> ATTACHMENTS = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, MODID);
     private static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(Registries.ENTITY_TYPE, MODID);
     private static final DeferredRegister<RecipeSerializer<?>> RECIPES = DeferredRegister.create(Registries.RECIPE_SERIALIZER, MODID);
+    private static final DeferredRegister<net.minecraft.world.item.crafting.RecipeType<?>> RECIPE_TYPES = DeferredRegister.create(Registries.RECIPE_TYPE, MODID);
+    public static final DeferredHolder<net.minecraft.world.item.crafting.RecipeType<?>, net.minecraft.world.item.crafting.RecipeType<FishProcessingRecipe>> FISH_PROCESSING_TYPE =
+            RECIPE_TYPES.register("fish_processing", () -> new net.minecraft.world.item.crafting.RecipeType<>() {
+                @Override public String toString() { return id("fish_processing").toString(); }
+            });
+    public static final DeferredHolder<RecipeSerializer<?>, FishProcessingRecipe.Serializer> FISH_PROCESSING_RECIPE =
+            RECIPES.register("fish_processing", FishProcessingRecipe.Serializer::new);
     private static final DeferredRegister<IngredientType<?>> INGREDIENTS = DeferredRegister.create(NeoForgeRegistries.INGREDIENT_TYPES, MODID);
     private static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
 
@@ -116,6 +123,7 @@ public class PufferfishPlease {
                         }
                     }
                     output.accept(PufferfishItems.PUMP);
+                    output.accept(PufferfishBlocks.PROCESSING_TABLE);
                     output.accept(PufferfishItems.UPGRADE_TEMPLATE);
                     output.accept(PufferfishItems.ANCIENT_PEARL);
 
@@ -173,10 +181,12 @@ public class PufferfishPlease {
         ATTACHMENTS.register(bus);
         ENTITIES.register(bus);
         RECIPES.register(bus);
+        RECIPE_TYPES.register(bus);
         INGREDIENTS.register(bus);
         TABS.register(bus);
         bus.addListener(FlailAttackPayload::register);
         NeoForge.EVENT_BUS.addListener(PufferfishCommands::register);
+        NeoForge.EVENT_BUS.addListener(FishProcessingTableBlockEntity::brushTick);
         NeoForge.EVENT_BUS.addListener(CopperPufferfish::interact);
         NeoForge.EVENT_BUS.addListener(PufferfishColors::interact);
         NeoForge.EVENT_BUS.addListener(PufferfishMobs::feed);

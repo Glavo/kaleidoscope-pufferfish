@@ -35,18 +35,21 @@ public final class PufferfishJadePlugin implements IWailaPlugin {
     private static final LevelProvider<EntityAccessor> ENTITY = new LevelProvider<>(
             accessor -> PufferfishData.stored((Pufferfish) accessor.getEntity()));
     private static final LevelProvider<BlockAccessor> BLOCK = new LevelProvider<>(
-            accessor -> accessor.getBlockEntity() instanceof PlacedPufferfishBlockEntity fish ? fish.fish() : ItemStack.EMPTY);
+            accessor -> accessor.getBlockEntity() instanceof PlacedPufferfishBlockEntity fish ? fish.fish()
+                    : accessor.getBlockEntity() instanceof org.glavo.mcmod.pufferfish.FishProcessingTableBlockEntity table ? table.item() : ItemStack.EMPTY);
 
     @Override
     public void register(IWailaCommonRegistration registration) {
         registration.registerEntityDataProvider(ENTITY, Pufferfish.class);
         registration.registerBlockDataProvider(BLOCK, PlacedPufferfishBlockEntity.class);
+        registration.registerBlockDataProvider(BLOCK, org.glavo.mcmod.pufferfish.FishProcessingTableBlockEntity.class);
     }
 
     @Override
     public void registerClient(IWailaClientRegistration registration) {
         registration.registerEntityComponent(ENTITY, Pufferfish.class);
         registration.registerBlockComponent(BLOCK, PlacedPufferfishBlock.class);
+        registration.registerBlockComponent(BLOCK, org.glavo.mcmod.pufferfish.FishProcessingTableBlock.class);
     }
 
     private record LevelProvider<T extends Accessor<?>>(Function<T, ItemStack> source)

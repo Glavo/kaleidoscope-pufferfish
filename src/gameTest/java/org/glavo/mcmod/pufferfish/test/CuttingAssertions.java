@@ -22,6 +22,13 @@ import org.glavo.mcmod.pufferfish.PufferfishVariant;
 public final class CuttingAssertions {
     private CuttingAssertions() {}
 
+    public static void verifySashimi(GameTestHelper helper, BlockPos pos) {
+        var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(2));
+        helper.assertTrue(drops.size() == 1 && ItemStack.matches(drops.getFirst().getItem(), new ItemStack(PufferfishItems.SASHIMI.get())),
+                "Generic cutting must produce exactly one plain sashimi and no skin");
+        drops.forEach(ItemEntity::discard);
+    }
+
     public static ItemStack fish(DyeColor color) {
         var stack = new ItemStack(Items.PUFFERFISH, 2);
         return color == null ? stack : PufferfishColors.dye(stack, color);
