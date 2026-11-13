@@ -39,10 +39,9 @@ public class PlacedPufferfishBlock extends BaseEntityBlock implements SimpleWate
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
     public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
-    private static final VoxelShape SHAPE = Block.box(3, 0, 3, 13, 10, 13);
 
     public PlacedPufferfishBlock(Properties properties) {
-        super(properties);
+        super(properties.dynamicShape());
         registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(WATERLOGGED, false).setValue(LIT, false));
     }
 
@@ -85,7 +84,11 @@ public class PlacedPufferfishBlock extends BaseEntityBlock implements SimpleWate
     }
 
     @Override
-    protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) { return SHAPE; }
+    protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        var facing = state.getValue(FACING);
+        return level.getBlockEntity(pos) instanceof PlacedPufferfishBlockEntity entity
+                ? entity.shape(facing) : PufferfishSize.placedShape(ItemStack.EMPTY, facing);
+    }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) { builder.add(FACING, WATERLOGGED, LIT); }

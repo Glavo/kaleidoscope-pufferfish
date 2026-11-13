@@ -34,6 +34,48 @@ import org.glavo.mcmod.pufferfish.test.TestItems;
 @PrefixGameTestTemplate(false)
 public final class PufferfishPlacementGameTests {
 
+    @GameTest(template = "empty")
+    public static void decorationShapesFollowStoredGrowthAndWear(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var pos = helper.absolutePos(new BlockPos(2, 3, 2));
+        var blocks = new java.util.ArrayList<PlacedPufferfishBlock>();
+        blocks.add(PufferfishBlocks.PLACED_FISH.get());
+        blocks.add(PufferfishBlocks.PLACED_HEAVY_FISH.get());
+        PufferfishLamps.VARIANTS.values().forEach(variant -> blocks.add(variant.block().get()));
+        for (var block : blocks) {
+            level.setBlockAndUpdate(pos, block.defaultBlockState());
+            var entity = (PlacedPufferfishBlockEntity) level.getBlockEntity(pos);
+            var fish = block instanceof HeavyPufferfishBlock ? PufferfishItems.HEAVY.toStack() : new ItemStack(Items.PUFFERFISH);
+            entity.setFish(fish);
+            var state = level.getBlockState(pos);
+            var initial = state.getShape(level, pos).bounds();
+            fish.set(PufferfishPlease.CULTIVATION.get(), new PufferfishCultivation(PufferfishLevel.LEVEL_10, 0.5, 0, 0));
+            entity.setFish(fish);
+            var grown = state.getShape(level, pos).bounds();
+            helper.assertTrue(Math.abs(grown.getXsize() - initial.getXsize() * 2) < 0.0001
+                    && Math.abs(grown.getYsize() - initial.getYsize() * 2) < 0.0001
+                    && Math.abs(grown.getZsize() - initial.getZsize() * 2) < 0.0001,
+                    "Decoration retained a cached unranked outline");
+            helper.assertTrue(state.getCollisionShape(level, pos).bounds().equals(grown), "Outline and collision disagreed");
+            var probe = new AABB(pos.getX() + 1.1, pos.getY() + 0.2, pos.getZ() + 0.4,
+                    pos.getX() + 1.2, pos.getY() + 0.4, pos.getZ() + 0.6);
+            helper.assertTrue(!level.noCollision(null, probe), "Collision traversal missed the fish outside its block cell");
+            var restored = new PlacedPufferfishBlockEntity(pos, state);
+            restored.loadWithComponents(entity.getUpdateTag(level.registryAccess()), level.registryAccess());
+            helper.assertTrue(restored.shape(Direction.NORTH).bounds().equals(grown), "Synchronized fish lost its collision size");
+            PufferfishDurability.activate(fish);
+            fish.setDamageValue((fish.getMaxDamage() * 3 + 3) / 4);
+            entity.setFish(fish);
+            helper.assertTrue(state.getShape(level, pos).bounds().getYsize() < initial.getYsize()
+                    && level.noCollision(null, probe), "Deflated fish retained its inflated collision");
+            fish.remove(PufferfishPlease.CULTIVATION.get());
+            entity.setFish(fish);
+            helper.assertTrue(state.getShape(level, pos).bounds().getXsize() < initial.getXsize(), "Lowering rank retained the enlarged shape");
+            level.removeBlock(pos, false);
+        }
+        helper.succeed();
+    }
+
     private static PlayerInteractEvent.RightClickBlock use(Player player, BlockPos floor) {
         var event = new PlayerInteractEvent.RightClickBlock(player, InteractionHand.MAIN_HAND, floor,
                 new BlockHitResult(Vec3.atCenterOf(floor).add(0, 0.5, 0), Direction.UP, floor, false));

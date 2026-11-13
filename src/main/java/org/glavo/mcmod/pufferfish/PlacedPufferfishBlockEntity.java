@@ -22,6 +22,10 @@ public final class PlacedPufferfishBlockEntity extends BlockEntity {
 
     public ItemStack fish() { return fish.copy(); }
 
+    public net.minecraft.world.phys.shapes.VoxelShape shape(net.minecraft.core.Direction facing) {
+        return PufferfishSize.placedShape(fish, facing);
+    }
+
     public static void serverTick(Level level, BlockPos pos, BlockState state, PlacedPufferfishBlockEntity entity) {
         if (level.getGameTime() % 40 != 1) return;
         var cultivation = entity.fish.get(PufferfishPlease.CULTIVATION.get());
