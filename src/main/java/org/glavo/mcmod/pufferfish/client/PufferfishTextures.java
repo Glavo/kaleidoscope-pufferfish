@@ -75,6 +75,17 @@ public final class PufferfishTextures implements ResourceManagerReloadListener {
         });
     }
 
+    public static ResourceLocation radiantGlow() {
+        return MATERIAL_TEXTURES.computeIfAbsent("radiant_glow", ignored -> {
+            var minecraft = Minecraft.getInstance();
+            var id = PufferfishPlease.id("textures/entity/radiant_glow.png");
+            if (minecraft.getResourceManager().getResource(id).isEmpty()) {
+                minecraft.getTextureManager().register(id, new DynamicTexture(RadiantPufferfishVisuals.createGlowTexture()));
+            }
+            return id;
+        });
+    }
+
     public static ResourceLocation ancientConduit() {
         return MATERIAL_TEXTURES.computeIfAbsent("ancient_conduit", ignored -> {
             var minecraft = Minecraft.getInstance();

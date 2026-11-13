@@ -49,7 +49,12 @@ public final class PufferfishFlailClientTest {
                 var pose = new PoseStack();
                 var capture = new Capture();
                 IClientItemExtensions.of(stack).getCustomRenderer().renderByItem(stack, context, pose, capture, LIGHT, OverlayTexture.NO_OVERLAY);
-                if (capture.vertices < 300 || capture.types.size() != (item == PufferfishItems.RADIANT_FLAIL.get() ? 4 : 3) || !pose.clear()) {
+                var bodies = new HashSet<>(capture.types);
+                if (PufferfishItems.isRadiant(stack)) {
+                    bodies.remove(RenderType.entityTranslucentEmissive(org.glavo.mcmod.pufferfish.client.PufferfishTextures.radiantGlow()));
+                    bodies.remove(RenderType.entityTranslucentEmissive(ResourceLocation.withDefaultNamespace("textures/particle/flash.png")));
+                }
+                if (capture.vertices < 300 || bodies.size() != 3 || !pose.clear()) {
                     throw new IllegalStateException("Flail head, grip, or chain failed to render: " + context);
                 }
                 if (item == PufferfishItems.HEAVY_FLAIL.get() && !capture.types.contains(RenderType.entityCutoutNoCull(

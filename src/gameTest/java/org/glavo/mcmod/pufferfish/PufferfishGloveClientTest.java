@@ -64,8 +64,13 @@ public final class PufferfishGloveClientTest {
                     var pose = new PoseStack();
                     layer.render(pose, capture, LIGHT, player, 0, 0, 0, 0, 0, 0);
                     var vertices = capture.parts.get(type(stack));
+                    var bodies = new java.util.HashSet<>(capture.parts.keySet());
+                    if (PufferfishItems.isRadiant(stack)) {
+                        bodies.remove(RenderType.entityTranslucentEmissive(PufferfishTextures.radiantGlow()));
+                        bodies.remove(RenderType.entityTranslucentEmissive(ResourceLocation.withDefaultNamespace("textures/particle/flash.png")));
+                    }
                     float center = arm == HumanoidArm.RIGHT ? -0.36F : 0.36F;
-                    if (capture.parts.size() != (PufferfishItems.isRadiant(stack) ? 2 : 1) || vertices == null || vertices.count < 100
+                    if (!bodies.equals(java.util.Set.of(type(stack))) || vertices == null || vertices.count < 100
                             || Math.abs((vertices.minX + vertices.maxX) / 2 - center) > 0.05F
                             || vertices.minY < 0.28F || vertices.maxY > 0.95F || !pose.clear()) {
                         throw new IllegalStateException("Glove did not replace held fish or cover the hand: " + stack + ", " + arm
