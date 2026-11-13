@@ -52,6 +52,10 @@ public class PufferfishPleaseClient {
         bus.addListener(this::registerReloadListeners);
         bus.addListener(this::registerRenderers);
         bus.addListener((EntityRenderersEvent.AddLayers event) -> {
+            var golemRenderer = event.getRenderer(net.minecraft.world.entity.EntityType.IRON_GOLEM);
+            if (golemRenderer instanceof net.minecraft.client.renderer.entity.IronGolemRenderer ironGolemRenderer) {
+                ironGolemRenderer.addLayer(new org.glavo.mcmod.pufferfish.client.PufferfishGolemHeadLayer(ironGolemRenderer));
+            }
             var renderer = event.getRenderer(net.minecraft.world.entity.EntityType.CAT);
             if (renderer instanceof net.minecraft.client.renderer.entity.CatRenderer catRenderer) {
                 catRenderer.addLayer(new org.glavo.mcmod.pufferfish.client.PufferfishCatArmorLayer(catRenderer));

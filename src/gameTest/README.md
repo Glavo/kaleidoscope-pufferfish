@@ -40,6 +40,10 @@ Completed fish downgrades refund one quarter of current XP plus the talent-adjus
 
 Recipes use `pufferfish_please:fish_processing` with `ingredient`, `tool`, `strokes`, `results` and optional `inherit_skin_level`. The table accepts other ingredients when a data pack supplies a recipe. No idle block entity ticker is required. Client smoke tests save a rendered preview to `build/test-runs/client/screenshots/fish-processing-table.png`.
 
+## Iron golem headgear
+
+Right-click an iron golem with a pufferfish to equip one in its empty head slot. Sneak-right-click with an empty hand to retrieve it; Binding Curse prevents survival removal. Equipment retains its components through save/load and uses the existing headgear effects and durability rules. Iron ingots still repair the golem. Client tests cover variant rendering, attachment to the head and removal.
+
 ## Ownership
 
 - `*GameTests`: observable server behavior, real interactions, persistence, synchronization, event cancellation and item conservation.

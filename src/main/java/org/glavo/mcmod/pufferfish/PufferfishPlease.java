@@ -216,7 +216,8 @@ public class PufferfishPlease {
         NeoForge.EVENT_BUS.addListener(PufferfishConduitSpawning::unload);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishEnchantments::applyBook);
         NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::breathe);
-        NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::breatheZombie);
+        NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::breatheMob);
+        NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::interact);
         NeoForge.EVENT_BUS.addListener(PufferfishHeadgear::retaliate);
         NeoForge.EVENT_BUS.addListener(PufferfishArmor::retaliate);
         NeoForge.EVENT_BUS.addListener(PufferfishRetaliation::effectsOnThorns);

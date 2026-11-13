@@ -40,6 +40,90 @@ import org.glavo.mcmod.pufferfish.test.TestEffects;
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishHeadgearGameTests {
+    @GameTest(template = "empty")
+    public static void golemHeadgearRetaliatesAndRespectsBinding(GameTestHelper helper) {
+        var player = org.glavo.mcmod.pufferfish.test.TestPlayers.serverPlayer(helper);
+        var golem = EntityType.IRON_GOLEM.create(helper.getLevel());
+        var fish = new ItemStack(Items.PUFFERFISH, 4);
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, fish);
+        player.interactOn(golem, net.minecraft.world.InteractionHand.MAIN_HAND);
+        helper.assertTrue(fish.getCount() == 3 && golem.getItemBySlot(EquipmentSlot.HEAD).getCount() == 1,
+                "Equipping a stack did not consume exactly one fish");
+        var attacker = EntityType.PIG.create(helper.getLevel());
+        golem.getRandom().setSeed(42);
+        int reflected = 0;
+        for (int i = 0; i < 32; i++) {
+            golem.setHealth(golem.getMaxHealth());
+            golem.invulnerableTime = 0;
+            attacker.setHealth(attacker.getMaxHealth());
+            attacker.invulnerableTime = 0;
+            attacker.removeAllEffects();
+            golem.hurt(golem.damageSources().mobAttack(attacker), 1);
+            var poison = TestEffects.poison(attacker);
+            if (attacker.getHealth() < attacker.getMaxHealth()) reflected++;
+            helper.assertTrue(attacker.getHealth() < attacker.getMaxHealth()
+                    ? poison != null && poison.getDuration() == 120 : poison == null,
+                    "Golem headgear poison did not follow successful thorns");
+        }
+        var equipped = golem.getItemBySlot(EquipmentSlot.HEAD);
+        helper.assertTrue(reflected > 0 && reflected < 32 && equipped.getDamageValue() > 0,
+                "Golem headgear did not retaliate or wear out");
+        equipped.enchant(helper.getLevel().registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.ENCHANTMENT)
+                .getHolderOrThrow(net.minecraft.world.item.enchantment.Enchantments.BINDING_CURSE), 1);
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+        player.setShiftKeyDown(true);
+        player.interactOn(golem, net.minecraft.world.InteractionHand.MAIN_HAND);
+        helper.assertTrue(!golem.getItemBySlot(EquipmentSlot.HEAD).isEmpty() && player.getMainHandItem().isEmpty(),
+                "Survival removal bypassed binding curse");
+        player.setGameMode(GameType.CREATIVE);
+        player.interactOn(golem, net.minecraft.world.InteractionHand.MAIN_HAND);
+        helper.assertTrue(golem.getItemBySlot(EquipmentSlot.HEAD).isEmpty(), "Creative removal was blocked by binding");
+        player.setShiftKeyDown(false);
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new ItemStack(Items.PUFFERFISH, 4));
+        player.interactOn(golem, net.minecraft.world.InteractionHand.MAIN_HAND);
+        helper.assertTrue(player.getMainHandItem().getCount() == 4 && golem.getItemBySlot(EquipmentSlot.HEAD).getCount() == 1,
+                "Creative equipping consumed fish or equipped a stack");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void golemHeadgearInteractionPreservesItemsAndVanillaRepair(GameTestHelper helper) {
+        var player = org.glavo.mcmod.pufferfish.test.TestPlayers.serverPlayer(helper);
+        var golem = EntityType.IRON_GOLEM.create(helper.getLevel());
+        for (var variant : PufferfishVariant.ALL) {
+            player.getInventory().clearContent();
+            player.setShiftKeyDown(false);
+            var fish = org.glavo.mcmod.pufferfish.test.CuttingAssertions.rankedFish(variant, 3);
+            fish.set(DataComponents.CUSTOM_NAME, Component.literal("Golem companion"));
+            var expected = fish.copy();
+            player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, fish);
+            helper.assertTrue(player.interactOn(golem, net.minecraft.world.InteractionHand.MAIN_HAND).consumesAction()
+                    && player.getMainHandItem().isEmpty(), "Golem did not equip the fish");
+            helper.assertTrue(ItemStack.matches(expected, golem.getItemBySlot(EquipmentSlot.HEAD))
+                    && PufferfishHeadgear.isWearing(golem), "Golem headgear lost data or effects");
+            var tag = new net.minecraft.nbt.CompoundTag();
+            golem.saveWithoutId(tag);
+            golem = EntityType.IRON_GOLEM.create(helper.getLevel());
+            golem.load(tag);
+            helper.assertTrue(ItemStack.matches(expected, golem.getItemBySlot(EquipmentSlot.HEAD)), "Reload lost headgear data");
+            player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new ItemStack(Items.PUFFERFISH));
+            player.interactOn(golem, net.minecraft.world.InteractionHand.MAIN_HAND);
+            helper.assertTrue(player.getMainHandItem().getCount() == 1
+                    && ItemStack.matches(expected, golem.getItemBySlot(EquipmentSlot.HEAD)), "Occupied headgear was overwritten");
+            player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+            player.setShiftKeyDown(true);
+            helper.assertTrue(player.interactOn(golem, net.minecraft.world.InteractionHand.MAIN_HAND).consumesAction()
+                    && golem.getItemBySlot(EquipmentSlot.HEAD).isEmpty()
+                    && ItemStack.matches(expected, player.getMainHandItem()), "Retrieval lost or duplicated headgear");
+        }
+        player.setShiftKeyDown(false);
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_INGOT, 2));
+        golem.setHealth(50);
+        player.interactOn(golem, net.minecraft.world.InteractionHand.MAIN_HAND);
+        helper.assertTrue(golem.getHealth() == 75 && player.getMainHandItem().getCount() == 1, "Headgear interaction blocked iron repair");
+        helper.succeed();
+    }
+
     private static List<DyeColor> colors() {
         var colors = new ArrayList<DyeColor>();
         colors.add(null);

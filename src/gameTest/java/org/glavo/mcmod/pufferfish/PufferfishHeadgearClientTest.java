@@ -42,6 +42,19 @@ public final class PufferfishHeadgearClientTest {
         verifyScopedVisibility(minecraft, context);
         verifyZombie(minecraft, context);
         verifyArmorStand(minecraft, context);
+        var dispatcher = minecraft.getEntityRenderDispatcher();
+        var camera = dispatcher.camera;
+        var previousPlayer = minecraft.player;
+        try {
+            dispatcher.camera = new net.minecraft.client.Camera();
+            minecraft.player = new net.minecraft.client.player.LocalPlayer(minecraft, level(minecraft),
+                    org.glavo.mcmod.pufferfish.test.ClientTestLevel.connection(minecraft),
+                    new net.minecraft.stats.StatsCounter(), new net.minecraft.client.ClientRecipeBook(), false, false);
+            verifyGolem(minecraft);
+        } finally {
+            dispatcher.camera = camera;
+            minecraft.player = previousPlayer;
+        }
         for (boolean slim : new boolean[] {false, true}) {
             var renderer = new PlayerRenderer(context, slim);
             var model = renderer.getModel();
@@ -234,6 +247,46 @@ public final class PufferfishHeadgearClientTest {
                 throw new IllegalStateException("Armor stand hand item incorrectly replaced its head");
             }
         }
+    }
+
+    private static void verifyGolem(Minecraft minecraft) {
+        var golem = net.minecraft.world.entity.EntityType.IRON_GOLEM.create(level(minecraft));
+        var renderer = (net.minecraft.client.renderer.entity.IronGolemRenderer) minecraft.getEntityRenderDispatcher().getRenderer(golem);
+        for (var variant : PufferfishVariant.ALL) {
+            golem.setItemSlot(EquipmentSlot.HEAD, variant.fish());
+            var capture = new CapturedVertices();
+            renderer.render(golem, 0, 0, new PoseStack(), capture, 15728880);
+            var texture = switch (variant.material()) {
+                case NORMAL -> variant.color() == null ? ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png")
+                        : PufferfishTextures.entity(variant.color());
+                case NETHERITE -> PufferfishTextures.netheriteEntity();
+                case HEAVY -> PufferfishTextures.heavyEntity();
+                default -> PufferfishTextures.materialEntity(PufferfishItems.materialName(golem.getItemBySlot(EquipmentSlot.HEAD)));
+            };
+            if (!capture.types.contains(RenderType.entityCutoutNoCull(texture))) {
+                throw new IllegalStateException("Registered golem renderer did not draw fish headgear: " + variant.fishName());
+            }
+        }
+        var layer = new org.glavo.mcmod.pufferfish.client.PufferfishGolemHeadLayer(renderer);
+        golem.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.PUFFERFISH));
+        var model = renderer.getModel();
+        model.setupAnim(golem, 0, 0, 0, 0, 0);
+        var capture = new CapturedVertices();
+        layer.render(new PoseStack(), capture, 15728880, golem, 0, 0, 0, 0, 0, 0);
+        if (capture.vertices < 100 || capture.maxY > -1.15F || capture.minY < -1.9F) {
+            throw new IllegalStateException("Golem fish was not seated above the head");
+        }
+        model.root().getChild("head").y += 2;
+        var moved = new CapturedVertices();
+        layer.render(new PoseStack(), moved, 15728880, golem, 0, 0, 0, 0, 0, 0);
+        model.root().getChild("head").y -= 2;
+        if (Math.abs(moved.minY - capture.minY - 0.125F) > 0.001F) {
+            throw new IllegalStateException("Golem headgear did not follow the head transform");
+        }
+        golem.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
+        capture = new CapturedVertices();
+        layer.render(new PoseStack(), capture, 15728880, golem, 0, 0, 0, 0, 0, 0);
+        if (capture.vertices != 0) throw new IllegalStateException("Removed golem headgear still rendered");
     }
 
     private static final class CapturedVertices implements MultiBufferSource, VertexConsumer {

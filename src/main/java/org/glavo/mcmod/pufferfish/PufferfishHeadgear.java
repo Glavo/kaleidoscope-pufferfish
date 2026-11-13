@@ -9,6 +9,13 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.animal.IronGolem;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.sounds.SoundEvents;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.enchantment.EnchantedItemInUse;
@@ -22,7 +29,7 @@ public final class PufferfishHeadgear {
 
     public static boolean isWearing(LivingEntity entity) {
         return ((entity instanceof Player player && !player.isSpectator())
-                || entity.getType() == EntityType.ZOMBIE)
+                || entity.getType() == EntityType.ZOMBIE || entity instanceof IronGolem)
                 && PufferfishItems.isPufferfish(entity.getItemBySlot(EquipmentSlot.HEAD));
     }
 
@@ -30,8 +37,36 @@ public final class PufferfishHeadgear {
         breathe(event.getEntity());
     }
 
-    public static void breatheZombie(EntityTickEvent.Post event) {
-        if (event.getEntity() instanceof Zombie zombie) breathe(zombie);
+    public static void breatheMob(EntityTickEvent.Post event) {
+        if (event.getEntity() instanceof Zombie || event.getEntity() instanceof IronGolem) {
+            breathe((LivingEntity) event.getEntity());
+        }
+    }
+
+    public static void interact(PlayerInteractEvent.EntityInteract event) {
+        var player = event.getEntity();
+        if (!(event.getTarget() instanceof IronGolem golem) || !golem.isAlive()
+                || player.isSpectator() || !player.mayBuild()) return;
+        var held = event.getItemStack();
+        var equipped = golem.getItemBySlot(EquipmentSlot.HEAD);
+        boolean equip = equipped.isEmpty() && PufferfishItems.isPufferfish(held);
+        boolean remove = held.isEmpty() && player.isShiftKeyDown() && PufferfishItems.isPufferfish(equipped)
+                && (player.hasInfiniteMaterials() || !EnchantmentHelper.has(equipped, EnchantmentEffectComponents.PREVENT_ARMOR_CHANGE));
+        if (!equip && !remove) return;
+        if (!player.level().isClientSide()) {
+            if (equip) {
+                golem.setItemSlot(EquipmentSlot.HEAD, held.copyWithCount(1));
+                golem.setDropChance(EquipmentSlot.HEAD, 2.0F);
+                held.consume(1, player);
+            } else {
+                golem.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
+                player.getInventory().add(equipped);
+                if (!equipped.isEmpty()) player.drop(equipped, false);
+            }
+            golem.playSound(SoundEvents.ARMOR_EQUIP_GENERIC.value(), 1, 1);
+        }
+        event.setCanceled(true);
+        event.setCancellationResult(InteractionResult.sidedSuccess(player.level().isClientSide()));
     }
 
     private static void breathe(LivingEntity wearer) {
