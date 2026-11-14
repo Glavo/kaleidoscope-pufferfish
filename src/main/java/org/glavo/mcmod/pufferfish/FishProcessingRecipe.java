@@ -18,6 +18,7 @@ import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.Unmodifiable;
 
 /// Data-driven table processing; only explicitly opted-in recipes transfer rank to skin outputs.
 public record FishProcessingRecipe(Ingredient ingredient, Ingredient tool, int strokes,
@@ -37,13 +38,20 @@ public record FishProcessingRecipe(Ingredient ingredient, Ingredient tool, int s
         @Override public int size() { return 2; }
     }
 
-    public List<ItemStack> process(ItemStack fish) {
-        return results.stream().map(result -> inheritSkinLevel
-                ? PufferfishSkinBlock.inheritLevel(fish, result.copy()) : result.copy()).toList();
+    /// Creates detached outputs, transferring rank only to eligible skins.
+    public @Unmodifiable List<ItemStack> process(ItemStack fish) {
+        return results.stream().map(result -> createResult(fish, result)).toList();
+    }
+
+    /// Copies one result and applies this recipe's rank inheritance policy.
+    private ItemStack createResult(ItemStack fish, ItemStack result) {
+        var copy = result.copy();
+        return inheritSkinLevel ? PufferfishSkinBlock.inheritLevel(fish, copy) : copy;
     }
 
     @Override public boolean matches(Input input, Level level) { return ingredient.test(input.fish()) && tool.test(input.tool()); }
-    @Override public ItemStack assemble(Input input, HolderLookup.Provider registries) { return process(input.fish()).getFirst(); }
+    /// Returns the primary output with the same rank inheritance as full processing.
+    @Override public ItemStack assemble(Input input, HolderLookup.Provider registries) { return createResult(input.fish(), results.getFirst()); }
     @Override public ItemStack getResultItem(HolderLookup.Provider registries) { return results.getFirst().copy(); }
     @Override public boolean canCraftInDimensions(int width, int height) { return true; }
     @Override public boolean isSpecial() { return true; }
@@ -51,9 +59,14 @@ public record FishProcessingRecipe(Ingredient ingredient, Ingredient tool, int s
     @Override public RecipeSerializer<?> getSerializer() { return PufferfishPlease.FISH_PROCESSING_RECIPE.get(); }
 
     public static final class Serializer implements RecipeSerializer<FishProcessingRecipe> {
+        /// Shares the data-pack format for recipe synchronization.
+        private static final StreamCodec<RegistryFriendlyByteBuf, FishProcessingRecipe> STREAM_CODEC =
+                ByteBufCodecs.fromCodecWithRegistries(CODEC.codec());
+
         @Override public MapCodec<FishProcessingRecipe> codec() { return CODEC; }
+        /// Reuses the registry-aware network codec across synchronizations.
         @Override public StreamCodec<RegistryFriendlyByteBuf, FishProcessingRecipe> streamCodec() {
-            return ByteBufCodecs.fromCodecWithRegistries(CODEC.codec());
+            return STREAM_CODEC;
         }
     }
 }

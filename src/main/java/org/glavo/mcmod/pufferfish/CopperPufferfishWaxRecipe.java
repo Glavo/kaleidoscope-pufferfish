@@ -15,13 +15,14 @@ import net.minecraft.world.level.Level;
 public final class CopperPufferfishWaxRecipe extends CustomRecipe {
     public CopperPufferfishWaxRecipe(CraftingBookCategory category) { super(category); }
 
+    /// Checks ingredients without copying or converting the fish or skin.
     @Override
     public boolean matches(CraftingInput input, Level level) {
-        return !assemble(input, level.registryAccess()).isEmpty();
+        return !findFish(input).isEmpty();
     }
 
-    @Override
-    public ItemStack assemble(CraftingInput input, HolderLookup.Provider registries) {
+    /// Borrows the unwaxed fish or skin from a valid honeycomb recipe.
+    private static ItemStack findFish(CraftingInput input) {
         ItemStack fish = ItemStack.EMPTY;
         boolean honeycomb = false;
         for (var stack : input.items()) {
@@ -32,10 +33,18 @@ public final class CopperPufferfishWaxRecipe extends CustomRecipe {
             else if (stack.is(Items.HONEYCOMB) && !honeycomb) honeycomb = true;
             else return ItemStack.EMPTY;
         }
-        if (fish.isEmpty() || !honeycomb) return ItemStack.EMPTY;
+        return honeycomb ? fish : ItemStack.EMPTY;
+    }
+
+    /// Waxes one fish or skin, preserving its components and leaving the ingredients untouched.
+    @Override
+    public ItemStack assemble(CraftingInput input, HolderLookup.Provider registries) {
+        var fish = findFish(input);
+        if (fish.isEmpty()) return ItemStack.EMPTY;
         int skin = CopperPufferfish.skinIndex(fish);
-        return skin >= 0 ? fish.copyWithCount(1).transmuteCopy(PufferfishBlocks.COPPER_SKINS.get(skin + 4).get().asItem())
-                : CopperPufferfish.convert(fish.copyWithCount(1), CopperPufferfish.index(fish) + 4);
+        var result = skin >= 0 ? PufferfishBlocks.COPPER_SKINS.get(skin + 4).get().asItem()
+                : PufferfishItems.COPPER_VARIANTS.get(CopperPufferfish.index(fish) + 4).get();
+        return fish.transmuteCopy(result, 1);
     }
 
     @Override

@@ -14,31 +14,42 @@ import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.Nullable;
 
 /// Turns a fish and one water bucket into a live fish bucket, consuming the original bucket.
 public final class PufferfishBucketRecipe extends CustomRecipe {
     public PufferfishBucketRecipe(CraftingBookCategory category) { super(category); }
 
+    /// Checks ingredients without creating or serializing a bucket.
     @Override
-    public boolean matches(CraftingInput input, Level level) { return !assemble(input, level.registryAccess()).isEmpty(); }
+    public boolean matches(CraftingInput input, Level level) { return !findFish(input).isEmpty(); }
 
-    @Override
-    public ItemStack assemble(CraftingInput input, HolderLookup.Provider registries) {
+    /// Borrows the fish from a valid fish-and-water-bucket input, or returns an empty stack.
+    private static ItemStack findFish(CraftingInput input) {
         ItemStack fish = ItemStack.EMPTY;
         boolean water = false;
         for (var stack : input.items()) {
             if (stack.isEmpty()) continue;
             if (stack.is(Items.WATER_BUCKET) && !water) water = true;
-            else if (PufferfishItems.isPufferfish(stack) && fish.isEmpty()) fish = stack.copyWithCount(1);
+            else if (PufferfishItems.isPufferfish(stack) && fish.isEmpty()) fish = stack;
             else return ItemStack.EMPTY;
         }
-        if (fish.isEmpty() || !water) return ItemStack.EMPTY;
-        var variant = PufferfishMobs.variant(fish);
+        return water ? fish : ItemStack.EMPTY;
+    }
+
+    /// Stores one fish's data in its matching bucket without modifying the ingredients.
+    @Override
+    public ItemStack assemble(CraftingInput input, HolderLookup.Provider registries) {
+        var fish = findFish(input);
+        if (fish.isEmpty()) return ItemStack.EMPTY;
+        @Nullable var variant = PufferfishMobs.variant(fish);
         var bucket = new ItemStack(variant == null ? Items.PUFFERFISH_BUCKET : variant.bucket().get());
-        var stored = fish;
+        var stored = fish.copyWithCount(1);
         CustomData.update(DataComponents.BUCKET_ENTITY_DATA, bucket, tag -> tag.put("Fish", stored.save(registries)));
-        if (variant == null && PufferfishColors.get(fish) != null) PufferfishColors.dye(bucket, PufferfishColors.get(fish));
-        if (fish.has(DataComponents.CUSTOM_NAME)) bucket.set(DataComponents.CUSTOM_NAME, fish.get(DataComponents.CUSTOM_NAME));
+        @Nullable var color = PufferfishColors.get(fish);
+        if (variant == null && color != null) PufferfishColors.dye(bucket, color);
+        @Nullable var name = fish.get(DataComponents.CUSTOM_NAME);
+        if (name != null) bucket.set(DataComponents.CUSTOM_NAME, name);
         return bucket;
     }
 

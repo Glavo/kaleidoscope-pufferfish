@@ -12,35 +12,50 @@ import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.NotNullByDefault;
+import org.jetbrains.annotations.Nullable;
 
 public class PufferfishDyeRecipe extends CustomRecipe {
     public PufferfishDyeRecipe(CraftingBookCategory category) {
         super(category);
     }
 
+    /// Checks ingredients without copying fish data or updating bucket NBT.
     @Override
     public boolean matches(CraftingInput input, Level level) {
-        return !assemble(input, level.registryAccess()).isEmpty();
+        return ingredients(input) != null;
     }
 
-    @Override
-    public ItemStack assemble(CraftingInput input, HolderLookup.Provider registries) {
+    /// A borrowed fish and the single dye selected for this craft.
+    @NotNullByDefault
+    private record Ingredients(ItemStack fish, DyeColor color) {}
+
+    /// Validates exactly one dyeable fish or bucket and one dye.
+    private static @Nullable Ingredients ingredients(CraftingInput input) {
         ItemStack fish = ItemStack.EMPTY;
-        DyeColor color = null;
-        for (int i = 0; i < input.size(); i++) {
-            ItemStack stack = input.getItem(i);
+        @Nullable DyeColor color = null;
+        for (var stack : input.items()) {
             if (stack.isEmpty()) {
                 continue;
             }
             if (PufferfishColors.supports(stack) && fish.isEmpty()) {
                 fish = stack;
-            } else if (DyeColor.getColor(stack) != null && color == null) {
+            } else if (color == null) {
                 color = DyeColor.getColor(stack);
+                if (color == null) return null;
             } else {
-                return ItemStack.EMPTY;
+                return null;
             }
         }
-        return fish.isEmpty() || color == null ? ItemStack.EMPTY : PufferfishColors.dye(fish.copyWithCount(1), color);
+        return fish.isEmpty() || color == null ? null : new Ingredients(fish, color);
+    }
+
+    /// Dyes a single copy, preserving custom names and bucket contents.
+    @Override
+    public ItemStack assemble(CraftingInput input, HolderLookup.Provider registries) {
+        @Nullable var ingredients = ingredients(input);
+        return ingredients == null ? ItemStack.EMPTY
+                : PufferfishColors.dye(ingredients.fish().copyWithCount(1), ingredients.color());
     }
 
     @Override

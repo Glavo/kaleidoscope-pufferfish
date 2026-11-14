@@ -196,6 +196,7 @@ public class PufferfishGameTests {
         helper.succeed();
     }
 
+    /// Dye crafting preserves fish and bucket data while rejecting extra or missing ingredients.
     @GameTest(template = "empty")
     public static void recipesPreserveDataAndDoNotDuplicateBuckets(GameTestHelper helper) {
         var manager = helper.getLevel().getRecipeManager();
@@ -230,7 +231,9 @@ public class PufferfishGameTests {
                 List.of(new ItemStack(Items.PUFFERFISH), new ItemStack(Items.PUFFERFISH), new ItemStack(Items.RED_DYE)),
                 List.of(new ItemStack(Items.PUFFERFISH), new ItemStack(Items.RED_DYE), new ItemStack(Items.BLUE_DYE)),
                 List.of(new ItemStack(Items.PUFFERFISH)))) {
-            helper.assertTrue(!recipe.matches(CraftingInput.of(input.size(), 1, input), helper.getLevel()), "Invalid recipe accepted");
+            var grid = CraftingInput.of(input.size(), 1, input);
+            helper.assertTrue(!recipe.matches(grid, helper.getLevel()) && recipe.assemble(grid, helper.getLevel().registryAccess()).isEmpty(),
+                    "Invalid dye ingredients matched or produced a result");
         }
         helper.succeed();
     }

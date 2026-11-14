@@ -70,14 +70,21 @@ public final class PufferfishMobGameTests {
         helper.succeed();
     }
 
+    /// Crafting stores exactly one fish, preserves its data, and consumes the original bucket.
     @GameTest(template = "empty")
     public static void bucketCraftingConsumesOneBucketAndPreservesFish(GameTestHelper helper) {
         var recipe = new PufferfishBucketRecipe(CraftingBookCategory.MISC);
         for (var variant : PufferfishMobs.VARIANTS.values()) {
-            var fish = new ItemStack(variant.fish().get());
+            var fish = new ItemStack(variant.fish().get(), 7);
             fish.set(DataComponents.CUSTOM_NAME, Component.literal("Crafted fish"));
-            var input = CraftingInput.of(2, 1, List.of(fish, new ItemStack(Items.WATER_BUCKET)));
+            var original = fish.copy();
+            var input = CraftingInput.of(3, 1, List.of(new ItemStack(Items.WATER_BUCKET), ItemStack.EMPTY, fish));
+            helper.assertTrue(recipe.matches(input, helper.getLevel()), "Valid fish bucket ingredients did not match");
             var result = recipe.assemble(input, helper.getLevel().registryAccess());
+            var stored = ItemStack.parseOptional(helper.getLevel().registryAccess(),
+                    result.get(DataComponents.BUCKET_ENTITY_DATA).copyTag().getCompound("Fish"));
+            helper.assertTrue(ItemStack.matches(stored, original.copyWithCount(1)) && ItemStack.matches(fish, original),
+                    "Bucket crafting changed its input or stored more than one fish");
             helper.assertTrue(result.is(variant.bucket().get()) && result.getHoverName().getString().equals("Crafted fish")
                     && recipe.getRemainingItems(input).stream().allMatch(ItemStack::isEmpty), "Fish bucket recipe duplicated a bucket or lost its name");
         }
@@ -85,8 +92,17 @@ public final class PufferfishMobGameTests {
             var input = CraftingInput.of(2, 1, List.of(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color), new ItemStack(Items.WATER_BUCKET)));
             helper.assertTrue(PufferfishColors.get(recipe.assemble(input, helper.getLevel().registryAccess())) == color, "Fish bucket recipe lost dye");
         }
-        helper.assertTrue(!recipe.matches(CraftingInput.of(2, 1, List.of(new ItemStack(PufferfishItems.RADIANT.get()), new ItemStack(Items.BUCKET))), helper.getLevel()),
-                "Empty buckets should not revive fish");
+        for (var stacks : List.of(
+                List.of(new ItemStack(Items.PUFFERFISH)),
+                List.of(new ItemStack(Items.WATER_BUCKET)),
+                List.of(new ItemStack(Items.PUFFERFISH), new ItemStack(Items.BUCKET)),
+                List.of(new ItemStack(Items.PUFFERFISH), new ItemStack(Items.PUFFERFISH), new ItemStack(Items.WATER_BUCKET)),
+                List.of(new ItemStack(Items.PUFFERFISH), new ItemStack(Items.WATER_BUCKET), new ItemStack(Items.WATER_BUCKET)),
+                List.of(new ItemStack(Items.PUFFERFISH), new ItemStack(Items.WATER_BUCKET), new ItemStack(Items.STICK)))) {
+            var input = CraftingInput.of(stacks.size(), 1, stacks);
+            helper.assertTrue(!recipe.matches(input, helper.getLevel()) && recipe.assemble(input, helper.getLevel().registryAccess()).isEmpty(),
+                    "Invalid bucket ingredients matched or produced a result");
+        }
         helper.succeed();
     }
 

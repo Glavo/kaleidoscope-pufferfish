@@ -156,6 +156,7 @@ public final class FishProcessingTableGameTests {
         return (FishProcessingTableBlockEntity) helper.getBlockEntity(pos);
     }
 
+    /// Processing and primary-output assembly share rank inheritance without mutating recipe templates.
     @GameTest(template = "empty")
     public static void processingRecipesPreserveOnlySkinRankForEveryVariant(GameTestHelper helper) {
         var recipes = helper.getLevel().getRecipeManager();
@@ -169,6 +170,9 @@ public final class FishProcessingTableGameTests {
             PufferfishSkinBlock.setLevel(expectedSkin, PufferfishLevel.LEVEL_10);
             helper.assertTrue(results.size() == 2 && ItemStack.matches(results.get(0), expectedSkin)
                     && ItemStack.matches(results.get(1), PufferfishItems.SASHIMI.toStack()), "Processing must preserve rank only on the matching skin");
+            var assembled = recipe.assemble(input, helper.getLevel().registryAccess());
+            helper.assertTrue(ItemStack.matches(assembled, expectedSkin), "Primary output lost its inherited skin rank");
+            assembled.setCount(30);
             results.getFirst().setCount(30);
             helper.assertTrue(recipe.process(fish).getFirst().getCount() == 1, "Processing mutated the shared recipe result");
             helper.assertTrue(!recipe.matches(new FishProcessingRecipe.Input(fish, new ItemStack(Items.STICK)), helper.getLevel()), "Invalid tool matched");

@@ -33,6 +33,7 @@ import org.glavo.mcmod.pufferfish.test.TestEffects;
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class CopperPufferfishGameTests {
+    /// Skin waxing preserves the oxidation stage and metadata without consuming the input during lookup.
     @GameTest(template = "empty")
     public static void copperSkinsPreserveStagesAndWaxInCrafting(GameTestHelper helper) {
         for (int i = 0; i < 8; i++) {
@@ -40,16 +41,18 @@ public final class CopperPufferfishGameTests {
             var fish = new ItemStack(PufferfishItems.COPPER_VARIANTS.get(i).get());
             helper.assertTrue(PufferfishBlocks.skinForFish(fish) == skin, "Processing lost the copper stage");
             helper.assertTrue(skin.defaultBlockState().isRandomlyTicking() == (i < 3), "Incorrect skin random ticking");
-            var stack = new ItemStack(skin);
+            var stack = new ItemStack(skin, 8);
             stack.set(DataComponents.CUSTOM_NAME, Component.literal("Skin test"));
+            var original = stack.copy();
             var input = CraftingInput.of(2, 1, List.of(stack, new ItemStack(Items.HONEYCOMB)));
             var recipe = helper.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel());
             helper.assertTrue(recipe.isPresent() == (i < 4), "Unexpected skin waxing recipe");
             if (i < 4) {
                 var result = recipe.orElseThrow().value().assemble(input, helper.getLevel().registryAccess());
-                helper.assertTrue(CopperPufferfish.skinIndex(result) == i + 4
+                helper.assertTrue(CopperPufferfish.skinIndex(result) == i + 4 && result.getCount() == 1
                         && result.get(DataComponents.CUSTOM_NAME).equals(stack.get(DataComponents.CUSTOM_NAME)), "Waxing lost skin data");
             }
+            helper.assertTrue(ItemStack.matches(stack, original), "Wax recipe lookup or assembly mutated its input");
             var drops = net.minecraft.world.level.block.Block.getDrops(skin.defaultBlockState(), helper.getLevel(),
                     helper.absolutePos(new BlockPos(1, 2, 1)), null);
             helper.assertTrue(drops.size() == 1 && drops.getFirst().is(skin.asItem()), "Skin dropped a different copper stage");
