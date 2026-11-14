@@ -23,6 +23,7 @@ import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.PowderSnowBlock;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.glavo.mcmod.pufferfish.test.TestEffects;
@@ -30,6 +31,36 @@ import org.glavo.mcmod.pufferfish.test.TestEffects;
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishArmorGameTests {
+
+    /// Each skin armor piece prevents freezing; only boots support powder snow walking.
+    @GameTest(template = "empty")
+    public static void skinArmorProtectsAgainstPowderSnow(GameTestHelper helper) {
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        helper.assertTrue(player.canFreeze() && !PowderSnowBlock.canEntityWalkOnPowderSnow(player),
+                "Unequipped player unexpectedly resisted powder snow");
+        for (var entry : PufferfishArmor.VARIANTS.entrySet()) {
+            var armor = entry.getValue().get();
+            var slot = armor.getEquipmentSlot();
+            player.setItemSlot(slot, new ItemStack(armor));
+            helper.assertTrue(!player.canFreeze(), "Skin armor did not prevent freezing: " + entry.getKey());
+            helper.assertTrue(PowderSnowBlock.canEntityWalkOnPowderSnow(player) == (slot == EquipmentSlot.FEET),
+                    "Powder snow walking did not match the equipped slot: " + entry.getKey());
+            player.setItemSlot(slot, ItemStack.EMPTY);
+        }
+        helper.assertTrue(player.canFreeze() && !PowderSnowBlock.canEntityWalkOnPowderSnow(player),
+                "Removing armor retained powder snow protection");
+
+        var cat = java.util.Objects.requireNonNull(EntityType.CAT.create(helper.getLevel()));
+        helper.assertTrue(cat.canFreeze(), "Unarmored cat unexpectedly resisted freezing");
+        for (var entry : PufferfishCatArmor.VARIANTS.entrySet()) {
+            cat.setBodyArmorItem(entry.getValue().toStack());
+            helper.assertTrue(!cat.canFreeze(), "Cat armor did not prevent freezing: " + entry.getKey());
+            helper.assertTrue(!PowderSnowBlock.canEntityWalkOnPowderSnow(cat), "Cat armor granted powder snow walking");
+        }
+        cat.setBodyArmorItem(ItemStack.EMPTY);
+        helper.assertTrue(cat.canFreeze(), "Removing cat armor retained freezing immunity");
+        helper.succeed();
+    }
 
     @GameTest(template = "empty")
     public static void mixedArmorUsesStrongestUnwaxedPoisonAfterThorns(GameTestHelper helper) {

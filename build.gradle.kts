@@ -391,6 +391,14 @@ val generateArmorResources = tasks.register<Sync>("generateArmorResources") {
             rename { "${slot}_armor.json" }
         }
     }
+    from("src/main/templates/armor/tag.json") {
+        expand("values" to JsonOutput.toJson(allSkinVariants.flatMap { color ->
+            val prefix = if (color.isEmpty()) "" else "${color}_"
+            (patterns.keys + "cat_armor").map { "$modId:${prefix}pufferfish_skin_$it" }
+        }))
+        into("data/minecraft/tags/item")
+        rename { "freeze_immune_wearables.json" }
+    }
 }
 
 val generateBoatResources = tasks.register<Sync>("generateBoatResources") {

@@ -18,6 +18,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.enchantment.EnchantedItemInUse;
@@ -59,15 +60,24 @@ public final class PufferfishArmor {
                 int durability = kind == PufferfishMaterial.HEAVY ? (type.getDurability(37) * 3 + 1) / 2 : type.getDurability(5);
                 var properties = new Item.Properties().durability(durability);
                 if (kind.fireResistant()) properties.fireResistant();
-                if (kind == PufferfishMaterial.HEAVY) return variant.bind(new ArmorItem(material, type, properties) {
-                    private final ItemAttributeModifiers modifiers = super.getDefaultAttributeModifiers().withModifierAdded(
+                return variant.bind(new ArmorItem(material, type, properties) {
+                    /// Heavy armor slows the wearer; other variants retain their material attributes.
+                    private final ItemAttributeModifiers modifiers = kind == PufferfishMaterial.HEAVY
+                            ? super.getDefaultAttributeModifiers().withModifierAdded(
                             Attributes.MOVEMENT_SPEED, new AttributeModifier(PufferfishPlease.id(itemName + "_weight"),
-                                    -0.10, AttributeModifier.Operation.ADD_MULTIPLIED_BASE), EquipmentSlotGroup.bySlot(type.getSlot()));
+                                    -0.10, AttributeModifier.Operation.ADD_MULTIPLIED_BASE), EquipmentSlotGroup.bySlot(type.getSlot()))
+                            : super.getDefaultAttributeModifiers();
 
+                    /// Returns the armor attributes, including any weight penalty.
                     @Override
                     public ItemAttributeModifiers getDefaultAttributeModifiers() { return modifiers; }
+
+                    /// Skin boots support walking on powder snow like vanilla leather boots.
+                    @Override
+                    public boolean canWalkOnPowderedSnow(ItemStack stack, LivingEntity wearer) {
+                        return type == Type.BOOTS;
+                    }
                 });
-                return variant.bind(new ArmorItem(material, type, properties));
             }));
         }
     }
