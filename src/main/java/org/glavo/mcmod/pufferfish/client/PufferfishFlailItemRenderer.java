@@ -140,19 +140,25 @@ public final class PufferfishFlailItemRenderer extends BlockEntityWithoutLevelRe
     /// Keeps the face upright and large enough to read in a 16-pixel inventory slot.
     private void renderIcon(ItemStack stack, PoseStack pose, MultiBufferSource buffers, int light, int overlay) {
         pose.pushPose();
-        pose.translate(0.20, 0.23, 0.5);
-        pose.mulPose(Axis.ZP.rotationDegrees(-35));
+        pose.translate(0.18, 0.30, 0.5);
+        pose.mulPose(Axis.ZP.rotationDegrees(-15));
         model.renderGrip(stack, pose, buffers, light, overlay);
         pose.popPose();
         pose.pushPose();
-        pose.translate(0.332, 0.418, 0.5);
-        model.renderChain(stack, new Vec3(0.18, 0.13, 0), 0, pose, buffers, light);
+        pose.translate(0.232, 0.493, 0.5);
+        var chain = new Vec3(0.258, 0.107, 0);
+        var direction = chain.normalize();
+        // Show both link planes and keep them legible at native inventory resolution.
+        pose.mulPose(new Quaternionf().rotationAxis((float) Math.PI / 4,
+                (float) direction.x, (float) direction.y, (float) direction.z));
+        pose.scale(1.75F, 1.75F, 1.75F);
+        model.renderChain(stack, chain.scale(1 / 1.75), 0, pose, buffers, light);
         pose.popPose();
         pose.pushPose();
-        pose.translate(0.65, 0.65, 0.5);
-        pose.mulPose(Axis.YP.rotationDegrees(-15));
+        pose.translate(0.70, 0.68, 0.5);
+        pose.mulPose(Axis.YP.rotationDegrees(-22));
         pose.mulPose(Axis.XP.rotationDegrees(10));
-        pose.scale(1.1F, 1.1F, 1.1F);
+        pose.scale(0.92F, 0.92F, 0.92F);
         model.renderHead(stack, pose, buffers, light, overlay, 0, 0, 1);
         pose.popPose();
     }

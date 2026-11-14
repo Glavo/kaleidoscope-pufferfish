@@ -28,9 +28,11 @@ public final class PufferfishFlailModel {
     /// The original fish texture used by undyed flails.
     private static final ResourceLocation FISH_TEXTURE = ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png");
     /// The metal texture used by the chain's solid geometry.
-    private static final ResourceLocation CHAIN_TEXTURE = ResourceLocation.withDefaultNamespace("textures/block/iron_block.png");
-    private static final ResourceLocation NETHERITE_TEXTURE = ResourceLocation.withDefaultNamespace("textures/block/netherite_block.png");
-    private static final ResourceLocation GRIP_TEXTURE = ResourceLocation.withDefaultNamespace("textures/block/stripped_dark_oak_log.png");
+    private static final ResourceLocation CHAIN_TEXTURE = PufferfishPlease.id("textures/entity/flail/iron.png");
+    /// Dark alloy fittings with worn edges for reinforced flails.
+    private static final ResourceLocation NETHERITE_TEXTURE = PufferfishPlease.id("textures/entity/flail/netherite.png");
+    /// Leather wraps shared by the held model and inventory icon.
+    private static final ResourceLocation GRIP_TEXTURE = PufferfishPlease.id("textures/entity/flail/grip.png");
     /// The inflated head model, replaced when resource reload creates a new renderer.
     private final DeflatingPufferfishModel<Entity> fish;
     /// A rectangular chain link centered on its local origin.
@@ -43,10 +45,10 @@ public final class PufferfishFlailModel {
         fish = new DeflatingPufferfishModel<>(Minecraft.getInstance().getEntityModels());
         var mesh = new MeshDefinition();
         mesh.getRoot().addOrReplaceChild("link", CubeListBuilder.create()
-                .texOffs(2, 2).addBox(-0.5F, -1, -0.1F, 0.2F, 2, 0.2F)
-                .texOffs(2, 2).addBox(0.3F, -1, -0.1F, 0.2F, 2, 0.2F)
+                .texOffs(0, 2).addBox(-0.5F, -1, -0.1F, 0.2F, 2, 0.2F)
+                .texOffs(6, 7).addBox(0.3F, -1, -0.1F, 0.2F, 2, 0.2F)
                 .texOffs(2, 2).addBox(-0.3F, -1, -0.1F, 0.6F, 0.2F, 0.2F)
-                .texOffs(2, 2).addBox(-0.3F, 0.8F, -0.1F, 0.6F, 0.2F, 0.2F), PartPose.ZERO);
+                .texOffs(2, 7).addBox(-0.3F, 0.8F, -0.1F, 0.6F, 0.2F, 0.2F), PartPose.ZERO);
         link = LayerDefinition.create(mesh, 16, 16).bakeRoot();
         var handle = new MeshDefinition();
         handle.getRoot().addOrReplaceChild("grip", CubeListBuilder.create()
@@ -54,8 +56,8 @@ public final class PufferfishFlailModel {
         grip = LayerDefinition.create(handle, 16, 16).bakeRoot();
         var metal = new MeshDefinition();
         metal.getRoot().addOrReplaceChild("bands", CubeListBuilder.create()
-                .texOffs(2, 2).addBox(-1.1F, -4.2F, -1.1F, 2.2F, 0.8F, 2.2F)
-                .texOffs(2, 2).addBox(-1.1F, 2.4F, -1.1F, 2.2F, 0.8F, 2.2F), PartPose.ZERO);
+                .texOffs(0, 0).addBox(-1.1F, -4.2F, -1.1F, 2.2F, 0.8F, 2.2F)
+                .texOffs(0, 0).addBox(-1.1F, 2.4F, -1.1F, 2.2F, 0.8F, 2.2F), PartPose.ZERO);
         bands = LayerDefinition.create(metal, 16, 16).bakeRoot();
     }
 

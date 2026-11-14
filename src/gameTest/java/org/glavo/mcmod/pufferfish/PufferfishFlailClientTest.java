@@ -212,7 +212,7 @@ public final class PufferfishFlailClientTest {
             }
             vertices++;
             if (tetherEnd != null && currentType == RenderType.entityCutoutNoCull(
-                    ResourceLocation.withDefaultNamespace("textures/block/iron_block.png"))) {
+                    PufferfishPlease.id("textures/entity/flail/iron.png"))) {
                 var vertex = new Vec3(x, y, z);
                 var projection = tetherEnd.scale(vertex.dot(tetherEnd) / tetherEnd.lengthSqr());
                 tetherDeviation = Math.max(tetherDeviation, vertex.distanceTo(projection));
