@@ -73,10 +73,6 @@ public final class PufferfishSpriteSource implements SpriteSource {
         addDish(manager, output, false);
         addDish(manager, output, true);
         addZosui(manager, output);
-        var pearlTexture = PufferfishPlease.id("item/ancient_pufferfish_pearl");
-        var pearlReplacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(pearlTexture));
-        if (pearlReplacement.isPresent()) output.add(pearlTexture, pearlReplacement.get());
-        else output.add(pearlTexture, loader -> AncientPufferfishPearlTexture.create(pearlTexture));
         var aspicTexture = PufferfishPlease.id("block/pufferfish_aspic");
         var aspicReplacement = manager.getResource(TEXTURE_ID_CONVERTER.idToFile(aspicTexture));
         if (aspicReplacement.isPresent()) output.add(aspicTexture, aspicReplacement.get());
