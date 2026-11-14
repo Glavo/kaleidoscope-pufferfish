@@ -86,7 +86,6 @@ public final class PufferfishMeleeGameTests {
     @GameTest(template = "empty")
     public static void meleeEnchantmentsRespectArmorAndFlatDensity(GameTestHelper helper) {
         for (boolean netherite : new boolean[] {false, true}) {
-            float baseline = 0;
             for (var key : List.of(Enchantments.DENSITY, Enchantments.BREACH)) {
                 int max = key == Enchantments.DENSITY ? 5 : 4;
                 float previous = 0;
@@ -99,7 +98,6 @@ public final class PufferfishMeleeGameTests {
                     melee.getAttribute(Attributes.ARMOR_TOUGHNESS).setBaseValue(8);
                     player.attack(melee);
                     float damage = 20 - melee.getHealth();
-                    if (rank == 0) baseline = damage;
                     if (key == Enchantments.DENSITY) {
                         float base = (netherite ? 6 : 1) + (rank == 0 ? 0 : 0.5F + 0.5F * rank);
                         float expected = base * (1 - (20 - base / 4) / 25);
@@ -115,6 +113,7 @@ public final class PufferfishMeleeGameTests {
         helper.succeed();
     }
 
+    /// Partial recharge reduces actual hit damage, and offhand fish grant neither attributes nor poison.
     @GameTest(template = "empty")
     public static void cooldownMatchesWeaponSpeedAndOffhandDoesNotGrantMeleeBonuses(GameTestHelper helper) {
         var player = player(helper, new ItemStack(Items.PUFFERFISH));
@@ -126,7 +125,7 @@ public final class PufferfishMeleeGameTests {
         var target = target(helper);
         player.setOnGround(true);
         player.attack(target);
-        helper.assertTrue(target.getHealth() > 18 && target.getHealth() < 20, "Uncharged attacks ignored damage scaling");
+        helper.assertTrue(target.getHealth() > 19 && target.getHealth() < 20, "Partial recharge did not reduce the one-point base damage");
         target.discard();
         player.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(PufferfishItems.NETHERITE.get()));
         player.tick();

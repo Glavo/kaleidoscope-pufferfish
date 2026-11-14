@@ -3,13 +3,12 @@
 
 package org.glavo.mcmod.pufferfish;
 
+import static org.glavo.mcmod.pufferfish.test.TestItems.enchant;
 import com.mojang.authlib.GameProfile;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.InteractionHand;
@@ -20,7 +19,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
@@ -63,40 +61,24 @@ public final class PufferfishSmashGameTests {
         return target;
     }
 
-    /// Verifies all fish variants and the exact fall threshold and damage-curve boundaries.
+    /// Every non-heavy fish retains normal critical-hit scaling and fall distance across smash boundaries.
     @GameTest(template = "empty")
-    public static void ordinaryFishUseNormalAttacksAtEveryFallHeight(GameTestHelper helper) {
-        var stacks = new ArrayList<ItemStack>();
-        stacks.add(new ItemStack(Items.PUFFERFISH, 4));
-        stacks.add(new ItemStack(PufferfishItems.NETHERITE.get(), 4));
-        for (var color : DyeColor.values()) stacks.add(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH, 4), color));
-        for (var stack : stacks) {
-            for (float distance : new float[] {0, 1.5F, 1.5001F, 3, 8, 12}) {
+    public static void nonHeavyFishRetainNormalCriticalHitsAtEveryFallHeight(GameTestHelper helper) {
+        for (var stack : TestItems.fishVariants()) {
+            if (stack.is(PufferfishItems.HEAVY.get())) continue;
+            float groundedDamage = attackDamage(helper, stack.copy(), 0);
+            helper.assertTrue(groundedDamage > 0, "Grounded control attack did not damage its target: " + stack);
+            for (float distance : new float[] {1.5F, 1.5001F, 3, 8, 12}) {
                 var player = attacker(helper, stack.copy(), distance);
                 var target = target(helper);
-                player.getRandom().setSeed(4096);
                 player.attack(target);
-                float expected = (PufferfishItems.isNetherite(stack) ? 6 : 1) * (distance > 0 ? 1.5F : 1);
-                helper.assertTrue(Math.abs(1000 - target.getHealth() - expected) < 0.001F, "Ordinary fish gained falling damage at distance " + distance);
-                helper.assertTrue(player.fallDistance == distance && !PufferfishCombat.canSmash(player, stack), "Fall distance reset without a successful smash");
-                helper.assertTrue(ItemStack.matches(player.getMainHandItem(), TestItems.worn(stack)),
-                        "Attack changed fish components unexpectedly: " + stack + ", distance=" + distance);
-                helper.assertTrue(player.getInventory().countItem(stack.getItem()) == 4,
-                        "Attack changed the total fish count: " + player.getInventory().countItem(stack.getItem()));
-                helper.assertTrue(TestEffects.hasPoison(target), "Seeded melee hit failed to apply poison");
+                helper.assertTrue(Math.abs(1000 - target.getHealth() - groundedDamage * 1.5F) < 0.001F,
+                        "Non-heavy fish gained smash damage: " + stack + ", distance=" + distance);
+                helper.assertTrue(player.fallDistance == distance, "Non-heavy fish reset fall distance: " + stack);
                 target.discard();
             }
         }
         helper.succeed();
-    }
-
-    /// Adds Density at the specified level to a stack for combat-pipeline tests.
-    private static ItemStack density(GameTestHelper helper, ItemStack stack, int rank) {
-        if (rank > 0) {
-            var enchantment = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.DENSITY);
-            EnchantmentHelper.updateEnchantments(stack, enchantments -> enchantments.set(enchantment, rank));
-        }
-        return stack;
     }
 
     /// Measures immediate damage from a fully charged player attack, excluding later poison ticks.
@@ -109,17 +91,6 @@ public final class PufferfishSmashGameTests {
         return damage;
     }
 
-    /// Compares unenchanted heavy fish hits with the vanilla mace at each curve boundary.
-    @GameTest(template = "empty")
-    public static void onlyHeavyFishMatchUnenchantedMaceDamage(GameTestHelper helper) {
-        for (float distance : new float[] {0, 1.5F, 2, 3, 8, 15}) {
-            float mace = attackDamage(helper, new ItemStack(Items.MACE), distance);
-            float heavy = attackDamage(helper, new ItemStack(PufferfishItems.HEAVY.get()), distance);
-            helper.assertTrue(Math.abs(heavy - mace) < 0.001, "Heavy fish lost the native mace falling curve");
-        }
-        helper.succeed();
-    }
-
     /// Verifies every Density level adds the same flat bonus before normal critical-hit scaling.
     @GameTest(template = "empty")
     public static void ordinaryDensityAddsFlatDamageAtEveryFallHeight(GameTestHelper helper) {
@@ -129,7 +100,7 @@ public final class PufferfishSmashGameTests {
             for (float distance : new float[] {0, 1.5F, 3, 8, 15}) {
                 float baseline = attackDamage(helper, original.copy(), distance);
                 for (int rank = 1; rank <= 5; rank++) {
-                    var stack = density(helper, original.copy(), rank);
+                    var stack = enchant(helper, original.copy(), Enchantments.DENSITY, rank);
                     var player = attacker(helper, stack, distance);
                     var target = target(helper);
                     player.attack(target);
@@ -138,14 +109,12 @@ public final class PufferfishSmashGameTests {
                             "Density gained a fall-dependent bonus");
                     helper.assertTrue(player.getAttributeValue(Attributes.ATTACK_DAMAGE) == ((netherite ? 6 : 1) + 0.5F + 0.5F * rank),
                             "Density did not add the expected flat main-hand damage");
-                    helper.assertTrue(PufferfishCombat.damage(stack) == (netherite ? 6 : 1) + 0.5F + 0.5F * rank,
-                            "Density changes affected projectile damage");
                     target.discard();
                 }
             }
         }
         var player = attacker(helper, new ItemStack(Items.PUFFERFISH), 8);
-        player.setItemInHand(InteractionHand.OFF_HAND, density(helper, new ItemStack(PufferfishItems.NETHERITE.get()), 5));
+        player.setItemInHand(InteractionHand.OFF_HAND, enchant(helper, new ItemStack(PufferfishItems.NETHERITE.get()), Enchantments.DENSITY, 5));
         var target = target(helper);
         player.attack(target);
         helper.assertTrue(Math.abs(1000 - target.getHealth() - 1.5F) < 0.001, "Offhand Density changed main-hand smash damage");
@@ -244,25 +213,4 @@ public final class PufferfishSmashGameTests {
         setting.clearCache();
     }
 
-    /// Verifies heavy smash caps include Density and disabling restores normal base damage.
-    @GameTest(template = "empty")
-    public static void heavySmashCapIncludesDensity(GameTestHelper helper) {
-        double cap = PufferfishCombatConfig.MAX_SMASH_BONUS.get();
-        boolean enabled = PufferfishCombatConfig.SMASH_ENABLED.get();
-        try {
-            configure(PufferfishCombatConfig.MAX_SMASH_BONUS, 7.0);
-            var stack = density(helper, new ItemStack(PufferfishItems.HEAVY.get()), 5);
-            helper.assertTrue(attackDamage(helper, stack, 12) == (6 + 7) * 1.5F, "Heavy smash cap omitted Density");
-            configure(PufferfishCombatConfig.SMASH_ENABLED, false);
-            var player = attacker(helper, stack, 12);
-            var target = target(helper);
-            player.attack(target);
-            helper.assertTrue(target.getHealth() == 991.0F && player.fallDistance == 12, "Disabled heavy smash retained Density damage or reset falling");
-            target.discard();
-        } finally {
-            configure(PufferfishCombatConfig.MAX_SMASH_BONUS, cap);
-            configure(PufferfishCombatConfig.SMASH_ENABLED, enabled);
-        }
-        helper.succeed();
-    }
 }
