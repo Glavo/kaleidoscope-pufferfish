@@ -58,7 +58,7 @@ public final class HeavyPufferfishGameTests {
         var buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(), level.registryAccess());
         try {
             var codec = PufferfishPlease.HEAVY_UPGRADE.get().streamCodec();
-            codec.encode(buffer, (HeavyPufferfishUpgradeRecipe) recipe);
+            codec.encode(buffer, (PufferfishUpgradeRecipe) recipe);
             var synced = codec.decode(buffer);
             helper.assertTrue(!synced.isIncomplete() && synced.matches(input, level)
                     && ItemStack.matches(output, synced.assemble(input, level.registryAccess())), "Upgrade recipe failed network synchronization");

@@ -38,6 +38,7 @@ public final class PufferfishTextures implements ResourceManagerReloadListener {
         return ENTITY_TEXTURES.computeIfAbsent(color, PufferfishTextures::loadEntityTexture);
     }
 
+    /// Chooses the body texture consistently across wearable, placed, and projectile fish.
     public static ResourceLocation entity(ItemStack fish) {
         if (PufferfishItems.isHeavy(fish)) return heavyEntity();
         if (PufferfishItems.isNetherite(fish)) return netheriteEntity();

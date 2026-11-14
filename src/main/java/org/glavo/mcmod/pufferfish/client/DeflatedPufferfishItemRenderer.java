@@ -14,10 +14,12 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import org.glavo.mcmod.pufferfish.PufferfishDurability;
 import org.glavo.mcmod.pufferfish.PufferfishItems;
+import org.jetbrains.annotations.Nullable;
 
 /// Shows the same puff state in inventory, held items, dropped items, and projectiles.
 public final class DeflatedPufferfishItemRenderer extends BlockEntityWithoutLevelRenderer implements IClientItemExtensions {
-    private PufferfishFlailModel model;
+    /// Rebuilt lazily after resource reloads.
+    private @Nullable PufferfishFlailModel model;
 
     public DeflatedPufferfishItemRenderer() {
         super(Minecraft.getInstance().getBlockEntityRenderDispatcher(), Minecraft.getInstance().getEntityModels());
@@ -31,13 +33,10 @@ public final class DeflatedPufferfishItemRenderer extends BlockEntityWithoutLeve
         if (model == null) model = new PufferfishFlailModel();
         pose.pushPose();
         pose.translate(0.5, 0.5, 0.5);
-        float scale = 1.25F;
         if (context == ItemDisplayContext.GUI) {
-            scale = switch (PufferfishDurability.deflationStage(stack)) { case 1 -> 1.55F; case 2 -> 1.85F; default -> 2.5F; };
+            float scale = switch (PufferfishDurability.deflationStage(stack)) { case 1 -> 1.55F; case 2 -> 1.85F; default -> 2.5F; };
             pose.mulPose(Axis.XP.rotationDegrees(15));
             pose.mulPose(Axis.YP.rotationDegrees(25));
-        }
-        if (context == ItemDisplayContext.GUI) {
             pose.pushPose();
             pose.scale(scale, scale, scale);
             model.renderBody(stack, pose, buffers, light, overlay, 0, 0, 1);
@@ -48,7 +47,7 @@ public final class DeflatedPufferfishItemRenderer extends BlockEntityWithoutLeve
                 RadiantPufferfishVisuals.renderCentered(pose, buffers, overlay);
             }
         } else {
-            pose.scale(scale, scale, scale);
+            pose.scale(1.25F, 1.25F, 1.25F);
             model.renderHead(stack, pose, buffers, light, overlay, 0);
         }
         pose.popPose();

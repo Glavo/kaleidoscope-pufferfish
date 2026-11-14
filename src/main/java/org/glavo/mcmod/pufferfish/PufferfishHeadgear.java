@@ -37,11 +37,13 @@ public final class PufferfishHeadgear {
         }
     }
 
+    /// Refreshes air breathing and the radiant variant's night vision for eligible wearers.
     private static void breathe(LivingEntity wearer) {
-        if (!wearer.level().isClientSide() && isWearing(wearer) && wearer.getItemBySlot(EquipmentSlot.HEAD).is(PufferfishItems.RADIANT.get())) {
+        if (wearer.level().isClientSide() || !isWearing(wearer)) return;
+        if (wearer.getItemBySlot(EquipmentSlot.HEAD).is(PufferfishItems.RADIANT.get())) {
             wearer.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 300, 0, false, false, true));
         }
-        if (!wearer.level().isClientSide() && isWearing(wearer) && !wearer.isEyeInFluid(FluidTags.WATER)) {
+        if (!wearer.isEyeInFluid(FluidTags.WATER)) {
             wearer.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 200, 0, false, false, true));
         }
     }

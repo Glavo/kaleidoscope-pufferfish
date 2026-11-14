@@ -13,18 +13,14 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.event.RenderHandEvent;
-import org.glavo.mcmod.pufferfish.PufferfishColors;
-import org.glavo.mcmod.pufferfish.PufferfishItems;
 
 public final class PufferfishGloveRenderer {
-    private static final ResourceLocation ORIGINAL = ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png");
     private static PufferfishGloveRenderer firstPerson;
     private final DeflatingPufferfishModel<LivingEntity> model = new DeflatingPufferfishModel<>(
             Minecraft.getInstance().getEntityModels());
@@ -51,11 +47,7 @@ public final class PufferfishGloveRenderer {
         float scale = 0.75F * org.glavo.mcmod.pufferfish.PufferfishSize.equipmentScale(stack);
         pose.scale(scale, scale, scale);
         pose.translate(0, -18.0F / 16, 0);
-        var color = PufferfishColors.get(stack);
-        var texture = PufferfishItems.isHeavy(stack) ? PufferfishTextures.heavyEntity()
-                : PufferfishItems.isNetherite(stack) ? PufferfishTextures.netheriteEntity()
-                : PufferfishItems.materialName(stack) != null ? PufferfishTextures.materialEntity(PufferfishItems.materialName(stack))
-                : color == null ? ORIGINAL : PufferfishTextures.entity(color);
+        var texture = PufferfishTextures.entity(stack);
         model.prepare(stack);
         model.setupAnim(player, 0, 0, age, 0, 0);
         model.renderToBuffer(pose, ItemRenderer.getFoilBufferDirect(buffers, RenderType.entityCutoutNoCull(texture),

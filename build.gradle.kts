@@ -142,6 +142,7 @@ dependencies {
     val create = "maven.modrinth:create:${providers.gradleProperty("create_version").get()}"
     val jade = "maven.modrinth:jade:${providers.gradleProperty("jade_version").get()}"
 
+    compileOnly("org.jetbrains:annotations:26.1.0")
     compileOnly(cookery)
     compileOnly(chineseFood)
     compileOnly(farmersDelight)

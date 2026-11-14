@@ -11,14 +11,11 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import org.glavo.mcmod.pufferfish.PlacedPufferfishBlock;
 import org.glavo.mcmod.pufferfish.PlacedPufferfishBlockEntity;
-import org.glavo.mcmod.pufferfish.PufferfishColors;
-import org.glavo.mcmod.pufferfish.PufferfishItems;
 
 public final class PlacedPufferfishRenderer implements BlockEntityRenderer<PlacedPufferfishBlockEntity> {
     private final DeflatingPufferfishModel<Entity> model;
@@ -42,13 +39,7 @@ public final class PlacedPufferfishRenderer implements BlockEntityRenderer<Place
 
     public void render(ItemStack stack, BlockState state, PoseStack pose, MultiBufferSource buffers, int light, int overlay) {
         if (stack.isEmpty()) return;
-        var color = PufferfishColors.get(stack);
-        var material = PufferfishItems.materialName(stack);
-        var texture = PufferfishItems.isHeavy(stack) ? PufferfishTextures.heavyEntity()
-                : PufferfishItems.isNetherite(stack) ? PufferfishTextures.netheriteEntity()
-                : material != null ? PufferfishTextures.materialEntity(material)
-                : color != null ? PufferfishTextures.entity(color)
-                : ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png");
+        var texture = PufferfishTextures.entity(stack);
         pose.pushPose();
         pose.translate(0.5, 0, 0.5);
         float scale = org.glavo.mcmod.pufferfish.PufferfishSize.scale(stack);

@@ -26,7 +26,6 @@ import org.joml.Quaternionf;
 /// Renders a colored pufferfish head and alternating metal chain links.
 public final class PufferfishFlailModel {
     /// The original fish texture used by undyed flails.
-    private static final ResourceLocation FISH_TEXTURE = ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png");
     /// The metal texture used by the chain's solid geometry.
     private static final ResourceLocation CHAIN_TEXTURE = PufferfishPlease.id("textures/entity/flail/iron.png");
     /// Dark alloy fittings with worn edges for reinforced flails.
@@ -101,11 +100,7 @@ public final class PufferfishFlailModel {
     public void renderBody(ItemStack stack, PoseStack pose, MultiBufferSource buffers, int light, int overlay, float age, float pressure, float scale) {
         fish.prepare(stack, pressure);
         stack = PufferfishItems.flailFish(stack);
-        var color = stack.get(PufferfishPlease.COLOR.get());
-        var texture = PufferfishItems.hasHeavyCombat(stack) ? PufferfishTextures.heavyEntity()
-                : PufferfishItems.isNetherite(stack) ? PufferfishTextures.netheriteEntity()
-                : PufferfishItems.materialName(stack) != null ? PufferfishTextures.materialEntity(PufferfishItems.materialName(stack))
-                : color == null ? FISH_TEXTURE : PufferfishTextures.entity(color);
+        var texture = PufferfishTextures.entity(stack);
         pose.pushPose();
         pose.scale(0.8F * scale, -0.8F * scale, -0.8F * scale);
         pose.translate(0, -18.0F / 16, 0);
