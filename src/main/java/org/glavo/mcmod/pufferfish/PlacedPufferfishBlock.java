@@ -33,6 +33,7 @@ import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import org.jetbrains.annotations.Unmodifiable;
 
 public class PlacedPufferfishBlock extends BaseEntityBlock implements SimpleWaterloggedBlock {
     public static final MapCodec<PlacedPufferfishBlock> CODEC = simpleCodec(PlacedPufferfishBlock::new);
@@ -116,11 +117,13 @@ public class PlacedPufferfishBlock extends BaseEntityBlock implements SimpleWate
     @Override
     protected BlockState mirror(BlockState state, Mirror mirror) { return state.rotate(mirror.getRotation(state.getValue(FACING))); }
 
+    /// Drops a lamp with its cultivation or a detached copy of the placed fish.
     @Override
-    protected List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
+    protected @Unmodifiable List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
         if (PufferfishLamps.isLamp(this)) return List.of(lampStack(params.getOptionalParameter(LootContextParams.BLOCK_ENTITY)));
-        return params.getOptionalParameter(LootContextParams.BLOCK_ENTITY) instanceof PlacedPufferfishBlockEntity fish && !fish.fish().isEmpty()
-                ? List.of(fish.fish()) : List.of();
+        var stack = params.getOptionalParameter(LootContextParams.BLOCK_ENTITY) instanceof PlacedPufferfishBlockEntity fish
+                ? fish.fish() : ItemStack.EMPTY;
+        return stack.isEmpty() ? List.of() : List.of(stack);
     }
 
     @Override

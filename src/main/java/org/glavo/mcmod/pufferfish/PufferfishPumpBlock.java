@@ -34,6 +34,7 @@ import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import org.jetbrains.annotations.Unmodifiable;
 
 public final class PufferfishPumpBlock extends BaseEntityBlock {
     public static final MapCodec<PufferfishPumpBlock> CODEC = simpleCodec(PufferfishPumpBlock::new);
@@ -92,10 +93,12 @@ public final class PufferfishPumpBlock extends BaseEntityBlock {
                 && level.getBlockEntity(pos) instanceof PufferfishPumpBlockEntity pump) pump.press(player);
     }
 
+    /// Drops the stored pump item with its metadata; the inserted fish is released on removal.
     @Override
-    protected List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
-        return params.getOptionalParameter(LootContextParams.BLOCK_ENTITY) instanceof PufferfishPumpBlockEntity pump
-                && !pump.pump().isEmpty() ? List.of(pump.pump()) : List.of();
+    protected @Unmodifiable List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
+        var stack = params.getOptionalParameter(LootContextParams.BLOCK_ENTITY) instanceof PufferfishPumpBlockEntity pump
+                ? pump.pump() : ItemStack.EMPTY;
+        return stack.isEmpty() ? List.of() : List.of(stack);
     }
 
     @Override

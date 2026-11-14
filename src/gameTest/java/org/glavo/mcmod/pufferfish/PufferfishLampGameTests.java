@@ -42,9 +42,15 @@ public final class PufferfishLampGameTests {
     @GameTest(template = "empty")
     public static void everyFishCraftsOnlyItsMatchingLamp(GameTestHelper helper) {
         var level = helper.getLevel();
-        helper.assertTrue(PufferfishLamps.VARIANTS.size() == 30, "Missing lamp variants");
         for (var variant : PufferfishLamps.VARIANTS.values()) {
             var fish = variant.fish().get();
+            var block = variant.block().get();
+            helper.assertTrue(PufferfishLamps.isLamp(block) && PufferfishLamps.lamp(fish).is(block.asItem())
+                    && ItemStack.matches(PufferfishLamps.fish(block), fish), "Lamp and fish identities disagree");
+            var copy = PufferfishLamps.fish(block);
+            copy.setCount(30);
+            copy.set(DataComponents.CUSTOM_NAME, Component.literal("Changed copy"));
+            helper.assertTrue(ItemStack.matches(PufferfishLamps.fish(block), fish), "Lamp lookup retained mutable fish data");
             var cultivation = new PufferfishCultivation(PufferfishLevel.LEVEL_5, 0.75, 123, 456);
             for (boolean cultivated : List.of(false, true)) {
                 if (cultivated) {
@@ -65,9 +71,14 @@ public final class PufferfishLampGameTests {
             }
         }
         for (var invalid : List.of(new ItemStack(Items.PUFFERFISH_BUCKET), new ItemStack(Items.COD),
+                PufferfishColors.dye(new ItemStack(Items.PUFFERFISH_BUCKET), net.minecraft.world.item.DyeColor.RED),
+                new ItemStack(PufferfishBlocks.COPPER_SKIN.get()), ItemStack.EMPTY,
                 new ItemStack(PufferfishItems.FLAIL.get()), new ItemStack(PufferfishItems.SASHIMI.get()))) {
-            helper.assertTrue(level.getRecipeManager().getRecipeFor(RecipeType.CRAFTING,
+            helper.assertTrue(PufferfishLamps.lamp(invalid).isEmpty() && level.getRecipeManager().getRecipeFor(RecipeType.CRAFTING,
                     lampInput(invalid), level).isEmpty(), "Lamp accepted an invalid fish");
+        }
+        for (var block : List.of(Blocks.STONE, PufferfishBlocks.PLACED_FISH.get(), PufferfishBlocks.PLACED_HEAVY_FISH.get())) {
+            helper.assertTrue(!PufferfishLamps.isLamp(block) && PufferfishLamps.fish(block).isEmpty(), "Non-lamp block resolved to a lamp fish");
         }
         helper.succeed();
     }

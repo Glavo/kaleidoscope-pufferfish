@@ -4,6 +4,7 @@
 package org.glavo.mcmod.pufferfish;
 
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -15,11 +16,14 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredRegister;
+import org.jetbrains.annotations.Nullable;
 
 public final class PufferfishLamps {
     private static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(PufferfishPlease.MODID);
     private static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(PufferfishPlease.MODID);
     public static final Map<String, Variant> VARIANTS;
+    /// Associates registered lamp blocks with their fish without resolving deferred items.
+    private static final Map<Block, PufferfishVariant> FISH_BY_BLOCK = new IdentityHashMap<>();
 
     static {
         var variants = new LinkedHashMap<String, Variant>();
@@ -29,6 +33,7 @@ public final class PufferfishLamps {
 
     private PufferfishLamps() {}
 
+    /// Registers the lamp and records its fish identity when the block is constructed.
     private static void add(Map<String, Variant> variants, PufferfishVariant variant) {
         String name = variant.fishName() + "_lamp";
         int light = switch (variant.oxidation()) {
@@ -37,8 +42,12 @@ public final class PufferfishLamps {
             case 3 -> 4;
             default -> 15;
         };
-        var block = BLOCKS.<PlacedPufferfishBlock>registerBlock(name,
-                variant.material() == PufferfishMaterial.HEAVY ? HeavyPufferfishBlock::new : PlacedPufferfishBlock::new,
+        var block = BLOCKS.registerBlock(name, settings -> {
+                    var lamp = variant.material() == PufferfishMaterial.HEAVY
+                            ? new HeavyPufferfishBlock(settings) : new PlacedPufferfishBlock(settings);
+                    FISH_BY_BLOCK.put(lamp, variant);
+                    return lamp;
+                },
                 BlockBehaviour.Properties.of().strength(0.3F).noOcclusion().lightLevel(state -> light).sound(SoundType.LANTERN));
         var properties = new Item.Properties();
         if (variant.material().fireResistant()) properties.fireResistant();
@@ -46,21 +55,22 @@ public final class PufferfishLamps {
         variants.put(name, new Variant(block, variant::fish));
     }
 
+    /// Recognizes registered lamps by block identity.
     public static boolean isLamp(Block block) {
-        return VARIANTS.values().stream().anyMatch(variant -> variant.block().get() == block);
+        return FISH_BY_BLOCK.containsKey(block);
     }
 
+    /// Creates a fresh fish for a lamp, or an empty stack for other blocks.
     public static ItemStack fish(Block block) {
-        return VARIANTS.values().stream().filter(variant -> variant.block().get() == block)
-                .findFirst().map(variant -> variant.fish().get()).orElse(ItemStack.EMPTY);
+        @Nullable var variant = FISH_BY_BLOCK.get(block);
+        return variant == null ? ItemStack.EMPTY : variant.fish();
     }
 
+    /// Creates the matching lamp for a whole fish; derivatives and unsupported variants have no result.
     public static ItemStack lamp(ItemStack fish) {
-        var color = PufferfishColors.get(fish);
-        String name = color != null ? color.getName() + "_pufferfish"
-                : net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(fish.getItem()).getPath();
-        var variant = VARIANTS.get(name + "_lamp");
-        return variant == null ? ItemStack.EMPTY : new ItemStack(variant.block().get());
+        @Nullable var variant = PufferfishVariant.of(fish);
+        if (variant == null || fish.isEmpty() || fish.getItem() != variant.fishItem() || !variant.hasLamp()) return ItemStack.EMPTY;
+        return new ItemStack(VARIANTS.get(variant.fishName() + "_lamp").block().get());
     }
 
     public static void register(IEventBus bus) {
