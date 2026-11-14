@@ -120,7 +120,7 @@ public final class RadiantPufferfishVisuals {
         return image;
     }
 
-    /// Preserves the flat fish silhouette and adds the same breathing, drifting arcs outside it.
+    /// Preserves the flat fish silhouette with compact drifting arcs around it.
     public static SpriteContents createItemSprite(ResourceLocation id, FrameSize sourceSize, NativeImage source) {
         int size = Math.max(32, sourceSize.width());
         var frames = new NativeImage(size, size * FRAMES, true);
@@ -140,11 +140,11 @@ public final class RadiantPufferfishVisuals {
                         double tilt = 0.3 + arc * 0.7 + 0.25 * Math.sin(phase + arc);
                         double u = px * Math.cos(tilt) + py * Math.sin(tilt);
                         double v = -px * Math.sin(tilt) + py * Math.cos(tilt);
-                        double radius = 6.9 + 0.35 * Math.sin(phase + arc * 2);
-                        double ellipse = Math.sqrt(u * u / (radius * radius) + v * v / (3.5 * 3.5));
-                        double distance = Math.abs(ellipse - 1) * 3.5 / 0.65;
+                        double radius = 5.5 + 0.25 * Math.sin(phase + arc * 2);
+                        double ellipse = Math.sqrt(u * u / (radius * radius) + v * v / (2.8 * 2.8));
+                        double distance = Math.abs(ellipse - 1) * 2.8 / 0.5;
                         if (distance >= 1) continue;
-                        double angle = Math.atan2(v / 3.5, u / radius);
+                        double angle = Math.atan2(v / 2.8, u / radius);
                         int color = glowColor(distance);
                         int alpha = (int) ((color >>> 24) * arcLight(angle - arcPhase(phase, arc)) * arcStrength(phase, arc));
                         if (alpha > (brightest >>> 24)) brightest = FastColor.ARGB32.color(alpha, color);

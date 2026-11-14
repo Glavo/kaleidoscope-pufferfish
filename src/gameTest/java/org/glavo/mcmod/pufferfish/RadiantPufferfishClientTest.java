@@ -18,6 +18,7 @@ public final class RadiantPufferfishClientTest {
     public static void verify(Minecraft minecraft) {
         verifyRadiantSprite(minecraft.getItemRenderer().getModel(PufferfishItems.RADIANT.toStack(), null, null, 0));
         verifyGlow(minecraft);
+        verifyWornInventoryBounds(minecraft);
         var stars = RenderType.entityTranslucentEmissive(net.minecraft.resources.ResourceLocation.withDefaultNamespace("textures/particle/flash.png"));
         var glow = RenderType.entityTranslucentEmissive(PufferfishTextures.radiantGlow());
         for (var item : net.minecraft.core.registries.BuiltInRegistries.ITEM) {
@@ -30,6 +31,26 @@ public final class RadiantPufferfishClientTest {
                 if (capture.count(stars) == 0 || capture.count(glow) == 0 || !pose.clear()) {
                     throw new IllegalStateException("Radiant item lost its glow or leaked its transform: " + stack + ", " + context);
                 }
+            }
+        }
+    }
+
+    /// Worn fish must keep their glow inside a single inventory slot at every puff stage.
+    private static void verifyWornInventoryBounds(Minecraft minecraft) {
+        var glow = RenderType.entityTranslucentEmissive(PufferfishTextures.radiantGlow());
+        var stars = RenderType.entityTranslucentEmissive(net.minecraft.resources.ResourceLocation.withDefaultNamespace("textures/particle/flash.png"));
+        for (int stage = 1; stage <= 3; stage++) {
+            var stack = PufferfishItems.RADIANT.toStack();
+            PufferfishDurability.activate(stack);
+            stack.setDamageValue(stack.getMaxDamage() * stage / 4 + 1);
+            var halo = new RenderCapture();
+            var body = new RenderCapture();
+            var pose = new PoseStack();
+            minecraft.getItemRenderer().renderStatic(stack, ItemDisplayContext.GUI, 15728880, OverlayTexture.NO_OVERLAY,
+                    pose, type -> (type == glow || type == stars ? halo : body).getBuffer(type), null, 0);
+            var bounds = halo.bounds();
+            if (bounds.minX < -0.5 || bounds.maxX > 0.5 || bounds.minY < -0.5 || bounds.maxY > 0.5 || !pose.clear()) {
+                throw new IllegalStateException("Worn fish halo escaped its inventory slot at stage " + stage + ": " + bounds);
             }
         }
     }

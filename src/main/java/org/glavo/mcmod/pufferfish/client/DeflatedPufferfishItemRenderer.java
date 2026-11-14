@@ -13,6 +13,7 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import org.glavo.mcmod.pufferfish.PufferfishDurability;
+import org.glavo.mcmod.pufferfish.PufferfishItems;
 
 /// Shows the same puff state in inventory, held items, dropped items, and projectiles.
 public final class DeflatedPufferfishItemRenderer extends BlockEntityWithoutLevelRenderer implements IClientItemExtensions {
@@ -36,8 +37,20 @@ public final class DeflatedPufferfishItemRenderer extends BlockEntityWithoutLeve
             pose.mulPose(Axis.XP.rotationDegrees(15));
             pose.mulPose(Axis.YP.rotationDegrees(25));
         }
-        pose.scale(scale, scale, scale);
-        model.renderHead(stack, pose, buffers, light, overlay, 0);
+        if (context == ItemDisplayContext.GUI) {
+            pose.pushPose();
+            pose.scale(scale, scale, scale);
+            model.renderBody(stack, pose, buffers, light, overlay, 0, 0, 1);
+            pose.popPose();
+            if (PufferfishItems.isRadiant(stack)) {
+                // Keep the full animated aura within the slot, independently of puff-state magnification.
+                pose.scale(0.6F, -0.6F, -0.6F);
+                RadiantPufferfishVisuals.renderCentered(pose, buffers, overlay);
+            }
+        } else {
+            pose.scale(scale, scale, scale);
+            model.renderHead(stack, pose, buffers, light, overlay, 0);
+        }
         pose.popPose();
     }
 }

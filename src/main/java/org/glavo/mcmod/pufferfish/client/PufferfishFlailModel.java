@@ -86,7 +86,19 @@ public final class PufferfishFlailModel {
         renderHead(stack, pose, buffers, light, overlay, age, pressure, 1);
     }
 
+    /// Renders the fish body and its matching aura at the same scale.
     public void renderHead(ItemStack stack, PoseStack pose, MultiBufferSource buffers, int light, int overlay, float age, float pressure, float scale) {
+        renderBody(stack, pose, buffers, light, overlay, age, pressure, scale);
+        if (PufferfishItems.isRadiant(PufferfishItems.flailFish(stack))) {
+            pose.pushPose();
+            pose.scale(0.8F * scale, -0.8F * scale, -0.8F * scale);
+            RadiantPufferfishVisuals.renderCentered(pose, buffers, overlay);
+            pose.popPose();
+        }
+    }
+
+    /// Renders the centered fish body without an aura, allowing inventory effects to use their own scale.
+    public void renderBody(ItemStack stack, PoseStack pose, MultiBufferSource buffers, int light, int overlay, float age, float pressure, float scale) {
         fish.prepare(stack, pressure);
         stack = PufferfishItems.flailFish(stack);
         var color = stack.get(PufferfishPlease.COLOR.get());
@@ -100,7 +112,6 @@ public final class PufferfishFlailModel {
         fish.setupAnim(null, 0, 0, age, 0, 0);
         fish.renderToBuffer(pose, ItemRenderer.getFoilBufferDirect(buffers, RenderType.entityCutoutNoCull(texture),
                 false, stack.hasFoil()), light, overlay);
-        RadiantPufferfishVisuals.render(stack, pose, buffers, overlay);
         pose.popPose();
     }
 
