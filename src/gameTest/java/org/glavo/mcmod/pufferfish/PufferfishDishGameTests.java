@@ -44,7 +44,7 @@ public final class PufferfishDishGameTests {
             var remaining = new ItemStack(PufferfishItems.BAOZI.get(), count).finishUsingItem(helper.getLevel(), player);
             var breathing = player.getEffect(net.minecraft.world.effect.MobEffects.WATER_BREATHING);
             helper.assertTrue(player.getFoodData().getFoodLevel() == 8 && breathing != null
-                    && breathing.getDuration() == 1200 && breathing.getAmplifier() == 0
+                    && breathing.getDuration() == 1600 && breathing.getAmplifier() == 0
                     && player.getActiveEffects().size() == 1, "Baozi food or effects are incorrect");
             helper.assertTrue(remaining.getCount() == count - 1 && player.getInventory().countItem(Items.BOWL) == 0,
                     "Baozi consumption produced an unexpected remainder");
@@ -76,7 +76,15 @@ public final class PufferfishDishGameTests {
                 var result = stack.finishUsingItem(helper.getLevel(), player);
                 int nutrition = item == PufferfishItems.BRAISED.get() ? 9 : item == PufferfishItems.ZOSUI.get() ? 10 : 14;
                 helper.assertTrue(player.getFoodData().getFoodLevel() == nutrition
-                        && player.getActiveEffects().isEmpty() && !PufferfishItems.isWeapon(stack), "Cooked meal nutrition or effects are incorrect");
+                        && !PufferfishItems.isWeapon(stack), "Cooked meal nutrition is incorrect");
+                if (item == PufferfishItems.BRAISED.get() || cookery) {
+                    String effectId = item == PufferfishItems.BRAISED.get() ? "minecraft:water_breathing"
+                            : item == PufferfishItems.ZOSUI.get() ? "kaleidoscope_cookery:mustard" : "kaleidoscope_cookery:satiated_shield";
+                    int duration = item == PufferfishItems.ZOSUI.get() ? 12000 : 3600;
+                    helper.assertTrue(player.getActiveEffects().size() == 1 && player.getActiveEffects().stream().anyMatch(effect ->
+                            net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.getKey(effect.getEffect().value()).toString().equals(effectId)
+                                    && effect.getDuration() == duration && effect.getAmplifier() == 0), "Cooked meal applied incorrect effects");
+                } else helper.assertTrue(player.getActiveEffects().isEmpty(), "Cookery effects leaked into a standalone meal");
                 helper.assertTrue(count == 1 ? result.is(Items.BOWL) && result.getCount() == 1
                         : result.is(item) && result.getCount() == 1 && player.getInventory().countItem(Items.BOWL) == 1,
                         "Eating a meal lost or duplicated its bowl");

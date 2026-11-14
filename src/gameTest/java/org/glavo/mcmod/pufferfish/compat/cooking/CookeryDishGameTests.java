@@ -37,6 +37,50 @@ import org.glavo.mcmod.pufferfish.test.CuttingAssertions;
 public final class CookeryDishGameTests {
     private CookeryDishGameTests() {}
 
+    /// Quality scales cooked meal nutrition and effects once while preserving stack and bowl behavior.
+    @GameTest(template = "empty", templateNamespace = "pufferfish_please")
+    public static void mealQualityScalesNutritionAndEffectsWithoutLosingContainers(GameTestHelper helper) {
+        var meals = List.of(PufferfishItems.BAOZI.get(), PufferfishItems.BRAISED.get(),
+                PufferfishItems.BRAISED_RICE_BOWL.get(), PufferfishItems.ZOSUI.get());
+        var effects = List.of(net.minecraft.world.effect.MobEffects.WATER_BREATHING, net.minecraft.world.effect.MobEffects.WATER_BREATHING,
+                com.github.ysbbbbbb.kaleidoscopecookery.init.ModEffects.SATIATED_SHIELD,
+                com.github.ysbbbbbb.kaleidoscopecookery.init.ModEffects.MUSTARD);
+        var nutrition = List.of(8, 9, 14, 10);
+        var durations = List.of(1600, 3600, 3600, 12000);
+        for (var quality : Quality.values()) {
+            double ratio = switch (quality) {
+                case POOR -> 0.3;
+                case STANDARD -> 0.6;
+                case EXCELLENT -> 0.9;
+                case SUPERB -> 1.2;
+            };
+            for (int index = 0; index < meals.size(); index++) for (int count : List.of(1, 2)) {
+                var player = helper.makeMockPlayer(GameType.SURVIVAL);
+                player.getFoodData().setFoodLevel(0);
+                var stack = new ItemStack(meals.get(index), count);
+                QualityUtils.setQuality(stack, quality);
+                var result = stack.finishUsingItem(helper.getLevel(), player);
+                @org.jetbrains.annotations.Nullable var effect = player.getEffect(effects.get(index));
+                helper.assertTrue(player.getFoodData().getFoodLevel() == Math.round(nutrition.get(index) * ratio)
+                                && effect != null && effect.getDuration() == Math.round(durations.get(index) * ratio)
+                                && effect.getAmplifier() == 0 && player.getActiveEffects().size() == 1,
+                        "Meal quality did not scale nutrition and the matching effect exactly once: " + stack + ", " + quality);
+                if (count == 2) {
+                    helper.assertTrue(result.is(meals.get(index)) && result.getCount() == 1
+                            && QualityUtils.getQuality(result) == quality, "Eating changed the remaining meal's quality");
+                }
+                if (index == 0) {
+                    helper.assertTrue((count == 2 || result.isEmpty()) && player.getInventory().countItem(Items.BOWL) == 0,
+                            "Baozi returned an unexpected container");
+                } else {
+                    helper.assertTrue(count == 1 ? result.is(Items.BOWL) && result.getCount() == 1
+                            : player.getInventory().countItem(Items.BOWL) == 1, "Quality meal lost or duplicated its bowl");
+                }
+            }
+        }
+        helper.succeed();
+    }
+
     @GameTest(template = "empty", templateNamespace = "pufferfish_please")
     public static void baoziUsesVegetableAndDoughTagsWithoutRecipeConflicts(GameTestHelper helper) {
         var level = helper.getLevel();

@@ -515,8 +515,12 @@
   "tooltip.pufferfish_please.processing_table.cut": "Knife or shears: skin fish, preserving skin rank",
   "tooltip.pufferfish_please.processing_table.brush": "Brush: lower one rank every three strokes",
   "tooltip.pufferfish_please.processing_table.retrieve": "Empty hand: retrieve the item",
+  "tooltip.pufferfish_please.braised_pufferfish.maxim": "Rich sauce, fresh fish, and a breath of the sea.",
+  "tooltip.pufferfish_please.braised_pufferfish_rice_bowl.maxim": "A hearty bowl to face the day.",
   "tooltip.pufferfish_please.pufferfish_aspic.maxim": "A golden wobble with a familiar sting.",
+  "tooltip.pufferfish_please.pufferfish_baozi.maxim": "A little bun for a breath beneath the waves.",
   "tooltip.pufferfish_please.pufferfish_skin_broth": "Refrigerate in the upper compartment for 2 minutes to set into aspic.",
   "tooltip.pufferfish_please.pufferfish_stargazy_pie.maxim": "A skyward stare in every serving.",
+  "tooltip.pufferfish_please.pufferfish_zosui.maxim": "Tender rice, rich broth, and a lingering warmth.",
   "upgrade.pufferfish_please.pufferfish_upgrade": "Pufferfish Upgrade"
 }

@@ -20,6 +20,7 @@ import net.minecraft.world.item.SmithingTemplateItem;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -84,22 +85,27 @@ public final class PufferfishItems {
     public static final DeferredItem<Item> SASHIMI = ITEMS.register("pufferfish_sashimi", () -> new Item(
             new Item.Properties().food(new FoodProperties.Builder().nutrition(2).saturationModifier(0.1F).build())));
     public static final DeferredItem<Item> RAW_BAOZI = ITEMS.register("raw_pufferfish_baozi", () -> new Item(new Item.Properties()));
-    public static final DeferredItem<Item> BAOZI = ITEMS.register("pufferfish_baozi", () -> new Item(
-            new Item.Properties().food(new FoodProperties.Builder().nutrition(8).saturationModifier(1)
-                    .alwaysEdible().effect(() -> new MobEffectInstance(MobEffects.WATER_BREATHING, 1200), 1)
-                    .build())));
-    /// A cooked fish dish restoring nine nutrition points and returning a bowl when eaten.
-    public static final DeferredItem<Item> BRAISED = ITEMS.register("braised_pufferfish", () -> new Item(
-            new Item.Properties().food(new FoodProperties.Builder().nutrition(9).saturationModifier(0.6F)
-                    .usingConvertsTo(Items.BOWL).build())));
-    /// A cooked fish rice bowl restoring fourteen nutrition points and returning a bowl when eaten.
-    public static final DeferredItem<Item> BRAISED_RICE_BOWL = ITEMS.register("braised_pufferfish_rice_bowl", () -> new Item(
-            new Item.Properties().food(new FoodProperties.Builder().nutrition(14).saturationModifier(0.65F)
-                    .usingConvertsTo(Items.BOWL).build())));
-    /// A cooked fish and rice soup restoring ten nutrition points and returning a bowl when eaten.
-    public static final DeferredItem<Item> ZOSUI = ITEMS.register("pufferfish_zosui", () -> new Item(
-            new Item.Properties().food(new FoodProperties.Builder().nutrition(10).saturationModifier(0.6F)
-                    .usingConvertsTo(Items.BOWL).build())));
+    /// A portable meal granting eighty seconds of water breathing before quality scaling.
+    public static final DeferredItem<Item> BAOZI = ITEMS.register("pufferfish_baozi", () -> cookedFood(
+            new FoodProperties.Builder().nutrition(8).saturationModifier(1).alwaysEdible()
+                    .effect(() -> new MobEffectInstance(MobEffects.WATER_BREATHING, 80 * 20), 1)));
+    /// A bowl meal granting three minutes of water breathing before quality scaling.
+    public static final DeferredItem<Item> BRAISED = ITEMS.register("braised_pufferfish", () -> cookedFood(
+            new FoodProperties.Builder().nutrition(9).saturationModifier(0.6F).alwaysEdible()
+                    .effect(() -> new MobEffectInstance(MobEffects.WATER_BREATHING, 3 * 60 * 20), 1)
+                    .usingConvertsTo(Items.BOWL)));
+    /// A rice bowl granting Cookery's satiated shield when the integration is present.
+    public static final DeferredItem<Item> BRAISED_RICE_BOWL = ITEMS.register("braised_pufferfish_rice_bowl", () -> {
+        var food = new FoodProperties.Builder().nutrition(14).saturationModifier(0.65F).alwaysEdible().usingConvertsTo(Items.BOWL);
+        return ModList.get().isLoaded("kaleidoscope_cookery")
+                ? org.glavo.mcmod.pufferfish.compat.cookery.CookeryFoodIntegration.riceBowl(food) : cookedFood(food);
+    });
+    /// A rice soup retaining Cookery's pufferfish soup mustard effect when available.
+    public static final DeferredItem<Item> ZOSUI = ITEMS.register("pufferfish_zosui", () -> {
+        var food = new FoodProperties.Builder().nutrition(10).saturationModifier(0.6F).alwaysEdible().usingConvertsTo(Items.BOWL);
+        return ModList.get().isLoaded("kaleidoscope_cookery")
+                ? org.glavo.mcmod.pufferfish.compat.cookery.CookeryFoodIntegration.zosui(food) : cookedFood(food);
+    });
     public static final DeferredItem<Item> SKIN_BROTH = ITEMS.register("pufferfish_skin_broth", () -> new Item(new Item.Properties().stacksTo(16)) {
         @Override
         public void appendHoverText(ItemStack stack, TooltipContext context, java.util.List<net.minecraft.network.chat.Component> tooltip,
@@ -133,6 +139,13 @@ public final class PufferfishItems {
             () -> new Item(new Item.Properties().rarity(Rarity.RARE)));
 
     private PufferfishItems() {}
+
+    /// Uses Cookery's quality-aware meals when installed, otherwise retaining vanilla food behavior.
+    private static Item cookedFood(FoodProperties.Builder food) {
+        return ModList.get().isLoaded("kaleidoscope_cookery")
+                ? org.glavo.mcmod.pufferfish.compat.cookery.CookeryFoodIntegration.meal(food)
+                : new Item(new Item.Properties().food(food.build()));
+    }
 
     private static java.util.List<DeferredItem<Item>> registerCopperFish() {
         var fish = new java.util.ArrayList<DeferredItem<Item>>();

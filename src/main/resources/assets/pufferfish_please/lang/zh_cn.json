@@ -515,8 +515,12 @@
   "tooltip.pufferfish_please.processing_table.cut": "刀具或剪刀：剥皮，保留皮的境界",
   "tooltip.pufferfish_please.processing_table.brush": "刷子：每三次刷动降低一个境界",
   "tooltip.pufferfish_please.processing_table.retrieve": "空手：取回物品",
+  "tooltip.pufferfish_please.braised_pufferfish.maxim": "浓汁收鲜，入水从容。",
+  "tooltip.pufferfish_please.braised_pufferfish_rice_bowl.maxim": "一碗吃饱，心里有底。",
   "tooltip.pufferfish_please.pufferfish_aspic.maxim": "晶莹一颤，河豚本色。",
+  "tooltip.pufferfish_please.pufferfish_baozi.maxim": "一口鲜香，一息入海。",
   "tooltip.pufferfish_please.pufferfish_skin_broth": "放入冰箱上层冷藏约 2 分钟，凝固为河豚鱼冻。",
   "tooltip.pufferfish_please.pufferfish_stargazy_pie.maxim": "满盘河豚，一同仰望星空。",
+  "tooltip.pufferfish_please.pufferfish_zosui.maxim": "鲜汤入米，余味悠长。",
   "upgrade.pufferfish_please.pufferfish_upgrade": "河豚升级"
 }
