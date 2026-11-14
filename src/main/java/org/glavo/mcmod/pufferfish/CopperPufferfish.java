@@ -10,7 +10,9 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.WeatheringCopper;
+import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.common.ItemAbilities;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
@@ -37,9 +39,11 @@ public final class CopperPufferfish {
                 && blockItem.getBlock() instanceof PufferfishSkinBlock ? variant.copperIndex() : -1;
     }
 
-    private static int placedIndex(net.minecraft.world.level.Level level, BlockPos pos) {
-        return level.getBlockEntity(pos) instanceof PlacedPufferfishBlockEntity placed ? index(placed.fish())
-                : skinIndex(level.getBlockState(pos).getBlock().asItem().getDefaultInstance());
+    /// Reads a placed fish or skin's copper stage, using the caller's block state to exclude unrelated blocks.
+    private static int placedIndex(Level level, BlockPos pos, BlockState state) {
+        if (state.getBlock() instanceof PufferfishSkinBlock skin) return skinIndex(skin.asItem().getDefaultInstance());
+        return state.hasBlockEntity() && level.getBlockEntity(pos) instanceof PlacedPufferfishBlockEntity placed
+                ? index(placed.fish()) : -1;
     }
 
     private static void changePlaced(net.minecraft.world.level.Level level, BlockPos pos, int index) {
@@ -60,12 +64,13 @@ public final class CopperPufferfish {
         return stack.transmuteCopy(PufferfishItems.COPPER_VARIANTS.get(index).get());
     }
 
+    /// Waxes or scrapes placed copper fish, lamps, and skins while preserving their stored data.
     public static void interact(PlayerInteractEvent.RightClickBlock event) {
         var level = event.getLevel();
         var player = event.getEntity();
         if (player.isSpectator() || !player.mayBuild() || !level.mayInteract(player, event.getPos())
                 || event.getUseItem() == net.neoforged.neoforge.common.util.TriState.FALSE) return;
-        int index = placedIndex(level, event.getPos());
+        int index = placedIndex(level, event.getPos(), level.getBlockState(event.getPos()));
         if (index < 0) return;
         var tool = event.getItemStack();
         boolean wax = tool.is(Items.HONEYCOMB) && index < 4;
@@ -88,17 +93,19 @@ public final class CopperPufferfish {
         event.setCanceled(true);
     }
 
+    /// Applies copper weathering with nearby fish, skins, and vanilla copper contributing their oxidation stages.
     public static void randomTick(ServerLevel level, BlockPos pos, RandomSource random) {
-        int age = placedIndex(level, pos);
+        int age = placedIndex(level, pos, level.getBlockState(pos));
         if (age < 0 || age >= 3 || random.nextFloat() >= 0.05688889F) return;
         int same = 0;
         int older = 0;
         for (var neighbor : BlockPos.withinManhattan(pos, 4, 4, 4)) {
             if (neighbor.distManhattan(pos) > 4) break;
             if (neighbor.equals(pos)) continue;
-            int other = placedIndex(level, neighbor);
+            var neighborState = level.getBlockState(neighbor);
+            int other = placedIndex(level, neighbor, neighborState);
             if (other >= 4) other = -1;
-            if (other < 0 && level.getBlockState(neighbor).getBlock() instanceof WeatheringCopper copper) {
+            if (other < 0 && neighborState.getBlock() instanceof WeatheringCopper copper) {
                 other = copper.getAge().ordinal();
             }
             if (other < 0) continue;
