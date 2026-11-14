@@ -513,7 +513,7 @@
   "message.pufferfish_please.processing_table.restore_unavailable": "这条河豚无法恢复堆叠",
   "message.pufferfish_please.processing_table.rank": "降至%s",
   "tooltip.pufferfish_please.level": "%s",
-  "tooltip.pufferfish_please.processing_table": "刀具剥皮，刷子归凡",
+  "tooltip.pufferfish_please.processing_table": "可以摆放河豚",
   "tooltip.pufferfish_please.processing_table.cut": "刀具或剪刀：剥皮并保留境界",
   "tooltip.pufferfish_please.processing_table.brush": "刷子：每刷三次降低一个境界",
   "tooltip.pufferfish_please.processing_table.retrieve": "空手：取回物品",

@@ -513,7 +513,7 @@
   "message.pufferfish_please.processing_table.restore_unavailable": "This pufferfish cannot be made stackable",
   "message.pufferfish_please.processing_table.rank": "Lowered to %s",
   "tooltip.pufferfish_please.level": "%s",
-  "tooltip.pufferfish_please.processing_table": "Skin with a blade; lower ranks with a brush",
+  "tooltip.pufferfish_please.processing_table": "Display your pufferfish",
   "tooltip.pufferfish_please.processing_table.cut": "Knife or shears: skin the fish and keep its rank",
   "tooltip.pufferfish_please.processing_table.brush": "Brush: lower one rank every three strokes",
   "tooltip.pufferfish_please.processing_table.retrieve": "Empty hand: retrieve the item",
