@@ -4,7 +4,6 @@
 package org.glavo.mcmod.pufferfish;
 
 import static org.glavo.mcmod.pufferfish.test.TestItems.enchant;
-import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
@@ -23,7 +22,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AnvilMenu;
-import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -37,6 +35,7 @@ import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.glavo.mcmod.pufferfish.entity.ThrownPufferfish;
 import org.glavo.mcmod.pufferfish.test.TestItems;
+import org.jetbrains.annotations.Unmodifiable;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
@@ -67,15 +66,6 @@ public final class PufferfishEnchantmentGameTests {
         return EnchantmentHelper.getItemEnchantmentLevel(holder, stack);
     }
 
-    private static List<ItemStack> variants() {
-        var result = new ArrayList<ItemStack>();
-        result.add(new ItemStack(Items.PUFFERFISH));
-        for (var color : DyeColor.values()) result.add(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
-        result.add(new ItemStack(PufferfishItems.NETHERITE.get()));
-        result.add(new ItemStack(PufferfishItems.HEAVY.get()));
-        return result;
-    }
-
     private static Player owner(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         var pos = helper.absolutePos(new BlockPos(2, 1, 0));
@@ -104,10 +94,11 @@ public final class PufferfishEnchantmentGameTests {
         target.discard();
     }
 
+    /// Every registered fish accepts eligible books, retains its identity, and pays the anvil's costs.
     @GameTest(template = "empty")
     public static void allSupportedBooksApplyAndUpgradeEveryFishVariant(GameTestHelper helper) {
         var player = owner(helper);
-        for (var original : variants()) {
+        for (var original : TestItems.fishVariants()) {
             original.set(DataComponents.CUSTOM_NAME, Component.literal("Enchanted keepsake"));
             for (var key : SUPPORTED) {
                 int max = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(key).value().getMaxLevel();
@@ -138,9 +129,10 @@ public final class PufferfishEnchantmentGameTests {
         helper.succeed();
     }
 
+    /// Respiration affects oxygen only in the head slot across the complete fish family.
     @GameTest(template = "empty")
     public static void respirationGrantsNativeOxygenBonusOnlyWhenWorn(GameTestHelper helper) {
-        for (var original : variants()) for (int rank = 1; rank <= 3; rank++) {
+        for (var original : TestItems.fishVariants()) for (int rank = 1; rank <= 3; rank++) {
             var player = owner(helper);
             var stack = enchant(helper, original.copy(), Enchantments.RESPIRATION, rank);
             player.setItemSlot(EquipmentSlot.HEAD, stack);
@@ -156,17 +148,20 @@ public final class PufferfishEnchantmentGameTests {
         helper.succeed();
     }
 
+    /// Conflicting damage enchantments are rejected without discarding compatible entries in mixed books.
     @GameTest(template = "empty")
     public static void mixedBooksRespectDamageExclusivityAndPreserveCompatibleEnchantments(GameTestHelper helper) {
         var player = owner(helper);
-        for (var first : List.of(Enchantments.DENSITY, Enchantments.BREACH)) {
-            var second = first == Enchantments.DENSITY ? Enchantments.BREACH : Enchantments.DENSITY;
+        @Unmodifiable List<ResourceKey<Enchantment>> damageEnchantments = List.of(
+                Enchantments.DENSITY, Enchantments.BREACH, Enchantments.SMITE, Enchantments.BANE_OF_ARTHROPODS);
+        for (var first : damageEnchantments) for (var second : damageEnchantments) {
+            if (first == second) continue;
             var menu = new AnvilMenu(1, player.getInventory());
             var fish = enchant(helper, new ItemStack(Items.PUFFERFISH), first, 1);
             menu.getSlot(0).set(fish);
             var book = enchant(helper, new ItemStack(Items.ENCHANTED_BOOK), second, 1);
             menu.getSlot(1).set(book);
-            helper.assertTrue(!menu.getSlot(2).hasItem(), "Density and Breach were combined");
+            helper.assertTrue(!menu.getSlot(2).hasItem(), "Mutually exclusive damage enchantments were combined: " + first + ", " + second);
             enchant(helper, book, Enchantments.PUNCH, 2);
             enchant(helper, book, Enchantments.LOYALTY, 3);
             enchant(helper, book, Enchantments.AQUA_AFFINITY, 1);
@@ -256,10 +251,11 @@ public final class PufferfishEnchantmentGameTests {
         helper.succeed();
     }
 
+    /// Aqua Affinity removes the underwater mining penalty only when the fish is worn.
     @GameTest(template = "empty")
     public static void aquaAffinityRestoresUnderwaterMiningSpeedOnlyWhileWorn(GameTestHelper helper) {
         for (int y = 1; y <= 3; y++) helper.setBlock(new BlockPos(2, y, 0), Blocks.WATER);
-        for (var stack : variants()) {
+        for (var stack : TestItems.fishVariants()) {
             var player = owner(helper);
             player.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.IRON_PICKAXE));
             player.tick();
@@ -291,11 +287,13 @@ public final class PufferfishEnchantmentGameTests {
         helper.succeed();
     }
 
+    /// Throwable fish retain combined enchantments through impact, persistence, and Loyalty recovery.
     @GameTest(template = "empty")
     public static void combinedEnchantmentsSurviveImpactReloadAndLoyaltyReturn(GameTestHelper helper) {
         var player = owner(helper);
         for (var damageEnchantment : List.of(Enchantments.DENSITY, Enchantments.BREACH)) {
-            for (var stack : variants()) {
+            for (var stack : TestItems.fishVariants()) {
+                if (stack.is(PufferfishItems.GOLDEN.get())) continue;
                 stack = TestItems.awakened(stack);
                 player.getInventory().clearContent();
                 stack.set(DataComponents.CUSTOM_NAME, Component.literal("Combined keepsake"));

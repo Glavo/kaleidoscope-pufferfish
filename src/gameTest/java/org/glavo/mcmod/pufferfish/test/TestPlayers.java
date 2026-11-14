@@ -6,6 +6,7 @@ package org.glavo.mcmod.pufferfish.test;
 import com.mojang.authlib.GameProfile;
 import java.util.UUID;
 import java.util.function.Consumer;
+import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.Packet;
@@ -15,9 +16,24 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.level.GameType;
+import org.glavo.mcmod.pufferfish.PufferfishPlease;
+import org.jetbrains.annotations.Nullable;
 
 public final class TestPlayers {
     private TestPlayers() {}
+
+    /// Looks up a mod adventure advancement, failing explicitly if its resource is missing.
+    public static AdvancementHolder advancement(ServerPlayer player, String id) {
+        var location = PufferfishPlease.id("adventure/" + id);
+        @Nullable var advancement = player.server.getAdvancements().get(location);
+        if (advancement == null) throw new AssertionError("Missing advancement: " + location);
+        return advancement;
+    }
+
+    /// Checks completion without treating a missing advancement as an unmet condition.
+    public static boolean hasAdvancement(ServerPlayer player, String id) {
+        return player.getAdvancements().getOrStartProgress(advancement(player, id)).isDone();
+    }
 
     /// Creates an untracked survival player whose outgoing packets are discarded.
     public static ServerPlayer serverPlayer(GameTestHelper helper) {

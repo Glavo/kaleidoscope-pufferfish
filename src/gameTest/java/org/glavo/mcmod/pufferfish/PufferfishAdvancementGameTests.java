@@ -3,8 +3,9 @@
 
 package org.glavo.mcmod.pufferfish;
 
+import static org.glavo.mcmod.pufferfish.test.TestPlayers.advancement;
+import static org.glavo.mcmod.pufferfish.test.TestPlayers.hasAdvancement;
 import java.util.List;
-import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.AdvancementType;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
@@ -56,8 +57,8 @@ public final class PufferfishAdvancementGameTests {
         var cultivator = player(helper);
         cultivator.setItemSlot(EquipmentSlot.HEAD, cultivated(PufferfishLevel.LEVEL_4, 12_600_000));
         PufferfishCultivation.advanceAtConduit(cultivator);
-        helper.assertTrue(done(cultivator, "cultivation_level_5") && done(cultivator, "cultivation_level_10")
-                && !done(cultivator, "cultivation_level_1"), "Consecutive breakthrough milestones were missed or earlier ranks were backfilled");
+        helper.assertTrue(hasAdvancement(cultivator, "cultivation_level_5") && hasAdvancement(cultivator, "cultivation_level_10")
+                && !hasAdvancement(cultivator, "cultivation_level_1"), "Consecutive breakthrough milestones were missed or earlier ranks were backfilled");
 
         var learner = player(helper);
         learner.setItemSlot(EquipmentSlot.OFFHAND, cultivated(PufferfishLevel.LEVEL_9, 9_999_999));
@@ -78,10 +79,10 @@ public final class PufferfishAdvancementGameTests {
             parent = id;
         }
         helper.runAfterDelay(2, () -> {
-            helper.assertTrue(done(learner, "cultivation_level_10") && !done(learner, "cultivation_level_5")
-                    && !done(learner, "cultivation_level_1"), "Experience-driven promotion credited the wrong milestones");
+            helper.assertTrue(hasAdvancement(learner, "cultivation_level_10") && !hasAdvancement(learner, "cultivation_level_5")
+                    && !hasAdvancement(learner, "cultivation_level_1"), "Experience-driven promotion credited the wrong milestones");
             for (var bystander : List.of(observer, borrower)) for (int level : new int[] {1, 5, 10}) {
-                helper.assertTrue(!done(bystander, "cultivation_level_" + level), "Possession or an unowned breakthrough granted cultivation progress");
+                helper.assertTrue(!hasAdvancement(bystander, "cultivation_level_" + level), "Possession or an unowned breakthrough granted cultivation progress");
             }
             for (var player : List.of(observer, borrower, cultivator, learner)) player.getAdvancements().stopListening();
             live.discard();
@@ -158,7 +159,7 @@ public final class PufferfishAdvancementGameTests {
         helper.runAfterDelay(2, () -> {
             players.forEach((mode, player) -> {
                 boolean granted = List.of("melee", "throw", "flail").contains(mode);
-                helper.assertTrue(done(player, "fish_fighter") == granted, "Incorrect weapon kill progress: " + mode);
+                helper.assertTrue(hasAdvancement(player, "fish_fighter") == granted, "Incorrect weapon kill progress: " + mode);
                 player.getAdvancements().stopListening();
             });
             helper.succeed();
@@ -184,7 +185,7 @@ public final class PufferfishAdvancementGameTests {
         }
         helper.runAfterDelay(2, () -> {
             for (var player : players) {
-                helper.assertTrue(done(player, "unbearable_weight"), "Heavy pufferfish death did not grant progress");
+                helper.assertTrue(hasAdvancement(player, "unbearable_weight"), "Heavy pufferfish death did not grant progress");
                 player.getAdvancements().stopListening();
             }
             helper.succeed();
@@ -208,7 +209,7 @@ public final class PufferfishAdvancementGameTests {
         anvil.discard();
         helper.runAfterDelay(2, () -> {
             for (var player : players) {
-                helper.assertTrue(!done(player, "unbearable_weight"), "Unrelated death granted heavy pufferfish progress");
+                helper.assertTrue(!hasAdvancement(player, "unbearable_weight"), "Unrelated death granted heavy pufferfish progress");
                 player.getAdvancements().stopListening();
             }
             helper.succeed();
@@ -243,7 +244,7 @@ public final class PufferfishAdvancementGameTests {
         helper.assertTrue(!canceled.isDeadOrDying(), "Death cancellation did not save the player");
         helper.runAfterDelay(2, () -> {
             for (var player : List.of(injured, saved, canceled)) {
-                helper.assertTrue(!done(player, "unbearable_weight"), "Surviving a heavy pufferfish granted death progress");
+                helper.assertTrue(!hasAdvancement(player, "unbearable_weight"), "Surviving a heavy pufferfish granted death progress");
                 player.getAdvancements().stopListening();
             }
             helper.succeed();
@@ -259,8 +260,8 @@ public final class PufferfishAdvancementGameTests {
             player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.WATER_BUCKET));
             fish.interact(player, InteractionHand.MAIN_HAND);
             helper.assertTrue(fish.isRemoved() && player.getMainHandItem().is(Items.PUFFERFISH_BUCKET), "Pufferfish was not captured");
-            helper.assertTrue(done(player, "root") && done(player, "pufferfish_trainer"), "Capture did not unlock the root and trainer rank");
-            helper.assertTrue(!done(player, "experienced_pufferfish_trainer") && !done(player, "legendary_pufferfish_trainer"),
+            helper.assertTrue(hasAdvancement(player, "root") && hasAdvancement(player, "pufferfish_trainer"), "Capture did not unlock the root and trainer rank");
+            helper.assertTrue(!hasAdvancement(player, "experienced_pufferfish_trainer") && !hasAdvancement(player, "legendary_pufferfish_trainer"),
                     "Ordinary or dyed pufferfish granted a higher trainer rank");
             player.getAdvancements().stopListening();
         }
@@ -276,17 +277,17 @@ public final class PufferfishAdvancementGameTests {
             if (!fish.canCapture()) {
                 fish.interact(player, InteractionHand.MAIN_HAND);
                 helper.assertTrue(!fish.isRemoved() && player.getMainHandItem().is(Items.WATER_BUCKET), "Healthy fish was captured");
-                helper.assertTrue(!done(player, "root") && !done(player, "pufferfish_trainer")
-                                && !done(player, "experienced_pufferfish_trainer") && !done(player, "legendary_pufferfish_trainer"),
+                helper.assertTrue(!hasAdvancement(player, "root") && !hasAdvancement(player, "pufferfish_trainer")
+                                && !hasAdvancement(player, "experienced_pufferfish_trainer") && !hasAdvancement(player, "legendary_pufferfish_trainer"),
                         "Failed capture granted progress");
             }
             fish.setHealth(1);
             fish.interact(player, InteractionHand.MAIN_HAND);
             helper.assertTrue(fish.isRemoved() && player.getMainHandItem().is(variant.bucket().get()), "Material fish was not captured");
-            helper.assertTrue(done(player, "root") && done(player, "pufferfish_trainer") && done(player, "experienced_pufferfish_trainer"),
+            helper.assertTrue(hasAdvancement(player, "root") && hasAdvancement(player, "pufferfish_trainer") && hasAdvancement(player, "experienced_pufferfish_trainer"),
                     "Material capture did not grant all lower ranks: " + variant.entity().getId());
             boolean elite = variant.fish() == PufferfishItems.HEAVY || variant.fish() == PufferfishItems.RADIANT;
-            helper.assertTrue(done(player, "legendary_pufferfish_trainer") == elite, "Incorrect legendary rank: " + variant.entity().getId());
+            helper.assertTrue(hasAdvancement(player, "legendary_pufferfish_trainer") == elite, "Incorrect legendary rank: " + variant.entity().getId());
             helper.assertTrue(advancement(player, "legendary_pufferfish_trainer").value().display().orElseThrow().getType() == AdvancementType.CHALLENGE,
                     "Legendary trainer is not a challenge");
             player.getAdvancements().stopListening();
@@ -310,8 +311,8 @@ public final class PufferfishAdvancementGameTests {
         var cod = EntityType.COD.create(helper.getLevel());
         cod.interact(player, InteractionHand.MAIN_HAND);
         helper.assertTrue(cod.isRemoved() && player.getMainHandItem().is(Items.COD_BUCKET), "Cod was not captured");
-        helper.assertTrue(!done(player, "root") && !done(player, "pufferfish_trainer")
-                        && !done(player, "experienced_pufferfish_trainer") && !done(player, "legendary_pufferfish_trainer"),
+        helper.assertTrue(!hasAdvancement(player, "root") && !hasAdvancement(player, "pufferfish_trainer")
+                        && !hasAdvancement(player, "experienced_pufferfish_trainer") && !hasAdvancement(player, "legendary_pufferfish_trainer"),
                 "Obtaining a bucket, crafting one, or capturing another fish granted trainer progress");
         player.getAdvancements().stopListening();
         helper.succeed();
@@ -330,51 +331,51 @@ public final class PufferfishAdvancementGameTests {
         var ordinary = new ItemStack(Items.PUFFERFISH);
         player.getInventory().add(ordinary.copy());
         CriteriaTriggers.INVENTORY_CHANGED.trigger(player, player.getInventory(), ordinary);
-        helper.assertTrue(done(player, "root"), "Obtaining a pufferfish did not unlock the root");
+        helper.assertTrue(hasAdvancement(player, "root"), "Obtaining a pufferfish did not unlock the root");
         player.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.LEATHER_HELMET));
         CriteriaTriggers.TICK.trigger(player);
-        helper.assertTrue(!done(player, "careful_with_spikes"), "Ordinary armor granted the pufferfish headgear advancement");
+        helper.assertTrue(!hasAdvancement(player, "careful_with_spikes"), "Ordinary armor granted the pufferfish headgear advancement");
         player.setItemSlot(EquipmentSlot.HEAD, PufferfishItems.COPPER.toStack());
         CriteriaTriggers.TICK.trigger(player);
-        helper.assertTrue(done(player, "careful_with_spikes"), "Wearing a material pufferfish did not grant progress");
+        helper.assertTrue(hasAdvancement(player, "careful_with_spikes"), "Wearing a material pufferfish did not grant progress");
         player.addEffect(new MobEffectInstance(PufferfishEffects.PUFFERFISH_POWER, 260));
         player.addEffect(new MobEffectInstance(PufferfishEffects.PUFFERFISH_CURSE, 260));
-        helper.assertTrue(done(player, "pufferfish_blessing") && done(player, "pufferfish_curse"), "Effects did not grant their advancements");
+        helper.assertTrue(hasAdvancement(player, "pufferfish_blessing") && hasAdvancement(player, "pufferfish_curse"), "Effects did not grant their advancements");
         for (var entry : java.util.Map.of(
                 "radiant_promise", "radiant_pufferfish",
                 "heavy_pufferfish", "heavy_pufferfish",
                 "upgrade_template", "pufferfish_upgrade_smithing_template",
                 "pufferfish_conduit", "pufferfish_conduit",
                 "skin_craft", "pufferfish_skin").entrySet()) {
-            helper.assertTrue(!done(player, entry.getKey()), "Unrelated actions granted progress: " + entry.getKey());
+            helper.assertTrue(!hasAdvancement(player, entry.getKey()), "Unrelated actions granted progress: " + entry.getKey());
             var item = BuiltInRegistries.ITEM.get(PufferfishPlease.id(entry.getValue()));
             CriteriaTriggers.INVENTORY_CHANGED.trigger(player, player.getInventory(), new ItemStack(item));
-            helper.assertTrue(done(player, entry.getKey()), "Obtaining an item did not grant progress: " + entry.getKey());
+            helper.assertTrue(hasAdvancement(player, entry.getKey()), "Obtaining an item did not grant progress: " + entry.getKey());
         }
         boolean cooking = ModList.get().isLoaded("kaleidoscope_cookery");
         CriteriaTriggers.INVENTORY_CHANGED.trigger(player, player.getInventory(), PufferfishItems.SASHIMI.toStack());
-        helper.assertTrue(done(player, "pufferfish_sashimi"), "Sashimi did not grant its advancement");
+        helper.assertTrue(hasAdvancement(player, "pufferfish_sashimi"), "Sashimi did not grant its advancement");
         boolean aspic = cooking && ModList.get().isLoaded("kaleidoscope_chinesefood");
         helper.assertTrue((advancement(player, "fish_aspic") != null) == aspic, "Aspic progress has incorrect mod conditions");
         if (aspic) {
             var item = BuiltInRegistries.ITEM.get(PufferfishPlease.id("pufferfish_aspic"));
             CriteriaTriggers.INVENTORY_CHANGED.trigger(player, player.getInventory(), new ItemStack(item));
-            helper.assertTrue(done(player, "fish_aspic"), "Aspic did not grant its advancement");
+            helper.assertTrue(hasAdvancement(player, "fish_aspic"), "Aspic did not grant its advancement");
         }
         var vanillaBoat = EntityType.BOAT.create(level);
         player.startRiding(vanillaBoat, true);
         CriteriaTriggers.START_RIDING_TRIGGER.trigger(player);
-        helper.assertTrue(!done(player, "pufferfish_voyage"), "Vanilla boat granted the pufferfish voyage");
-        helper.assertTrue(!done(player, "radiant_voyage") && !done(player, "heavy_voyage"), "Vanilla boat granted a special voyage");
+        helper.assertTrue(!hasAdvancement(player, "pufferfish_voyage"), "Vanilla boat granted the pufferfish voyage");
+        helper.assertTrue(!hasAdvancement(player, "radiant_voyage") && !hasAdvancement(player, "heavy_voyage"), "Vanilla boat granted a special voyage");
         player.stopRiding();
         for (var variant : PufferfishBoats.VARIANTS.values()) {
             var boat = variant.entity().get().create(level);
             player.startRiding(boat, true);
             CriteriaTriggers.START_RIDING_TRIGGER.trigger(player);
-            helper.assertTrue(done(player, "pufferfish_voyage"), "Missing boat advancement variant: " + variant.entity().getId());
-            helper.assertTrue(done(player, "radiant_voyage") == boat.skinBoatName().equals("radiant_pufferfish_skin_boat"),
+            helper.assertTrue(hasAdvancement(player, "pufferfish_voyage"), "Missing boat advancement variant: " + variant.entity().getId());
+            helper.assertTrue(hasAdvancement(player, "radiant_voyage") == boat.skinBoatName().equals("radiant_pufferfish_skin_boat"),
                     "Incorrect radiant voyage progress: " + boat.skinBoatName());
-            helper.assertTrue(done(player, "heavy_voyage") == boat.isHeavy(), "Incorrect heavy voyage progress: " + boat.skinBoatName());
+            helper.assertTrue(hasAdvancement(player, "heavy_voyage") == boat.isHeavy(), "Incorrect heavy voyage progress: " + boat.skinBoatName());
             player.stopRiding();
             player.getAdvancements().revoke(advancement(player, "pufferfish_voyage"), "ride");
             player.getAdvancements().revoke(advancement(player, "radiant_voyage"), "ride");
@@ -390,7 +391,7 @@ public final class PufferfishAdvancementGameTests {
         var player = player(helper);
         var observer = player(helper);
         CriteriaTriggers.INVENTORY_CHANGED.trigger(player, player.getInventory(), PufferfishItems.PUMP.toStack());
-        helper.assertTrue(!done(player, "pufferfish_pump"), "Obtaining a pump granted repair progress");
+        helper.assertTrue(!hasAdvancement(player, "pufferfish_pump"), "Obtaining a pump granted repair progress");
         var pos = helper.absolutePos(new BlockPos(2, 2, 2));
         var block = PufferfishBlocks.PUMP.get();
         var state = block.defaultBlockState();
@@ -403,10 +404,10 @@ public final class PufferfishAdvancementGameTests {
             fish.setDamageValue(worn ? 1 : 0);
             pump.setFish(fish);
             block.stepOn(level, pos, state, player);
-            helper.assertTrue(!done(player, "pufferfish_pump"), "Walking on a pump granted repair progress");
+            helper.assertTrue(!hasAdvancement(player, "pufferfish_pump"), "Walking on a pump granted repair progress");
             block.fallOn(level, state, pos, player, 1);
-            helper.assertTrue(done(player, "pufferfish_pump") == worn, "Pump progress did not match actual repair");
-            helper.assertTrue(!done(observer, "pufferfish_pump"), "A nearby observer received pump progress");
+            helper.assertTrue(hasAdvancement(player, "pufferfish_pump") == worn, "Pump progress did not match actual repair");
+            helper.assertTrue(!hasAdvancement(observer, "pufferfish_pump"), "A nearby observer received pump progress");
             if (worn) helper.assertTrue(pump.fish().getDamageValue() == 0, "The successful stroke did not repair the fish");
             level.removeBlock(pos, false);
         }
@@ -420,10 +421,10 @@ public final class PufferfishAdvancementGameTests {
         var player = player(helper);
         var level = helper.getLevel();
         CriteriaTriggers.INVENTORY_CHANGED.trigger(player, player.getInventory(), PufferfishItems.COPPER_VARIANTS.get(4).toStack());
-        helper.assertTrue(!done(player, "wax_on"), "Merely obtaining a waxed fish granted waxing progress");
+        helper.assertTrue(!hasAdvancement(player, "wax_on"), "Merely obtaining a waxed fish granted waxing progress");
         CriteriaTriggers.RECIPE_CRAFTED.trigger(player, PufferfishPlease.id("wax_copper_pufferfish"),
                 List.of(PufferfishItems.COPPER.toStack(), new ItemStack(Items.HONEYCOMB)));
-        helper.assertTrue(done(player, "wax_on"), "Wax crafting did not grant progress");
+        helper.assertTrue(hasAdvancement(player, "wax_on"), "Wax crafting did not grant progress");
         player.getAdvancements().revoke(advancement(player, "wax_on"), "craft");
         var pos = helper.absolutePos(new BlockPos(2, 3, 2));
         level.setBlockAndUpdate(pos, PufferfishBlocks.PLACED_FISH.get().defaultBlockState());
@@ -431,12 +432,12 @@ public final class PufferfishAdvancementGameTests {
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.HONEYCOMB));
         CopperPufferfish.interact(new PlayerInteractEvent.RightClickBlock(player, InteractionHand.MAIN_HAND, pos,
                 new BlockHitResult(pos.getCenter(), Direction.UP, pos, false)));
-        helper.assertTrue(done(player, "wax_on"), "Waxing a placed fish did not grant progress");
+        helper.assertTrue(hasAdvancement(player, "wax_on"), "Waxing a placed fish did not grant progress");
         player.getAdvancements().revoke(advancement(player, "wax_on"), "wax");
         var fish = PufferfishMobs.VARIANTS.get("copper_pufferfish").entity().get().create(level);
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.HONEYCOMB));
         fish.interact(player, InteractionHand.MAIN_HAND);
-        helper.assertTrue(done(player, "wax_on"), "Waxing a living fish did not grant progress");
+        helper.assertTrue(hasAdvancement(player, "wax_on"), "Waxing a living fish did not grant progress");
         level.removeBlock(pos, false);
         player.getAdvancements().stopListening();
         helper.succeed();
@@ -458,10 +459,10 @@ public final class PufferfishAdvancementGameTests {
             level.structureManager().addReferenceForStructure(SectionPos.of(floor), structure, new ChunkPos(floor).toLong(), chunk);
             player.setPos(floor.above(12).getCenter());
             CriteriaTriggers.LOCATION.trigger(player);
-            helper.assertTrue(!done(player, id), "Standing outside a ruin granted discovery");
+            helper.assertTrue(!hasAdvancement(player, id), "Standing outside a ruin granted discovery");
             player.setPos(floor.above(4).getCenter());
             CriteriaTriggers.LOCATION.trigger(player);
-            helper.assertTrue(done(player, id), "Entering a ruin did not grant discovery");
+            helper.assertTrue(hasAdvancement(player, id), "Entering a ruin did not grant discovery");
             level.structureManager().setStartForStructure(SectionPos.of(floor), structure, StructureStart.INVALID_START, chunk);
         }
         player.getAdvancements().stopListening();
@@ -485,7 +486,7 @@ public final class PufferfishAdvancementGameTests {
         level.setBlockAndUpdate(last, Blocks.PRISMARINE_BRICKS.defaultBlockState());
         NeoForge.EVENT_BUS.post(new BlockEvent.EntityPlaceEvent(previous, Blocks.PRISMARINE.defaultBlockState(), player));
         helper.runAfterDelay(2, () -> {
-            helper.assertTrue(!done(player, "restored_glory") && !done(observer, "restored_glory"),
+            helper.assertTrue(!hasAdvancement(player, "restored_glory") && !hasAdvancement(observer, "restored_glory"),
                     "An already complete frame or a nearby observer earned restoration");
             level.setBlockAndUpdate(last, Blocks.WATER.defaultBlockState());
             var snapshot = BlockSnapshot.create(level.dimension(), level, last);
@@ -495,12 +496,12 @@ public final class PufferfishAdvancementGameTests {
             canceled.setCanceled(true);
             level.setBlockAndUpdate(last, Blocks.WATER.defaultBlockState());
             helper.runAfterDelay(2, () -> {
-                helper.assertTrue(!done(player, "restored_glory"), "Canceled placement granted restoration");
+                helper.assertTrue(!hasAdvancement(player, "restored_glory"), "Canceled placement granted restoration");
                 var valid = BlockSnapshot.create(level.dimension(), level, last);
                 level.setBlockAndUpdate(last, PufferfishBlocks.ANCIENT_PRISMARINE.get().defaultBlockState());
                 NeoForge.EVENT_BUS.post(new BlockEvent.EntityPlaceEvent(valid, Blocks.PRISMARINE.defaultBlockState(), player));
                 helper.runAfterDelay(2, () -> {
-                    helper.assertTrue(done(player, "restored_glory") && !done(observer, "restored_glory"),
+                    helper.assertTrue(hasAdvancement(player, "restored_glory") && !hasAdvancement(observer, "restored_glory"),
                             "Restoration did not credit only the player who completed the frame");
                     for (var pos : BlockPos.betweenClosed(center.offset(-2, -2, -2), center.offset(2, 2, 2))) level.removeBlock(pos, false);
                     player.getAdvancements().stopListening();
@@ -509,15 +510,6 @@ public final class PufferfishAdvancementGameTests {
                 });
             });
         });
-    }
-
-    private static AdvancementHolder advancement(ServerPlayer player, String id) {
-        return player.server.getAdvancements().get(PufferfishPlease.id("adventure/" + id));
-    }
-
-    static boolean done(ServerPlayer player, String id) {
-        var advancement = advancement(player, id);
-        return advancement != null && player.getAdvancements().getOrStartProgress(advancement).isDone();
     }
 
     private static ServerPlayer player(GameTestHelper helper) {

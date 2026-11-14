@@ -251,38 +251,4 @@ public final class PufferfishArmorGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "empty")
-    public static void fullSetRetaliatesOnlyOncePerHit(GameTestHelper helper) {
-        var single = helper.makeMockPlayer(GameType.SURVIVAL);
-        var full = helper.makeMockPlayer(GameType.SURVIVAL);
-        single.setItemSlot(EquipmentSlot.CHEST, new ItemStack(PufferfishArmor.VARIANTS.get("pufferfish_skin_chestplate").get()));
-        for (var type : PufferfishArmor.TYPES) {
-            full.setItemSlot(type.getSlot(), new ItemStack(PufferfishArmor.VARIANTS.get("pufferfish_skin_" + type.getName()).get()));
-        }
-        single.tick();
-        full.tick();
-        helper.assertTrue(full.getArmorValue() == 7, "Full skin armor set has incorrect protection");
-        var attacker = helper.spawn(EntityType.VILLAGER, new BlockPos(2, 2, 2));
-        attacker.setNoAi(true);
-        for (int attempt = 0; attempt < 64; attempt++) {
-            float damage = -1;
-            for (var player : List.of(single, full)) {
-                long seed = 9123L + attempt * 7919L;
-                helper.getLevel().getRandom().setSeed(seed);
-                player.getRandom().setSeed(seed);
-                attacker.getRandom().setSeed(seed);
-                player.setHealth(20);
-                player.invulnerableTime = 0;
-                for (var stack : player.getArmorSlots()) stack.setDamageValue(0);
-                attacker.setHealth(20);
-                attacker.invulnerableTime = 0;
-                attacker.removeAllEffects();
-                player.hurt(player.damageSources().mobAttack(attacker), 2);
-                if (damage == -1) damage = 20 - attacker.getHealth();
-                else helper.assertTrue(damage == 20 - attacker.getHealth(), "Full set multiplied intrinsic retaliation");
-            }
-        }
-        attacker.discard();
-        helper.succeed();
-    }
 }

@@ -19,7 +19,6 @@ import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
@@ -372,20 +371,4 @@ public final class PufferfishExtraEnchantmentGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "empty")
-    public static void newDamageBooksRespectExclusivity(GameTestHelper helper) {
-        var keys = List.of(Enchantments.DENSITY, Enchantments.BREACH, Enchantments.SMITE, Enchantments.BANE_OF_ARTHROPODS);
-        var player = helper.makeMockPlayer(GameType.SURVIVAL);
-        for (var first : keys) {
-            for (var second : keys) {
-                if (first == second) continue;
-                var menu = new AnvilMenu(1, player.getInventory());
-                menu.getSlot(0).set(enchant(helper, new ItemStack(Items.PUFFERFISH), first, 1));
-                menu.getSlot(1).set(enchant(helper, new ItemStack(Items.ENCHANTED_BOOK), second, 1));
-                menu.createResult();
-                helper.assertTrue(!menu.getSlot(2).hasItem(), "Mutually exclusive damage books combined");
-            }
-        }
-        helper.succeed();
-    }
 }

@@ -87,8 +87,8 @@ public final class PufferfishConduitCultivationGameTests {
             level.setBlockAndUpdate(missing, Blocks.PRISMARINE.defaultBlockState());
             helper.runAfterDelay(45, () -> {
                 var expected = new PufferfishCultivation(PufferfishLevel.LEVEL_5, 0.5, 3, 50_000);
-                helper.assertTrue(PufferfishAdvancementGameTests.done(player, "cultivation_level_5")
-                        && !PufferfishAdvancementGameTests.done(outside, "cultivation_level_5"),
+                helper.assertTrue(TestPlayers.hasAdvancement(player, "cultivation_level_5")
+                        && !TestPlayers.hasAdvancement(outside, "cultivation_level_5"),
                         "Core-driven promotion credited the wrong player");
                 for (var stack : java.util.List.of(main, ordinary.getExistingDataOrNull(PufferfishPlease.FISH_ITEM), material.fish(), placed.fish())) {
                     helper.assertTrue(expected.equals(stack.get(PufferfishPlease.CULTIVATION.get())),

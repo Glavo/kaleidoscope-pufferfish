@@ -22,6 +22,7 @@ import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.glavo.mcmod.pufferfish.test.TestEffects;
+import org.jetbrains.annotations.Nullable;
 
 /// Verifies actual support detection, poison damage, refreshing, and expiration after leaving.
 @GameTestHolder(PufferfishPlease.MODID)
@@ -126,20 +127,16 @@ public final class PufferfishSurfacePoisonGameTests {
     @GameTest(template = "empty")
     public static void poisonRefreshPreservesStrongerEffects(GameTestHelper helper) {
         var entity = stand(helper, PufferfishBlocks.skin(null).defaultBlockState());
-        for (var effect : new MobEffectInstance[] {
-                new MobEffectInstance(MobEffects.POISON, 60, 0),
-                new MobEffectInstance(MobEffects.POISON, 20, 1), new MobEffectInstance(MobEffects.POISON, -1, 0)}) {
-            entity.addEffect(effect);
+        // Each case specifies the initial duration, amplifier, and expected refreshed duration.
+        for (var sample : new int[][] {{60, 0, 60}, {21, 0, 21}, {20, 1, 20}, {-1, 0, -1}, {20, 0, 120}, {200, 0, 200}}) {
+            entity.addEffect(new MobEffectInstance(MobEffects.POISON, sample[0], sample[1]));
             entity.invulnerableTime = 0;
             NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
-            helper.assertTrue(TestEffects.poison(entity).getDuration() == effect.getDuration()
-                    && TestEffects.poison(entity).getAmplifier() == effect.getAmplifier(), "Existing poison was overwritten");
+            @Nullable var actual = TestEffects.poison(entity);
+            helper.assertTrue(actual != null && actual.getDuration() == sample[2] && actual.getAmplifier() == sample[1],
+                    "Surface poison did not preserve or refresh the existing effect: duration=" + sample[0] + ", amplifier=" + sample[1]);
             TestEffects.clearPoison(entity);
         }
-        entity.addEffect(new MobEffectInstance(MobEffects.POISON, 20, 0));
-        entity.invulnerableTime = 0;
-        NeoForge.EVENT_BUS.post(new EntityTickEvent.Post(entity));
-        helper.assertTrue(TestEffects.poison(entity).getDuration() == 120, "Short poison was not refreshed");
         entity.discard();
         helper.succeed();
     }

@@ -82,7 +82,7 @@ public final class PufferfishAwakeningGameTests {
                 var cultivation = stacks.get(i).get(PufferfishPlease.CULTIVATION.get());
                 helper.assertTrue(trials.get(i).awakens() ? new PufferfishCultivation(PufferfishLevel.LEVEL_1, talents.get(i), 0, 0).equals(cultivation)
                         : cultivation == null, "Direct damage used the wrong chance, rerolled, or retained pre-awakening progress: " + i);
-                helper.assertTrue(PufferfishAdvancementGameTests.done(players.get(i), "cultivation_level_1") == trials.get(i).awakens(),
+                helper.assertTrue(TestPlayers.hasAdvancement(players.get(i), "cultivation_level_1") == trials.get(i).awakens(),
                         "Initial breakthrough progress did not follow successful awakening");
                 players.get(i).getAdvancements().stopListening();
             }
