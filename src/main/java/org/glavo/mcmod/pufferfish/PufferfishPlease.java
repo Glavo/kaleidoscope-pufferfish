@@ -78,10 +78,11 @@ public class PufferfishPlease {
     public static final DeferredHolder<RecipeSerializer<?>, PufferfishShieldRecipe.Serializer> SHIELD_RECIPE =
             RECIPES.register("pufferfish_skin_shield", PufferfishShieldRecipe.Serializer::new);
     /// The shaped flail recipe serializer, which retains the ingredient fish's component changes.
-    public static final DeferredHolder<RecipeSerializer<?>, PufferfishFlailRecipe.Serializer> FLAIL_RECIPE =
-            RECIPES.register("pufferfish_flail", PufferfishFlailRecipe.Serializer::new);
-    public static final DeferredHolder<RecipeSerializer<?>, PufferfishMaterialRecipe.Serializer> MATERIAL_RECIPE =
-            RECIPES.register("material_pufferfish", PufferfishMaterialRecipe.Serializer::new);
+    public static final DeferredHolder<RecipeSerializer<?>, PufferfishCraftingRecipe.Serializer> FLAIL_RECIPE =
+            RECIPES.register("pufferfish_flail", () -> new PufferfishCraftingRecipe.Serializer(true));
+    /// Material upgrades preserve weapon data while discarding dye.
+    public static final DeferredHolder<RecipeSerializer<?>, PufferfishCraftingRecipe.Serializer> MATERIAL_RECIPE =
+            RECIPES.register("material_pufferfish", () -> new PufferfishCraftingRecipe.Serializer(false));
     public static final DeferredHolder<RecipeSerializer<?>, PufferfishLampRecipe.Serializer> LAMP_RECIPE =
             RECIPES.register("pufferfish_lamp", PufferfishLampRecipe.Serializer::new);
     public static final DeferredHolder<RecipeSerializer<?>, SimpleCraftingRecipeSerializer<PufferfishDyeRecipe>> DYE_RECIPE =

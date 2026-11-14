@@ -73,14 +73,15 @@ public record PufferfishVariant(String fishName, PufferfishMaterial material, @N
         return item;
     }
 
+    /// Resolves fish and derivative identity without allocating temporary stacks.
     @Nullable
     public static PufferfishVariant of(ItemStack stack) {
-        if (stack.getItem() instanceof PufferfishFlailItem flail) return of(flail.fish(stack));
-        if (stack.is(Items.PUFFERFISH) || stack.is(Items.PUFFERFISH_BUCKET) || stack.is(Items.PUFFERFISH_SPAWN_EGG)) {
-            var color = stack.get(PufferfishPlease.COLOR.get());
+        var item = stack.getItem() instanceof PufferfishFlailItem flail ? flail.fishItem() : stack.getItem();
+        if (item == Items.PUFFERFISH || item == Items.PUFFERFISH_BUCKET || item == Items.PUFFERFISH_SPAWN_EGG) {
+            @Nullable var color = stack.get(PufferfishPlease.COLOR.get());
             return color == null ? NORMAL : DYED.get(color);
         }
-        return ITEMS.get(stack.getItem());
+        return ITEMS.get(item);
     }
 
     public Item fishItem() {

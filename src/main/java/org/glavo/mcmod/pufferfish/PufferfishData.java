@@ -3,8 +3,6 @@
 
 package org.glavo.mcmod.pufferfish;
 
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.entity.animal.Pufferfish;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -29,9 +27,7 @@ public final class PufferfishData {
         var color = PufferfishColors.get(fish);
         if (color != null) return PufferfishColors.dye(stack, color);
         stack.remove(PufferfishPlease.COLOR.get());
-        var name = stack.get(DataComponents.ITEM_NAME);
-        if (name != null && name.getContents() instanceof TranslatableContents translated
-                && translated.getKey().equals("item.pufferfish_please.dyed_pufferfish")) stack.remove(DataComponents.ITEM_NAME);
+        PufferfishColors.clearGeneratedName(stack);
         return stack;
     }
 

@@ -8,10 +8,8 @@ import java.util.List;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -158,14 +156,10 @@ public final class PufferfishEngineBlockEntity extends GeneratingKineticBlockEnt
         return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
     }
 
+    /// Converts between fish and bucket forms, preserving dye and component changes.
     private static ItemStack convertFish(ItemStack source, boolean bucket) {
         ItemStack result = source.transmuteCopy(bucket ? Items.PUFFERFISH_BUCKET : Items.PUFFERFISH, 1);
-        Component name = result.get(DataComponents.ITEM_NAME);
-        if (name != null && name.getContents() instanceof TranslatableContents translated
-                && (translated.getKey().equals("item.pufferfish_please.dyed_pufferfish")
-                || translated.getKey().equals("item.pufferfish_please.dyed_pufferfish_bucket"))) {
-            result.remove(DataComponents.ITEM_NAME);
-        }
+        PufferfishColors.clearGeneratedName(result);
         var color = PufferfishColors.get(source);
         if (color != null) {
             PufferfishColors.dye(result, color);

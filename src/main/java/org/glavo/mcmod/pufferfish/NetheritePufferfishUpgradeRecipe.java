@@ -5,9 +5,7 @@ package org.glavo.mcmod.pufferfish;
 
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeSerializer;
@@ -26,11 +24,7 @@ public record NetheritePufferfishUpgradeRecipe(SmithingTransformRecipe delegate)
     public ItemStack assemble(SmithingRecipeInput input, HolderLookup.Provider registries) {
         var result = delegate.assemble(input, registries);
         result.remove(PufferfishPlease.COLOR.get());
-        var name = result.get(DataComponents.ITEM_NAME);
-        if (name != null && name.getContents() instanceof TranslatableContents translated
-                && translated.getKey().equals("item.pufferfish_please.dyed_pufferfish")) {
-            result.remove(DataComponents.ITEM_NAME);
-        }
+        PufferfishColors.clearGeneratedName(result);
         return PufferfishDurability.transfer(input.base(), result);
     }
 

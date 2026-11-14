@@ -34,7 +34,11 @@ public final class PufferfishFlailItem extends Item {
         this.fish = fish;
     }
 
-    public ItemStack fish(ItemStack stack) { return stack.transmuteCopy(fish.get(), 1); }
+    /// Returns the fish item represented by this flail without copying stack components.
+    public Item fishItem() { return fish.get(); }
+
+    /// Copies the flail's components onto its corresponding fish item.
+    public ItemStack fish(ItemStack stack) { return stack.transmuteCopy(fishItem(), 1); }
 
     public static int chargeTicks(ItemStack stack) {
         int base = PufferfishCombatConfig.value(PufferfishItems.hasHeavyCombat(stack) ? PufferfishCombatConfig.HEAVY_FLAIL_CHARGE_TICKS
