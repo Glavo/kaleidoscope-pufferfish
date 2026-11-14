@@ -40,12 +40,12 @@ public final class PufferfishFlailItem extends Item {
     /// Copies the flail's components onto its corresponding fish item.
     public ItemStack fish(ItemStack stack) { return stack.transmuteCopy(fishItem(), 1); }
 
+    /// Returns the material's full-charge duration with Density's configured penalty, capped at the use duration.
     public static int chargeTicks(ItemStack stack) {
         int base = PufferfishCombatConfig.value(PufferfishItems.hasHeavyCombat(stack) ? PufferfishCombatConfig.HEAVY_FLAIL_CHARGE_TICKS
                 : PufferfishItems.hasNetheriteCombat(stack)
                 ? PufferfishCombatConfig.NETHERITE_FLAIL_CHARGE_TICKS : PufferfishCombatConfig.NORMAL_FLAIL_CHARGE_TICKS);
-        int density = stack.getEnchantments().entrySet().stream().filter(entry -> entry.getKey().is(Enchantments.DENSITY))
-                .mapToInt(entry -> entry.getIntValue()).findFirst().orElse(0);
+        int density = PufferfishEnchantments.storedLevel(stack, Enchantments.DENSITY);
         return (int) Math.min(72000, Math.ceil(base * (1 + density * PufferfishCombatConfig.value(PufferfishCombatConfig.FLAIL_DENSITY_CHARGE_PENALTY))));
     }
 

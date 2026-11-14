@@ -151,11 +151,12 @@ public record PufferfishCultivation(PufferfishLevel level, double talent, long e
         // Wait for all pickup listeners, including later cancellation, while retaining the original recipients.
         player.server.tell(new TickTask(player.server.getTickCount(), () -> {
             if (event.isCanceled()) return;
+            boolean inConduitRange = PufferfishConduitSpawning.isInRange(player.level(), player.blockPosition());
             for (var stack : recipients) {
-                var cultivation = stack.get(PufferfishPlease.CULTIVATION.get());
+                @Nullable var cultivation = stack.get(PufferfishPlease.CULTIVATION.get());
                 if (!stack.isEmpty() && cultivation != null) {
                     var updated = cultivation.addExperience(amount);
-                    if (PufferfishConduitSpawning.isInRange(player.level(), player.blockPosition())) updated = updated.advanceAtConduit();
+                    if (inConduitRange) updated = updated.advanceAtConduit();
                     stack.set(PufferfishPlease.CULTIVATION.get(), updated);
                     announcePromotion(player, stack, cultivation.level());
                 }

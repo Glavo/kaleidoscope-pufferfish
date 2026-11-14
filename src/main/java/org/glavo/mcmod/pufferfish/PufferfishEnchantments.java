@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.List;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -20,6 +21,14 @@ import org.jetbrains.annotations.Nullable;
 
 public final class PufferfishEnchantments {
     private PufferfishEnchantments() {}
+
+    /// Reads the stack's stored enchantments without applying runtime enchantment modifiers.
+    static int storedLevel(ItemStack stack, ResourceKey<Enchantment> key) {
+        for (var entry : stack.getEnchantments().entrySet()) {
+            if (entry.getKey().is(key)) return entry.getIntValue();
+        }
+        return 0;
+    }
 
     /// Applies an anvil name and returns its level cost; blank names only clear existing custom names.
     static int applyAnvilName(ItemStack result, @Nullable String name) {

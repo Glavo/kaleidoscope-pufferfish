@@ -5,7 +5,6 @@ package org.glavo.mcmod.pufferfish;
 
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -24,7 +23,6 @@ import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.phys.Vec3;
@@ -80,7 +78,8 @@ public final class PufferfishCombat {
                 + Math.min(Math.max(distance - 3, 0), 5) * PufferfishCombatConfig.value(PufferfishCombatConfig.NEXT_FIVE_BLOCKS_DAMAGE)
                 + Math.max(distance - 8, 0) * PufferfishCombatConfig.value(PufferfishCombatConfig.REMAINING_BLOCKS_DAMAGE);
         double density = PufferfishCombatConfig.value(PufferfishCombatConfig.HEAVY_DENSITY_DAMAGE);
-        double bonus = curve * PufferfishCombatConfig.value(PufferfishCombatConfig.HEAVY_DAMAGE_MULTIPLIER) + distance * enchantmentLevel(stack, Enchantments.DENSITY) * density;
+        double bonus = curve * PufferfishCombatConfig.value(PufferfishCombatConfig.HEAVY_DAMAGE_MULTIPLIER)
+                + distance * PufferfishEnchantments.storedLevel(stack, Enchantments.DENSITY) * density;
         double cap = PufferfishCombatConfig.value(PufferfishCombatConfig.MAX_SMASH_BONUS);
         return (float) (cap > 0 ? Math.min(bonus, cap) : bonus);
     }
@@ -144,10 +143,11 @@ public final class PufferfishCombat {
         hitEffects(stack, target, source, direction, false);
     }
 
+    /// Applies Punch knockback and optionally the active status effect, excluding cats.
     private static void hitEffects(ItemStack stack, LivingEntity target, Entity source, Vec3 direction, boolean applyEffect) {
         if (target instanceof Cat) return;
         if (applyEffect) applyAttackEffect(stack, target, source);
-        int punch = enchantmentLevel(stack, Enchantments.PUNCH);
+        int punch = PufferfishEnchantments.storedLevel(stack, Enchantments.PUNCH);
         if (punch > 0) {
             double resistance = Math.max(0, 1 - target.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE));
             Vec3 push = direction.multiply(1, 0, 1).normalize().scale(punch * 0.6 * resistance);
@@ -219,12 +219,6 @@ public final class PufferfishCombat {
         return poison == null ? null : new MobEffectInstance(MobEffects.POISON, STATUS_EFFECT_DURATION_TICKS, poison.amplifier());
     }
 
-    /// Returns the stored level of the specified enchantment, or zero when absent.
-    private static int enchantmentLevel(ItemStack stack, ResourceKey<Enchantment> key) {
-        return stack.getEnchantments().entrySet().stream().filter(entry -> entry.getKey().is(key))
-                .mapToInt(entry -> entry.getIntValue()).findFirst().orElse(0);
-    }
-
     /// Resolves fish and flail damage by material without constructing a temporary fish stack.
     private static float throwingBaseDamage(ItemStack stack) {
         @org.jetbrains.annotations.Nullable var variant = PufferfishVariant.of(stack);
@@ -243,8 +237,9 @@ public final class PufferfishCombat {
         return PufferfishCombatConfig.value(damage).floatValue();
     }
 
+    /// Returns Density's flat bonus for ordinary melee attacks and projectiles.
     private static float densityBonus(ItemStack stack) {
-        int density = enchantmentLevel(stack, Enchantments.DENSITY);
+        int density = PufferfishEnchantments.storedLevel(stack, Enchantments.DENSITY);
         return density > 0 ? 0.5F + 0.5F * density : 0;
     }
 
