@@ -25,7 +25,8 @@ public final class FishProcessingCategory implements IRecipeCategory<FishProcess
 
     public FishProcessingCategory(IGuiHelper gui) { icon = gui.createDrawableItemStack(new ItemStack(PufferfishBlocks.PROCESSING_TABLE.get())); }
     @Override public RecipeType<FishProcessingRecipe> getRecipeType() { return TYPE; }
-    @Override public Component getTitle() { return Component.translatable("jei.pufferfish_please.fish_processing"); }
+    /// Uses the stand's localized name as the recipe category title.
+    @Override public Component getTitle() { return PufferfishBlocks.PROCESSING_TABLE.get().getName(); }
     @Override public IDrawable getIcon() { return icon; }
     @Override public int getWidth() { return 166; }
     @Override public int getHeight() { return 82; }
