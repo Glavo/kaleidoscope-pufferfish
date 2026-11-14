@@ -13,6 +13,7 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import org.glavo.mcmod.pufferfish.PufferfishDurability;
 import org.glavo.mcmod.pufferfish.PufferfishVariant;
+import org.jetbrains.annotations.Unmodifiable;
 
 public final class TestItems {
     private TestItems() {}
@@ -38,7 +39,14 @@ public final class TestItems {
         return stack;
     }
 
-    public static List<ItemStack> fishVariants() {
+    /// Creates independent stacks for the complete registered fish family.
+    public static @Unmodifiable List<ItemStack> fishVariants() {
         return PufferfishVariant.ALL.stream().map(PufferfishVariant::fish).toList();
+    }
+
+    /// Golden fish are eaten on use; every other whole-fish variant supports throwing.
+    public static @Unmodifiable List<ItemStack> throwableFishVariants() {
+        return PufferfishVariant.ALL.stream().filter(variant -> variant != PufferfishVariant.GOLDEN)
+                .map(PufferfishVariant::fish).toList();
     }
 }

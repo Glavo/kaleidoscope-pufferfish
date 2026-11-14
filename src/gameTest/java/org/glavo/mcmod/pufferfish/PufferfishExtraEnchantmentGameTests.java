@@ -4,7 +4,6 @@
 package org.glavo.mcmod.pufferfish;
 
 import static org.glavo.mcmod.pufferfish.test.TestItems.enchant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
@@ -20,7 +19,6 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.inventory.ClickType;
-import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
@@ -45,15 +43,6 @@ public final class PufferfishExtraEnchantmentGameTests {
         var player = TestPlayers.serverPlayer(helper);
         player.setPos(Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(2, 2, 0))));
         return player;
-    }
-
-    private static List<ItemStack> fish() {
-        var stacks = new ArrayList<ItemStack>();
-        stacks.add(new ItemStack(Items.PUFFERFISH));
-        for (var color : DyeColor.values()) stacks.add(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
-        stacks.add(new ItemStack(PufferfishItems.NETHERITE.get()));
-        stacks.add(new ItemStack(PufferfishItems.HEAVY.get()));
-        return stacks;
     }
 
     @GameTest(template = "empty")
@@ -130,13 +119,14 @@ public final class PufferfishExtraEnchantmentGameTests {
         helper.succeed();
     }
 
+    /// Forced Wind Burst retains its fall requirement across all fish without granting ordinary fish smash protection.
     @GameTest(template = "empty")
     public static void windBurstRetainsItsFallConditionWithoutOrdinarySmashProtection(GameTestHelper helper) {
         int[] bursts = {0};
         Consumer<ExplosionEvent.Start> capture = event -> { bursts[0]++; event.setCanceled(true); };
         NeoForge.EVENT_BUS.addListener(capture);
         try {
-            for (var original : fish()) {
+            for (var original : TestItems.fishVariants()) {
                 for (float distance : new float[] {0, 3}) {
                     var player = serverPlayer(helper);
                     player.setItemInHand(InteractionHand.MAIN_HAND, enchant(helper, original.copy(), Enchantments.WIND_BURST, 3));
@@ -163,9 +153,10 @@ public final class PufferfishExtraEnchantmentGameTests {
         helper.succeed();
     }
 
+    /// Binding restricts survival removal for every fish while leaving inventory and creative access intact.
     @GameTest(template = "empty")
     public static void bindingPreventsRemovingWornFishButAllowsCreativeRemoval(GameTestHelper helper) {
-        for (var stack : fish()) {
+        for (var stack : TestItems.fishVariants()) {
             enchant(helper, stack, Enchantments.BINDING_CURSE, 1);
             var player = helper.makeMockPlayer(GameType.SURVIVAL);
             player.setItemSlot(EquipmentSlot.HEAD, stack.copy());
@@ -184,6 +175,7 @@ public final class PufferfishExtraEnchantmentGameTests {
         helper.succeed();
     }
 
+    /// Vanishing removes every cursed fish variant only when inventory is dropped on death.
     @GameTest(template = "empty")
     public static void vanishingRemovesFishOnDeathAndRespectsKeepInventory(GameTestHelper helper) {
         var rule = helper.getLevel().getGameRules().getRule(GameRules.RULE_KEEPINVENTORY);
@@ -191,7 +183,7 @@ public final class PufferfishExtraEnchantmentGameTests {
         try {
             for (boolean keep : new boolean[] {false, true}) {
                 rule.set(keep, helper.getLevel().getServer());
-                for (var stack : fish()) {
+                for (var stack : TestItems.fishVariants()) {
                     var player = serverPlayer(helper);
                     player.setPos(Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(2, 2, 2))));
                     enchant(helper, stack, Enchantments.VANISHING_CURSE, 1);
@@ -215,6 +207,7 @@ public final class PufferfishExtraEnchantmentGameTests {
         helper.succeed();
     }
 
+    /// Every throwable fish checks weather, exposure, and successful damage before Channeling, then recovers normally.
     @GameTest(template = "empty")
     public static void channelingChecksWeatherSkyAndDamageAndPreservesRecovery(GameTestHelper helper) {
         var level = helper.getLevel();
@@ -227,7 +220,7 @@ public final class PufferfishExtraEnchantmentGameTests {
                         && level.canSeeSky(helper.absolutePos(new BlockPos(4, 2, 3))), "Sky lighting is not ready"))
                 .thenExecute(() -> {
             try {
-                for (var original : fish()) {
+                for (var original : TestItems.throwableFishVariants()) {
                     for (int scenario = 0; scenario < 6; scenario++) {
                         for (boolean loyal : new boolean[] {false, true}) {
                             level.setRainLevel(scenario == 0 ? 0 : 1);

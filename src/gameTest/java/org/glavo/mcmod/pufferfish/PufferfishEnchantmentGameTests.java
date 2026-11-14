@@ -94,6 +94,32 @@ public final class PufferfishEnchantmentGameTests {
         target.discard();
     }
 
+    /// Rejects stacked or unsupported inputs and enforces XP limits while filtering mixed books.
+    @GameTest(template = "empty")
+    public static void anvilRejectsBatchesAndHonorsCostsAndOtherEnchantments(GameTestHelper helper) {
+        var player = owner(helper);
+        var menu = new AnvilMenu(1, player.getInventory());
+        var book = enchant(helper, new ItemStack(Items.ENCHANTED_BOOK), Enchantments.LOYALTY, 3);
+        for (var invalid : List.of(new ItemStack(Items.PUFFERFISH, 2), new ItemStack(Items.PUFFERFISH_BUCKET), new ItemStack(Items.COD))) {
+            menu.getSlot(0).set(invalid);
+            menu.getSlot(1).set(book.copy());
+            helper.assertTrue(!menu.getSlot(2).hasItem(), "Anvil accepted an invalid loyalty target");
+        }
+        var expensive = new ItemStack(Items.PUFFERFISH);
+        expensive.set(DataComponents.REPAIR_COST, 40);
+        menu.getSlot(0).set(expensive);
+        helper.assertTrue(!menu.getSlot(2).hasItem(), "Anvil bypassed the too-expensive limit");
+        menu.getSlot(0).set(new ItemStack(Items.PUFFERFISH));
+        player.experienceLevel = 0;
+        helper.assertTrue(menu.getSlot(2).hasItem() && !menu.getSlot(2).mayPickup(player), "Anvil ignored insufficient XP");
+        var impaling = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.IMPALING);
+        var mixed = book.copy();
+        EnchantmentHelper.updateEnchantments(mixed, enchantments -> enchantments.set(impaling, 5));
+        menu.getSlot(1).set(mixed);
+        helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(impaling, menu.getSlot(2).getItem()) == 0, "Loyalty support enabled unrelated enchantments");
+        helper.succeed();
+    }
+
     /// Every registered fish accepts eligible books, retains its identity, and pays the anvil's costs.
     @GameTest(template = "empty")
     public static void allSupportedBooksApplyAndUpgradeEveryFishVariant(GameTestHelper helper) {
@@ -292,8 +318,7 @@ public final class PufferfishEnchantmentGameTests {
     public static void combinedEnchantmentsSurviveImpactReloadAndLoyaltyReturn(GameTestHelper helper) {
         var player = owner(helper);
         for (var damageEnchantment : List.of(Enchantments.DENSITY, Enchantments.BREACH)) {
-            for (var stack : TestItems.fishVariants()) {
-                if (stack.is(PufferfishItems.GOLDEN.get())) continue;
+            for (var stack : TestItems.throwableFishVariants()) {
                 stack = TestItems.awakened(stack);
                 player.getInventory().clearContent();
                 stack.set(DataComponents.CUSTOM_NAME, Component.literal("Combined keepsake"));

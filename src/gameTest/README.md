@@ -57,6 +57,7 @@ Ranks 0–10 multiply maximum health by 1, 1.2, 1.5, 2, 2.7, 3.6, 4.8, 6.2, 7.5,
 - `*GameTests`: observable server behavior, real interactions, persistence, synchronization, event cancellation and item conservation.
 - `PufferfishVariantGameTests`: family completeness and variant identity. Other suites exercise those families instead of repeating registration counts.
 - `PufferfishEnchantmentGameTests`: book acceptance, upgrades and costs. Loyalty and other specialized suites cover their runtime effects.
+- `PufferfishLoyaltyGameTests`: single-hit return, owner loss, inventory capacity, persistence and item conservation. Projectile and combat suites own base damage values.
 - `PufferfishEquipmentRetaliationGameTests`: intrinsic Thorns tiers and one-roll behavior across headgear, armor sets and shields, compared directly with vanilla. Armor, shield and headgear suites retain their own effect, wear and interaction checks; live-fish retaliation belongs to `PufferfishMobThornsGameTests`.
 - `PufferfishResourcesClientTest`: models, sprites, translations and resource selection. Domain client tests cover rendering behavior, animation and state restoration.
 - `compat/`: integrations registered only when the corresponding mod is present.
@@ -64,7 +65,7 @@ Ranks 0–10 multiply maximum health by 1, 1.2, 1.5, 2, 2.7, 3.6, 4.8, 6.2, 7.5,
 
 ## Adding coverage
 
-Give each behavior one primary owner. Use `TestItems.fishVariants()` for the complete fish family and explicit subsets for behavior-specific cases. Separate tests where entry points or failure modes differ. Keep independent expected results; do not call production code to compute the same value being asserted. For behavior intentionally matching vanilla, compare both paths with the same random seed rather than accepting a broad frequency range.
+Give each behavior one primary owner. Use `TestItems.fishVariants()` for the complete fish family, `throwableFishVariants()` for throws, and explicit subsets for behavior-specific cases. The throwing fixture excludes golden fish independently of the production eligibility check. Separate tests where entry points or failure modes differ. Keep independent expected results; do not call production code to compute the same value being asserted. For behavior intentionally matching vanilla, compare both paths with the same random seed rather than accepting a broad frequency range.
 
 Prefer real item use, collisions and menus over invoking an event handler directly. Isolated effect and event tests are still useful for cancellation and boundary conditions. Use fixed random sources or explicit boundary rolls, not unseeded frequency assertions.
 

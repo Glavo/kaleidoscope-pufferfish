@@ -3,11 +3,8 @@
 
 package org.glavo.mcmod.pufferfish;
 
-import java.util.ArrayList;
-import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
@@ -16,11 +13,9 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
@@ -35,20 +30,9 @@ import org.glavo.mcmod.pufferfish.test.TestItems;
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishLoyaltyGameTests {
-    private static List<ItemStack> variants() {
-        var result = new ArrayList<ItemStack>();
-        result.add(new ItemStack(Items.PUFFERFISH));
-        for (var color : DyeColor.values()) {
-            result.add(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
-        }
-        result.add(new ItemStack(PufferfishItems.NETHERITE.get()));
-        return result;
-    }
-
+    /// Adds Loyalty through the shared enchantment fixture.
     private static ItemStack enchant(GameTestHelper helper, ItemStack stack, int level) {
-        var loyalty = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.LOYALTY);
-        EnchantmentHelper.updateEnchantments(stack, enchantments -> enchantments.set(loyalty, level));
-        return stack;
+        return TestItems.enchant(helper, stack, Enchantments.LOYALTY, level);
     }
 
     private static Player owner(GameTestHelper helper) {
@@ -76,35 +60,11 @@ public final class PufferfishLoyaltyGameTests {
         return ticks;
     }
 
-    @GameTest(template = "empty")
-    public static void anvilRejectsBatchesAndHonorsCostsAndOtherEnchantments(GameTestHelper helper) {
-        var player = owner(helper);
-        var menu = new AnvilMenu(1, player.getInventory());
-        var book = enchant(helper, new ItemStack(Items.ENCHANTED_BOOK), 3);
-        for (var invalid : List.of(new ItemStack(Items.PUFFERFISH, 2), new ItemStack(Items.PUFFERFISH_BUCKET), new ItemStack(Items.COD))) {
-            menu.getSlot(0).set(invalid);
-            menu.getSlot(1).set(book.copy());
-            helper.assertTrue(!menu.getSlot(2).hasItem(), "Anvil accepted an invalid loyalty target");
-        }
-        var expensive = new ItemStack(Items.PUFFERFISH);
-        expensive.set(DataComponents.REPAIR_COST, 40);
-        menu.getSlot(0).set(expensive);
-        helper.assertTrue(!menu.getSlot(2).hasItem(), "Anvil bypassed the too-expensive limit");
-        menu.getSlot(0).set(new ItemStack(Items.PUFFERFISH));
-        player.experienceLevel = 0;
-        helper.assertTrue(menu.getSlot(2).hasItem() && !menu.getSlot(2).mayPickup(player), "Anvil ignored insufficient XP");
-        var impaling = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.IMPALING);
-        var mixed = book.copy();
-        EnchantmentHelper.updateEnchantments(mixed, enchantments -> enchantments.set(impaling, 5));
-        menu.getSlot(1).set(mixed);
-        helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(impaling, menu.getSlot(2).getItem()) == 0, "Loyalty support enabled unrelated enchantments");
-        helper.succeed();
-    }
-
+    /// Every throwable fish hits once and returns exactly one item with its components and impact wear.
     @GameTest(template = "empty")
     public static void loyalImpactsDamageOnceAndReturnEveryVariant(GameTestHelper helper) {
         var player = owner(helper);
-        for (var original : variants()) {
+        for (var original : TestItems.throwableFishVariants()) {
             var stack = TestItems.awakened(original);
             player.getInventory().clearContent();
             enchant(helper, stack, 3);
@@ -118,7 +78,7 @@ public final class PufferfishLoyaltyGameTests {
             helper.getLevel().addFreshEntity(projectile);
             projectile.tick();
             float health = target.getHealth();
-            helper.assertTrue(health == 20 - (PufferfishItems.isNetherite(stack) ? 6 : 1), "Loyalty changed impact damage");
+            helper.assertTrue(health < target.getMaxHealth(), "Loyal fish did not damage its target on impact");
             helper.assertTrue(projectile.isReturning() && !projectile.isRemoved(), "Entity hit dropped loyal fish");
             target.invulnerableTime = 0;
             projectile.setPos(target.position().add(0, 0.8, 1));
