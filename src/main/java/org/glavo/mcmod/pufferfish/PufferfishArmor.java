@@ -109,7 +109,7 @@ public final class PufferfishArmor {
         PufferfishRetaliation.thorns(level, strength, thornsItem, wearer, source);
     }
 
-    @javax.annotation.Nullable
+    @org.jetbrains.annotations.Nullable
     public static PufferfishPoison poison(LivingEntity wearer) {
         PufferfishPoison poison = null;
         for (var type : TYPES) {

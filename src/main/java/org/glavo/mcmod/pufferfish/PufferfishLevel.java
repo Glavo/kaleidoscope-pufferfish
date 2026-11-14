@@ -4,7 +4,7 @@
 package org.glavo.mcmod.pufferfish;
 
 import com.mojang.serialization.Codec;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.StringRepresentable;
 

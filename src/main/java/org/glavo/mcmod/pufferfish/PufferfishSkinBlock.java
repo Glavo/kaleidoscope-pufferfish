@@ -6,7 +6,7 @@ package org.glavo.mcmod.pufferfish;
 import com.mojang.serialization.MapCodec;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.BlockItem;

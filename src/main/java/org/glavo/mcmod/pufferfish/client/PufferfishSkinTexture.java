@@ -4,7 +4,7 @@
 package org.glavo.mcmod.pufferfish.client;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.resources.metadata.animation.FrameSize;
 import net.minecraft.resources.ResourceLocation;

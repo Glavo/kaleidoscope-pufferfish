@@ -206,16 +206,16 @@ public final class PufferfishCombat {
         }
     }
 
-    public static void applyRadiantGlow(LivingEntity target, @javax.annotation.Nullable Entity source) {
+    public static void applyRadiantGlow(LivingEntity target, @org.jetbrains.annotations.Nullable Entity source) {
         if (target instanceof Cat) return;
         target.addEffect(new MobEffectInstance(MobEffects.GLOWING, RADIANT_GLOW_DURATION_TICKS), source);
     }
 
     /// Returns the material's status before rolling lethal toxin replacement.
-    @javax.annotation.Nullable
+    @org.jetbrains.annotations.Nullable
     public static MobEffectInstance passiveEffect(ItemStack stack) {
         if (PufferfishItems.isRadiant(stack)) return new MobEffectInstance(MobEffects.WITHER, STATUS_EFFECT_DURATION_TICKS, 0);
-        @javax.annotation.Nullable var poison = PufferfishPoison.of(stack);
+        @org.jetbrains.annotations.Nullable var poison = PufferfishPoison.of(stack);
         return poison == null ? null : new MobEffectInstance(MobEffects.POISON, STATUS_EFFECT_DURATION_TICKS, poison.amplifier());
     }
 
@@ -227,7 +227,7 @@ public final class PufferfishCombat {
 
     /// Resolves fish and flail damage by material without constructing a temporary fish stack.
     private static float throwingBaseDamage(ItemStack stack) {
-        @javax.annotation.Nullable var variant = PufferfishVariant.of(stack);
+        @org.jetbrains.annotations.Nullable var variant = PufferfishVariant.of(stack);
         var material = variant != null && (stack.getItem() == variant.fishItem() || PufferfishItems.isFlail(stack))
                 ? variant.material() : PufferfishMaterial.NORMAL;
         if (material == PufferfishMaterial.HEAVY) return 10;

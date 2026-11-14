@@ -184,7 +184,7 @@ public final class PufferfishItems {
         }));
     }
 
-    @javax.annotation.Nullable
+    @org.jetbrains.annotations.Nullable
     public static String materialName(ItemStack stack) {
         if (!isPufferfish(stack)) return null;
         var variant = PufferfishVariant.of(stack);

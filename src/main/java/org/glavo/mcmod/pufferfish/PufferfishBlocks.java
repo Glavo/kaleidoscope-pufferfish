@@ -5,7 +5,7 @@ package org.glavo.mcmod.pufferfish;
 
 import java.util.EnumMap;
 import java.util.Map;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
