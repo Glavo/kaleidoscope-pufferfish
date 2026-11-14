@@ -1,5 +1,5 @@
 {
-  "parent": "pufferfish_please:adventure/root",
+  "parent": "pufferfish_please:adventure/ocean_visitor",
   "display": {
     "icon": {
       "id": "pufferfish_please:pufferfish_upgrade_smithing_template"

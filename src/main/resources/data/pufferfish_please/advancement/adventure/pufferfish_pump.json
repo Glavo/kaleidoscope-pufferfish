@@ -17,14 +17,7 @@
   },
   "criteria": {
     "obtain": {
-      "trigger": "minecraft:inventory_changed",
-      "conditions": {
-        "items": [
-          {
-            "items": "pufferfish_please:pufferfish_pump"
-          }
-        ]
-      }
+      "trigger": "pufferfish_please:inflate_pufferfish"
     }
   },
   "requirements": [

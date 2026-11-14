@@ -345,7 +345,6 @@ public final class PufferfishAdvancementGameTests {
                 "heavy_pufferfish", "heavy_pufferfish",
                 "upgrade_template", "pufferfish_upgrade_smithing_template",
                 "pufferfish_conduit", "pufferfish_conduit",
-                "pufferfish_pump", "pufferfish_pump",
                 "skin_craft", "pufferfish_skin").entrySet()) {
             helper.assertTrue(!done(player, entry.getKey()), "Unrelated actions granted progress: " + entry.getKey());
             var item = BuiltInRegistries.ITEM.get(PufferfishPlease.id(entry.getValue()));
@@ -353,12 +352,8 @@ public final class PufferfishAdvancementGameTests {
             helper.assertTrue(done(player, entry.getKey()), "Obtaining an item did not grant progress: " + entry.getKey());
         }
         boolean cooking = ModList.get().isLoaded("kaleidoscope_cookery");
-        boolean sashimi = cooking || ModList.get().isLoaded("farmersdelight");
-        helper.assertTrue((advancement(player, "pufferfish_sashimi") != null) == sashimi, "Sashimi progress has incorrect mod conditions");
-        if (sashimi) {
-            CriteriaTriggers.INVENTORY_CHANGED.trigger(player, player.getInventory(), PufferfishItems.SASHIMI.toStack());
-            helper.assertTrue(done(player, "pufferfish_sashimi"), "Sashimi did not grant its advancement");
-        }
+        CriteriaTriggers.INVENTORY_CHANGED.trigger(player, player.getInventory(), PufferfishItems.SASHIMI.toStack());
+        helper.assertTrue(done(player, "pufferfish_sashimi"), "Sashimi did not grant its advancement");
         boolean aspic = cooking && ModList.get().isLoaded("kaleidoscope_chinesefood");
         helper.assertTrue((advancement(player, "fish_aspic") != null) == aspic, "Aspic progress has incorrect mod conditions");
         if (aspic) {
@@ -386,6 +381,37 @@ public final class PufferfishAdvancementGameTests {
             player.getAdvancements().revoke(advancement(player, "heavy_voyage"), "ride");
         }
         player.getAdvancements().stopListening();
+        helper.succeed();
+    }
+
+    /// Only restoring durability grants pump progress, and only to the player operating it.
+    @GameTest(template = "empty")
+    public static void pumpProgressRequiresRepairingFish(GameTestHelper helper) {
+        var player = player(helper);
+        var observer = player(helper);
+        CriteriaTriggers.INVENTORY_CHANGED.trigger(player, player.getInventory(), PufferfishItems.PUMP.toStack());
+        helper.assertTrue(!done(player, "pufferfish_pump"), "Obtaining a pump granted repair progress");
+        var pos = helper.absolutePos(new BlockPos(2, 2, 2));
+        var block = PufferfishBlocks.PUMP.get();
+        var state = block.defaultBlockState();
+        var level = helper.getLevel();
+        for (boolean worn : new boolean[] {false, true}) {
+            level.setBlockAndUpdate(pos, state);
+            var pump = (PufferfishPumpBlockEntity) java.util.Objects.requireNonNull(level.getBlockEntity(pos));
+            var fish = new ItemStack(Items.PUFFERFISH);
+            PufferfishDurability.activate(fish);
+            fish.setDamageValue(worn ? 1 : 0);
+            pump.setFish(fish);
+            block.stepOn(level, pos, state, player);
+            helper.assertTrue(!done(player, "pufferfish_pump"), "Walking on a pump granted repair progress");
+            block.fallOn(level, state, pos, player, 1);
+            helper.assertTrue(done(player, "pufferfish_pump") == worn, "Pump progress did not match actual repair");
+            helper.assertTrue(!done(observer, "pufferfish_pump"), "A nearby observer received pump progress");
+            if (worn) helper.assertTrue(pump.fish().getDamageValue() == 0, "The successful stroke did not repair the fish");
+            level.removeBlock(pos, false);
+        }
+        player.getAdvancements().stopListening();
+        observer.getAdvancements().stopListening();
         helper.succeed();
     }
 

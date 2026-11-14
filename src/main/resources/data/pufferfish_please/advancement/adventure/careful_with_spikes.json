@@ -1,5 +1,5 @@
 {
-  "parent": "pufferfish_please:adventure/root",
+  "parent": "pufferfish_please:adventure/fish_fighter",
   "display": {
     "icon": {
       "id": "minecraft:pufferfish"

@@ -12,6 +12,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
@@ -67,6 +68,7 @@ public final class PufferfishPumpBlockEntity extends BlockEntity {
         return result;
     }
 
+    /// Repairs a worn fish or increases excess pressure, crediting only successful repairs.
     public boolean press(Player player) {
         if (!(level instanceof ServerLevel server) || player.isSpectator() || pump.isEmpty()) return false;
         long time = level.getGameTime();
@@ -76,6 +78,7 @@ public final class PufferfishPumpBlockEntity extends BlockEntity {
         if (PufferfishPumpItem.canInflate(fish)) {
             fish.setDamageValue(Math.max(0, fish.getDamageValue() - (fish.getMaxDamage() + 9) / 10));
             pressure = releaseTicks = 0;
+            if (player instanceof ServerPlayer serverPlayer) PufferfishAdvancements.INFLATE_PUFFERFISH.get().trigger(serverPlayer);
         } else if (PufferfishItems.isPufferfish(fish)) {
             if (++pressure >= BURST_PRESSURE) {
                 burst(server, player);
