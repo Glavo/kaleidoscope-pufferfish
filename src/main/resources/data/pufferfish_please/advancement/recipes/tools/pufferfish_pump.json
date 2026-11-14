@@ -1,6 +1,10 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
+    "has_fish": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": { "items": [{ "items": "#pufferfish_please:pufferfish" }] }
+    },
     "has_skin": {
       "trigger": "minecraft:inventory_changed",
       "conditions": { "items": [{ "items": "#pufferfish_please:pufferfish_skins" }] }
@@ -10,6 +14,6 @@
       "conditions": { "recipe": "pufferfish_please:pufferfish_pump" }
     }
   },
-  "requirements": [["has_skin", "has_the_recipe"]],
+  "requirements": [["has_fish", "has_skin", "has_the_recipe"]],
   "rewards": { "recipes": ["pufferfish_please:pufferfish_pump"] }
 }

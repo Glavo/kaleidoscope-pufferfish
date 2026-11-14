@@ -2,6 +2,10 @@
   "type": "${modId}:pufferfish_lamp",
   "category": "building",
   "group": "${modId}:pufferfish_lamps",
-  "ingredients": [{"item": "minecraft:torch"}, ${ingredient}],
+  "pattern": [" S ", "SPS", " S "],
+  "key": {
+    "P": ${ingredient},
+    "S": {"item": "minecraft:sea_pickle"}
+  },
   "result": {"id": "${modId}:${lampName}", "count": 1}
 }

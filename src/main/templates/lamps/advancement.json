@@ -1,12 +1,12 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_fish": {
+    "has_sea_pickle": {
       "trigger": "minecraft:inventory_changed",
       "conditions": {
         "items": [
           {
-            "items": "minecraft:torch"
+            "items": "minecraft:sea_pickle"
           }
         ]
       }
@@ -20,7 +20,7 @@
   },
   "requirements": [
     [
-      "has_fish",
+      "has_sea_pickle",
       "has_the_recipe"
     ]
   ],

@@ -192,8 +192,9 @@ public final class PufferfishPumpGameTests {
         helper.succeed();
     }
 
+    /// All fish and skin variants share the pump recipe and its fixed output.
     @GameTest(template = "empty")
-    public static void pumpRecipeUsesWoodenSlabsSkinNeedleAndCopperBase(GameTestHelper helper) {
+    public static void pumpRecipeAcceptsFishOrSkinWithWoodenSlabsNeedleAndCopperBase(GameTestHelper helper) {
         var empty = ItemStack.EMPTY;
         var copper = new ItemStack(Items.COPPER_INGOT);
         var slabs = net.minecraft.core.registries.BuiltInRegistries.ITEM.stream()
@@ -201,12 +202,15 @@ public final class PufferfishPumpGameTests {
         var skins = net.minecraft.core.registries.BuiltInRegistries.BLOCK.stream()
                 .filter(block -> block instanceof PufferfishSkinBlock).toList();
         helper.assertTrue(!slabs.isEmpty() && !skins.isEmpty(), "Pump recipe ingredients are missing");
+        var materials = new java.util.ArrayList<ItemStack>();
+        skins.forEach(skin -> materials.add(new ItemStack(skin)));
+        PufferfishVariant.ALL.forEach(variant -> materials.add(variant.fish()));
         var recipe = (net.minecraft.world.item.crafting.CraftingRecipe) helper.getLevel().getRecipeManager()
                 .byKey(PufferfishPlease.id("pufferfish_pump")).orElseThrow().value();
-        for (var slab : slabs) for (var skin : skins) {
+        for (var slab : slabs) for (var material : materials) {
             var input = CraftingInput.of(3, 3, java.util.List.of(empty, new ItemStack(slab), empty,
-                    empty, new ItemStack(skin), new ItemStack(Items.IRON_NUGGET), copper, copper, copper));
-            helper.assertTrue(recipe.matches(input, helper.getLevel()), "Pump recipe rejected a wooden slab or pufferfish skin variant");
+                    empty, material, new ItemStack(Items.IRON_NUGGET), copper, copper, copper));
+            helper.assertTrue(recipe.matches(input, helper.getLevel()), "Pump recipe rejected a wooden slab, fish or skin variant");
             var output = recipe.assemble(input, helper.getLevel().registryAccess());
             helper.assertTrue(output.is(PufferfishItems.PUMP.get()) && !output.isDamageableItem() && !output.isBarVisible()
                     && output.getMaxStackSize() == 1 && output.getCount() == 1, "Wrong pump recipe output");

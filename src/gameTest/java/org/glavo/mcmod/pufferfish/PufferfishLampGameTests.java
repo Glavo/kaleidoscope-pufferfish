@@ -38,6 +38,7 @@ import org.glavo.mcmod.pufferfish.test.TestEffects;
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishLampGameTests {
+    /// Checks variant matching and cultivation transfer through the sea-pickle cross recipe.
     @GameTest(template = "empty")
     public static void everyFishCraftsOnlyItsMatchingLamp(GameTestHelper helper) {
         var level = helper.getLevel();
@@ -45,28 +46,37 @@ public final class PufferfishLampGameTests {
         for (var variant : PufferfishLamps.VARIANTS.values()) {
             var fish = variant.fish().get();
             var cultivation = new PufferfishCultivation(PufferfishLevel.LEVEL_5, 0.75, 123, 456);
-            for (boolean reversed : new boolean[] {false, true}) {
-                if (reversed) {
+            for (boolean cultivated : List.of(false, true)) {
+                if (cultivated) {
                     PufferfishDurability.activate(fish);
                     fish.set(PufferfishPlease.CULTIVATION.get(), cultivation);
                 }
-                var torch = new ItemStack(Items.TORCH);
-                var input = CraftingInput.of(2, 1, reversed ? List.of(torch, fish) : List.of(fish, torch));
+                var input = lampInput(fish);
                 var recipe = level.getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, level).orElseThrow().value();
                 var result = recipe.assemble(input, level.registryAccess());
                 helper.assertTrue(result.is(variant.block().get().asItem()) && result.getCount() == 1,
                         "Lamp recipe lost the fish variant");
-                helper.assertTrue(java.util.Objects.equals(result.get(PufferfishPlease.CULTIVATION.get()), reversed ? cultivation : null)
+                helper.assertTrue(java.util.Objects.equals(result.get(PufferfishPlease.CULTIVATION.get()), cultivated ? cultivation : null)
                         && !result.has(DataComponents.MAX_DAMAGE), "Lamp lost cultivation or inherited weapon durability");
                 helper.assertTrue(recipe.getRemainingItems(input).stream().allMatch(ItemStack::isEmpty), "Lamp recipe returned ingredients");
+                var misplaced = new java.util.ArrayList<>(input.items());
+                java.util.Collections.swap(misplaced, 0, 1);
+                helper.assertTrue(!recipe.matches(CraftingInput.of(3, 3, misplaced), level), "Lamp accepted a misplaced sea pickle");
             }
         }
         for (var invalid : List.of(new ItemStack(Items.PUFFERFISH_BUCKET), new ItemStack(Items.COD),
                 new ItemStack(PufferfishItems.FLAIL.get()), new ItemStack(PufferfishItems.SASHIMI.get()))) {
             helper.assertTrue(level.getRecipeManager().getRecipeFor(RecipeType.CRAFTING,
-                    CraftingInput.of(2, 1, List.of(new ItemStack(Items.TORCH), invalid)), level).isEmpty(), "Lamp accepted an invalid fish");
+                    lampInput(invalid), level).isEmpty(), "Lamp accepted an invalid fish");
         }
         helper.succeed();
+    }
+
+    /// Places four sea pickles around the supplied fish in a crafting grid.
+    private static CraftingInput lampInput(ItemStack fish) {
+        var empty = ItemStack.EMPTY;
+        var pickle = new ItemStack(Items.SEA_PICKLE);
+        return CraftingInput.of(3, 3, List.of(empty, pickle, empty, pickle, fish, pickle, empty, pickle, empty));
     }
 
     @GameTest(template = "empty")
