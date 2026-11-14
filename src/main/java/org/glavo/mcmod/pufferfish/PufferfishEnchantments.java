@@ -9,15 +9,26 @@ import java.util.List;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.AnvilMenu;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.neoforged.neoforge.event.AnvilUpdateEvent;
+import org.jetbrains.annotations.Nullable;
 
 public final class PufferfishEnchantments {
     private PufferfishEnchantments() {}
+
+    /// Applies an anvil name and returns its level cost; blank names only clear existing custom names.
+    static int applyAnvilName(ItemStack result, @Nullable String name) {
+        if (name == null) return 0;
+        if (name.isBlank()) return result.remove(DataComponents.CUSTOM_NAME) == null ? 0 : 1;
+        if (name.equals(result.getHoverName().getString())) return 0;
+        result.set(DataComponents.CUSTOM_NAME, Component.literal(name));
+        return 1;
+    }
 
     public static boolean supports(Holder<Enchantment> enchantment) {
         return enchantment.is(Enchantments.RESPIRATION) || enchantment.is(Enchantments.AQUA_AFFINITY) || enchantment.is(Enchantments.LOYALTY)
@@ -29,6 +40,7 @@ public final class PufferfishEnchantments {
                 || enchantment.is(Enchantments.UNBREAKING) || enchantment.is(Enchantments.MENDING);
     }
 
+    /// Applies compatible book enchantments with anvil costs, naming, and fish durability activation.
     public static void applyBook(AnvilUpdateEvent event) {
         var fish = event.getLeft();
         var book = event.getRight();
@@ -80,17 +92,7 @@ public final class PufferfishEnchantments {
         PufferfishDurability.activate(result);
         int previousCost = fish.getOrDefault(DataComponents.REPAIR_COST, 0);
         int bookCost = book.getOrDefault(DataComponents.REPAIR_COST, 0);
-        long cost = (long) previousCost + bookCost + enchantmentCost;
-        String name = event.getName();
-        if (name != null) {
-            if (name.isBlank() && result.has(DataComponents.CUSTOM_NAME)) {
-                result.remove(DataComponents.CUSTOM_NAME);
-                cost++;
-            } else if (!name.isBlank() && !name.equals(fish.getHoverName().getString())) {
-                result.set(DataComponents.CUSTOM_NAME, Component.literal(name));
-                cost++;
-            }
-        }
+        long cost = (long) previousCost + bookCost + enchantmentCost + applyAnvilName(result, event.getName());
         if (cost >= 40 && !event.getPlayer().getAbilities().instabuild) {
             event.setCanceled(true);
             return;

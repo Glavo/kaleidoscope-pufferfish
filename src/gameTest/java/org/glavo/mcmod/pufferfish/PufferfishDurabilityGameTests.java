@@ -30,6 +30,47 @@ import org.glavo.mcmod.pufferfish.test.TestPlayers;
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishDurabilityGameTests {
+    /// Repair and book application charge for actual name changes, leaving both inputs intact.
+    @GameTest(template = "empty")
+    public static void anvilNameChangesHaveConsistentCosts(GameTestHelper helper) {
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        var book = TestItems.enchant(helper, new ItemStack(Items.ENCHANTED_BOOK), Enchantments.UNBREAKING, 1);
+        for (var fresh : variants()) {
+            for (boolean applyingBook : new boolean[] {false, true}) {
+                var fish = worn(fresh.copy());
+                var material = applyingBook ? book.copy() : fresh.copyWithCount(Math.min(4, fresh.getMaxStackSize()));
+                var original = fish.copy();
+                var originalMaterial = material.copy();
+                var menu = new AnvilMenu(1, player.getInventory());
+                menu.getSlot(0).set(fish);
+                menu.getSlot(1).set(material);
+                menu.setItemName(fish.getHoverName().getString());
+                int baseCost = menu.getCost();
+                helper.assertTrue(!menu.getSlot(2).getItem().isEmpty() && baseCost > 0, "Anvil operation did not produce a result");
+                for (var blank : java.util.List.of("", "   ")) {
+                    menu.setItemName(blank);
+                    helper.assertTrue(menu.getCost() == baseCost && !menu.getSlot(2).getItem().has(DataComponents.CUSTOM_NAME),
+                            "Blank input charged for removing a nonexistent name");
+                }
+                menu.setItemName("New name");
+                helper.assertTrue(menu.getCost() == baseCost + 1 && menu.getSlot(2).getItem().getHoverName().getString().equals("New name"),
+                        "Renaming did not charge exactly one additional level");
+                helper.assertTrue(ItemStack.matches(fish, original) && ItemStack.matches(material, originalMaterial),
+                        "Anvil preview mutated an ingredient");
+
+                var named = fish.copy();
+                named.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Keepsake"));
+                menu.getSlot(0).set(named);
+                menu.setItemName("Keepsake");
+                helper.assertTrue(menu.getCost() == baseCost, "Keeping a custom name incurred a rename cost");
+                menu.setItemName("");
+                helper.assertTrue(menu.getCost() == baseCost + 1 && !menu.getSlot(2).getItem().has(DataComponents.CUSTOM_NAME)
+                        && named.getHoverName().getString().equals("Keepsake"), "Removing a custom name changed its cost or mutated the source");
+            }
+        }
+        helper.succeed();
+    }
+
     @GameTest(template = "empty")
     public static void externalDurabilitySurvivesUseRepairAndUpgrades(GameTestHelper helper) {
         var external = new ItemStack(Items.PUFFERFISH);

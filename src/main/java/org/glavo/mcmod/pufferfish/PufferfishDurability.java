@@ -6,7 +6,6 @@ package org.glavo.mcmod.pufferfish;
 import com.mojang.serialization.Codec;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.server.level.ServerLevel;
@@ -148,6 +147,7 @@ public final class PufferfishDurability {
         }
     }
 
+    /// Repairs with one fresh fish, preserving cultivation and charging only for actual name changes.
     public static void repair(net.neoforged.neoforge.event.AnvilUpdateEvent event) {
         var left = event.getLeft();
         var right = event.getRight();
@@ -160,12 +160,7 @@ public final class PufferfishDurability {
         long cost = 2L + left.getOrDefault(DataComponents.REPAIR_COST, 0) + right.getOrDefault(DataComponents.REPAIR_COST, 0);
         var result = left.copy();
         result.setDamageValue(0);
-        String name = event.getName();
-        if (name != null && !name.equals(left.getHoverName().getString())) {
-            if (name.isBlank()) result.remove(DataComponents.CUSTOM_NAME);
-            else result.set(DataComponents.CUSTOM_NAME, Component.literal(name));
-            cost++;
-        }
+        cost += PufferfishEnchantments.applyAnvilName(result, event.getName());
         if (cost >= 40 && !event.getPlayer().hasInfiniteMaterials()) { event.setCanceled(true); return; }
         result.set(DataComponents.REPAIR_COST, net.minecraft.world.inventory.AnvilMenu.calculateIncreasedRepairCost(
                 Math.max(left.getOrDefault(DataComponents.REPAIR_COST, 0), right.getOrDefault(DataComponents.REPAIR_COST, 0))));
