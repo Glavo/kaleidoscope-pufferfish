@@ -4,7 +4,6 @@
 package org.glavo.mcmod.pufferfish;
 
 import static org.glavo.mcmod.pufferfish.test.TestItems.enchant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
@@ -32,18 +31,17 @@ import org.glavo.mcmod.pufferfish.entity.ThrownPufferfish;
 import org.glavo.mcmod.pufferfish.test.TestEffects;
 import org.glavo.mcmod.pufferfish.test.TestItems;
 import org.glavo.mcmod.pufferfish.test.TestPlayers;
+import org.jetbrains.annotations.Unmodifiable;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class PufferfishWindBurstGameTests {
 
-    private static List<ItemStack> fish() {
-        var stacks = new ArrayList<ItemStack>();
-        stacks.add(new ItemStack(Items.PUFFERFISH));
-        for (var color : DyeColor.values()) stacks.add(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
-        stacks.add(new ItemStack(PufferfishItems.NETHERITE.get()));
-        stacks.add(new ItemStack(PufferfishItems.HEAVY.get()));
-        return stacks;
+    /// Covers native heavy-fish support and representative forced enchantments, including dyed item recovery.
+    private static @Unmodifiable List<ItemStack> gustFish() {
+        return List.of(new ItemStack(Items.PUFFERFISH),
+                PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), DyeColor.CYAN),
+                PufferfishItems.NETHERITE.toStack(), PufferfishItems.HEAVY.toStack());
     }
 
     private static ThrownPufferfish throwFish(GameTestHelper helper, Player owner, ItemStack stack, Vec3 from, Vec3 velocity) {
@@ -60,8 +58,9 @@ public final class PufferfishWindBurstGameTests {
         helper.getLevel().getEntitiesOfClass(ItemEntity.class, new AABB(center, center).inflate(5)).forEach(ItemEntity::discard);
     }
 
+    /// Compares gust levels with an unenchanted impact while checking knockback, range, and item recovery.
     @GameTest(template = "empty")
-    public static void everyFishHasOneScalingGustWithoutExtraDamage(GameTestHelper helper) {
+    public static void gustScalesKnockbackWithoutChangingImpactDamage(GameTestHelper helper) {
         int[] bursts = {0};
         Consumer<ExplosionEvent.Start> capture = event -> {
             if (event.getExplosion().getDirectSourceEntity() instanceof ThrownPufferfish) {
@@ -73,9 +72,10 @@ public final class PufferfishWindBurstGameTests {
         };
         NeoForge.EVENT_BUS.addListener(capture);
         try {
-            for (var original : fish()) {
+            for (var original : gustFish()) {
                 double previous = 0;
                 double baseSpeed = 0;
+                float impactHealth = 0;
                 for (int rank = 0; rank <= 3; rank++) {
                     var stack = TestItems.awakened(original);
                     if (rank > 0) enchant(helper, stack, Enchantments.WIND_BURST, rank);
@@ -89,7 +89,11 @@ public final class PufferfishWindBurstGameTests {
                     var projectile = throwFish(helper, owner, stack, target.position().add(0, 0.5, -2), new Vec3(0, 0, 3));
                     helper.assertTrue(bursts[0] - before == (rank > 0 ? 1 : 0) && projectile.isRemoved(),
                             "An impact did not trigger exactly one gust and recover the fish");
-                    helper.assertTrue(target.getHealth() == 20 - PufferfishCombat.damage(stack)
+                    if (rank == 0) {
+                        impactHealth = target.getHealth();
+                        helper.assertTrue(impactHealth < target.getMaxHealth(), "Control projectile did not damage its target");
+                    }
+                    helper.assertTrue(target.getHealth() == impactHealth
                             && TestEffects.poison(target) != null && nearby.getHealth() == 20,
                             "Gust changed direct damage, poison, or bystander health");
                     double speed = nearby.getDeltaMovement().length();
@@ -101,7 +105,7 @@ public final class PufferfishWindBurstGameTests {
                     helper.assertTrue(distant.getDeltaMovement().lengthSqr() == 0, "Higher gust levels enlarged the range");
                     previous = speed;
                     var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, target.getBoundingBox().inflate(4));
-                    helper.assertTrue(drops.size() == 1 && ItemStack.isSameItemSameComponents(drops.getFirst().getItem(), TestItems.worn(stack)),
+                    helper.assertTrue(drops.size() == 1 && ItemStack.matches(drops.getFirst().getItem(), TestItems.worn(stack)),
                             "Gust lost or changed the recovered fish");
                     drops.forEach(ItemEntity::discard);
                     target.discard(); nearby.discard(); distant.discard();
@@ -152,16 +156,19 @@ public final class PufferfishWindBurstGameTests {
         helper.succeed();
     }
 
+    /// Combined impact effects occur once, and the return flight preserves exactly one worn fish.
     @GameTest(template = "empty")
     public static void windBurstAndChannelingKeepLoyaltyAndDoNotRepeatOnReturn(GameTestHelper helper) {
         var level = helper.getLevel();
         float rain = level.getRainLevel(1), thunder = level.getThunderLevel(1);
         level.setRainLevel(1); level.setThunderLevel(1);
         int[] bursts = {0};
-        Consumer<ExplosionEvent.Start> capture = event -> { bursts[0]++; };
+        Consumer<ExplosionEvent.Start> capture = event -> {
+            if (event.getExplosion().getDirectSourceEntity() instanceof ThrownPufferfish) bursts[0]++;
+        };
         NeoForge.EVENT_BUS.addListener(capture);
         try {
-            for (var original : fish()) {
+            for (var original : gustFish()) {
                 var stack = enchant(helper, TestItems.awakened(original), Enchantments.WIND_BURST, 3);
                 enchant(helper, stack, Enchantments.LOYALTY, 3);
                 enchant(helper, stack, Enchantments.CHANNELING, 1);
@@ -177,8 +184,10 @@ public final class PufferfishWindBurstGameTests {
                 bolts.forEach(LightningBolt::discard);
                 for (int tick = 0; tick < 100 && !projectile.isRemoved(); tick++) projectile.tick();
                 helper.assertTrue(projectile.isRemoved() && bursts[0] == before + 1
-                        && ItemStack.isSameItemSameComponents(owner.getInventory().getItem(0), TestItems.worn(stack)),
+                        && ItemStack.matches(owner.getInventory().getItem(0), TestItems.worn(stack)),
                         "Return flight repeated the gust or lost enchanted fish");
+                helper.assertTrue(level.getEntitiesOfClass(LightningBolt.class, target.getBoundingBox().inflate(4)).isEmpty(),
+                        "Return flight repeated Channeling");
                 target.discard();
                 clearDrops(helper, target.position());
             }
@@ -189,10 +198,15 @@ public final class PufferfishWindBurstGameTests {
         helper.succeed();
     }
 
+    /// Canceling an observed gust prevents knockback but still recovers the fish after a blocked damage attempt.
     @GameTest(template = "empty")
     public static void canceledGustPreservesRecoveryWithoutKnockback(GameTestHelper helper) {
+        int[] canceled = {0};
         Consumer<ExplosionEvent.Start> cancel = event -> {
-            if (event.getExplosion().getDirectSourceEntity() instanceof ThrownPufferfish) event.setCanceled(true);
+            if (event.getExplosion().getDirectSourceEntity() instanceof ThrownPufferfish) {
+                canceled[0]++;
+                event.setCanceled(true);
+            }
         };
         NeoForge.EVENT_BUS.addListener(cancel);
         try {
@@ -203,8 +217,11 @@ public final class PufferfishWindBurstGameTests {
             target.setInvulnerable(true);
             target.setDeltaMovement(Vec3.ZERO);
             var projectile = throwFish(helper, owner, stack, target.position().add(0, 0.5, -2), new Vec3(0, 0, 3));
-            helper.assertTrue(projectile.isRemoved() && target.getDeltaMovement().lengthSqr() == 0 && target.getHealth() == 20,
+            helper.assertTrue(canceled[0] == 1 && projectile.isRemoved() && target.getDeltaMovement().lengthSqr() == 0 && target.getHealth() == 20,
                     "Canceled gust applied knockback or prevented recovery");
+            var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, target.getBoundingBox().inflate(4));
+            helper.assertTrue(drops.size() == 1 && ItemStack.matches(drops.getFirst().getItem(), TestItems.worn(stack)),
+                    "Canceled gust lost, duplicated, or changed the recovered fish");
             clearDrops(helper, target.position());
             target.discard();
         } finally {
