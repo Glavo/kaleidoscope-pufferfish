@@ -48,15 +48,20 @@ public final class FishProcessingTableBlock extends BaseEntityBlock {
     @Override protected BlockState rotate(BlockState state, Rotation rotation) { return state.setValue(FACING, rotation.rotate(state.getValue(FACING))); }
     @Override protected BlockState mirror(BlockState state, Mirror mirror) { return state.rotate(mirror.getRotation(state.getValue(FACING))); }
 
+    /// Inserts a single accepted item or applies the held tool to the occupied stand.
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
             Player player, InteractionHand hand, BlockHitResult hit) {
         if (player.isSpectator() || !player.mayBuild()) return ItemInteractionResult.FAIL;
         if (stack.isEmpty()) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         if (!(level.getBlockEntity(pos) instanceof FishProcessingTableBlockEntity table)) return ItemInteractionResult.FAIL;
-        if (table.item().isEmpty()) {
-            if (!table.accepts(stack)) return ItemInteractionResult.FAIL;
-            if (!level.isClientSide && table.insert(stack)) stack.consume(1, player);
+        if (table.isEmpty()) {
+            if (level.isClientSide) {
+                if (!table.accepts(stack)) return ItemInteractionResult.FAIL;
+            } else {
+                if (!table.insert(stack)) return ItemInteractionResult.FAIL;
+                stack.consume(1, player);
+            }
         } else if (stack.getItem() instanceof BrushItem) {
             if (!level.isClientSide && !table.canBrush(player)) return ItemInteractionResult.FAIL;
             player.startUsingItem(hand);
@@ -64,10 +69,11 @@ public final class FishProcessingTableBlock extends BaseEntityBlock {
         return ItemInteractionResult.sidedSuccess(level.isClientSide);
     }
 
+    /// Returns the stored item to an empty-handed player without processing it.
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
         if (player.isSpectator() || !player.mayBuild()
-                || !(level.getBlockEntity(pos) instanceof FishProcessingTableBlockEntity table) || table.item().isEmpty()) return InteractionResult.PASS;
+                || !(level.getBlockEntity(pos) instanceof FishProcessingTableBlockEntity table) || table.isEmpty()) return InteractionResult.PASS;
         if (!level.isClientSide) {
             var item = table.removeItem();
             if (!player.getInventory().add(item)) player.drop(item, false);

@@ -45,8 +45,7 @@ public record FishProcessingRecipe(Ingredient ingredient, Ingredient tool, int s
 
     /// Copies one result and applies this recipe's rank inheritance policy.
     private ItemStack createResult(ItemStack fish, ItemStack result) {
-        var copy = result.copy();
-        return inheritSkinLevel ? PufferfishSkinBlock.inheritLevel(fish, copy) : copy;
+        return inheritSkinLevel ? PufferfishSkinBlock.inheritLevel(fish, result) : result.copy();
     }
 
     @Override public boolean matches(Input input, Level level) { return ingredient.test(input.fish()) && tool.test(input.tool()); }

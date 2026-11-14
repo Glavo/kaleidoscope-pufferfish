@@ -89,12 +89,18 @@ public final class PufferfishEngineBlockEntity extends GeneratingKineticBlockEnt
         }
     }
 
+    /// Refreshes the kinetic network when redstone power or configured output changes.
     public void refreshPower() {
+        refreshPower(false);
+    }
+
+    /// Content changes require a network update even when redstone and configured output are unchanged.
+    private void refreshPower(boolean contentsChanged) {
         boolean nextPowered = level.hasNeighborSignal(worldPosition);
         int nextSpeed = CreateIntegration.SPEED.get();
         int nextCapacity = (PufferfishItems.isHeavy(fish) ? CreateIntegration.HEAVY_CAPACITY
                 : PufferfishItems.hasNetheriteCombat(fish) ? CreateIntegration.NETHERITE_CAPACITY : CreateIntegration.NORMAL_CAPACITY).get();
-        if (powered != nextPowered || configuredSpeed != nextSpeed || configuredCapacity != nextCapacity) {
+        if (contentsChanged || powered != nextPowered || configuredSpeed != nextSpeed || configuredCapacity != nextCapacity) {
             powered = nextPowered;
             configuredSpeed = nextSpeed;
             configuredCapacity = nextCapacity;
@@ -103,12 +109,7 @@ public final class PufferfishEngineBlockEntity extends GeneratingKineticBlockEnt
         }
     }
 
-    private void contentsChanged() {
-        refreshPower();
-        updateGeneratedRotation();
-        setChanged();
-    }
-
+    /// Inserts fish or transfers water, preserving item data and refreshing the engine's output.
     public ItemInteractionResult useItem(Player player, InteractionHand hand) {
         if (player.isSpectator() || !player.mayBuild()) {
             return ItemInteractionResult.FAIL;
@@ -124,7 +125,7 @@ public final class PufferfishEngineBlockEntity extends GeneratingKineticBlockEnt
                 } else if (!player.getAbilities().instabuild) {
                     held.shrink(1);
                 }
-                contentsChanged();
+                refreshPower(true);
                 level.playSound(null, worldPosition, SoundEvents.BUCKET_EMPTY_FISH, SoundSource.BLOCKS, 0.7F, 1.0F);
             }
             return ItemInteractionResult.sidedSuccess(level.isClientSide());
@@ -133,7 +134,7 @@ public final class PufferfishEngineBlockEntity extends GeneratingKineticBlockEnt
             if (!level.isClientSide()) {
                 water = true;
                 player.setItemInHand(hand, ItemUtils.createFilledResult(held, player, new ItemStack(Items.BUCKET)));
-                contentsChanged();
+                refreshPower(true);
                 level.playSound(null, worldPosition, SoundEvents.BUCKET_EMPTY, SoundSource.BLOCKS, 0.7F, 1.0F);
             }
             return ItemInteractionResult.sidedSuccess(level.isClientSide());
@@ -144,7 +145,7 @@ public final class PufferfishEngineBlockEntity extends GeneratingKineticBlockEnt
                 fish = ItemStack.EMPTY;
                 water = false;
                 player.setItemInHand(hand, ItemUtils.createFilledResult(held, player, result));
-                contentsChanged();
+                refreshPower(true);
                 level.playSound(null, worldPosition, SoundEvents.BUCKET_FILL, SoundSource.BLOCKS, 0.7F, 1.0F);
             }
             return ItemInteractionResult.sidedSuccess(level.isClientSide());
@@ -167,6 +168,7 @@ public final class PufferfishEngineBlockEntity extends GeneratingKineticBlockEnt
         return result;
     }
 
+    /// Returns the stored fish to the player and stops generation without draining the tank.
     public InteractionResult takeFish(Player player) {
         if (fish.isEmpty() || player.isSpectator() || !player.mayBuild()) {
             return InteractionResult.PASS;
@@ -177,7 +179,7 @@ public final class PufferfishEngineBlockEntity extends GeneratingKineticBlockEnt
             if (!player.addItem(result)) {
                 player.drop(result, false);
             }
-            contentsChanged();
+            refreshPower(true);
         }
         return InteractionResult.sidedSuccess(level.isClientSide());
     }

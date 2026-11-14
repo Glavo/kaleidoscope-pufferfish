@@ -56,12 +56,13 @@ public final class PufferfishSkinBlock extends FaceAttachedHorizontalDirectional
         else stack.set(PufferfishPlease.SKIN_LEVEL.get(), level);
     }
 
-    /// Copies only rank from a processed fish, leaving food and unrelated outputs untouched.
+    /// Returns a detached output, transferring only rank from a processed fish to an eligible skin.
     public static ItemStack inheritLevel(ItemStack source, ItemStack output) {
-        if (!PufferfishItems.isPufferfish(source) || !isSkin(output)) return output;
         var result = output.copy();
-        var cultivation = source.get(PufferfishPlease.CULTIVATION.get());
-        setLevel(result, cultivation == null ? PufferfishLevel.LEVEL_0 : cultivation.level());
+        if (PufferfishItems.isPufferfish(source) && isSkin(result)) {
+            @Nullable var cultivation = source.get(PufferfishPlease.CULTIVATION.get());
+            setLevel(result, cultivation == null ? PufferfishLevel.LEVEL_0 : cultivation.level());
+        }
         return result;
     }
 

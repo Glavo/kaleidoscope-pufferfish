@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.util.RandomSource;
@@ -42,6 +43,7 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.glavo.mcmod.pufferfish.entity.MaterialPufferfish;
+import org.jetbrains.annotations.Nullable;
 
 public final class PufferfishMobs {
     public static final TagKey<Item> FOOD = TagKey.create(Registries.ITEM, PufferfishPlease.id("pufferfish_food"));
@@ -83,8 +85,10 @@ public final class PufferfishMobs {
         variants.put(name, new Variant(fish, entity, bucket, egg, rarity, conduitRarity));
     }
 
+    /// Resolves a material fish item; buckets and other derivatives are not accepted.
+    @Nullable
     public static Variant variant(ItemStack fish) {
-        var id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(fish.getItem());
+        var id = BuiltInRegistries.ITEM.getKey(fish.getItem());
         return id.getNamespace().equals(PufferfishPlease.MODID) ? VARIANTS.get(id.getPath()) : null;
     }
 
@@ -155,14 +159,17 @@ public final class PufferfishMobs {
         return ItemStack.EMPTY;
     }
 
+    /// Resolves a material fish entity through the registration names shared with its fish item.
+    @Nullable
     private static Variant variant(EntityType<?> type) {
-        for (var variant : VARIANTS.values()) if (variant.entity().get() == type) return variant;
-        return null;
+        var id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+        return id.getNamespace().equals(PufferfishPlease.MODID) ? VARIANTS.get(id.getPath()) : null;
     }
 
+    /// Excludes unrelated aquatic mobs and applies each material's natural rarity divisor.
     private static double naturalWeight(MobSpawnSettings.SpawnerData entry) {
         if (entry.type == EntityType.PUFFERFISH) return entry.getWeight().asInt();
-        var variant = variant(entry.type);
+        @Nullable var variant = variant(entry.type);
         return variant == null ? 0 : entry.getWeight().asInt() / (double) variant.rarity();
     }
 

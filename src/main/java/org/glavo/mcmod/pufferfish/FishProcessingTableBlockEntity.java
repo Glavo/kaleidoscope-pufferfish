@@ -44,6 +44,9 @@ public final class FishProcessingTableBlockEntity extends BlockEntity {
 
     public ItemStack item() { return item.copy(); }
 
+    /// Checks the slot without copying or exposing the stored item.
+    public boolean isEmpty() { return item.isEmpty(); }
+
     public boolean accepts(ItemStack stack) {
         return !stack.isEmpty() && (PufferfishItems.isPufferfish(stack) || PufferfishSkinBlock.isSkin(stack)
                 || level != null && level.getRecipeManager().getAllRecipesFor(PufferfishPlease.FISH_PROCESSING_TYPE.get())

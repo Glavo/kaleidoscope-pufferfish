@@ -4,6 +4,7 @@
 package org.glavo.mcmod.pufferfish;
 
 import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
@@ -18,6 +19,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.glavo.mcmod.pufferfish.test.CuttingAssertions;
+import org.jetbrains.annotations.Unmodifiable;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
@@ -173,8 +175,10 @@ public final class FishProcessingTableGameTests {
             var assembled = recipe.assemble(input, helper.getLevel().registryAccess());
             helper.assertTrue(ItemStack.matches(assembled, expectedSkin), "Primary output lost its inherited skin rank");
             assembled.setCount(30);
-            results.getFirst().setCount(30);
-            helper.assertTrue(recipe.process(fish).getFirst().getCount() == 1, "Processing mutated the shared recipe result");
+            results.forEach(result -> result.setCount(30));
+            @Unmodifiable List<ItemStack> repeated = recipe.process(fish);
+            helper.assertTrue(ItemStack.matches(repeated.getFirst(), expectedSkin)
+                    && ItemStack.matches(repeated.get(1), PufferfishItems.SASHIMI.toStack()), "Processing mutated shared recipe results");
             helper.assertTrue(!recipe.matches(new FishProcessingRecipe.Input(fish, new ItemStack(Items.STICK)), helper.getLevel()), "Invalid tool matched");
             var encoded = FishProcessingRecipe.CODEC.codec().encodeStart(helper.getLevel().registryAccess().createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), recipe).getOrThrow();
             var decoded = FishProcessingRecipe.CODEC.codec().parse(helper.getLevel().registryAccess().createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), encoded).getOrThrow();
