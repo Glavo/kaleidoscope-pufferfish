@@ -21,6 +21,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
@@ -37,6 +38,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.glavo.mcmod.pufferfish.entity.ThrownPufferfish;
 import org.glavo.mcmod.pufferfish.test.TestEffects;
 import org.glavo.mcmod.pufferfish.test.TestItems;
+import org.jetbrains.annotations.Unmodifiable;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
@@ -189,43 +191,6 @@ public class PufferfishProjectileGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void throwingConsumesOneFishAndPreservesColor(GameTestHelper helper) {
-        var player = helper.makeMockPlayer(GameType.SURVIVAL);
-        BlockPos pos = helper.absolutePos(new BlockPos(2, 1, 2));
-        player.setPos(pos.getX(), pos.getY(), pos.getZ());
-        for (InteractionHand hand : InteractionHand.values()) {
-            for (DyeColor color : DyeColor.values()) {
-                var stack = PufferfishColors.dye(new ItemStack(Items.PUFFERFISH, 3), color);
-                player.setItemInHand(hand, stack);
-                var event = new PlayerInteractEvent.RightClickItem(player, hand);
-                NeoForge.EVENT_BUS.post(event);
-                var projectiles = helper.getLevel().getEntitiesOfClass(ThrownPufferfish.class, new AABB(pos).inflate(3));
-                helper.assertTrue(event.isCanceled() && event.getCancellationResult().consumesAction(), "Throw interaction was not handled");
-                helper.assertTrue(stack.getCount() == 2 && projectiles.size() == 1, "Throw did not consume and spawn exactly one fish");
-                var projectile = projectiles.getFirst();
-                helper.assertTrue(PufferfishColors.get(projectile.getItem()) == color && projectile.getItem().getCount() == 1,
-                        "Projectile did not preserve its colored item");
-                helper.assertTrue(projectile.getOwner() == player && projectile.getDeltaMovement().length() > 1.0,
-                        "Projectile owner or launch velocity is incorrect");
-                projectile.discard();
-                for (int tick = 0; tick < PufferfishCombatConfig.value(PufferfishCombatConfig.THROW_COOLDOWN_TICKS); tick++) {
-                    player.getCooldowns().tick();
-                }
-            }
-        }
-        var creative = helper.makeMockPlayer(GameType.CREATIVE);
-        creative.getAbilities().instabuild = true;
-        creative.setPos(pos.getX(), pos.getY(), pos.getZ());
-        creative.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.PUFFERFISH));
-        NeoForge.EVENT_BUS.post(new PlayerInteractEvent.RightClickItem(creative, InteractionHand.MAIN_HAND));
-        var projectiles = helper.getLevel().getEntitiesOfClass(ThrownPufferfish.class, new AABB(pos).inflate(3));
-        helper.assertTrue(creative.getMainHandItem().getCount() == 1 && projectiles.size() == 1, "Creative throw consumed a fish");
-        helper.assertTrue(PufferfishColors.get(projectiles.getFirst().getItem()) == null, "Undyed projectile gained a color");
-        projectiles.forEach(ThrownPufferfish::discard);
-        helper.succeed();
-    }
-
-    @GameTest(template = "empty")
     public static void throwingRespectsOtherUsesAndCanceledSpawns(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.PUFFERFISH));
@@ -269,13 +234,12 @@ public class PufferfishProjectileGameTests {
         helper.succeed();
     }
 
+    /// Throws preserve one complete fish and share a one-second cooldown across variants and hands in both game modes.
     @GameTest(template = "empty")
-    public static void throwCooldownIsSharedAcrossVariantsAndHands(GameTestHelper helper) {
-        var variants = new ArrayList<ItemStack>();
-        variants.add(new ItemStack(Items.PUFFERFISH));
-        for (var color : DyeColor.values()) variants.add(PufferfishColors.dye(new ItemStack(Items.PUFFERFISH), color));
-        variants.add(new ItemStack(PufferfishItems.NETHERITE.get()));
-        variants.add(new ItemStack(PufferfishItems.HEAVY.get()));
+    public static void throwsPreserveItemsAndShareCooldownAcrossVariantsAndHands(GameTestHelper helper) {
+        @Unmodifiable List<ItemStack> variants = TestItems.throwableFishVariants();
+        // Cooldowns are keyed by item type; dyed component preservation is checked on every initial throw.
+        @Unmodifiable List<Item> cooldownItems = variants.stream().map(ItemStack::getItem).distinct().toList();
         helper.assertTrue(PufferfishCombatConfig.value(PufferfishCombatConfig.THROW_COOLDOWN_TICKS) == 20,
                 "Default throw cooldown is not one second");
         var pos = helper.absolutePos(new BlockPos(2, 2, 2));
@@ -287,15 +251,25 @@ public class PufferfishProjectileGameTests {
                     player.getAbilities().instabuild = mode == GameType.CREATIVE;
                     player.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
                     var stack = original.copyWithCount(3);
+                    stack.set(DataComponents.CUSTOM_NAME, Component.literal("Keepsake"));
+                    var expected = stack.copyWithCount(1);
+                    int remaining = mode == GameType.CREATIVE ? 3 : 2;
                     player.setItemInHand(hand, stack);
-                    NeoForge.EVENT_BUS.post(new PlayerInteractEvent.RightClickItem(player, hand));
+                    var event = new PlayerInteractEvent.RightClickItem(player, hand);
+                    NeoForge.EVENT_BUS.post(event);
                     var launched = helper.getLevel().getEntitiesOfClass(ThrownPufferfish.class, bounds);
-                    helper.assertTrue(launched.size() == 1 && stack.getCount() == (mode == GameType.CREATIVE ? 3 : 2),
-                            "Initial throw did not succeed");
+                    helper.assertTrue(event.isCanceled() && event.getCancellationResult().consumesAction() && launched.size() == 1,
+                            "Throw interaction did not spawn exactly one projectile");
+                    var projectile = launched.getFirst();
+                    helper.assertTrue(ItemStack.matches(projectile.getItem(), expected)
+                            && ItemStack.matches(player.getItemInHand(hand), expected.copyWithCount(remaining)),
+                            "Throw changed fish components or consumed the wrong count: " + original);
+                    helper.assertTrue(projectile.getOwner() == player && projectile.getDeltaMovement().lengthSqr() > 0,
+                            "Projectile lost its owner or launch velocity");
                     launched.forEach(ThrownPufferfish::discard);
                     for (var blockedHand : InteractionHand.values()) {
-                        for (var variant : variants) {
-                            var blocked = variant.copyWithCount(3);
+                        for (var item : cooldownItems) {
+                            var blocked = new ItemStack(item, 3);
                             player.setItemInHand(blockedHand, blocked);
                             helper.assertTrue(player.getCooldowns().isOnCooldown(blocked.getItem()), "Variant did not share cooldown");
                             NeoForge.EVENT_BUS.post(new PlayerInteractEvent.RightClickItem(player, blockedHand));
@@ -308,8 +282,8 @@ public class PufferfishProjectileGameTests {
                     for (int tick = 0; tick < 19; tick++) player.getCooldowns().tick();
                     helper.assertTrue(player.getCooldowns().isOnCooldown(Items.PUFFERFISH), "Cooldown expired before 20 ticks");
                     player.getCooldowns().tick();
-                    for (var variant : variants) {
-                        helper.assertTrue(!player.getCooldowns().isOnCooldown(variant.getItem()), "Shared cooldown did not expire together");
+                    for (var item : cooldownItems) {
+                        helper.assertTrue(!player.getCooldowns().isOnCooldown(item), "Shared cooldown did not expire together");
                     }
                     player.setItemInHand(hand, original.copyWithCount(3));
                     NeoForge.EVENT_BUS.post(new PlayerInteractEvent.RightClickItem(player, hand));

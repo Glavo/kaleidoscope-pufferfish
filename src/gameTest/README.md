@@ -57,6 +57,7 @@ Ranks 0–10 multiply maximum health by 1, 1.2, 1.5, 2, 2.7, 3.6, 4.8, 6.2, 7.5,
 - `*GameTests`: observable server behavior, real interactions, persistence, synchronization, event cancellation and item conservation.
 - `PufferfishVariantGameTests`: family completeness and variant identity. Other suites exercise those families instead of repeating registration counts.
 - `PufferfishEnchantmentGameTests`: book acceptance, upgrades and costs. Loyalty and other specialized suites cover their runtime effects.
+- `PufferfishProjectileGameTests`: throw consumption, component preservation and shared cooldowns across the throwable family, both hands and survival/creative modes. Material suites cover their specific damage and effects.
 - `PufferfishLoyaltyGameTests`: single-hit return, owner loss, inventory capacity, persistence and item conservation. Projectile and combat suites own base damage values.
 - `PufferfishEquipmentRetaliationGameTests`: intrinsic Thorns tiers and one-roll behavior across headgear, armor sets and shields, compared directly with vanilla. Armor, shield and headgear suites retain their own effect, wear and interaction checks; live-fish retaliation belongs to `PufferfishMobThornsGameTests`.
 - `PufferfishResourcesClientTest`: models, sprites, translations and resource selection. Domain client tests cover rendering behavior, animation and state restoration.

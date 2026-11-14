@@ -11,7 +11,6 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.inventory.SmithingMenu;
@@ -23,7 +22,6 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -87,11 +85,6 @@ public final class RadiantPufferfishGameTests {
         helper.assertTrue(player.getAttributeValue(Attributes.ARMOR) == 3
                 && player.getAttributeValue(Attributes.ARMOR_TOUGHNESS) == 3, "Radiant headgear lost netherite protection");
         helper.assertTrue(PufferfishCombat.damage(output) == 11, "Radiant fish should deal eight base damage plus three from Density V");
-        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(PufferfishItems.RADIANT.get(), 2));
-        NeoForge.EVENT_BUS.post(new PlayerInteractEvent.RightClickItem(player, InteractionHand.MAIN_HAND));
-        helper.assertTrue(player.getMainHandItem().getCount() == 1
-                && player.getCooldowns().isOnCooldown(PufferfishItems.RADIANT.get())
-                && player.getCooldowns().isOnCooldown(PufferfishItems.NETHERITE.get()), "Radiant throwing lost consumption or shared cooldown");
         helper.succeed();
     }
 

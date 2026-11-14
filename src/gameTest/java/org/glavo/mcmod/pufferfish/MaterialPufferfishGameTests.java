@@ -10,7 +10,6 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -21,12 +20,9 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.GameType;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
-import org.glavo.mcmod.pufferfish.entity.ThrownPufferfish;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
@@ -100,26 +96,4 @@ public final class MaterialPufferfishGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "empty")
-    public static void materialThrowsKeepTheirItemAndShareCooldown(GameTestHelper helper) {
-        var player = helper.makeMockPlayer(GameType.SURVIVAL);
-        player.setPos(helper.absoluteVec(new net.minecraft.world.phys.Vec3(2, 2, 2)));
-        var allFish = new ArrayList<>(fish());
-        allFish.addAll(List.of(Items.PUFFERFISH, PufferfishItems.NETHERITE.get(), PufferfishItems.HEAVY.get()));
-        for (var item : allFish) {
-            for (var other : allFish) player.getCooldowns().removeCooldown(other);
-            var stack = new ItemStack(item, 2);
-            player.setItemInHand(InteractionHand.MAIN_HAND, stack);
-            var event = new PlayerInteractEvent.RightClickItem(player, InteractionHand.MAIN_HAND);
-            NeoForge.EVENT_BUS.post(event);
-            var projectiles = helper.getLevel().getEntitiesOfClass(ThrownPufferfish.class, player.getBoundingBox().inflate(4),
-                    projectile -> projectile.getOwner() == player);
-            helper.assertTrue(event.isCanceled() && stack.getCount() == 1 && projectiles.size() == 1
-                    && projectiles.getFirst().getItem().is(item) && projectiles.getFirst().getItem().getCount() == 1,
-                    "Throwing lost the material fish identity or consumed the wrong quantity");
-            for (var other : allFish) helper.assertTrue(player.getCooldowns().isOnCooldown(other), "Switching fish bypassed the throw cooldown");
-            projectiles.getFirst().discard();
-        }
-        helper.succeed();
-    }
 }
