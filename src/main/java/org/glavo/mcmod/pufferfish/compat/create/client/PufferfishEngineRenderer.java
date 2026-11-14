@@ -14,25 +14,22 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.neoforge.client.model.data.ModelData;
 import net.neoforged.neoforge.client.model.pipeline.VertexConsumerWrapper;
-import org.glavo.mcmod.pufferfish.PufferfishColors;
-import org.glavo.mcmod.pufferfish.PufferfishItems;
 import org.glavo.mcmod.pufferfish.client.PufferfishTextures;
 import org.glavo.mcmod.pufferfish.compat.create.PufferfishEngineBlock;
 import org.glavo.mcmod.pufferfish.compat.create.PufferfishEngineBlockEntity;
 
 public final class PufferfishEngineRenderer implements BlockEntityRenderer<PufferfishEngineBlockEntity> {
-    private static final ResourceLocation ORIGINAL = ResourceLocation.withDefaultNamespace("textures/entity/fish/pufferfish.png");
     private final PufferfishBigModel<LivingEntity> fishModel;
 
     public PufferfishEngineRenderer(BlockEntityRendererProvider.Context context) {
         fishModel = new PufferfishBigModel<>(context.bakeLayer(ModelLayers.PUFFERFISH_BIG));
     }
 
+    /// Renders the engine mechanism and its fish using the shared body texture selection.
     @Override
     public void render(PufferfishEngineBlockEntity engine, float partialTick, PoseStack pose, MultiBufferSource buffers,
             int light, int overlay) {
@@ -66,11 +63,7 @@ public final class PufferfishEngineRenderer implements BlockEntityRenderer<Puffe
 
         var fish = engine.getFish();
         if (!fish.isEmpty()) {
-            var color = PufferfishColors.get(fish);
-            var texture = PufferfishItems.isHeavy(fish) ? PufferfishTextures.heavyEntity()
-                    : PufferfishItems.isNetherite(fish) ? PufferfishTextures.netheriteEntity()
-                    : PufferfishItems.materialName(fish) != null ? PufferfishTextures.materialEntity(PufferfishItems.materialName(fish))
-                    : color == null ? ORIGINAL : PufferfishTextures.entity(color);
+            var texture = PufferfishTextures.entity(fish);
             float scale = 0.65F + pulse * 0.4F;
             pose.pushPose();
             pose.translate(0.5, 0.5, 0.34375);

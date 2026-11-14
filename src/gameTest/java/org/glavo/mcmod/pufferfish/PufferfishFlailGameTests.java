@@ -123,6 +123,9 @@ public final class PufferfishFlailGameTests {
             target.setNoAi(true);
 
             float damage = PufferfishCombat.damage(PufferfishItems.flailFish(stack));
+            helper.assertTrue(java.util.Objects.equals(PufferfishCombat.passiveEffect(stack),
+                    PufferfishCombat.passiveEffect(PufferfishItems.flailFish(stack))),
+                    "Flail passive effects differ from its fish material");
             if (PufferfishItems.isRadiant(stack)) helper.assertTrue(damage == 8, "Radiant flail should use eight base damage");
             helper.assertTrue(player.getAttributeValue(Attributes.ATTACK_DAMAGE) == damage
                     && Math.abs(player.getAttributeValue(Attributes.ATTACK_SPEED) - 1) < 0.000001,

@@ -214,9 +214,8 @@ public final class PufferfishCombat {
     /// Returns the material's status before rolling lethal toxin replacement.
     @javax.annotation.Nullable
     public static MobEffectInstance passiveEffect(ItemStack stack) {
-        stack = PufferfishItems.flailFish(stack);
         if (PufferfishItems.isRadiant(stack)) return new MobEffectInstance(MobEffects.WITHER, STATUS_EFFECT_DURATION_TICKS, 0);
-        var poison = PufferfishPoison.of(stack);
+        @javax.annotation.Nullable var poison = PufferfishPoison.of(stack);
         return poison == null ? null : new MobEffectInstance(MobEffects.POISON, STATUS_EFFECT_DURATION_TICKS, poison.amplifier());
     }
 
@@ -226,15 +225,22 @@ public final class PufferfishCombat {
                 .mapToInt(entry -> entry.getIntValue()).findFirst().orElse(0);
     }
 
+    /// Resolves fish and flail damage by material without constructing a temporary fish stack.
     private static float throwingBaseDamage(ItemStack stack) {
-        stack = PufferfishItems.flailFish(stack);
-        if (CopperPufferfish.index(stack) >= 0) return PufferfishCombatConfig.value(PufferfishCombatConfig.COPPER_DAMAGE).floatValue();
-        if (stack.is(PufferfishItems.IRON.get())) return PufferfishCombatConfig.value(PufferfishCombatConfig.IRON_DAMAGE).floatValue();
-        if (stack.is(PufferfishItems.DIAMOND.get())) return PufferfishCombatConfig.value(PufferfishCombatConfig.DIAMOND_DAMAGE).floatValue();
-        if (stack.is(PufferfishItems.GOLDEN.get())) return PufferfishCombatConfig.value(PufferfishCombatConfig.GOLDEN_DAMAGE).floatValue();
-        if (stack.is(PufferfishItems.RADIANT.get())) return PufferfishCombatConfig.value(PufferfishCombatConfig.RADIANT_DAMAGE).floatValue();
-        return PufferfishItems.hasHeavyCombat(stack) ? 10 : PufferfishCombatConfig.value(PufferfishItems.hasNetheriteCombat(stack)
-                ? PufferfishCombatConfig.NETHERITE_DAMAGE : PufferfishCombatConfig.NORMAL_DAMAGE).floatValue();
+        @javax.annotation.Nullable var variant = PufferfishVariant.of(stack);
+        var material = variant != null && (stack.getItem() == variant.fishItem() || PufferfishItems.isFlail(stack))
+                ? variant.material() : PufferfishMaterial.NORMAL;
+        if (material == PufferfishMaterial.HEAVY) return 10;
+        var damage = switch (material) {
+            case COPPER -> PufferfishCombatConfig.COPPER_DAMAGE;
+            case IRON -> PufferfishCombatConfig.IRON_DAMAGE;
+            case GOLDEN -> PufferfishCombatConfig.GOLDEN_DAMAGE;
+            case DIAMOND -> PufferfishCombatConfig.DIAMOND_DAMAGE;
+            case NETHERITE -> PufferfishCombatConfig.NETHERITE_DAMAGE;
+            case RADIANT -> PufferfishCombatConfig.RADIANT_DAMAGE;
+            default -> PufferfishCombatConfig.NORMAL_DAMAGE;
+        };
+        return PufferfishCombatConfig.value(damage).floatValue();
     }
 
     private static float densityBonus(ItemStack stack) {

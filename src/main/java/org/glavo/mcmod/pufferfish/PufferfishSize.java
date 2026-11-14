@@ -12,6 +12,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.animal.Pufferfish;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import org.jetbrains.annotations.Nullable;
 
 public final class PufferfishSize {
     private static final net.minecraft.resources.ResourceLocation MODIFIER = PufferfishPlease.id("cultivation_scale");
@@ -69,10 +70,11 @@ public final class PufferfishSize {
     public static void update(Pufferfish fish) {
         if (fish.level().isClientSide) return;
         var stack = PufferfishData.stored(fish);
-        var attribute = fish.getAttribute(Attributes.SCALE);
+        @Nullable var attribute = fish.getAttribute(Attributes.SCALE);
+        if (attribute == null) return;
         double amount = scale(stack) - 1;
-        var previous = attribute.getModifier(MODIFIER);
-        if (previous != null && previous.amount() == amount) return;
+        @Nullable var previous = attribute.getModifier(MODIFIER);
+        if (previous == null ? amount == 0 : previous.amount() == amount) return;
         attribute.removeModifier(MODIFIER);
         if (amount != 0) attribute.addTransientModifier(new AttributeModifier(MODIFIER, amount, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
         fish.refreshDimensions();

@@ -63,11 +63,12 @@ public final class PufferfishContactDamage {
         }
     }
 
+    /// Resolves the skin or a detached placed-fish snapshot that supplies contact effects.
     private static net.minecraft.world.item.ItemStack contactItem(Level level, BlockPos pos, BlockState state) {
         if (state.getBlock() instanceof PufferfishSkinBlock) {
             return state.getBlock().asItem().getDefaultInstance();
         }
-        if (level.getBlockEntity(pos) instanceof PlacedPufferfishBlockEntity placed && !placed.fish().isEmpty()) {
+        if (level.getBlockEntity(pos) instanceof PlacedPufferfishBlockEntity placed) {
             return placed.fish();
         }
         return net.minecraft.world.item.ItemStack.EMPTY;
