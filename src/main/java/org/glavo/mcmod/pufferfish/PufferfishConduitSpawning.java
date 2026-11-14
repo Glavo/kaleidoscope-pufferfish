@@ -16,6 +16,7 @@ import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.MobSpawnSettings;
 import net.neoforged.neoforge.event.level.LevelEvent;
+import org.jetbrains.annotations.Nullable;
 
 public final class PufferfishConduitSpawning {
     public static final TagKey<EntityType<?>> REPLACED = TagKey.create(Registries.ENTITY_TYPE,
@@ -29,13 +30,14 @@ public final class PufferfishConduitSpawning {
 
     private PufferfishConduitSpawning() {}
 
-    static void update(Level level, BlockPos pos, int radius) {
+    /// Registers the current server-side range, or removes it when the core is inactive or unloaded.
+    public static void update(@Nullable Level level, BlockPos pos, int radius) {
         if (level == null || level.isClientSide) return;
         if (radius > 0) {
             ACTIVE.computeIfAbsent(level, ignored -> new HashMap<>()).put(pos.immutable(),
                     new Aura(radius, level.getBlockState(pos).is(PufferfishBlocks.ANCIENT_CONDUIT.get())));
         } else {
-            var positions = ACTIVE.get(level);
+            @Nullable var positions = ACTIVE.get(level);
             if (positions != null) {
                 positions.remove(pos);
                 if (positions.isEmpty()) ACTIVE.remove(level);

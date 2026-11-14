@@ -12,6 +12,7 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.ConduitBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.Nullable;
 
 public final class PufferfishConduitBlock extends ConduitBlock {
     public static final MapCodec<ConduitBlock> CODEC = simpleCodec(PufferfishConduitBlock::new);
@@ -26,9 +27,10 @@ public final class PufferfishConduitBlock extends ConduitBlock {
         return new PufferfishConduitBlockEntity(pos, state);
     }
 
+    /// Retains vanilla ticking with the pufferfish core's frame and power hooks.
     @Override
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+    public <T extends BlockEntity> @Nullable BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
         return createTickerHelper(type, PufferfishBlocks.CONDUIT_ENTITY.get(),
-                level.isClientSide ? ConduitBlockEntity::clientTick : PufferfishConduitBlockEntity::serverTick);
+                level.isClientSide ? ConduitBlockEntity::clientTick : ConduitBlockEntity::serverTick);
     }
 }

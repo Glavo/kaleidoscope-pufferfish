@@ -15,12 +15,14 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.ConduitBlockEntity;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(PufferfishPlease.MODID)
 @PrefixGameTestTemplate(false)
 public final class AncientPufferfishConduitGameTests {
+    /// Power and both range indexes follow the same frame thresholds through vanilla ticking.
     @GameTest(template = "empty", timeoutTicks = 100)
     public static void bothConduitsFollowEveryVanillaRangeThreshold(GameTestHelper helper) {
         var level = helper.getLevel();
@@ -53,14 +55,14 @@ public final class AncientPufferfishConduitGameTests {
                     }
                     fish.removeEffect(PufferfishEffects.PUFFERFISH_POWER);
                     fish.setPos(pos.above(radius).getCenter());
-                    PufferfishConduitBlockEntity.serverTick(level, pos, core.getBlockState(), core);
+                    ConduitBlockEntity.serverTick(level, pos, core.getBlockState(), core);
                     helper.assertTrue(core.isActive() == (radius > 0), "Incorrect activation at frame size " + count);
                     helper.assertTrue(!fish.hasEffect(PufferfishEffects.PUFFERFISH_POWER)
                             && !PufferfishConduitSpawning.isInRange(level, pos.above(radius)),
                             "Power or spawn replacement exceeded the radius at frame size " + count);
                     if (radius > 0) {
                         fish.setPos(pos.above(radius - 1).getCenter());
-                        PufferfishConduitBlockEntity.serverTick(level, pos, core.getBlockState(), core);
+                        ConduitBlockEntity.serverTick(level, pos, core.getBlockState(), core);
                         helper.assertTrue(fish.hasEffect(PufferfishEffects.PUFFERFISH_POWER)
                                 && PufferfishConduitSpawning.isInRange(level, pos.above(radius - 1))
                                 && PufferfishConduitSpawning.isInAncientRange(level, pos.above(radius - 1)) == core.isAncient(),

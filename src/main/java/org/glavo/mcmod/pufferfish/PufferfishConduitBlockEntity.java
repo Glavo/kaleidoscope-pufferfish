@@ -77,22 +77,6 @@ public final class PufferfishConduitBlockEntity extends ConduitBlockEntity {
         }
     }
 
-    public static void serverTick(Level level, BlockPos pos, BlockState state, PufferfishConduitBlockEntity entity) {
-        ConduitBlockEntity.serverTick(level, pos, state, entity);
-        if (level.getGameTime() % 40 != 0) return;
-        int frameSize = 0;
-        if (entity.isActive()) {
-            for (var offset : BlockPos.betweenClosed(-2, -2, -2, 2, 2, 2)) {
-                if (isFrameOffset(offset)) {
-                    var framePos = pos.offset(offset);
-                    if (isFrameBlock(level, framePos, pos)) frameSize++;
-                }
-            }
-        }
-        int radius = frameSize / 7 * 16;
-        PufferfishConduitSpawning.update(level, pos, radius);
-    }
-
     @Override
     public void setRemoved() {
         PufferfishConduitSpawning.update(level, worldPosition, 0);
