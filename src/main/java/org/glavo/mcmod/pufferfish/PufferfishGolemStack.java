@@ -22,7 +22,7 @@ import net.neoforged.neoforge.event.tick.EntityTickEvent;
 
 /// The head slot holds the active fish; the attachment holds decorations from bottom to top.
 public final class PufferfishGolemStack {
-    public static final int MAX_COUNT = 256;
+    public static final int MAX_SUPPORTED_COUNT = 1024;
 
     private PufferfishGolemStack() {}
 
@@ -42,9 +42,21 @@ public final class PufferfishGolemStack {
                 || golem.isPlayerCreated()
                 || !golem.getItemBySlot(EquipmentSlot.HEAD).isEmpty() || !decorations(golem).isEmpty()) return;
         var random = golem.getRandom();
-        if (random.nextInt(10) != 0) return;
-        int roll = random.nextInt(100);
-        int count = roll < 90 ? 1 : roll < 99 ? 2 + random.nextInt(3) : 5 + random.nextInt(12);
+        if (random.nextDouble() >= PufferfishMobConfig.value(PufferfishMobConfig.GOLEM_HEADGEAR_CHANCE)) return;
+        int single = PufferfishMobConfig.value(PufferfishMobConfig.GOLEM_SINGLE_WEIGHT);
+        int small = PufferfishMobConfig.value(PufferfishMobConfig.GOLEM_SMALL_WEIGHT);
+        int total = single + small + PufferfishMobConfig.value(PufferfishMobConfig.GOLEM_LARGE_WEIGHT);
+        if (total == 0) return;
+        int roll = random.nextInt(total);
+        int count = 1;
+        if (roll >= single) {
+            int first = PufferfishMobConfig.value(roll < single + small
+                    ? PufferfishMobConfig.GOLEM_SMALL_MIN_COUNT : PufferfishMobConfig.GOLEM_LARGE_MIN_COUNT);
+            int last = PufferfishMobConfig.value(roll < single + small
+                    ? PufferfishMobConfig.GOLEM_SMALL_MAX_COUNT : PufferfishMobConfig.GOLEM_LARGE_MAX_COUNT);
+            count = Math.min(first, last) + random.nextInt(Math.abs(last - first) + 1);
+        }
+        count = Math.min(count, PufferfishMobConfig.value(PufferfishMobConfig.GOLEM_MAX_STACK_SIZE));
         var fish = new ArrayList<ItemStack>(count);
         for (int i = 0; i < count; i++) {
             var stack = PufferfishMobs.naturalFish(golem.registryAccess(), random);
@@ -65,7 +77,8 @@ public final class PufferfishGolemStack {
         var fish = decorations(golem);
         var top = fish.isEmpty() ? equipped : fish.getLast();
         boolean equip = (equipped.isEmpty() || PufferfishItems.isPufferfish(equipped))
-                && fish.size() < MAX_COUNT - 1 && PufferfishItems.isPufferfish(held);
+                && fish.size() + (equipped.isEmpty() ? 0 : 1) < PufferfishMobConfig.value(PufferfishMobConfig.GOLEM_MAX_STACK_SIZE)
+                && PufferfishItems.isPufferfish(held);
         boolean remove = held.isEmpty() && PufferfishItems.isPufferfish(top)
                 && (player.hasInfiniteMaterials() || !EnchantmentHelper.has(top, EnchantmentEffectComponents.PREVENT_ARMOR_CHANGE));
         if (!equip && !remove) return;

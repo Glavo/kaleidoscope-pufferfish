@@ -47,7 +47,7 @@ public final class PufferfishGolemStackGameTests {
         for (var reason : MobSpawnType.values()) {
             var random = new TowerRandom();
             var golem = naturalGolem(helper, random);
-            random.rolls(0, 0);
+            random.rolls(0);
             finalizeGolem(helper, golem, reason);
             boolean expected = reason == MobSpawnType.NATURAL || reason == MobSpawnType.CHUNK_GENERATION
                     || reason == MobSpawnType.STRUCTURE || reason == MobSpawnType.MOB_SUMMONED;
@@ -63,7 +63,7 @@ public final class PufferfishGolemStackGameTests {
         for (int scenario = 0; scenario < 4; scenario++) {
             var random = new TowerRandom();
             var golem = naturalGolem(helper, random);
-            random.rolls(0, 0);
+            random.rolls(0);
             if (scenario == 0) golem.setPlayerCreated(true);
             if (scenario == 1) golem.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.DIAMOND_HELMET));
             if (scenario == 2) golem.setData(PufferfishPlease.GOLEM_FISH, List.of(new ItemStack(PufferfishItems.IRON.get())));
@@ -82,7 +82,8 @@ public final class PufferfishGolemStackGameTests {
         for (int chance = 0; chance < 10; chance++) {
             var random = new TowerRandom();
             var golem = naturalGolem(helper, random);
-            random.rolls(chance, 0);
+            random.fraction = chance / 10.0;
+            random.rolls(0);
             finalizeGolem(helper, golem, MobSpawnType.MOB_SUMMONED);
             NeoForge.EVENT_BUS.post(new EntityJoinLevelEvent(golem, helper.getLevel()));
             helper.assertTrue(PufferfishHeadgear.isWearing(golem) == (chance == 0), "Golem headgear chance was not one in ten");
@@ -92,8 +93,8 @@ public final class PufferfishGolemStackGameTests {
                 var random = new TowerRandom();
                 var golem = naturalGolem(helper, random);
                 int offset = roll < 99 ? (maximum ? 2 : 0) : (maximum ? 11 : 0);
-                if (roll < 90) random.rolls(0, roll);
-                else random.rolls(0, roll, offset);
+                if (roll < 90) random.rolls(roll);
+                else random.rolls(roll, offset);
                 finalizeGolem(helper, golem, MobSpawnType.STRUCTURE);
                 NeoForge.EVENT_BUS.post(new EntityJoinLevelEvent(golem, helper.getLevel()));
                 int expected = roll < 90 ? 1 : roll < 99 ? 2 + offset : 5 + offset;
@@ -139,6 +140,111 @@ public final class PufferfishGolemStackGameTests {
                         == (dyed ? net.minecraft.world.item.DyeColor.LIME : null), "Natural headgear color did not follow the fish color roll");
             }
             before += entry.getValue();
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void naturalTowerConfigurationControlsChanceWeightsAndCounts(GameTestHelper helper) {
+        var chance = PufferfishMobConfig.GOLEM_HEADGEAR_CHANCE;
+        var single = PufferfishMobConfig.GOLEM_SINGLE_WEIGHT;
+        var small = PufferfishMobConfig.GOLEM_SMALL_WEIGHT;
+        var large = PufferfishMobConfig.GOLEM_LARGE_WEIGHT;
+        var settings = List.of(single, small, large, PufferfishMobConfig.GOLEM_SMALL_MIN_COUNT,
+                PufferfishMobConfig.GOLEM_SMALL_MAX_COUNT, PufferfishMobConfig.GOLEM_LARGE_MIN_COUNT,
+                PufferfishMobConfig.GOLEM_LARGE_MAX_COUNT, PufferfishMobConfig.GOLEM_MAX_STACK_SIZE);
+        var previous = settings.stream().map(setting -> setting.get()).toList();
+        double previousChance = chance.get();
+        try {
+            single.set(1);
+            small.set(0);
+            large.set(0);
+            for (double probability : new double[] {0, 0.35, 1}) for (double roll : new double[] {0, 0.349, 0.35, 0.999}) {
+                chance.set(probability);
+                var random = new TowerRandom();
+                random.fraction = roll;
+                var golem = naturalGolem(helper, random);
+                finalizeGolem(helper, golem, MobSpawnType.STRUCTURE);
+                helper.assertTrue(PufferfishHeadgear.isWearing(golem) == (roll < probability), "Configured headgear chance was ignored");
+            }
+            chance.set(1.0);
+            PufferfishMobConfig.GOLEM_SMALL_MIN_COUNT.set(7);
+            PufferfishMobConfig.GOLEM_SMALL_MAX_COUNT.set(7);
+            PufferfishMobConfig.GOLEM_LARGE_MIN_COUNT.set(11);
+            PufferfishMobConfig.GOLEM_LARGE_MAX_COUNT.set(11);
+            for (int group = 0; group < 4; group++) {
+                single.set(group == 0 ? 1 : 0);
+                small.set(group == 1 ? 1 : 0);
+                large.set(group == 2 ? 1 : 0);
+                var golem = naturalGolem(helper, new TowerRandom());
+                finalizeGolem(helper, golem, MobSpawnType.MOB_SUMMONED);
+                int expected = switch (group) { case 0 -> 1; case 1 -> 7; case 2 -> 11; default -> 0; };
+                helper.assertTrue(PufferfishGolemStack.decorations(golem).size() + (PufferfishHeadgear.isWearing(golem) ? 1 : 0) == expected,
+                        "Configured tower weights or ranges were ignored");
+            }
+            large.set(1);
+            PufferfishMobConfig.GOLEM_LARGE_MIN_COUNT.set(13);
+            PufferfishMobConfig.GOLEM_LARGE_MAX_COUNT.set(11);
+            var reversed = naturalGolem(helper, new TowerRandom());
+            finalizeGolem(helper, reversed, MobSpawnType.STRUCTURE);
+            helper.assertTrue(PufferfishGolemStack.decorations(reversed).size() == 12, "Reversed count endpoints were not supported");
+            PufferfishMobConfig.GOLEM_MAX_STACK_SIZE.set(1);
+            var capped = naturalGolem(helper, new TowerRandom());
+            finalizeGolem(helper, capped, MobSpawnType.STRUCTURE);
+            helper.assertTrue(PufferfishHeadgear.isWearing(capped) && PufferfishGolemStack.decorations(capped).isEmpty(),
+                    "Natural tower exceeded the configured stack limit");
+        } finally {
+            chance.set(previousChance);
+            for (int i = 0; i < settings.size(); i++) settings.get(i).set(previous.get(i));
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void changedStackLimitPreservesExistingTowersAndAllowsRetrieval(GameTestHelper helper) {
+        var limit = PufferfishMobConfig.GOLEM_MAX_STACK_SIZE;
+        int previous = limit.get();
+        try {
+            var player = TestPlayers.serverPlayer(helper);
+            player.setShiftKeyDown(true);
+            var golem = EntityType.IRON_GOLEM.create(helper.getLevel());
+            limit.set(1024);
+            for (int i = 0; i < 1024; i++) {
+                player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.PUFFERFISH));
+                player.interactOn(golem, InteractionHand.MAIN_HAND);
+                helper.assertTrue(player.getMainHandItem().isEmpty(), "Raised stack limit rejected a fish");
+            }
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.PUFFERFISH));
+            player.interactOn(golem, InteractionHand.MAIN_HAND);
+            helper.assertTrue(player.getMainHandItem().getCount() == 1, "Full tower consumed an extra fish");
+            limit.set(1);
+            var saved = new CompoundTag();
+            golem.saveWithoutId(saved);
+            var restored = EntityType.IRON_GOLEM.create(helper.getLevel());
+            restored.load(saved);
+            var receiver = EntityType.IRON_GOLEM.create(helper.getLevel());
+            var tracker = new ServerEntity(helper.getLevel(), restored, 3, true, packet -> {});
+            tracker.sendPairingData(FakePlayerFactory.getMinecraft(helper.getLevel()), new PacketAndPayloadAcceptor<>(packet -> {
+                if (packet instanceof ClientboundCustomPayloadPacket custom && custom.payload() instanceof SyncAttachmentsPayload data) {
+                    AttachmentSync.receiveSyncedDataAttachments(receiver, helper.getLevel().registryAccess(), data.types(), data.syncPayload());
+                }
+            }));
+            helper.assertTrue(PufferfishGolemStack.decorations(receiver).size() == 1023, "Lowered limit truncated saved or synchronized fish");
+            player.interactOn(restored, InteractionHand.MAIN_HAND);
+            helper.assertTrue(player.getMainHandItem().getCount() == 1, "Lowered limit allowed another fish");
+            for (int i = 0; i < 1024; i++) {
+                player.getInventory().clearContent();
+                player.interactOn(restored, InteractionHand.MAIN_HAND);
+                helper.assertTrue(player.getMainHandItem().is(Items.PUFFERFISH) && player.getMainHandItem().getCount() == 1,
+                        "Lowered limit prevented retrieval or lost a fish");
+            }
+            helper.assertTrue(restored.getItemBySlot(EquipmentSlot.HEAD).isEmpty() && PufferfishGolemStack.decorations(restored).isEmpty(),
+                    "Retrieval duplicated tower fish");
+            player.interactOn(restored, InteractionHand.MAIN_HAND);
+            helper.assertTrue(player.getMainHandItem().isEmpty() && PufferfishHeadgear.isWearing(restored),
+                    "A stack limit of one prevented equipping the first fish");
+        } finally {
+            limit.set(previous);
         }
         helper.succeed();
     }

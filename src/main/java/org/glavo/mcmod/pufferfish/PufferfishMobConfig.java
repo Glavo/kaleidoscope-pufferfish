@@ -18,6 +18,15 @@ public final class PufferfishMobConfig {
     public static final ModConfigSpec SPEC;
     public static final ModConfigSpec.DoubleValue ZOMBIE_HEADGEAR_CHANCE;
     public static final Map<PufferfishZombieHeadgear.Variant, ModConfigSpec.IntValue> ZOMBIE_HEADGEAR_WEIGHTS;
+    public static final ModConfigSpec.DoubleValue GOLEM_HEADGEAR_CHANCE;
+    public static final ModConfigSpec.IntValue GOLEM_MAX_STACK_SIZE;
+    public static final ModConfigSpec.IntValue GOLEM_SINGLE_WEIGHT;
+    public static final ModConfigSpec.IntValue GOLEM_SMALL_WEIGHT;
+    public static final ModConfigSpec.IntValue GOLEM_SMALL_MIN_COUNT;
+    public static final ModConfigSpec.IntValue GOLEM_SMALL_MAX_COUNT;
+    public static final ModConfigSpec.IntValue GOLEM_LARGE_WEIGHT;
+    public static final ModConfigSpec.IntValue GOLEM_LARGE_MIN_COUNT;
+    public static final ModConfigSpec.IntValue GOLEM_LARGE_MAX_COUNT;
     public static final ModConfigSpec.DoubleValue REINFORCEMENT_CHANCE;
     public static final ModConfigSpec.IntValue REINFORCEMENT_COOLDOWN;
     public static final ModConfigSpec.IntValue REINFORCEMENT_MAX_CALLS;
@@ -69,6 +78,22 @@ public final class PufferfishMobConfig {
         headgearWeights.put(PufferfishZombieHeadgear.Variant.DIAMOND, builder.defineInRange("diamond", 1, 0, 10000));
         ZOMBIE_HEADGEAR_WEIGHTS = java.util.Collections.unmodifiableMap(headgearWeights);
         builder.pop(2);
+        builder.push("golemHeadgear");
+        GOLEM_HEADGEAR_CHANCE = builder.comment("Chance for natural or villager-summoned iron golems to wear fish; 0 disables natural headgear.")
+                .defineInRange("chance", 0.1, 0, 1);
+        GOLEM_MAX_STACK_SIZE = builder.comment("Maximum fish added manually or at spawn. Lowering this does not remove existing fish or prevent retrieval.")
+                .defineInRange("maxStackSize", 256, 1, PufferfishGolemStack.MAX_SUPPORTED_COUNT);
+        GOLEM_SINGLE_WEIGHT = builder.comment("Relative weight for one fish. All three weights at zero disable natural headgear.")
+                .defineInRange("singleWeight", 90, 0, 10000);
+        GOLEM_SMALL_WEIGHT = builder.comment("Relative weight for a small tower.").defineInRange("smallWeight", 9, 0, 10000);
+        GOLEM_SMALL_MIN_COUNT = builder.comment("Inclusive small-tower range. Reversed endpoints are swapped; results are capped by maxStackSize.")
+                .defineInRange("smallMinCount", 2, 1, PufferfishGolemStack.MAX_SUPPORTED_COUNT);
+        GOLEM_SMALL_MAX_COUNT = builder.defineInRange("smallMaxCount", 4, 1, PufferfishGolemStack.MAX_SUPPORTED_COUNT);
+        GOLEM_LARGE_WEIGHT = builder.comment("Relative weight for a large tower.").defineInRange("largeWeight", 1, 0, 10000);
+        GOLEM_LARGE_MIN_COUNT = builder.comment("Inclusive large-tower range. Reversed endpoints are swapped; results are capped by maxStackSize.")
+                .defineInRange("largeMinCount", 5, 1, PufferfishGolemStack.MAX_SUPPORTED_COUNT);
+        GOLEM_LARGE_MAX_COUNT = builder.defineInRange("largeMaxCount", 16, 1, PufferfishGolemStack.MAX_SUPPORTED_COUNT);
+        builder.pop();
         SPEC = builder.build();
     }
 

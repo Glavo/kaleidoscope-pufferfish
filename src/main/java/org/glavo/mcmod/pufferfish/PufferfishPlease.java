@@ -64,8 +64,8 @@ public class PufferfishPlease {
             () -> AttachmentType.builder(() -> ItemStack.EMPTY).serialize(ItemStack.OPTIONAL_CODEC).build());
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<java.util.List<ItemStack>>> GOLEM_FISH = ATTACHMENTS.register("golem_fish",
             () -> AttachmentType.<java.util.List<ItemStack>>builder(() -> java.util.List.of())
-                    .serialize(ItemStack.SINGLE_ITEM_CODEC.listOf(0, PufferfishGolemStack.MAX_COUNT - 1))
-                    .sync(ItemStack.STREAM_CODEC.apply(net.minecraft.network.codec.ByteBufCodecs.list(PufferfishGolemStack.MAX_COUNT - 1)))
+                    .serialize(ItemStack.SINGLE_ITEM_CODEC.listOf(0, PufferfishGolemStack.MAX_SUPPORTED_COUNT - 1))
+                    .sync(ItemStack.STREAM_CODEC.apply(net.minecraft.network.codec.ByteBufCodecs.list(PufferfishGolemStack.MAX_SUPPORTED_COUNT - 1)))
                     .build());
     public static final DeferredHolder<EntityType<?>, EntityType<ThrownPufferfish>> THROWN_PUFFERFISH = ENTITIES.register("thrown_pufferfish",
             () -> EntityType.Builder.<ThrownPufferfish>of(ThrownPufferfish::new, MobCategory.MISC)
