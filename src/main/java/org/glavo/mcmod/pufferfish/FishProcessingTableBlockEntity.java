@@ -100,8 +100,15 @@ public final class FishProcessingTableBlockEntity extends BlockEntity {
         if (rank().number() > 0) return true;
         if (!PufferfishItems.isPufferfish(item) || !item.has(DataComponents.MAX_DAMAGE)) return false;
         if (PufferfishDurability.canDeactivate(item)) return true;
-        player.displayClientMessage(Component.translatable("message.pufferfish_please.processing_table.restore_required"), true);
+        explainRestorationFailure(player);
         return false;
+    }
+
+    /// Reports the next actionable obstacle without exposing durability implementation details.
+    private void explainRestorationFailure(Player player) {
+        String reason = item.isDamaged() ? "repair_required"
+                : !item.getEnchantments().isEmpty() ? "disenchant_required" : "restore_unavailable";
+        player.displayClientMessage(Component.translatable("message.pufferfish_please.processing_table." + reason), true);
     }
 
     private PufferfishLevel rank() {
@@ -139,7 +146,7 @@ public final class FishProcessingTableBlockEntity extends BlockEntity {
             item.remove(PufferfishPlease.CULTIVATION.get());
             if (PufferfishDurability.canDeactivate(item)) PufferfishDurability.deactivate(item);
             else if (item.has(DataComponents.MAX_DAMAGE)) {
-                player.displayClientMessage(Component.translatable("message.pufferfish_please.processing_table.restore_required"), true);
+                explainRestorationFailure(player);
             }
         }
         player.getItemInHand(hand).hurtAndBreak(1, player, slot(hand));

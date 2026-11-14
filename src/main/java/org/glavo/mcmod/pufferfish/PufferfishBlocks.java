@@ -83,12 +83,11 @@ public final class PufferfishBlocks {
 
     static {
         ITEMS.register("fish_processing_table", () -> new net.minecraft.world.item.BlockItem(PROCESSING_TABLE.get(), new Item.Properties()) {
+            /// Keeps detailed processing instructions in JEI.
             @Override public void appendHoverText(ItemStack stack, Item.TooltipContext context,
                     java.util.List<net.minecraft.network.chat.Component> tooltip, net.minecraft.world.item.TooltipFlag flag) {
-                for (var action : java.util.List.of("cut", "brush", "retrieve")) {
-                    tooltip.add(net.minecraft.network.chat.Component.translatable("tooltip.pufferfish_please.processing_table." + action)
-                            .withStyle(net.minecraft.ChatFormatting.GRAY));
-                }
+                tooltip.add(net.minecraft.network.chat.Component.translatable("tooltip.pufferfish_please.processing_table")
+                        .withStyle(net.minecraft.ChatFormatting.GRAY));
             }
         });
         ITEMS.registerSimpleBlockItem(CONDUIT);

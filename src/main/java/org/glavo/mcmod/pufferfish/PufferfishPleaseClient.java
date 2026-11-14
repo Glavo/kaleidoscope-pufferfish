@@ -70,7 +70,7 @@ public class PufferfishPleaseClient {
         NeoForge.EVENT_BUS.addListener(org.glavo.mcmod.pufferfish.client.PufferfishFlailTether::captureWorld);
         NeoForge.EVENT_BUS.addListener(org.glavo.mcmod.pufferfish.client.HeavyPufferfishVisuals::tick);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PufferfishTooltips::hideCreativeCategory);
-        NeoForge.EVENT_BUS.addListener(PufferfishTooltips::cultivation);
+        NeoForge.EVENT_BUS.addListener(PufferfishTooltips::details);
     }
 
     private org.glavo.mcmod.pufferfish.client.PufferfishBoatItemRenderer boatRenderer() {
